@@ -172,7 +172,7 @@ class MainActivity : ComponentActivity() {
                                     onBack = { filesVM.goUp() },
                                     onExtractArchive = { archive, targetDir ->
                                         tasksVM.enqueueExtract(archive, targetDir, null)
-                                        nav.navigate("tasks")
+//                                        nav.navigate("tasks")
                                     },
                                     onCreateZip = { sources, outName, targetDir ->
                                         tasksVM.enqueueCreateZip(sources, targetDir, outName)
@@ -246,16 +246,40 @@ class MainActivity : ComponentActivity() {
                                         archiveUri = uri,
                                         onBack = { nav.popBackStack() },
                                         onExtractTo = { arch, pwd ->
-                                            pendingExtractArchive = arch
-                                            pendingExtractPassword = pwd
-                                            pendingExtractPaths = null
-                                            pickTargetDir.launch(null)
+                                            // Get current directory from FileBrowserViewModel
+                                            val currentDir = when (val location = browserState.currentLocation) {
+                                                is BrowseLocation.FileSystem -> Uri.fromFile(location.file)
+                                                is BrowseLocation.SAF -> browserState.currentDir
+                                                else -> null
+                                            }
+
+                                            if (currentDir != null) {
+                                                tasksVM.enqueueExtract(arch, currentDir, pwd)
+                                                nav.popBackStack() // Go back to file browser
+                                            } else {
+                                                // Fallback: let user pick directory
+                                                pendingExtractArchive = arch
+                                                pendingExtractPassword = pwd
+                                                pendingExtractPaths = null
+                                                pickTargetDir.launch(null)
+                                            }
                                         },
                                         onExtractSelected = { arch, paths, pwd ->
-                                            pendingExtractArchive = arch
-                                            pendingExtractPassword = pwd
-                                            pendingExtractPaths = paths
-                                            pickTargetDir.launch(null)
+                                            val currentDir = when (val location = browserState.currentLocation) {
+                                                is BrowseLocation.FileSystem -> Uri.fromFile(location.file)
+                                                is BrowseLocation.SAF -> browserState.currentDir
+                                                else -> null
+                                            }
+
+                                            if (currentDir != null) {
+                                                tasksVM.enqueueExtract(arch, currentDir, pwd, paths)
+                                                nav.popBackStack()
+                                            } else {
+                                                pendingExtractArchive = arch
+                                                pendingExtractPassword = pwd
+                                                pendingExtractPaths = paths
+                                                pickTargetDir.launch(null)
+                                            }
                                         },
                                         onOpenAsFolder = { dirUri ->
                                             filesVM.openDir(dirUri)
