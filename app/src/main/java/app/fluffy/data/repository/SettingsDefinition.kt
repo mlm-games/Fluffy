@@ -51,6 +51,15 @@ data class AppSettings(
     val themeMode: Int = 0,
 
     @Setting(
+        title = "Use Aurora Theme",
+        description = "Enable the Aurora color theme with gradients",
+        category = SettingCategory.APPEARANCE,
+        type = SettingType.TOGGLE
+    )
+    val useAuroraTheme: Boolean = true,
+
+
+    @Setting(
         title = "ZIP compression level",
         description = "0 = no compression, 9 = maximum compression",
         category = SettingCategory.ARCHIVES,

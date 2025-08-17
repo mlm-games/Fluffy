@@ -22,7 +22,7 @@ object ThemeColors {
     val LightContainer = Color(0xFFDDE3EE)
 }
 
-val DarkTheme = darkColorScheme(
+val AurDarkTheme = darkColorScheme(
     primary = ThemeColors.AuroraTeal,
     onPrimary = Color(0xFF003830),
     primaryContainer = Color(0xFF005047),
@@ -62,7 +62,7 @@ val DarkTheme = darkColorScheme(
     surfaceTint = ThemeColors.AuroraTeal
 )
 
-val LightTheme = lightColorScheme(
+val AurLightTheme = lightColorScheme(
     primary = Color(0xFF00695C),
     onPrimary = Color(0xFFFFFFFF),
     primaryContainer = Color(0xFF73F5DD),

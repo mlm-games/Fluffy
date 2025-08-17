@@ -40,6 +40,8 @@ class SettingsRepository(private val context: Context) {
 
         // Appearance
         val THEME_MODE = intPreferencesKey("theme_mode")
+        val USE_AURORA_THEME = booleanPreferencesKey("use_aurora_theme")
+
 
         // Archives
         val ZIP_LEVEL = intPreferencesKey("zip_level")
@@ -49,13 +51,15 @@ class SettingsRepository(private val context: Context) {
         "defaultSort" to SettingDefinition.IntSetting("defaultSort", DEFAULT_SORT) { it.defaultSort },
         "showHidden" to SettingDefinition.BooleanSetting("showHidden", SHOW_HIDDEN) { it.showHidden },
         "themeMode" to SettingDefinition.IntSetting("themeMode", THEME_MODE) { it.themeMode },
-        "zipCompressionLevel" to SettingDefinition.IntSetting("zipCompressionLevel", ZIP_LEVEL) { it.zipCompressionLevel }
+        "zipCompressionLevel" to SettingDefinition.IntSetting("zipCompressionLevel", ZIP_LEVEL) { it.zipCompressionLevel },
+        "useAuroraTheme" to SettingDefinition.BooleanSetting("useAuroraTheme", USE_AURORA_THEME) { it.useAuroraTheme }
     )
 
     val settingsFlow: Flow<AppSettings> = context.ds.data.map { p ->
         AppSettings(
             defaultSort = p[DEFAULT_SORT] ?: 0,
             showHidden = p[SHOW_HIDDEN] ?: false,
+            useAuroraTheme = p[USE_AURORA_THEME] ?: true,
             themeMode = p[THEME_MODE] ?: 0,
             zipCompressionLevel = p[ZIP_LEVEL] ?: 5
         )
