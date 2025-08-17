@@ -167,7 +167,7 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.androidx.runtime)
-    implementation(libs.okhttp)
+//    implementation(libs.okhttp)
 
 
     //Material dependencies

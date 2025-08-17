@@ -4,6 +4,7 @@ import android.content.Context
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.archive.DefaultArchiveEngine
 import app.fluffy.data.repository.SettingsRepository
+import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.SafIo
 import app.fluffy.operations.ArchiveJobManager
 
@@ -15,6 +16,7 @@ object AppGraph {
         val appContext = ctx.applicationContext
         val settings = SettingsRepository(appContext)
         val io = SafIo(appContext)
+        val fileSystemAccess = FileSystemAccess(appContext) // Add this
         val archive: ArchiveEngine = DefaultArchiveEngine(appContext, io)
         val archiveJobs = ArchiveJobManager(appContext, archive)
     }
@@ -31,6 +33,7 @@ object AppGraph {
 
     val settings get() = ck().settings
     val io get() = ck().io
+    val fileSystemAccess get() = ck().fileSystemAccess
     val archive get() = ck().archive
     val archiveJobs get() = ck().archiveJobs
 }

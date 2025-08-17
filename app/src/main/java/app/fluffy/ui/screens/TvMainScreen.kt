@@ -1,15 +1,26 @@
 package app.fluffy.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.outlined.Folder
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.dp
+import app.fluffy.ui.components.TvNavItem
+import app.fluffy.ui.components.TvNavigationRail
 
 @Composable
 fun TvMainScreen(
@@ -17,38 +28,55 @@ fun TvMainScreen(
     currentRoute: String? = null,
     content: @Composable () -> Unit
 ) {
-    Row(Modifier.fillMaxSize()) {
-        Surface(
-            modifier = Modifier.fillMaxHeight().width(280.dp),
-            color = MaterialTheme.colorScheme.surface
-        ) {
-            Column(Modifier.fillMaxSize().padding(16.dp)) {
-                Text("Fluffy", style = MaterialTheme.typography.titleLarge)
-                Text("File Manager", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(Modifier.height(24.dp))
-                TvNavItem("Files", Icons.Default.Folder, selected = currentRoute == "files") { onNavigate("files") }
-                TvNavItem("Tasks", Icons.Default.Archive, selected = currentRoute == "tasks") { onNavigate("tasks") }
-                TvNavItem("Settings", Icons.Default.Settings, selected = currentRoute == "settings") { onNavigate("settings") }
-                Spacer(Modifier.weight(1f))
-            }
-        }
-        Divider(modifier = Modifier.width(1.dp).fillMaxHeight(), color = MaterialTheme.colorScheme.outlineVariant)
-        Box(Modifier.weight(1f)) { content() }
-    }
-}
+    val colors = MaterialTheme.colorScheme
 
-@Composable
-private fun TvNavItem(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit) {
-    FilledTonalButton(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
-        colors = ButtonDefaults.filledTonalButtonColors(
-            containerColor = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
+    Row(Modifier.fillMaxSize()) {
+        // Enhanced TV navigation rail
+        TvNavigationRail(
+            selectedRoute = currentRoute,
+            items = listOf(
+                TvNavItem(
+                    route = "files",
+                    label = "Files",
+                    icon = Icons.Outlined.Folder,
+                    selectedIcon = Icons.Filled.Folder
+                ),
+                TvNavItem(
+                    route = "tasks",
+                    label = "Tasks",
+                    icon = Icons.Outlined.Archive,
+                    selectedIcon = Icons.Filled.Archive
+                ),
+                TvNavItem(
+                    route = "settings",
+                    label = "Settings",
+                    icon = Icons.Outlined.Settings,
+                    selectedIcon = Icons.Filled.Settings
+                )
+            ),
+            onNavigate = onNavigate
         )
-    ) {
-        Icon(icon, contentDescription = null)
-        Spacer(Modifier.width(8.dp))
-        Text(label)
+
+        Box(
+            modifier = Modifier
+                .width(1.dp)
+                .fillMaxHeight()
+                .background(
+                    brush = Brush.verticalGradient(
+                        colors = listOf(
+                            colors.outline.copy(alpha = 0.1f),
+                            colors.outline.copy(alpha = 0.3f),
+                            colors.outline.copy(alpha = 0.1f)
+                        )
+                    )
+                )
+        )
+
+        Surface(
+            modifier = Modifier.weight(1f),
+            color = colors.background
+        ) {
+            content()
+        }
     }
 }
