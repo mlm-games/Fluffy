@@ -8,6 +8,7 @@ import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -23,8 +24,13 @@ class SafIo(private val context: Context) {
         )
     }
 
-    fun openIn(uri: Uri): InputStream =
-        requireNotNull(cr.openInputStream(uri)) { "openInputStream null $uri" }
+    fun openIn(uri: Uri): InputStream {
+        val df = docFileFromUri(uri)
+        if (df?.isDirectory == true) {
+            throw IOException("Cannot open directory as InputStream: $uri") as Throwable
+        }
+        return requireNotNull(cr.openInputStream(uri)) { "openInputStream null $uri" }
+    }
 
     fun openOut(uri: Uri): OutputStream =
         requireNotNull(cr.openOutputStream(uri)) { "openOutputStream null $uri" }

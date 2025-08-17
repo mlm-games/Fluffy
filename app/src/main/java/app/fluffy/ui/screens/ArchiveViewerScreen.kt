@@ -42,17 +42,44 @@ fun ArchiveViewerScreen(
         error = null
         val name = AppGraph.io.queryDisplayName(archiveUri)
         title = name
-        val res = withContext(Dispatchers.IO) {
-            AppGraph.archive.list(name, { AppGraph.io.openIn(archiveUri) }, password = password.ifBlank { null }?.toCharArray())
+
+        val doc = AppGraph.io.docFileFromUri(archiveUri)
+        if (doc?.isDirectory == true) {
+            loading = false
+            error = "Selected item is a folder, not an archive."
+            listing = emptyList()
+            return
         }
-        encrypted = res.encrypted
-        listing = res.entries
-        if (encrypted) {
-            askPassword = true
-            if (password.isNotBlank()) error = "Incorrect password. Please try again."
+
+        // show error instead of crashing
+        val res = runCatching {
+            withContext(Dispatchers.IO) {
+                AppGraph.archive.list(
+                    name,
+                    { AppGraph.io.openIn(archiveUri) },
+                    password = password.ifBlank { null }?.toCharArray()
+                )
+            }
         }
-        selected.clear()
-        loading = false
+
+        res.onSuccess { result ->
+            encrypted = result.encrypted
+            listing = result.entries
+            loading = false
+            if (encrypted) {
+                askPassword = true
+                if (password.isNotBlank()) {
+                    error = "Incorrect password. Please try again."
+                }
+            }
+        }.onFailure { ex ->
+            loading = false
+            listing = emptyList()
+            error = when (ex) {
+                is java.io.FileNotFoundException -> "Could not open the archive."
+                else -> "Failed to open the archive: ${ex.localizedMessage ?: "Unknown error"}"
+            }
+        }
     }
 
     LaunchedEffect(archiveUri) { load() }

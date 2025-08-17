@@ -203,14 +203,15 @@ private fun FileRow(
     onOpenArchive: (Uri) -> Unit,
     onExtractHere: () -> Unit
 ) {
-    val isArchive = remember(df.name) {
-        val n = (df.name ?: "").lowercase()
-        n.endsWith(".zip") || n.endsWith(".7z") ||
-                n.endsWith(".tar") || n.endsWith(".tgz") || n.endsWith(".tar.gz") ||
-                n.endsWith(".tbz2") || n.endsWith(".tar.bz2") ||
-                n.endsWith(".txz") || n.endsWith(".tar.xz")
+    val isArchive = remember(df.name, df.isDirectory) {
+        if (df.isDirectory) false else {
+            val n = (df.name ?: "").lowercase()
+            n.endsWith(".zip") || n.endsWith(".7z") ||
+                    n.endsWith(".tar") || n.endsWith(".tgz") || n.endsWith(".tar.gz") ||
+                    n.endsWith(".tbz2") || n.endsWith(".tar.bz2") ||
+                    n.endsWith(".txz") || n.endsWith(".tar.xz")
+        }
     }
-
     val mime = df.type ?: ""
     val previewable = remember(mime, df.name) {
         mime.startsWith("image/") || mime.startsWith("video/") || (df.name ?: "").endsWith(".pdf", true)
