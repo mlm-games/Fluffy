@@ -2,7 +2,7 @@ package app.fluffy
 
 import android.content.Context
 import app.fluffy.archive.ArchiveEngine
-import archive.DefaultArchiveEngine
+import app.fluffy.archive.DefaultArchiveEngine
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.SafIo
 import app.fluffy.operations.ArchiveJobManager
@@ -27,10 +27,10 @@ object AppGraph {
         }
     }
 
-    private fun get(): Instance = instance ?: error("AppGraph not initialized")
+    private fun ck() = instance ?: error("AppGraph.init(context) not called")
 
-    val settings get() = get().settings
-    val io get() = get().io
-    val archive get() = get().archive
-    val archiveJobs get() = get().archiveJobs
+    val settings get() = ck().settings
+    val io get() = ck().io
+    val archive get() = ck().archive
+    val archiveJobs get() = ck().archiveJobs
 }

@@ -21,20 +21,35 @@ class TasksViewModel(
 
     init {
         viewModelScope.launch {
-            WorkManager.getInstance(context).getWorkInfosByTagLiveData("fluffy").observeForever { list ->
-                _workInfos.value = list ?: emptyList()
-            }
+            WorkManager.getInstance(context).getWorkInfosByTagLiveData(ArchiveJobManager.TAG_ALL)
+                .observeForever { list ->
+                    _workInfos.value = list ?: emptyList()
+                }
         }
     }
 
-    fun enqueueExtract(archive: Uri, targetDir: Uri, password: String?) {
-        jobs.enqueueExtract(archive, targetDir, password)
+    fun enqueueExtract(archive: Uri, targetDir: Uri, password: String?, includePaths: List<String>? = null) {
+        jobs.enqueueExtract(archive, targetDir, password, includePaths)
     }
 
-    fun enqueueCreateZip(sources: List<Uri>, outName: String) {
-        val target = workDefaultTargetDir() ?: return
-        jobs.enqueueCreateZip(sources, target, outName, password = null)
+    fun enqueueCreateZip(sources: List<Uri>, targetDir: Uri, outName: String) {
+        jobs.enqueueCreateZip(sources, targetDir, outName, password = null)
     }
 
-    private fun workDefaultTargetDir(): Uri? = null // hook for future: remember last opened dir
+    fun enqueueCreate7z(sources: List<Uri>, targetDir: Uri, outName: String, password: String?) {
+        jobs.enqueueCreate7z(sources, targetDir, outName, password)
+    }
+
+    fun enqueueCopy(sources: List<Uri>, targetDir: Uri) {
+        jobs.enqueueCopy(sources, targetDir)
+    }
+
+    fun enqueueMove(sources: List<Uri>, targetDir: Uri) {
+        jobs.enqueueMove(sources, targetDir)
+    }
+
+    fun cancelAll() {
+        WorkManager.getInstance(context).cancelAllWorkByTag(ArchiveJobManager.TAG_ALL)
+    }
 }
+

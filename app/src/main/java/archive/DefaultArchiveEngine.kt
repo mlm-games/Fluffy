@@ -1,14 +1,28 @@
-package archive
+package app.fluffy.archive
 
 import android.content.Context
-import app.fluffy.archive.ArchiveEngine
 import app.fluffy.io.SafIo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import net.lingala.zip4j.io.inputstream.ZipInputStream
+import net.lingala.zip4j.io.outputstream.ZipOutputStream
+import net.lingala.zip4j.model.ZipParameters
+import net.lingala.zip4j.model.enums.CompressionLevel
+import net.lingala.zip4j.model.enums.CompressionMethod
+import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry
+import org.apache.commons.compress.archivers.sevenz.SevenZFile
+import org.apache.commons.compress.archivers.sevenz.SevenZOutputFile
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
+import org.apache.commons.compress.compressors.bzip2.BZip2CompressorInputStream
+import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream
+import org.apache.commons.compress.compressors.xz.XZCompressorInputStream
+import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 import java.util.Locale
-import kotlin.collections.plusAssign
 
 class DefaultArchiveEngine(
     private val context: Context,
@@ -21,7 +35,8 @@ class DefaultArchiveEngine(
         password: CharArray?
     ): ArchiveEngine.ListResult = withContext(Dispatchers.IO) {
         when (infer(archiveName)) {
-            Kind.ZIP -> listZip(open, password)
+            Kind.ZIP -> listZip(open)
+            Kind.SEVENZ -> listSevenZ(archiveName, open, password)
             Kind.TAR -> listTar(open)
             Kind.TARGZ -> listTar { GzipCompressorInputStream(open()) }
             Kind.TARBZ2 -> listTar { BZip2CompressorInputStream(open()) }
@@ -32,12 +47,13 @@ class DefaultArchiveEngine(
     override suspend fun extractAll(
         archiveName: String,
         open: () -> InputStream,
-        create: (pathInArchive: String, isDir: Boolean) -> OutputStream,
+        create: (String, Boolean) -> OutputStream,
         password: CharArray?,
         onProgress: (Long, Long) -> Unit
     ) = withContext(Dispatchers.IO) {
         when (infer(archiveName)) {
             Kind.ZIP -> extractZip(open, create, password, onProgress)
+            Kind.SEVENZ -> extractSevenZ(archiveName, open, create, password, onProgress)
             Kind.TAR -> extractTar(open, create, onProgress)
             Kind.TARGZ -> extractTar({ GzipCompressorInputStream(open()) }, create, onProgress)
             Kind.TARBZ2 -> extractTar({ BZip2CompressorInputStream(open()) }, create, onProgress)
@@ -52,62 +68,66 @@ class DefaultArchiveEngine(
         password: CharArray?,
         onProgress: (Long, Long) -> Unit
     ) = withContext(Dispatchers.IO) {
-        ZipOutputStream(writeTarget()).use { zout ->
-            val params = ZipParameters().apply {
-                compressionMethod = CompressionMethod.DEFLATE
-                this.compressionLevel = when (compressionLevel.coerceIn(0, 9)) {
-                    0 -> CompressionLevel.NO_COMPRESSION
-                    in 1..3 -> CompressionLevel.FASTEST
-                    in 4..6 -> CompressionLevel.NORMAL
-                    in 7..8 -> CompressionLevel.MAXIMUM
-                    else -> CompressionLevel.ULTRA
-                }
-                if (password != null) {
-                    isEncryptFiles = true
-                    aesKeyStrength = AesKeyStrength.KEY_STRENGTH_256
-                }
+        // Ensure you’re using zip4j’s ZipOutputStream
+        val out = if (password != null) {
+            ZipOutputStream(writeTarget(), password)
+        } else {
+            ZipOutputStream(writeTarget())
+        }
+
+        out.use { zout ->
+            // Map Int (0..9) to zip4j CompressionLevel
+            val lvl = when (compressionLevel.coerceIn(0, 9)) {
+                0 -> CompressionLevel.NO_COMPRESSION
+                in 1..3 -> CompressionLevel.FASTEST
+                in 4..6 -> CompressionLevel.NORMAL
+                in 7..8 -> CompressionLevel.MAXIMUM
+                else -> CompressionLevel.ULTRA
             }
-            for ((name, open) in sources) {
-                val isDir = name.endsWith("/")
-                val p = params.clone() as ZipParameters
-                p.fileNameInZip = name
-                zout.putNextEntry(p)
-                if (!isDir) {
-                    open().use { it.copyTo(zout) }
+
+            var totalWritten = 0L
+            val buf = ByteArray(128 * 1024)
+
+            for ((name, supplier) in sources) {
+                val params = ZipParameters().apply {
+                    // use setters to avoid "val cannot be reassigned"
+                    compressionMethod = CompressionMethod.DEFLATE
+                    setCompressionLevel(lvl)
+                    fileNameInZip = name
+                }
+
+                zout.putNextEntry(params)
+                if (!name.endsWith("/")) {
+                    supplier().use { input ->
+                        var read = input.read(buf)
+                        while (read > 0) {
+                            zout.write(buf, 0, read)
+                            totalWritten += read
+                            onProgress(totalWritten, -1L) // unknown total, report bytes so far
+                            read = input.read(buf)
+                        }
+                    }
                 }
                 zout.closeEntry()
             }
         }
     }
 
-    // --- Internals ---
 
-    private fun listZip(open: () -> InputStream, password: CharArray?): ArchiveEngine.ListResult {
-        // Use commons-compress for plain listing (works even for many zips; encrypted zips will still show names)
-        val zis = ZipArchiveInputStream(open())
-        val entries = mutableListOf<ArchiveEngine.Entry>()
-        var e: ZipArchiveEntry? = zis.nextZipEntry
-        while (e != null) {
-            entries plusAssign ArchiveEngine.Entry(
-                path = e.name,
-                isDir = e.isDirectory,
-                size = e.size,
-                time = e.lastModifiedDate?.time ?: 0L
-            )
-            e = zis.nextZipEntry
-        }
-        zis.close()
-        // Encrypted detection is best-effort; ZipArchiveInputStream doesn't expose it. Mark false.
-        return ArchiveEngine.ListResult(entries, encrypted = false)
-    }
+    // ZIP
 
-    private fun listTar(open: () -> InputStream): ArchiveEngine.ListResult {
-        TarArchiveInputStream(open()).use { tin ->
+    private fun listZip(open: () -> InputStream): ArchiveEngine.ListResult {
+        ZipArchiveInputStream(open()).use { zis ->
             val entries = mutableListOf<ArchiveEngine.Entry>()
-            var e: TarArchiveEntry? = tin.nextTarEntry
+            var e: ZipArchiveEntry? = zis.nextEntry
             while (e != null) {
-                entries plusAssign ArchiveEngine.Entry(e.name, e.isDirectory, e.size, e.modTime?.time ?: 0L)
-                e = tin.nextTarEntry
+                entries += ArchiveEngine.Entry(
+                    path = e.name,
+                    isDir = e.isDirectory,
+                    size = e.size,
+                    time = e.lastModifiedDate?.time ?: 0L
+                )
+                e = zis.nextEntry
             }
             return ArchiveEngine.ListResult(entries, encrypted = false)
         }
@@ -120,13 +140,12 @@ class DefaultArchiveEngine(
         onProgress: (Long, Long) -> Unit
     ) {
         ZipInputStream(open(), password).use { zin ->
-            var entry = zin.nextEntry
             val buf = ByteArray(128 * 1024)
+            var entry = zin.nextEntry
             while (entry != null) {
                 val name = entry.fileName
-                if (entry.isDirectory) {
-                    // cause directory to be created by opening and closing a dummy stream
-                    create("$name/", true).use { /* no-op */ }
+                if (entry.isDirectory || name.endsWith("/")) {
+                    create("$name/", true).use { /* dir ensure */ }
                 } else {
                     create(name, false).use { out ->
                         var r = zin.read(buf)
@@ -141,6 +160,84 @@ class DefaultArchiveEngine(
         }
     }
 
+    // 7Z
+
+    private fun listSevenZ(
+        archiveName: String,
+        open: () -> InputStream,
+        password: CharArray?
+    ): ArchiveEngine.ListResult {
+        val tmp = stageSevenZTemp(archiveName, open)
+        var encrypted = false
+        val list = mutableListOf<ArchiveEngine.Entry>()
+        kotlin.runCatching {
+            SevenZFile(tmp, password).use { z ->
+                var e: SevenZArchiveEntry? = z.nextEntry
+                while (e != null) {
+                    list += ArchiveEngine.Entry(
+                        path = e.name,
+                        isDir = e.isDirectory,
+                        size = e.size,
+                        time = e.lastModifiedDate?.time ?: 0L
+                    )
+                    e = z.nextEntry
+                }
+            }
+        }.onFailure {
+            // If header is encrypted or password is required, mark encrypted flag and return empty list
+            encrypted = true
+        }
+        return ArchiveEngine.ListResult(list, encrypted = encrypted)
+    }
+
+    private fun extractSevenZ(
+        archiveName: String,
+        open: () -> InputStream,
+        create: (String, Boolean) -> OutputStream,
+        password: CharArray?,
+        onProgress: (Long, Long) -> Unit
+    ) {
+        val tmp = stageSevenZTemp(archiveName, open)
+        SevenZFile(tmp, password).use { z ->
+            val buf = ByteArray(128 * 1024)
+            var e: SevenZArchiveEntry? = z.nextEntry
+            while (e != null) {
+                val name = e.name
+                if (e.isDirectory || name.endsWith("/")) {
+                    create("$name/", true).use { /* ensure dir */ }
+                } else {
+                    create(name, false).use { out ->
+                        var r = z.read(buf) // reads current entry bytes
+                        while (r > 0) {
+                            out.write(buf, 0, r)
+                            r = z.read(buf)
+                        }
+                    }
+                }
+                e = z.nextEntry
+            }
+        }
+    }
+
+    private fun stageSevenZTemp(archiveName: String, open: () -> InputStream): File {
+        val safe = if (archiveName.lowercase(Locale.ROOT).endsWith(".7z")) archiveName else "in.7z"
+        return io.stageToTemp(safe) { open() }
+    }
+
+    // TAR rekated
+
+    private fun listTar(open: () -> InputStream): ArchiveEngine.ListResult {
+        TarArchiveInputStream(open()).use { tin ->
+            val entries = mutableListOf<ArchiveEngine.Entry>()
+            var e: TarArchiveEntry? = tin.nextEntry
+            while (e != null) {
+                entries += ArchiveEngine.Entry(e.name, e.isDirectory, e.size, e.modTime?.time ?: 0L)
+                e = tin.nextEntry
+            }
+            return ArchiveEngine.ListResult(entries, encrypted = false)
+        }
+    }
+
     private fun extractTar(
         open: () -> InputStream,
         create: (String, Boolean) -> OutputStream,
@@ -148,11 +245,11 @@ class DefaultArchiveEngine(
     ) {
         TarArchiveInputStream(open()).use { tin ->
             val buf = ByteArray(128 * 1024)
-            var e = tin.nextTarEntry
+            var e = tin.nextEntry
             while (e != null) {
                 val name = e.name
-                if (e.isDirectory) {
-                    create("$name/", true).use { /* no-op */ }
+                if (e.isDirectory || name.endsWith("/")) {
+                    create("$name/", true).use { /* dir ensure */ }
                 } else {
                     create(name, false).use { out ->
                         var r = tin.read(buf)
@@ -162,22 +259,23 @@ class DefaultArchiveEngine(
                         }
                     }
                 }
-                e = tin.nextTarEntry
+                e = tin.nextEntry
             }
         }
     }
 
-    private enum class Kind { ZIP, TAR, TARGZ, TARBZ2, TARXZ }
+    private enum class Kind { ZIP, SEVENZ, TAR, TARGZ, TARBZ2, TARXZ }
 
     private fun infer(name: String): Kind {
         val n = name.lowercase(Locale.ROOT)
         return when {
+            n.endsWith(".7z") -> Kind.SEVENZ
             n.endsWith(".zip") -> Kind.ZIP
             n.endsWith(".tar.gz") || n.endsWith(".tgz") -> Kind.TARGZ
             n.endsWith(".tar.bz2") || n.endsWith(".tbz2") -> Kind.TARBZ2
             n.endsWith(".tar.xz") || n.endsWith(".txz") -> Kind.TARXZ
             n.endsWith(".tar") -> Kind.TAR
-            else -> Kind.ZIP // default; many cases are zip
+            else -> Kind.ZIP // default guess
         }
     }
 }

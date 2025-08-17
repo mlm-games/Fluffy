@@ -2,7 +2,6 @@ package app.fluffy.helper
 
 import android.app.UiModeManager
 import android.content.Context
-import android.content.pm.PackageManager
 import android.content.res.Configuration
 
 object DeviceUtils {

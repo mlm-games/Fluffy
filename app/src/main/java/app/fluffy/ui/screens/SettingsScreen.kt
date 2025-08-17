@@ -1,11 +1,13 @@
 package app.fluffy.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.*
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
@@ -27,7 +29,6 @@ import kotlin.reflect.KProperty1
 @Composable
 fun SettingsScreen(vm: SettingsViewModel) {
     val settings by vm.settings.collectAsState()
-    val repos by vm.repositories.collectAsState()
     val manager = remember { SettingsManager() }
 
     var showDropdown by remember { mutableStateOf(false) }
@@ -37,37 +38,28 @@ fun SettingsScreen(vm: SettingsViewModel) {
 
     val grouped = remember { manager.getByCategory() }
     val cfg = LocalConfiguration.current
-    // roughly 420dp per cell feels good on TV/phone acc. to ... u know
     val gridCells = remember(cfg.screenWidthDp) { GridCells.Adaptive(minSize = 420.dp) }
 
-    MyScreenScaffold(title = "Settings")
-    {
+    MyScreenScaffold(title = "Settings") { _ ->
         LazyVerticalGrid(
             columns = gridCells,
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            // Generate sections by category
             for (category in SettingCategory.entries) {
                 val itemsForCat = grouped[category] ?: emptyList()
                 if (itemsForCat.isEmpty()) continue
 
-                // Category header
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Text(
                         text = category.name.lowercase().replaceFirstChar { it.uppercase() },
                         style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(start = 4.dp, top = 8.dp, bottom = 4.dp)
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
 
-                // category wise
                 items(itemsForCat, key = { it.first.name }) { (prop, ann) ->
                     val enabled = manager.isEnabled(settings, prop, ann)
-
                     when (ann.type) {
                         SettingType.TOGGLE -> {
                             val value = prop.get(settings) as? Boolean ?: false
@@ -79,7 +71,6 @@ fun SettingsScreen(vm: SettingsViewModel) {
                                 onCheckedChange = { vm.updateSetting(prop.name, it) }
                             )
                         }
-
                         SettingType.DROPDOWN -> {
                             val idx = prop.get(settings) as? Int ?: 0
                             val options = ann.options.toList()
@@ -94,7 +85,6 @@ fun SettingsScreen(vm: SettingsViewModel) {
                                 showDropdown = true
                             }
                         }
-
                         SettingType.SLIDER -> {
                             val valueText = when (val v = prop.get(settings)) {
                                 is Int -> v.toString()
@@ -112,76 +102,16 @@ fun SettingsScreen(vm: SettingsViewModel) {
                                 showSlider = true
                             }
                         }
-
                         SettingType.BUTTON -> {
                             SettingsAction(
                                 title = ann.title,
                                 description = ann.description.takeIf { it.isNotBlank() },
                                 buttonText = "Run",
                                 enabled = enabled,
-                                onClick = {
-                                    vm.performAction(prop.name)
-                                }
+                                onClick = { vm.performAction(prop.name) }
                             )
                         }
                     }
-                }
-            }
-
-            // Repositories header
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                Text(
-                    text = "Repositories",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 4.dp, top = 12.dp, bottom = 4.dp)
-                )
-            }
-
-            // Repository items
-            items(repos, key = { it.url }) { r ->
-                Surface(
-                    tonalElevation = 1.dp,
-                    shape = MaterialTheme.shapes.medium,
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(14.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(r.name, style = MaterialTheme.typography.bodyLarge)
-                            Text(
-                                r.url,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                        Switch(
-                            checked = r.enabled,
-                            onCheckedChange = { vm.toggleRepository(r.url) })
-                    }
-                }
-            }
-
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                var showAdd by remember { mutableStateOf(false) }
-                Button(
-                    onClick = { showAdd = true },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Add Repository")
-                }
-                if (showAdd) {
-                    AddRepoDialog(
-                        onDismiss = { showAdd = false },
-                        onAdd = { name, url ->
-                            vm.addRepository(name, url)
-                            showAdd = false
-                        }
-                    )
                 }
             }
         }
@@ -227,28 +157,4 @@ fun SettingsScreen(vm: SettingsViewModel) {
             }
         )
     }
-}
-
-@Composable
-private fun AddRepoDialog(onDismiss: () -> Unit, onAdd: (String, String) -> Unit) {
-    var name by remember { mutableStateOf("") }
-    var url by remember { mutableStateOf("") }
-
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Add Repository") },
-        text = {
-            Column {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = url, onValueChange = { url = it }, label = { Text("URL") })
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = { if (url.isNotBlank()) onAdd(name.ifBlank { url }, url) }) {
-                Text("Add")
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
-    )
 }

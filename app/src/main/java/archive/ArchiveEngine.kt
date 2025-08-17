@@ -7,10 +7,8 @@ interface ArchiveEngine {
     data class Entry(val path: String, val isDir: Boolean, val size: Long, val time: Long)
     data class ListResult(val entries: List<Entry>, val encrypted: Boolean)
 
-    // Listing
     suspend fun list(archiveName: String, open: () -> InputStream, password: CharArray? = null): ListResult
 
-    // Extract (all or subset)
     suspend fun extractAll(
         archiveName: String,
         open: () -> InputStream,
@@ -19,9 +17,8 @@ interface ArchiveEngine {
         onProgress: (Long, Long) -> Unit = { _, _ -> }
     )
 
-    // Create zip (streaming)
     suspend fun createZip(
-        sources: List<Pair<String, () -> InputStream>>, // name in archive + supplier
+        sources: List<Pair<String, () -> InputStream>>,
         writeTarget: () -> OutputStream,
         compressionLevel: Int = 5,
         password: CharArray? = null,

@@ -15,7 +15,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,7 +43,7 @@ fun FullscreenImageViewer(
     ) { padding ->
         Box(Modifier.fillMaxSize().padding(padding)) {
             HorizontalPager(state = pagerState) { page ->
-                var scale by remember { mutableStateOf(1f) }
+                var scale by remember { mutableFloatStateOf(1f) }
                 val transformState = rememberTransformableState { zoomChange, _, _ ->
                     scale = (scale * zoomChange).coerceIn(1f, 4f)
                 }

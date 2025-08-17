@@ -17,13 +17,17 @@ class SafIo(private val context: Context) {
 
     fun listChildren(dir: Uri): List<DocumentFile> {
         val doc = DocumentFile.fromTreeUri(context, dir) ?: return emptyList()
-        return doc.listFiles().sortedWith(
+        val children = doc.listFiles().toList()
+        return children.sortedWith(
             compareBy<DocumentFile> { !it.isDirectory }.thenBy { it.name?.lowercase() ?: "" }
         )
     }
 
-    fun openIn(uri: Uri): InputStream = requireNotNull(cr.openInputStream(uri)) { "openInputStream null $uri" }
-    fun openOut(uri: Uri): OutputStream = requireNotNull(cr.openOutputStream(uri)) { "openOutputStream null $uri" }
+    fun openIn(uri: Uri): InputStream =
+        requireNotNull(cr.openInputStream(uri)) { "openInputStream null $uri" }
+
+    fun openOut(uri: Uri): OutputStream =
+        requireNotNull(cr.openOutputStream(uri)) { "openOutputStream null $uri" }
 
     fun createDir(parent: Uri, name: String): Uri {
         val p = DocumentFile.fromTreeUri(context, parent) ?: error("Invalid parent")
@@ -43,24 +47,28 @@ class SafIo(private val context: Context) {
         return current.uri
     }
 
-    suspend fun copyTo(parent: Uri, name: String, input: () -> InputStream, onProgress: (Long, Long) -> Unit = { _, _ -> }): Uri =
-        withContext(Dispatchers.IO) {
-            val target = createFile(parent, name)
-            cr.openOutputStream(target).use { out ->
-                input().use { `in` ->
-                    val buf = ByteArray(DEFAULT_BUF)
-                    var total = 0L
-                    var read = `in`.read(buf)
-                    while (read != -1) {
-                        out?.write(buf, 0, read)
-                        total += read
-                        onProgress(total, -1L)
-                        read = `in`.read(buf)
-                    }
+    suspend fun copyTo(
+        parent: Uri,
+        name: String,
+        input: () -> InputStream,
+        onProgress: (Long, Long) -> Unit = { _, _ -> }
+    ): Uri = withContext(Dispatchers.IO) {
+        val target = createFile(parent, name)
+        cr.openOutputStream(target).use { out ->
+            input().use { `in` ->
+                val buf = ByteArray(DEFAULT_BUF)
+                var total = 0L
+                var read = `in`.read(buf)
+                while (read != -1) {
+                    out?.write(buf, 0, read)
+                    total += read
+                    onProgress(total, -1L)
+                    read = `in`.read(buf)
                 }
             }
-            target
         }
+        target
+    }
 
     fun stageToTemp(name: String, input: () -> InputStream): File {
         val base = File(context.cacheDir, "stage").apply { mkdirs() }
@@ -82,9 +90,52 @@ class SafIo(private val context: Context) {
     fun rename(uri: Uri, newName: String): Boolean {
         return try {
             DocumentsContract.renameDocument(cr, uri, newName) != null
-        } catch (e: Exception) {
+        } catch (_: Exception) {
             false
         }
+    }
+
+    //recursive ops for Copy/Move/Delete
+
+    suspend fun copyIntoDir(srcUri: Uri, targetParent: Uri): Boolean = withContext(Dispatchers.IO) {
+        val src = docFileFromUri(srcUri) ?: return@withContext false
+        copyDocRecursive(src, targetParent)
+        true
+    }
+
+    suspend fun moveIntoDir(srcUri: Uri, targetParent: Uri): Boolean = withContext(Dispatchers.IO) {
+        val ok = copyIntoDir(srcUri, targetParent)
+        if (ok) deleteTree(srcUri)
+        ok
+    }
+
+    suspend fun deleteTree(uri: Uri): Boolean = withContext(Dispatchers.IO) {
+        val doc = docFileFromUri(uri) ?: return@withContext false
+        deleteDocRecursive(doc)
+        true
+    }
+
+    private fun copyDocRecursive(src: DocumentFile, targetParent: Uri) {
+        val name = src.name ?: "item"
+        if (src.isDirectory) {
+            val newDir = ensureDir(targetParent, name)
+            src.listFiles().forEach { child ->
+                copyDocRecursive(child, newDir)
+            }
+        } else {
+            val mime = src.type ?: "application/octet-stream"
+            val target = createFile(targetParent, name, mime)
+            openIn(src.uri).use { input ->
+                openOut(target).use { out -> input.copyTo(out) }
+            }
+        }
+    }
+
+    private fun deleteDocRecursive(doc: DocumentFile) {
+        if (doc.isDirectory) {
+            doc.listFiles().forEach { child -> deleteDocRecursive(child) }
+        }
+        doc.delete()
     }
 
     companion object {
