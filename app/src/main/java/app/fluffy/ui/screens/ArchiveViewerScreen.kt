@@ -1,6 +1,7 @@
 package app.fluffy.ui.screens
 
 import android.net.Uri
+import android.os.Build
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,14 +19,16 @@ import app.fluffy.AppGraph
 import app.fluffy.archive.ArchiveEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.IOException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ArchiveViewerScreen(
     archiveUri: Uri,
     onBack: () -> Unit,
-    onExtractTo: (Uri, String?) -> Unit,                  // full extract
-    onExtractSelected: (Uri, List<String>, String?) -> Unit = { _, _, _ -> } // partial extract
+    onExtractTo: (Uri, String?) -> Unit,
+    onExtractSelected: (Uri, List<String>, String?) -> Unit = { _, _, _ -> },
+    onOpenAsFolder: (Uri) -> Unit
 ) {
     var listing by remember { mutableStateOf<List<ArchiveEngine.Entry>>(emptyList()) }
     var title by remember { mutableStateOf("") }
@@ -34,25 +37,28 @@ fun ArchiveViewerScreen(
     var askPassword by remember { mutableStateOf(false) }
     var password by remember { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
+    var canOpenAsFolder by remember { mutableStateOf(false) }
     var selectionMode by remember { mutableStateOf(false) }
-    val selected = remember { mutableStateMapOf<String, Boolean>() } // path -> selected
+    val selected = remember { mutableStateMapOf<String, Boolean>() }
 
     suspend fun load() {
         loading = true
         error = null
+        canOpenAsFolder = false
         val name = AppGraph.io.queryDisplayName(archiveUri)
         title = name
 
+        // Quick pre-check: if the provider reports directory, offer folder open
         val doc = AppGraph.io.docFileFromUri(archiveUri)
         if (doc?.isDirectory == true) {
             loading = false
-            error = "Selected item is a folder, not an archive."
+            error = "Selected item is a folder (mounted by the system)."
+            canOpenAsFolder = true
             listing = emptyList()
             return
         }
 
-        // show error instead of crashing
-        val res = runCatching {
+        val result = runCatching {
             withContext(Dispatchers.IO) {
                 AppGraph.archive.list(
                     name,
@@ -62,9 +68,9 @@ fun ArchiveViewerScreen(
             }
         }
 
-        res.onSuccess { result ->
-            encrypted = result.encrypted
-            listing = result.entries
+        result.onSuccess { res ->
+            encrypted = res.encrypted
+            listing = res.entries
             loading = false
             if (encrypted) {
                 askPassword = true
@@ -75,11 +81,17 @@ fun ArchiveViewerScreen(
         }.onFailure { ex ->
             loading = false
             listing = emptyList()
-            error = when (ex) {
-                is java.io.FileNotFoundException -> "Could not open the archive."
-                else -> "Failed to open the archive: ${ex.localizedMessage ?: "Unknown error"}"
-            }
+            val msg = ex.localizedMessage ?: "Unknown error"
+            error = "Failed to open the archive: $msg"
+
+            // If it looks like the provider exposed a directory, offer open-as-folder
+            val looksLikeDir =
+                msg.contains("EISDIR", ignoreCase = true) ||
+                        msg.contains("is a directory", ignoreCase = true)
+            canOpenAsFolder = looksLikeDir
         }
+
+        selected.clear()
     }
 
     LaunchedEffect(archiveUri) { load() }
@@ -116,39 +128,48 @@ fun ArchiveViewerScreen(
                 }
             } else {
                 if (error != null) {
-                    Text(
-                        error!!,
-                        color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(12.dp),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
-                ) {
-                    items(listing, key = { it.path }) { e ->
-                        ListItem(
-                            headlineContent = { Text(e.path) },
-                            supportingContent = {
-                                val meta = buildString {
-                                    append(if (e.isDir) "Folder" else "File")
-                                    if (!e.isDir) append(" • ${e.size} B")
-                                }
-                                Text(meta)
-                            },
-                            trailingContent = {
-                                if (selectionMode) {
-                                    val checked = selected[e.path] == true
-                                    Checkbox(
-                                        checked = checked,
-                                        onCheckedChange = { selected[e.path] = it }
-                                    )
-                                }
-                            }
+                    Column(Modifier.padding(12.dp)) {
+                        Text(
+                            error!!,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium
                         )
-                        Divider()
+                        if (canOpenAsFolder) {
+                            Spacer(Modifier.height(8.dp))
+                            Button(onClick = { onOpenAsFolder(archiveUri) }) {
+                                Text("Open as folder")
+                            }
+                        }
+                    }
+                }
+                if (listing.isNotEmpty()) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        items(listing, key = { it.path }) { e ->
+                            ListItem(
+                                headlineContent = { Text(e.path) },
+                                supportingContent = {
+                                    val meta = buildString {
+                                        append(if (e.isDir) "Folder" else "File")
+                                        if (!e.isDir) append(" • ${e.size} B")
+                                    }
+                                    Text(meta)
+                                },
+                                trailingContent = {
+                                    if (selectionMode) {
+                                        val checked = selected[e.path] == true
+                                        Checkbox(
+                                            checked = checked,
+                                            onCheckedChange = { selected[e.path] = it }
+                                        )
+                                    }
+                                }
+                            )
+                            Divider()
+                        }
                     }
                 }
             }

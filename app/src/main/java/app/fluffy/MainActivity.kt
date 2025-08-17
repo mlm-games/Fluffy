@@ -182,6 +182,11 @@ class MainActivity : ComponentActivity() {
                                         pendingExtractPassword = pwd
                                         pendingExtractPaths = paths
                                         pickTargetDir.launch(null)
+                                    },
+                                    onOpenAsFolder = { dirUri ->
+                                        filesVM.openDir(dirUri)
+                                        nav.popBackStack()
+                                        nav.navigate("files")
                                     }
                                 )
                             }
