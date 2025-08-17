@@ -196,7 +196,7 @@ dependencies {
     implementation(libs.commons.compress)
     implementation(libs.xz)
     implementation(libs.zstd.jni)
-
+    implementation(libs.material.icons.extended)
 
 
     // Testing

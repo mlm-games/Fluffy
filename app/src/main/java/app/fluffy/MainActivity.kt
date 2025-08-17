@@ -17,32 +17,29 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.helper.DeviceUtils
-import app.fluffy.ui.screens.FileBrowserScreen
-import app.fluffy.ui.screens.SettingsScreen
-import app.fluffy.ui.screens.TasksScreen
-import app.fluffy.ui.screens.TvMainScreen
+import app.fluffy.io.FileSystemAccess
+import app.fluffy.ui.screens.*
 import app.fluffy.ui.theme.FluffyTheme
-import app.fluffy.viewmodel.FileBrowserViewModel
-import app.fluffy.viewmodel.SettingsViewModel
-import app.fluffy.viewmodel.TasksViewModel
+import app.fluffy.viewmodel.*
 import kotlinx.coroutines.launch
+import java.io.File
+import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 
@@ -55,8 +52,16 @@ class MainActivity : ComponentActivity() {
         }
 
     private val filesVM: FileBrowserViewModel by viewModels {
-        vm { FileBrowserViewModel(AppGraph.io, AppGraph.fileSystemAccess, AppGraph.archive, AppGraph.settings) }
+        vm {
+            FileBrowserViewModel(
+                AppGraph.io,
+                AppGraph.fileSystemAccess,
+                AppGraph.archive,
+                AppGraph.settings
+            )
+        }
     }
+
     private val tasksVM: TasksViewModel by viewModels {
         vm { TasksViewModel(this@MainActivity, AppGraph.archiveJobs) }
     }
@@ -65,14 +70,11 @@ class MainActivity : ComponentActivity() {
         vm { SettingsViewModel(AppGraph.settings) }
     }
 
-
     private val storagePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
-        // Handle permission result
         val allGranted = permissions.values.all { it }
         if (allGranted) {
-            // Refresh file list
             filesVM.refreshCurrentDir()
         }
     }
@@ -142,25 +144,20 @@ class MainActivity : ComponentActivity() {
 
             FluffyTheme(
                 darkTheme = dark,
+                useAuroraTheme = settings.useAuroraTheme
             ) {
                 Surface {
                     val nav = rememberNavController()
                     val currentRoute = nav.currentBackStackEntryAsState().value?.destination?.route
 
-                    lifecycleScope.launch {
-                        filesVM.state.collect { state ->
-                            state.pendingFileOpen?.let { uri ->
-                                // Check if it's an archive
-                                val name = uri.lastPathSegment?.lowercase() ?: ""
-                                val isArchive = name.endsWith(".zip") || name.endsWith(".7z") ||
-                                        name.endsWith(".tar") || name.endsWith(".rar")
-
-                                if (isArchive) {
-                                    val encoded =
-                                        URLEncoder.encode(uri.toString(), StandardCharsets.UTF_8.name())
-                                    nav.navigate("archive?uri=$encoded")
-                                    filesVM.clearPendingFileOpen()
-                                }
+                    val browserState by filesVM.state.collectAsState()
+                    LaunchedEffect(browserState.pendingFileOpen) {
+                        browserState.pendingFileOpen?.let { uri ->
+                            val name = uri.lastPathSegment?.lowercase() ?: ""
+                            if (FileSystemAccess.isArchiveFile(name)) {
+                                val encoded = URLEncoder.encode(uri.toString(), StandardCharsets.UTF_8.name())
+                                nav.navigate("archive/$encoded")
+                                filesVM.clearPendingFileOpen()
                             }
                         }
                     }
@@ -169,7 +166,7 @@ class MainActivity : ComponentActivity() {
                         NavHost(navController = nav, startDestination = "files") {
                             composable("files") {
                                 FileBrowserScreen(
-                                    state = filesVM.state.collectAsState().value,
+                                    state = browserState,
                                     onPickRoot = { pickRoot.launch(null) },
                                     onOpenDir = { filesVM.openDir(it) },
                                     onBack = { filesVM.goUp() },
@@ -185,7 +182,7 @@ class MainActivity : ComponentActivity() {
                                     onOpenTasks = { nav.navigate("tasks") },
                                     onOpenArchive = { arch ->
                                         val encoded = URLEncoder.encode(arch.toString(), StandardCharsets.UTF_8.name())
-                                        nav.navigate("archive?uri=$encoded")
+                                        nav.navigate("archive/$encoded")
                                     },
                                     onCopySelected = { list ->
                                         pendingCopy = list
@@ -198,26 +195,26 @@ class MainActivity : ComponentActivity() {
                                     onDeleteSelected = { list ->
                                         lifecycleScope.launch {
                                             list.forEach { AppGraph.io.deleteTree(it) }
-                                            filesVM.refresh()
+                                            filesVM.refreshCurrentDir()
                                         }
                                     },
                                     onRenameOne = { uri, newName ->
                                         lifecycleScope.launch {
-                                            if (newName.isNotBlank()) AppGraph.io.rename(uri, newName)
-                                            filesVM.refresh()
+                                            if (newName.isNotBlank()) {
+                                                AppGraph.io.rename(uri, newName)
+                                                filesVM.refreshCurrentDir()
+                                            }
                                         }
                                     },
                                     onCreate7z = { sources, outName, password, targetDir ->
                                         tasksVM.enqueueCreate7z(sources, targetDir, outName, password)
                                         nav.navigate("tasks")
                                     },
-                                    // New handlers
                                     onOpenFile = { file ->
                                         filesVM.openFile(file)
                                     },
                                     onQuickAccessClick = { item ->
-                                        item.file?.let { filesVM.openFileSystemPath(it) }
-                                        item.uri?.let { filesVM.openDir(it) }
+                                        filesVM.openQuickAccessItem(item)
                                     },
                                     onRequestPermission = {
                                         requestStoragePermission()
@@ -227,14 +224,56 @@ class MainActivity : ComponentActivity() {
                                     }
                                 )
                             }
+
+                            composable(
+                                route = "archive/{uri}",
+                                arguments = listOf(
+                                    navArgument("uri") {
+                                        type = NavType.StringType
+                                        nullable = false
+                                    }
+                                )
+                            ) { backStack ->
+                                val encoded = backStack.arguments?.getString("uri") ?: ""
+                                val uri = try {
+                                    URLDecoder.decode(encoded, StandardCharsets.UTF_8.name()).toUri()
+                                } catch (e: Exception) {
+                                    null
+                                }
+
+                                if (uri != null) {
+                                    ArchiveViewerScreen(
+                                        archiveUri = uri,
+                                        onBack = { nav.popBackStack() },
+                                        onExtractTo = { arch, pwd ->
+                                            pendingExtractArchive = arch
+                                            pendingExtractPassword = pwd
+                                            pendingExtractPaths = null
+                                            pickTargetDir.launch(null)
+                                        },
+                                        onExtractSelected = { arch, paths, pwd ->
+                                            pendingExtractArchive = arch
+                                            pendingExtractPassword = pwd
+                                            pendingExtractPaths = paths
+                                            pickTargetDir.launch(null)
+                                        },
+                                        onOpenAsFolder = { dirUri ->
+                                            filesVM.openDir(dirUri)
+                                            nav.popBackStack()
+                                            nav.navigate("files")
+                                        }
+                                    )
+                                }
+                            }
+
                             composable("tasks") {
                                 TasksScreen(
                                     workInfos = tasksVM.workInfos.collectAsState().value,
                                     onBack = { nav.popBackStack() }
                                 )
                             }
+
                             composable("settings") {
-                                // Use the tiny wrapper VM
                                 SettingsScreen(vm = settingsVM)
                             }
                         }
@@ -280,13 +319,12 @@ class MainActivity : ComponentActivity() {
     private fun checkStoragePermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
-                // Show dialog or request permission
                 requestManageStoragePermission()
             }
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             val permissions = mutableListOf<String>()
             if (ContextCompat.checkSelfPermission(
-                    applicationContext,
+                    this,
                     Manifest.permission.READ_EXTERNAL_STORAGE
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
@@ -294,7 +332,7 @@ class MainActivity : ComponentActivity() {
             }
             if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
                 if (ContextCompat.checkSelfPermission(
-                        applicationContext,
+                        this,
                         Manifest.permission.WRITE_EXTERNAL_STORAGE
                     ) != PackageManager.PERMISSION_GRANTED
                 ) {

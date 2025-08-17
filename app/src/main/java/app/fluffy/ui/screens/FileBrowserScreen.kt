@@ -1,78 +1,38 @@
 package app.fluffy.ui.screens
 
 import android.net.Uri
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
-import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.CreateNewFolder
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material.icons.filled.FolderZip
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Movie
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import app.fluffy.helper.DeviceUtils
+import app.fluffy.io.FileSystemAccess
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.QuickAccessItem
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,6 +59,8 @@ fun FileBrowserScreen(
     val currentLocation = state.currentLocation
     val canUp = state.stack.size > 1
     val isTV = DeviceUtils.isTV(LocalContext.current)
+    val configuration = LocalConfiguration.current
+    val isCompactScreen = configuration.screenWidthDp < 600
 
     val selected = remember { mutableStateListOf<Uri>() }
     val selectedFiles = remember { mutableStateListOf<File>() }
@@ -108,6 +70,15 @@ fun FileBrowserScreen(
     var showRenameDialog by remember { mutableStateOf(false) }
     var renameNewName by remember { mutableStateOf("") }
     var showNewFolderDialog by remember { mutableStateOf(false) }
+    var showExtractDialog by remember { mutableStateOf(false) }
+    var extractToCurrentDir by remember { mutableStateOf(true) }
+
+    // Get current directory Uri for operations
+    val currentDirUri: Uri? = when (currentLocation) {
+        is BrowseLocation.FileSystem -> Uri.fromFile(currentLocation.file)
+        is BrowseLocation.SAF -> state.currentDir
+        else -> null
+    }
 
     Scaffold(
         topBar = {
@@ -154,28 +125,143 @@ fun FileBrowserScreen(
                     }
                 )
 
-                // Selection bar
                 if ((selected.isNotEmpty() || selectedFiles.isNotEmpty()) &&
                     currentLocation !is BrowseLocation.QuickAccess) {
+
+                    val count = selected.size + selectedFiles.size
+                    val allSelectedUris = selected + selectedFiles.map { Uri.fromFile(it) }
+
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 6.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            val count = selected.size + selectedFiles.size
-                            Text(
-                                "$count selected",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
+                        if (isCompactScreen && !isTV) {
+                            // Mobile layout - vertical with wrapping
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "$count selected",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    TextButton(
+                                        onClick = {
+                                            selected.clear()
+                                            selectedFiles.clear()
+                                        }
+                                    ) {
+                                        Text("Clear")
+                                    }
+                                }
 
-                            if (!isTV) {
+                                // Scrollable row of action buttons
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    AssistChip(
+                                        onClick = { showZipNameDialog = true },
+                                        label = { Text("Zip") },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.FolderZip,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    )
+                                    AssistChip(
+                                        onClick = { show7zDialog = true },
+                                        label = { Text("7z") },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.Archive,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    )
+                                    AssistChip(
+                                        onClick = { onCopySelected(allSelectedUris) },
+                                        label = { Text("Copy") },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.ContentCopy,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    )
+                                    AssistChip(
+                                        onClick = { onMoveSelected(allSelectedUris) },
+                                        label = { Text("Move") },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.DriveFileMove,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    )
+                                    AssistChip(
+                                        onClick = {
+                                            onDeleteSelected(allSelectedUris)
+                                            selected.clear()
+                                            selectedFiles.clear()
+                                        },
+                                        label = { Text("Delete") },
+                                        leadingIcon = {
+                                            Icon(
+                                                Icons.Default.Delete,
+                                                contentDescription = null,
+                                                modifier = Modifier.size(18.dp)
+                                            )
+                                        }
+                                    )
+                                    if (count == 1) {
+                                        AssistChip(
+                                            onClick = {
+                                                renameTarget = allSelectedUris.first()
+                                                renameNewName = ""
+                                                showRenameDialog = true
+                                            },
+                                            label = { Text("Rename") },
+                                            leadingIcon = {
+                                                Icon(
+                                                    Icons.Default.Edit,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            // TV/Tablet layout - horizontal
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "$count selected",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
@@ -185,36 +271,38 @@ fun FileBrowserScreen(
                                     TextButton(onClick = { show7zDialog = true }) {
                                         Text("7z")
                                     }
-                                    TextButton(onClick = {
-                                        val uris = selected + selectedFiles.map { Uri.fromFile(it) }
-                                        onCopySelected(uris)
-                                    }) {
+                                    TextButton(onClick = { onCopySelected(allSelectedUris) }) {
                                         Text("Copy")
                                     }
-                                    TextButton(onClick = {
-                                        val uris = selected + selectedFiles.map { Uri.fromFile(it) }
-                                        onMoveSelected(uris)
-                                    }) {
+                                    TextButton(onClick = { onMoveSelected(allSelectedUris) }) {
                                         Text("Move")
                                     }
                                     TextButton(onClick = {
-                                        val uris = selected + selectedFiles.map { Uri.fromFile(it) }
-                                        onDeleteSelected(uris)
+                                        onDeleteSelected(allSelectedUris)
                                         selected.clear()
                                         selectedFiles.clear()
                                     }) {
                                         Text("Delete")
                                     }
+                                    if (count == 1) {
+                                        TextButton(onClick = {
+                                            renameTarget = allSelectedUris.first()
+                                            renameNewName = ""
+                                            showRenameDialog = true
+                                        }) {
+                                            Text("Rename")
+                                        }
+                                    }
                                 }
-                            }
 
-                            Spacer(Modifier.weight(1f))
+                                Spacer(Modifier.weight(1f))
 
-                            TextButton(onClick = {
-                                selected.clear()
-                                selectedFiles.clear()
-                            }) {
-                                Text("Clear")
+                                TextButton(onClick = {
+                                    selected.clear()
+                                    selectedFiles.clear()
+                                }) {
+                                    Text("Clear")
+                                }
                             }
                         }
                     }
@@ -247,7 +335,13 @@ fun FileBrowserScreen(
                                 if (toggled) selectedFiles.add(file) else selectedFiles.remove(file)
                             },
                             onOpenFile = onOpenFile,
-                            onOpenArchive = { onOpenArchive(Uri.fromFile(file)) }
+                            onOpenArchive = { onOpenArchive(Uri.fromFile(file)) },
+                            onExtractHere = {
+                                // Extract directly to current directory
+                                currentDirUri?.let { targetDir ->
+                                    onExtractArchive(Uri.fromFile(file), targetDir)
+                                }
+                            }
                         )
                     }
                 }
@@ -269,8 +363,9 @@ fun FileBrowserScreen(
                             onOpenDir = onOpenDir,
                             onOpenArchive = onOpenArchive,
                             onExtractHere = {
-                                state.currentDir?.let { dir ->
-                                    onExtractArchive(df.uri, dir)
+                                // Extract directly to current directory
+                                currentDirUri?.let { targetDir ->
+                                    onExtractArchive(df.uri, targetDir)
                                 }
                             }
                         )
@@ -312,6 +407,76 @@ fun FileBrowserScreen(
         }
     }
 
+    if (showZipNameDialog && currentDirUri != null) {
+        var name by remember { mutableStateOf("archive.zip") }
+        AlertDialog(
+            onDismissRequest = { showZipNameDialog = false },
+            title = { Text("Create ZIP") },
+            text = {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    singleLine = true,
+                    label = { Text("Filename") }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    showZipNameDialog = false
+                    val sources = selected + selectedFiles.map { Uri.fromFile(it) }
+                    onCreateZip(sources, name, currentDirUri)
+                    selected.clear()
+                    selectedFiles.clear()
+                }) { Text("Create") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showZipNameDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
+    if (show7zDialog && currentDirUri != null) {
+        var name by remember { mutableStateOf("archive.7z") }
+        var pwd by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { show7zDialog = false },
+            title = { Text("Create 7z") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        singleLine = true,
+                        label = { Text("Filename") }
+                    )
+                    OutlinedTextField(
+                        value = pwd,
+                        onValueChange = { pwd = it },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        label = { Text("Password (optional)") }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    show7zDialog = false
+                    val sources = selected + selectedFiles.map { Uri.fromFile(it) }
+                    onCreate7z(sources, name, pwd.ifBlank { null }, currentDirUri)
+                    selected.clear()
+                    selectedFiles.clear()
+                }) { Text("Create") }
+            },
+            dismissButton = {
+                TextButton(onClick = { show7zDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+
     if (showNewFolderDialog) {
         var folderName by remember { mutableStateOf("") }
         AlertDialog(
@@ -329,6 +494,7 @@ fun FileBrowserScreen(
                 TextButton(
                     onClick = {
                         if (folderName.isNotBlank()) {
+                            // Handle folder creation based on current location
                             showNewFolderDialog = false
                         }
                     }
@@ -342,89 +508,195 @@ fun FileBrowserScreen(
         )
     }
 
-    if (showZipNameDialog) {
-        var name by remember { mutableStateOf("archive.zip") }
-        val currentDir = when (state.currentLocation) {
-            is BrowseLocation.FileSystem -> Uri.fromFile(state.currentLocation.file)
-            is BrowseLocation.SAF -> state.currentDir
-            else -> null
-        }
-
-        if (currentDir != null) {
-            AlertDialog(
-                onDismissRequest = { showZipNameDialog = false },
-                title = { Text("Create ZIP") },
-                text = {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        singleLine = true,
-                        label = { Text("Filename") }
-                    )
-                },
-                confirmButton = {
-                    TextButton(onClick = {
-                        showZipNameDialog = false
-                        val sources = selected + selectedFiles.map { Uri.fromFile(it) }
-                        onCreateZip(sources, name, currentDir)
-                        selected.clear()
-                        selectedFiles.clear()
-                    }) { Text("Create") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showZipNameDialog = false }) {
-                        Text("Cancel")
-                    }
+    if (showRenameDialog && renameTarget != null) {
+        AlertDialog(
+            onDismissRequest = { showRenameDialog = false },
+            title = { Text("Rename") },
+            text = {
+                OutlinedTextField(
+                    value = renameNewName,
+                    onValueChange = { renameNewName = it },
+                    singleLine = true,
+                    label = { Text("New name") }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    val t = renameTarget!!
+                    onRenameOne(t, renameNewName)
+                    showRenameDialog = false
+                    selected.clear()
+                    selectedFiles.clear()
+                }) { Text("Apply") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showRenameDialog = false }) {
+                    Text("Cancel")
                 }
+            }
+        )
+    }
+}
+
+@Composable
+private fun FileSystemRow(
+    file: File,
+    selected: Boolean,
+    onToggleSelect: (Boolean) -> Unit,
+    onOpenFile: (File) -> Unit,
+    onOpenArchive: () -> Unit,
+    onExtractHere: () -> Unit = {}
+) {
+    val isArchive = remember(file.name) {
+        FileSystemAccess.isArchiveFile(file.name)
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {
+            when {
+                file.isDirectory -> onOpenFile(file)
+                isArchive -> onOpenArchive()
+                else -> onToggleSelect(!selected)
+            }
+        }
+    ) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                when {
+                    file.isDirectory -> Icons.Filled.Folder
+                    isArchive -> Icons.Filled.FolderZip
+                    else -> Icons.AutoMirrored.Filled.InsertDriveFile
+                },
+                contentDescription = null,
+                tint = when {
+                    file.isDirectory -> MaterialTheme.colorScheme.primary
+                    isArchive -> MaterialTheme.colorScheme.secondary
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
+                }
+            )
+
+            Column(Modifier.weight(1f)) {
+                Text(
+                    file.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        if (file.isDirectory) "Folder" else formatFileSize(file.length()),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        "• ${formatDate(file.lastModified())}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            // Quick extract button for archives
+            if (isArchive) {
+                IconButton(
+                    onClick = onExtractHere,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Unarchive,
+                        contentDescription = "Extract here",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            Checkbox(
+                checked = selected,
+                onCheckedChange = { onToggleSelect(it) }
             )
         }
     }
+}
 
-    if (show7zDialog) {
-        var name by remember { mutableStateOf("archive.7z") }
-        var pwd by remember { mutableStateOf("") }
-        val currentDir = when (state.currentLocation) {
-            is BrowseLocation.FileSystem -> Uri.fromFile(state.currentLocation.file)
-            is BrowseLocation.SAF -> state.currentDir
-            else -> null
+@Composable
+private fun FileRow(
+    df: DocumentFile,
+    selected: Boolean,
+    onToggleSelect: (Boolean) -> Unit,
+    onOpenDir: (Uri) -> Unit,
+    onOpenArchive: (Uri) -> Unit,
+    onExtractHere: () -> Unit
+) {
+    val isArchive = remember(df.name, df.isDirectory) {
+        if (df.isDirectory) false else {
+            FileSystemAccess.isArchiveFile(df.name ?: "")
         }
+    }
 
-        if (currentDir != null) {
-            AlertDialog(
-                onDismissRequest = { show7zDialog = false },
-                title = { Text("Create 7z") },
-                text = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(
-                            value = name,
-                            onValueChange = { name = it },
-                            singleLine = true,
-                            label = { Text("Filename") }
-                        )
-                        OutlinedTextField(
-                            value = pwd,
-                            onValueChange = { pwd = it },
-                            singleLine = true,
-                            visualTransformation = PasswordVisualTransformation(),
-                            label = { Text("Password (optional)") }
-                        )
-                    }
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = {
+            if (df.isDirectory) onOpenDir(df.uri)
+            else if (isArchive) onOpenArchive(df.uri)
+            else onToggleSelect(!selected)
+        }
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                when {
+                    df.isDirectory -> Icons.Filled.Folder
+                    isArchive -> Icons.Filled.FolderZip
+                    else -> Icons.AutoMirrored.Filled.InsertDriveFile
                 },
-                confirmButton = {
-                    TextButton(onClick = {
-                        show7zDialog = false
-                        val sources = selected + selectedFiles.map { Uri.fromFile(it) }
-                        onCreate7z(sources, name, pwd.ifBlank { null }, currentDir)
-                        selected.clear()
-                        selectedFiles.clear()
-                    }) { Text("Create") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { show7zDialog = false }) {
-                        Text("Cancel")
-                    }
+                contentDescription = null,
+                tint = when {
+                    df.isDirectory -> MaterialTheme.colorScheme.primary
+                    isArchive -> MaterialTheme.colorScheme.secondary
+                    else -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
             )
+
+            Column(Modifier.weight(1f)) {
+                Text(
+                    df.name ?: "(no name)",
+                    style = MaterialTheme.typography.bodyLarge,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis
+                )
+                val sub = if (df.isDirectory) "Folder" else (df.type ?: "file")
+                Text(
+                    sub,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Quick extract button for archives
+            if (isArchive) {
+                IconButton(
+                    onClick = onExtractHere,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        Icons.Default.Unarchive,
+                        contentDescription = "Extract here",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            Checkbox(checked = selected, onCheckedChange = { onToggleSelect(it) })
         }
     }
 }
@@ -516,140 +788,6 @@ private fun QuickAccessCard(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
-        }
-    }
-}
-
-@Composable
-private fun FileSystemRow(
-    file: File,
-    selected: Boolean,
-    onToggleSelect: (Boolean) -> Unit,
-    onOpenFile: (File) -> Unit,
-    onOpenArchive: () -> Unit
-) {
-    val isArchive = remember(file.name) {
-        val n = file.name.lowercase()
-        n.endsWith(".zip") || n.endsWith(".7z") ||
-                n.endsWith(".tar") || n.endsWith(".tgz") || n.endsWith(".tar.gz") ||
-                n.endsWith(".tbz2") || n.endsWith(".tar.bz2") ||
-                n.endsWith(".txz") || n.endsWith(".tar.xz") || n.endsWith(".rar")
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = {
-            when {
-                file.isDirectory -> onOpenFile(file)
-                isArchive -> onOpenArchive()
-                else -> onToggleSelect(!selected)
-            }
-        }
-    ) {
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                when {
-                    file.isDirectory -> Icons.Filled.Folder
-                    isArchive -> Icons.Filled.FolderZip
-                    else -> Icons.AutoMirrored.Filled.InsertDriveFile
-                },
-                contentDescription = null,
-                tint = when {
-                    file.isDirectory -> MaterialTheme.colorScheme.primary
-                    isArchive -> MaterialTheme.colorScheme.secondary
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                }
-            )
-
-            Column(Modifier.weight(1f)) {
-                Text(
-                    file.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(
-                        if (file.isDirectory) "Folder" else formatFileSize(file.length()),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        "• ${formatDate(file.lastModified())}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Checkbox(
-                checked = selected,
-                onCheckedChange = { onToggleSelect(it) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun FileRow(
-    df: DocumentFile,
-    selected: Boolean,
-    onToggleSelect: (Boolean) -> Unit,
-    onOpenDir: (Uri) -> Unit,
-    onOpenArchive: (Uri) -> Unit,
-    onExtractHere: () -> Unit
-) {
-    val isArchive = remember(df.name, df.isDirectory) {
-        if (df.isDirectory) false else {
-            val n = (df.name ?: "").lowercase()
-            n.endsWith(".zip") || n.endsWith(".7z") ||
-                    n.endsWith(".tar") || n.endsWith(".tgz") || n.endsWith(".tar.gz") ||
-                    n.endsWith(".tbz2") || n.endsWith(".tar.bz2") ||
-                    n.endsWith(".txz") || n.endsWith(".tar.xz")
-        }
-    }
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = {
-            if (df.isDirectory) onOpenDir(df.uri)
-            else if (isArchive) onOpenArchive(df.uri)
-            else onToggleSelect(!selected)
-        }
-    ) {
-        Row(
-            Modifier.fillMaxWidth().padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            Icon(
-                when {
-                    df.isDirectory -> Icons.Filled.Folder
-                    isArchive -> Icons.Filled.FolderZip
-                    else -> Icons.AutoMirrored.Filled.InsertDriveFile
-                },
-                contentDescription = null
-            )
-
-            Column(Modifier.weight(1f)) {
-                Text(
-                    df.name ?: "(no name)",
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1
-                )
-                val sub = if (df.isDirectory) "Folder" else (df.type ?: "file")
-                Text(
-                    sub,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-            Checkbox(checked = selected, onCheckedChange = { onToggleSelect(it) })
         }
     }
 }
