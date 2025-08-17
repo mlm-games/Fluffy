@@ -1,0 +1,4 @@
+- Bump build.gradle.kts
+- Add default sort and wifi-only setting
+- Add theme and dynamic theme settings
+- Remove odd divider for TV
