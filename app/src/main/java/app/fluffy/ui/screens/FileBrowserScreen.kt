@@ -1,7 +1,6 @@
 package app.fluffy.ui.screens
 
 import android.net.Uri
-import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,6 +11,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.DriveFileMove
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -54,7 +54,8 @@ fun FileBrowserScreen(
     onOpenFile: (File) -> Unit = {},
     onQuickAccessClick: (QuickAccessItem) -> Unit = {},
     onRequestPermission: () -> Unit = {},
-    onShowQuickAccess: () -> Unit = {}
+    onShowQuickAccess: () -> Unit = {},
+    onCreateFolder: (String) -> Unit = {}
 ) {
     val currentLocation = state.currentLocation
     val canUp = state.stack.size > 1
@@ -73,7 +74,6 @@ fun FileBrowserScreen(
     var showExtractDialog by remember { mutableStateOf(false) }
     var extractToCurrentDir by remember { mutableStateOf(true) }
 
-    // Get current directory Uri for operations
     val currentDirUri: Uri? = when (currentLocation) {
         is BrowseLocation.FileSystem -> Uri.fromFile(currentLocation.file)
         is BrowseLocation.SAF -> state.currentDir
@@ -207,7 +207,7 @@ fun FileBrowserScreen(
                                         label = { Text("Move") },
                                         leadingIcon = {
                                             Icon(
-                                                Icons.Default.DriveFileMove,
+                                                Icons.AutoMirrored.Filled.DriveFileMove,
                                                 contentDescription = null,
                                                 modifier = Modifier.size(18.dp)
                                             )
@@ -494,7 +494,7 @@ fun FileBrowserScreen(
                 TextButton(
                     onClick = {
                         if (folderName.isNotBlank()) {
-                            // TODO:, onCreateFolder: (String) -> Unit to FileBrowserScreen and wire it to filesVM.createNewFolder(name)
+                            onCreateFolder(folderName)
                             showNewFolderDialog = false
                         }
                     }

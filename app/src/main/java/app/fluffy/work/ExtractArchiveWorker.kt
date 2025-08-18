@@ -15,6 +15,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.OutputStream
 import androidx.core.net.toUri
+import app.fluffy.io.FileSystemAccess
+import net.lingala.zip4j.exception.ZipException
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 
 class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
 
@@ -29,6 +32,8 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
         val name = AppGraph.io.queryDisplayName(archive)
         val open = { AppGraph.io.openIn(archive) }
 
+        var wroteAny = false
+
         try {
             fun shouldInclude(path: String): Boolean {
                 val p = normalize(path)
@@ -39,28 +44,24 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
             val create: (String, Boolean) -> OutputStream = { path, isDir ->
                 val clean = path.trimStart('/').replace('\\', '/')
                 if (!shouldInclude(clean)) {
-                    // Null output stream for skipped files
                     object : OutputStream() {
                         override fun write(b: Int) {}
                         override fun write(b: ByteArray, off: Int, len: Int) {}
                     }
                 } else {
-                    val parent = clean.substringBeforeLast('/', "")
+                    val parentRel = clean.substringBeforeLast('/', "")
                     val fileName = clean.substringAfterLast('/').ifEmpty { "item" }
-                    val parentUri = if (parent.isNotEmpty()) {
-                        AppGraph.io.ensureDir(targetDir, parent)
-                    } else {
-                        targetDir
-                    }
-
                     if (isDir || clean.endsWith("/")) {
-                        AppGraph.io.ensureDir(targetDir, clean)
-                        object : OutputStream() {
-                            override fun write(b: Int) {}
-                        }
+                        AppGraph.io.ensureDir(targetDir, clean.removeSuffix("/"))
+                        wroteAny = true
+                        object : OutputStream() { override fun write(b: Int) {} }
                     } else {
-                        val mime = app.fluffy.io.FileSystemAccess.getMimeType(fileName)
+                        val parentUri = if (parentRel.isNotEmpty()) {
+                            AppGraph.io.ensureDir(targetDir, parentRel)
+                        } else targetDir
+                        val mime = FileSystemAccess.getMimeType(fileName)
                         val fileUri = AppGraph.io.createFile(parentUri, fileName, mime)
+                        wroteAny = true
                         AppGraph.io.openOut(fileUri)
                     }
                 }
@@ -68,20 +69,41 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
 
             setProgress(workDataOf("progress" to 0f))
 
-            // Use the archive engine to extract
-            AppGraph.archive.extractAll(name, open, create, password) { done, total ->
-                val frac = if (total > 0) done.toFloat() / total else 0.0f
-                setProgressAsync(workDataOf("progress" to frac))
+            try {
+                AppGraph.archive.extractAll(name, open, create, password) { done, total ->
+                    val frac = if (total > 0) done.toFloat() / total else 0.0f
+                    setProgressAsync(workDataOf("progress" to frac))
+                }
+            } catch (e: ZipException) {
+                // Fallback for strict/invalid zips (e.g., some APKs)
+                open().use { input ->
+                    ZipArchiveInputStream(input).use { zin ->
+                        var entry = zin.nextZipEntry
+                        while (entry != null) {
+                            val entryName = entry.name ?: ""
+                            if (entryName.isNotBlank()) {
+                                val out = create(entryName, entry.isDirectory)
+                                if (!entry.isDirectory) {
+                                    zin.copyTo(out)
+                                    out.flush()
+                                }
+                                out.close()
+                            }
+                            entry = zin.nextZipEntry
+                        }
+                    }
+                }
             }
 
-            setProgress(workDataOf("progress" to 1f))
-            Result.success()
-
+            if (!wroteAny) {
+                Result.failure(workDataOf("error" to "Nothing extracted (0 files written)"))
+            } else {
+                setProgress(workDataOf("progress" to 1f))
+                Result.success()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
-            return@withContext Result.failure(
-                workDataOf("error" to (e.message ?: e.toString()))
-            )
+            Result.failure(workDataOf("error" to (e.message ?: e.toString())))
         }
     }
 

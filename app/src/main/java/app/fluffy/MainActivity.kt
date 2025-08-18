@@ -38,7 +38,6 @@ import app.fluffy.ui.screens.*
 import app.fluffy.ui.theme.FluffyTheme
 import app.fluffy.viewmodel.*
 import kotlinx.coroutines.launch
-import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -122,10 +121,12 @@ class MainActivity : ComponentActivity() {
 
             lifecycleScope.launch {
                 pendingCopy?.let { list ->
-                    tasksVM.enqueueCopy(list, target); pendingCopy = null
+                    tasksVM.enqueueCopy(list, target)
+                    pendingCopy = null
                 }
                 pendingMove?.let { list ->
-                    tasksVM.enqueueMove(list, target); pendingMove = null
+                    tasksVM.enqueueMove(list, target)
+                    pendingMove = null
                 }
                 pendingExtractArchive?.let { arch ->
                     tasksVM.enqueueExtract(arch, target, pendingExtractPassword, pendingExtractPaths)
@@ -176,7 +177,6 @@ class MainActivity : ComponentActivity() {
                                     onBack = { filesVM.goUp() },
                                     onExtractArchive = { archive, targetDir ->
                                         tasksVM.enqueueExtract(archive, targetDir, null)
-//                                        nav.navigate("tasks")
                                     },
                                     onCreateZip = { sources, outName, targetDir ->
                                         tasksVM.enqueueCreateZip(sources, targetDir, outName)
@@ -185,7 +185,10 @@ class MainActivity : ComponentActivity() {
                                     onOpenSettings = { nav.navigate("settings") },
                                     onOpenTasks = { nav.navigate("tasks") },
                                     onOpenArchive = { arch ->
-                                        val encoded = URLEncoder.encode(arch.toString(), StandardCharsets.UTF_8.name())
+                                        val encoded = URLEncoder.encode(
+                                            arch.toString(),
+                                            StandardCharsets.UTF_8.name()
+                                        )
                                         nav.navigate("archive/$encoded")
                                     },
                                     onCopySelected = { list ->
@@ -211,7 +214,12 @@ class MainActivity : ComponentActivity() {
                                         }
                                     },
                                     onCreate7z = { sources, outName, password, targetDir ->
-                                        tasksVM.enqueueCreate7z(sources, targetDir, outName, password)
+                                        tasksVM.enqueueCreate7z(
+                                            sources,
+                                            targetDir,
+                                            outName,
+                                            password
+                                        )
                                         nav.navigate("tasks")
                                     },
                                     onOpenFile = { file ->
@@ -225,6 +233,9 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onShowQuickAccess = {
                                         filesVM.showQuickAccess()
+                                    },
+                                    onCreateFolder = { name ->
+                                        filesVM.createNewFolder(name)
                                     }
                                 )
                             }

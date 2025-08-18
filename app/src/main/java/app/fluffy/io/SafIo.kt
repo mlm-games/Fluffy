@@ -74,7 +74,9 @@ class SafIo(val context: Context) {
                 Uri.fromFile(newDir)
             }
             "content" -> {
-                val p = DocumentFile.fromTreeUri(context, parent) ?: error("Invalid parent")
+                val p = DocumentFile.fromTreeUri(context, parent)
+                    ?: DocumentFile.fromSingleUri(context, parent)
+                    ?: error("Invalid parent")
                 requireNotNull(p.createDirectory(name)?.uri) { "Failed to create dir" }
             }
             else -> throw IOException("Unsupported URI scheme: ${parent.scheme}")
@@ -90,7 +92,9 @@ class SafIo(val context: Context) {
                 Uri.fromFile(newFile)
             }
             "content" -> {
-                val p = DocumentFile.fromTreeUri(context, parent) ?: error("Invalid parent")
+                val p = DocumentFile.fromTreeUri(context, parent)
+                    ?: DocumentFile.fromSingleUri(context, parent)
+                    ?: error("Invalid parent")
                 requireNotNull(p.createFile(mime, name)?.uri) { "Failed to create file" }
             }
             else -> throw IOException("Unsupported URI scheme: ${parent.scheme}")
@@ -106,7 +110,9 @@ class SafIo(val context: Context) {
                 Uri.fromFile(targetDir)
             }
             "content" -> {
-                var current = DocumentFile.fromTreeUri(context, parent) ?: error("Invalid parent")
+                var current = DocumentFile.fromTreeUri(context, parent)
+                    ?: DocumentFile.fromSingleUri(context, parent)
+                    ?: error("Invalid parent")
                 for (seg in relativePath.split('/').filter { it.isNotBlank() }) {
                     current = current.findFile(seg) ?: current.createDirectory(seg)!!
                 }

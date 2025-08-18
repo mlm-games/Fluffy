@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
@@ -15,6 +16,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import androidx.core.net.toUri
+import java.io.File
 
 class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
 
@@ -28,10 +30,11 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
 
         val level = AppGraph.settings.settingsFlow.first().zipCompressionLevel.coerceIn(0, 9)
 
-        val pairs: List<Pair<String, () -> java.io.InputStream>> = sourcesIn.map { uri ->
-            val name = AppGraph.io.queryDisplayName(uri)
-            name to { AppGraph.io.openIn(uri) }
+        val pairs = mutableListOf<Pair<String, () -> java.io.InputStream>>()
+        for (src in sourcesIn) {
+            collectFilesRec(src, AppGraph.io.queryDisplayName(src), pairs)
         }
+
         val outUri = AppGraph.io.createFile(targetDir, outName, "application/zip")
         val writeTarget: () -> java.io.OutputStream = { AppGraph.io.openOut(outUri) }
 
@@ -50,6 +53,33 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
 
         setProgressAsync(workDataOf("progress" to 1f))
         Result.success()
+    }
+
+    private fun collectFilesRec(
+        uri: Uri,
+        relPath: String,
+        out: MutableList<Pair<String, () -> java.io.InputStream>>
+    ) {
+        val df = AppGraph.io.docFileFromUri(uri)
+        if (uri.scheme == "content" && df != null) {
+            if (df.isDirectory) {
+                df.listFiles().forEach { child ->
+                    val childName = "${relPath.trimEnd('/')}/${child.name ?: "item"}"
+                    collectFilesRec(child.uri, childName, out)
+                }
+            } else {
+                out += relPath to { AppGraph.io.openIn(uri) }
+            }
+        } else {
+            val f = File(requireNotNull(uri.path))
+            if (f.isDirectory) {
+                f.listFiles()?.forEach { child ->
+                    collectFilesRec(Uri.fromFile(child), "${relPath.trimEnd('/')}/${child.name}", out)
+                }
+            } else {
+                out += relPath to { f.inputStream() }
+            }
+        }
     }
 
     private fun createForeground(title: String): ForegroundInfo {

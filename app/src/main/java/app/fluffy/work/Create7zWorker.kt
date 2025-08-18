@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.work.CoroutineWorker
@@ -17,6 +18,7 @@ import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry
 import org.apache.commons.compress.archivers.sevenz.SevenZOutputFile
 import java.io.File
 import androidx.core.net.toUri
+import java.io.InputStream
 
 class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
 
@@ -29,59 +31,31 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
         val password = inputData.getString(KEY_PASSWORD)?.takeIf { it.isNotEmpty() }?.toCharArray()
 
         val outTmp = File(applicationContext.cacheDir, "create_${System.currentTimeMillis()}.7z")
-        
+
         try {
-            val sevenZFile = if (password != null) {
-                SevenZOutputFile(outTmp, password)
-            } else {
-                SevenZOutputFile(outTmp)
-            }
-            
-            sevenZFile.use { archive ->
-                val total = sources.size
+            val sevenZ = if (password != null) SevenZOutputFile(outTmp, password) else SevenZOutputFile(outTmp)
+            sevenZ.use { archive ->
                 var done = 0
-                
+                val total = sources.size.coerceAtLeast(1)
                 for (uri in sources) {
-                    val fileName = AppGraph.io.queryDisplayName(uri)
-                    
-                    // Create entry
-                    val entry = archive.createArchiveEntry(File(fileName), fileName)
-                    archive.putArchiveEntry(entry)
-                    
-                    // Write content
-                    if (!fileName.endsWith("/")) {
-                        AppGraph.io.openIn(uri).use { input ->
-                            val buffer = ByteArray(8192)
-                            var len = input.read(buffer)
-                            while (len > 0) {
-                                archive.write(buffer, 0, len)
-                                len = input.read(buffer)
-                            }
-                        }
-                    }
-                    
-                    archive.closeArchiveEntry()
+                    val baseName = AppGraph.io.queryDisplayName(uri)
+                    addTo7z(archive, uri, baseName)
                     done++
                     setProgress(workDataOf("progress" to (done.toFloat() / total)))
                 }
             }
-            
-            // Now copy the temp file to the target location
+
             val outUri = AppGraph.io.createFile(targetDir, outName, "application/x-7z-compressed")
             AppGraph.io.openOut(outUri).use { out ->
-                outTmp.inputStream().use { input ->
-                    input.copyTo(out)
-                }
+                outTmp.inputStream().use { input -> input.copyTo(out) }
             }
-            
+
             setProgress(workDataOf("progress" to 1f))
             Result.success()
-            
         } catch (e: Exception) {
             e.printStackTrace()
-            Result.failure()
+            Result.failure(workDataOf("error" to (e.message ?: e.toString())))
         } finally {
-            // Clean up temp file
             outTmp.delete()
         }
     }
@@ -101,6 +75,60 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
             .build()
         return ForegroundInfo((System.currentTimeMillis() % Int.MAX_VALUE).toInt(), n)
     }
+
+    private fun addTo7z(archive: SevenZOutputFile, uri: Uri, relPath: String) {
+        val df = AppGraph.io.docFileFromUri(uri)
+        if (uri.scheme == "content" && df != null) {
+            if (df.isDirectory) {
+                // Directory entry
+                val dirEntry = SevenZArchiveEntry().apply {
+                    name = ensureDirSuffix(relPath)
+                    isDirectory = true
+                }
+                archive.putArchiveEntry(dirEntry)
+                archive.closeArchiveEntry()
+                df.listFiles().forEach { child ->
+                    val childName = "${relPath.trimEnd('/')}/${child.name ?: "item"}"
+                    addTo7z(archive, child.uri, childName)
+                }
+            } else {
+                val entry = SevenZArchiveEntry().apply { name = relPath }
+                archive.putArchiveEntry(entry)
+                AppGraph.io.openIn(uri).use { copyToSevenZ(it, archive) }
+                archive.closeArchiveEntry()
+            }
+        } else {
+            val f = File(requireNotNull(uri.path))
+            if (f.isDirectory) {
+                val dirEntry = SevenZArchiveEntry().apply {
+                    name = ensureDirSuffix(relPath)
+                    isDirectory = true
+                }
+                archive.putArchiveEntry(dirEntry)
+                archive.closeArchiveEntry()
+                f.listFiles()?.forEach { child ->
+                    addTo7z(archive, Uri.fromFile(child), "${relPath.trimEnd('/')}/${child.name}")
+                }
+            } else {
+                val entry = SevenZArchiveEntry().apply { name = relPath }
+                archive.putArchiveEntry(entry)
+                f.inputStream().use { copyToSevenZ(it, archive) }
+                archive.closeArchiveEntry()
+            }
+        }
+    }
+
+    private fun copyToSevenZ(input: InputStream, archive: SevenZOutputFile) {
+        val buffer = ByteArray(8192)
+        var len = input.read(buffer)
+        while (len > 0) {
+            archive.write(buffer, 0, len)
+            len = input.read(buffer)
+        }
+    }
+
+    private fun ensureDirSuffix(name: String) = if (name.endsWith("/")) name else "$name/"
+
 
     companion object {
         const val KEY_SOURCES = "sources"
