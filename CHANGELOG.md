@@ -1,3 +1,14 @@
+## v2.2.8
+
+- Update android.yml
+- Update build.gradle.kts
+- Previous openAsFolder change commit
+- fix -Ptargetabi building all abis
+- Add error screen instead of just crashing
+- bootable, testable (basic) push with zipxtract like screen for now
+- first commit
+
+
 ## v2.2.7
 
 - Remove unused firebase lib and downgrade gradle for fdroid compat
