@@ -29,44 +29,60 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
         val name = AppGraph.io.queryDisplayName(archive)
         val open = { AppGraph.io.openIn(archive) }
 
-        fun shouldInclude(path: String): Boolean {
-            val p = normalize(path)
-            val inc = include ?: return true
-            return inc.any { sel -> p == sel || p.startsWith("$sel/") }
-        }
+        try {
+            fun shouldInclude(path: String): Boolean {
+                val p = normalize(path)
+                val inc = include ?: return true
+                return inc.any { sel -> p == sel || p.startsWith("$sel/") }
+            }
 
-        val create: (String, Boolean) -> OutputStream = { path, isDir ->
-            val clean = path.trimStart('/').replace('\\', '/')
-            if (!shouldInclude(clean)) {
-                object : OutputStream() {
-                    override fun write(b: Int) {}
-                    override fun write(b: ByteArray, off: Int, len: Int) {}
-                }
-            } else {
-                val parent = clean.substringBeforeLast('/', "")
-                val fileName = clean.substringAfterLast('/').ifEmpty { "item" }
-                val parentUri = if (parent.isNotEmpty()) AppGraph.io.ensureDir(targetDir, parent) else targetDir
-                if (isDir || clean.endsWith("/")) {
-                    AppGraph.io.ensureDir(targetDir, clean)
-                    object : OutputStream() { override fun write(b: Int) {} }
+            val create: (String, Boolean) -> OutputStream = { path, isDir ->
+                val clean = path.trimStart('/').replace('\\', '/')
+                if (!shouldInclude(clean)) {
+                    // Null output stream for skipped files
+                    object : OutputStream() {
+                        override fun write(b: Int) {}
+                        override fun write(b: ByteArray, off: Int, len: Int) {}
+                    }
                 } else {
-                    val fileUri = AppGraph.io.createFile(parentUri, fileName)
-                    AppGraph.io.openOut(fileUri)
+                    val parent = clean.substringBeforeLast('/', "")
+                    val fileName = clean.substringAfterLast('/').ifEmpty { "item" }
+                    val parentUri = if (parent.isNotEmpty()) {
+                        AppGraph.io.ensureDir(targetDir, parent)
+                    } else {
+                        targetDir
+                    }
+
+                    if (isDir || clean.endsWith("/")) {
+                        AppGraph.io.ensureDir(targetDir, clean)
+                        object : OutputStream() {
+                            override fun write(b: Int) {}
+                        }
+                    } else {
+                        val mime = app.fluffy.io.FileSystemAccess.getMimeType(fileName)
+                        val fileUri = AppGraph.io.createFile(parentUri, fileName, mime)
+                        AppGraph.io.openOut(fileUri)
+                    }
                 }
             }
+
+            setProgress(workDataOf("progress" to 0f))
+
+            // Use the archive engine to extract
+            AppGraph.archive.extractAll(name, open, create, password) { done, total ->
+                val frac = if (total > 0) done.toFloat() / total else 0.0f
+                setProgressAsync(workDataOf("progress" to frac))
+            }
+
+            setProgress(workDataOf("progress" to 1f))
+            Result.success()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return@withContext Result.failure(
+                workDataOf("error" to (e.message ?: e.toString()))
+            )
         }
-
-        setProgress(workDataOf("progress" to 0f))
-
-        AppGraph.archive.extractAll(name, open, create, password) { done, total ->
-            val frac = if (total > 0) done.toFloat() / total else 0.0f
-            // Use non-suspending variant inside the callback
-            setProgressAsync(workDataOf("progress" to frac))
-            if (isStopped) return@extractAll
-        }
-
-        setProgressAsync(workDataOf("progress" to 1f))
-        Result.success()
     }
 
     private fun normalize(path: String): String =
@@ -76,7 +92,9 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
         val channelId = "fluffy.work"
         val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(channelId) == null) {
-            nm.createNotificationChannel(NotificationChannel(channelId, "Background tasks", NotificationManager.IMPORTANCE_LOW))
+            nm.createNotificationChannel(
+                NotificationChannel(channelId, "Background tasks", NotificationManager.IMPORTANCE_LOW)
+            )
         }
         val n: Notification = NotificationCompat.Builder(applicationContext, channelId)
             .setContentTitle(title)

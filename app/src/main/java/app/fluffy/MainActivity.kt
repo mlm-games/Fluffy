@@ -113,14 +113,19 @@ class MainActivity : ComponentActivity() {
 
         val pickTargetDir = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
             val target = uri ?: return@registerForActivityResult
+            try {
+                contentResolver.takePersistableUriPermission(
+                    target,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+            } catch (_: SecurityException) { }
+
             lifecycleScope.launch {
                 pendingCopy?.let { list ->
-                    tasksVM.enqueueCopy(list, target)
-                    pendingCopy = null
+                    tasksVM.enqueueCopy(list, target); pendingCopy = null
                 }
                 pendingMove?.let { list ->
-                    tasksVM.enqueueMove(list, target)
-                    pendingMove = null
+                    tasksVM.enqueueMove(list, target); pendingMove = null
                 }
                 pendingExtractArchive?.let { arch ->
                     tasksVM.enqueueExtract(arch, target, pendingExtractPassword, pendingExtractPaths)
@@ -130,7 +135,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
         setContent {
             val settings by AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings())
             var showPermissionDialog by remember { mutableStateOf(false) }

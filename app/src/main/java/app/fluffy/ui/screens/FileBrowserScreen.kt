@@ -494,7 +494,7 @@ fun FileBrowserScreen(
                 TextButton(
                     onClick = {
                         if (folderName.isNotBlank()) {
-                            // Handle folder creation based on current location
+                            // TODO:, onCreateFolder: (String) -> Unit to FileBrowserScreen and wire it to filesVM.createNewFolder(name)
                             showNewFolderDialog = false
                         }
                     }

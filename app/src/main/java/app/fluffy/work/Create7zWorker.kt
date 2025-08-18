@@ -28,47 +28,71 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
         val outName = inputData.getString(KEY_OUT_NAME)?.ifBlank { "archive.7z" } ?: "archive.7z"
         val password = inputData.getString(KEY_PASSWORD)?.takeIf { it.isNotEmpty() }?.toCharArray()
 
-        val outTmp = File.createTempFile("fluffy-", ".7z", applicationContext.cacheDir)
-        val out = if (password != null) SevenZOutputFile(outTmp, password) else SevenZOutputFile(outTmp)
+        val outTmp = File(applicationContext.cacheDir, "create_${System.currentTimeMillis()}.7z")
+        
         try {
-            val buf = ByteArray(128 * 1024)
-            for (uri in sources) {
-                val fileName = AppGraph.io.queryDisplayName(uri)
-                val entry = SevenZArchiveEntry().apply { name = fileName }
-                out.putArchiveEntry(entry)
-                if (!fileName.endsWith("/")) {
-                    AppGraph.io.openIn(uri).use { input ->
-                        var r = input.read(buf)
-                        while (r > 0) {
-                            out.write(buf, 0, r)
-                            r = input.read(buf)
+            val sevenZFile = if (password != null) {
+                SevenZOutputFile(outTmp, password)
+            } else {
+                SevenZOutputFile(outTmp)
+            }
+            
+            sevenZFile.use { archive ->
+                val total = sources.size
+                var done = 0
+                
+                for (uri in sources) {
+                    val fileName = AppGraph.io.queryDisplayName(uri)
+                    
+                    // Create entry
+                    val entry = archive.createArchiveEntry(File(fileName), fileName)
+                    archive.putArchiveEntry(entry)
+                    
+                    // Write content
+                    if (!fileName.endsWith("/")) {
+                        AppGraph.io.openIn(uri).use { input ->
+                            val buffer = ByteArray(8192)
+                            var len = input.read(buffer)
+                            while (len > 0) {
+                                archive.write(buffer, 0, len)
+                                len = input.read(buffer)
+                            }
                         }
                     }
+                    
+                    archive.closeArchiveEntry()
+                    done++
+                    setProgress(workDataOf("progress" to (done.toFloat() / total)))
                 }
-                out.closeArchiveEntry()
             }
-        } catch (_: Throwable) {
-            runCatching { out.close() }
+            
+            // Now copy the temp file to the target location
+            val outUri = AppGraph.io.createFile(targetDir, outName, "application/x-7z-compressed")
+            AppGraph.io.openOut(outUri).use { out ->
+                outTmp.inputStream().use { input ->
+                    input.copyTo(out)
+                }
+            }
+            
+            setProgress(workDataOf("progress" to 1f))
+            Result.success()
+            
+        } catch (e: Exception) {
+            e.printStackTrace()
+            Result.failure()
+        } finally {
+            // Clean up temp file
             outTmp.delete()
-            return@withContext Result.failure()
         }
-        runCatching { out.close() }
-
-        val outUri = AppGraph.io.createFile(targetDir, outName, "application/x-7z-compressed")
-        AppGraph.io.openOut(outUri).use { sink ->
-            outTmp.inputStream().use { it.copyTo(sink) }
-        }
-        runCatching { outTmp.delete() }
-
-        setProgress(workDataOf("progress" to 1f))
-        Result.success()
     }
 
     private fun createForeground(title: String): ForegroundInfo {
         val channelId = "fluffy.work"
         val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(channelId) == null) {
-            nm.createNotificationChannel(NotificationChannel(channelId, "Background tasks", NotificationManager.IMPORTANCE_LOW))
+            nm.createNotificationChannel(
+                NotificationChannel(channelId, "Background tasks", NotificationManager.IMPORTANCE_LOW)
+            )
         }
         val n: Notification = NotificationCompat.Builder(applicationContext, channelId)
             .setContentTitle(title)
