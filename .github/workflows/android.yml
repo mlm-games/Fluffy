@@ -134,7 +134,7 @@ jobs:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew :app:bundleRelease
+        run: ./gradlew :app:bundleRelease -PenableApkSplits=false
       
       - name: Prepare AAB artifact
         run: |
@@ -162,7 +162,7 @@ jobs:
           STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
-        run: ./gradlew -PenableApkSplits=true :app:assembleRelease
+        run: ./gradlew :app:assembleRelease
           
       - name: Prepare APKs
         run: |
