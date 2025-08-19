@@ -11,6 +11,7 @@ import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -18,6 +19,7 @@ import app.fluffy.AppGraph
 import app.fluffy.archive.ArchiveEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,81 +42,123 @@ fun ArchiveViewerScreen(
     val selected = remember { mutableStateMapOf<String, Boolean>() }
 
     suspend fun load() {
-        loading = true
-        error = null
-        canOpenAsFolder = false
-        val name = AppGraph.io.queryDisplayName(archiveUri)
-        title = name
+    loading = true
+    error = null
+    canOpenAsFolder = false
+    val name = AppGraph.io.queryDisplayName(archiveUri)
+    title = name
 
-        // Check MIME type first to determine if it's an archive
-        val doc = AppGraph.io.docFileFromUri(archiveUri)
-        val mimeType = doc?.type ?: ""
-        val fileName = name.lowercase()
+    // Inspect mime and extension
+    val doc = AppGraph.io.docFileFromUri(archiveUri)
+    val mimeType = doc?.type ?: ""
+    val fileName = name.lowercase()
 
-        // Check if it's actually an archive file
-        val isArchive = mimeType.contains("zip") ||
-                mimeType.contains("x-7z") ||
-                mimeType.contains("x-tar") ||
-//                mimeType.contains("x-rar") ||
-                fileName.endsWith(".zip") ||
-                fileName.endsWith(".7z") ||
-                fileName.endsWith(".tar") ||
-                fileName.endsWith(".tar.gz") ||
-                fileName.endsWith(".tar.bz2") ||
-                fileName.endsWith(".tar.xz")
-//                fileName.endsWith(".rar") Might have OSS option later
+    val isZipLike = fileName.endsWith(".zip") ||
+            fileName.endsWith(".apk") ||
+            fileName.endsWith(".jar")
 
-        // If DocumentFile reports it as directory but it has archive extension,
-        // it might be a mounted archive by the system
-        if (doc?.isDirectory == true && !isArchive) {
-            loading = false
-            error = "Selected item is a folder."
-            canOpenAsFolder = true
-            listing = emptyList()
-            return
-        }
+    // Check if it's actually an archive file
+    val isArchive = mimeType.contains("zip") ||
+            mimeType.contains("x-7z") ||
+            mimeType.contains("x-tar") ||
+            fileName.endsWith(".zip") ||
+            fileName.endsWith(".7z") ||
+            fileName.endsWith(".tar") ||
+            fileName.endsWith(".tar.gz") ||
+            fileName.endsWith(".tar.bz2") ||
+            fileName.endsWith(".tar.xz")
 
-        val result = runCatching {
-            withContext(Dispatchers.IO) {
-                AppGraph.archive.list(
-                    name,
-                    { AppGraph.io.openIn(archiveUri) },
-                    password = password.ifBlank { null }?.toCharArray()
-                )
-            }
-        }
-
-        result.onSuccess { res ->
-            encrypted = res.encrypted
-            listing = res.entries
-            loading = false
-            if (encrypted && password.isBlank()) {
-                askPassword = true
-            }
-        }.onFailure { ex ->
-            loading = false
-            listing = emptyList()
-            val msg = ex.localizedMessage ?: "Unknown error"
-
-            error = when {
-                msg.contains("EISDIR", ignoreCase = true) ||
-                        msg.contains("is a directory", ignoreCase = true) -> {
-                    canOpenAsFolder = true
-                    "This appears to be a folder, not an archive."
-                }
-                msg.contains("password", ignoreCase = true) -> {
-                    askPassword = true
-                    "This archive is password protected."
-                }
-                msg.contains("not supported", ignoreCase = true) -> {
-                    "Archive format not supported."
-                }
-                else -> "Failed to open archive: $msg"
-            }
-        }
-
-        selected.clear()
+    // If DocumentFile reports it as directory but it has archive extension,
+    // it might be a mounted archive by the system
+    if (doc?.isDirectory == true && !isArchive) {
+        loading = false
+        error = "Selected item is a folder."
+        canOpenAsFolder = true
+        listing = emptyList()
+        return
     }
+
+    // Fallback lister for ZIP/APK using Apache Commons Compress (more tolerant than zip4j)
+    fun listWithCommonsZip(): List<ArchiveEngine.Entry> = runCatching {
+        AppGraph.io.openIn(archiveUri).use { input ->
+            ZipArchiveInputStream(input).use { zin ->
+                val out = mutableListOf<ArchiveEngine.Entry>()
+                var e = zin.nextZipEntry
+                while (e != null) {
+                    val n = e.name ?: ""
+                    if (n.isNotBlank()) {
+                        out.add(
+                            ArchiveEngine.Entry(
+                                path = n,
+                                isDir = e.isDirectory,
+                                size = if (e.size >= 0) e.size else 0L,
+                                time = e.time
+                            )
+                        )
+                    }
+                    e = zin.nextZipEntry
+                }
+                out
+            }
+        }
+    }.getOrElse { emptyList() }
+
+    val result = runCatching {
+        withContext(Dispatchers.IO) {
+            AppGraph.archive.list(
+                name,
+                { AppGraph.io.openIn(archiveUri) },
+                password = password.ifBlank { null }?.toCharArray()
+            )
+        }
+    }
+
+    result.onSuccess { res ->
+        encrypted = res.encrypted
+        listing = res.entries
+        loading = false
+        if (encrypted && password.isBlank()) {
+            askPassword = true
+        }
+        // Handle case where archives with only folders appear empty due to strict parser
+        if (listing.isEmpty() && isZipLike) {
+            val fb = withContext(Dispatchers.IO) { listWithCommonsZip() }
+            if (fb.isNotEmpty()) listing = fb
+        }
+    }.onFailure { ex ->
+        loading = false
+        listing = emptyList()
+
+        // Fallback to Commons Compress for ZIP/APK on failure (e.g., zip4j ZipException)
+        if (isZipLike) {
+            val fb = withContext(Dispatchers.IO) { listWithCommonsZip() }
+            if (fb.isNotEmpty()) {
+                error = null
+                listing = fb
+                return@onFailure
+            }
+        }
+
+        val msg = ex.localizedMessage ?: "Unknown error"
+        error = when {
+            msg.contains("EISDIR", ignoreCase = true) ||
+                    msg.contains("is a directory", ignoreCase = true) -> {
+                canOpenAsFolder = true
+                "This appears to be a folder, not an archive."
+            }
+            msg.contains("password", ignoreCase = true) -> {
+                askPassword = true
+                "This archive is password protected."
+            }
+            msg.contains("not supported", ignoreCase = true) -> {
+                "Archive format not supported."
+            }
+            else -> "Failed to open archive: $msg"
+        }
+    }
+
+    selected.clear()
+}
 
     LaunchedEffect(archiveUri) { load() }
     LaunchedEffect(password) { if (password.isNotEmpty()) load() }
@@ -152,7 +196,7 @@ fun ArchiveViewerScreen(
         Column(Modifier.fillMaxSize().padding(pv)) {
             when {
                 loading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         CircularProgressIndicator()
                     }
                 }
@@ -221,6 +265,20 @@ fun ArchiveViewerScreen(
                                 )
                             }
                         }
+                    }
+                }
+                else -> {
+                    Box(
+                        Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "No entries found in this archive.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 }
             }

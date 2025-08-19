@@ -27,7 +27,10 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
         val archive = inputData.getString(KEY_ARCHIVE)?.toUri() ?: return@withContext Result.failure()
         val targetDir = inputData.getString(KEY_TARGET_DIR)?.toUri() ?: return@withContext Result.failure()
         val password = inputData.getString(KEY_PASSWORD)?.takeIf { it.isNotEmpty() }?.toCharArray()
-        val include = inputData.getStringArray(KEY_INCLUDE_PATHS)?.toSet()?.map { normalize(it) }?.toSet()
+        val include = inputData.getStringArray(KEY_INCLUDE_PATHS)
+            ?.takeIf { it.isNotEmpty() }
+            ?.map { normalize(it) }
+            ?.toSet()
 
         val name = AppGraph.io.queryDisplayName(archive)
         val open = { AppGraph.io.openIn(archive) }
@@ -75,7 +78,8 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                     setProgressAsync(workDataOf("progress" to frac))
                 }
             } catch (e: ZipException) {
-                // Fallback for strict/invalid zips (e.g., some APKs)
+                e.printStackTrace()
+                println("Fallback for strict/invalid zips (e.g., some APKs")
                 open().use { input ->
                     ZipArchiveInputStream(input).use { zin ->
                         var entry = zin.nextZipEntry
