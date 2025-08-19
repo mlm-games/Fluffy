@@ -21,6 +21,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -38,6 +39,7 @@ import app.fluffy.ui.screens.*
 import app.fluffy.ui.theme.FluffyTheme
 import app.fluffy.viewmodel.*
 import kotlinx.coroutines.launch
+import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -236,6 +238,10 @@ class MainActivity : ComponentActivity() {
                                     },
                                     onCreateFolder = { name ->
                                         filesVM.createNewFolder(name)
+                                    },
+                                    onOpenWith = { uri, name ->
+                                        val final = if (uri.scheme == "file") contentUriFor(File(uri.path!!)) else uri
+                                        openWith(final, name)
                                     }
                                 )
                             }
@@ -252,7 +258,7 @@ class MainActivity : ComponentActivity() {
                                 val encoded = backStack.arguments?.getString("uri") ?: ""
                                 val uri = try {
                                     URLDecoder.decode(encoded, StandardCharsets.UTF_8.name()).toUri()
-                                } catch (e: Exception) {
+                                } catch (_: Exception) {
                                     null
                                 }
 
@@ -408,4 +414,22 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
+
+    private fun openWith(uri: Uri, displayName: String) {
+        val mime = FileSystemAccess.getMimeType(displayName)
+        val view = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, mime)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        startActivity(Intent.createChooser(view, "Open with"))
+    }
+
+    private fun contentUriFor(file: File): Uri {
+        return try {
+            FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
+        } catch (_: Exception) {
+            Uri.fromFile(file)
+        }
+    }
+
 }

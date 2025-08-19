@@ -45,6 +45,7 @@ fun FileBrowserScreen(
     onCreateZip: (List<Uri>, String, Uri) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenTasks: () -> Unit,
+    onOpenWith: (Uri, String) -> Unit = { _, _ -> },
     onOpenArchive: (Uri) -> Unit,
     onCopySelected: (List<Uri>) -> Unit = {},
     onMoveSelected: (List<Uri>) -> Unit = {},
@@ -239,6 +240,19 @@ fun FileBrowserScreen(
                                             leadingIcon = {
                                                 Icon(
                                                     Icons.Default.Edit,
+                                                    contentDescription = null,
+                                                    modifier = Modifier.size(18.dp)
+                                                )
+                                            }
+                                        )
+                                        AssistChip(
+                                            onClick = {
+                                                onOpenWith(allSelectedUris.first(), "")
+                                            },
+                                            label = { Text("Open With") },
+                                            leadingIcon = {
+                                                Icon(
+                                                    Icons.Default.OpenWith,
                                                     contentDescription = null,
                                                     modifier = Modifier.size(18.dp)
                                                 )
