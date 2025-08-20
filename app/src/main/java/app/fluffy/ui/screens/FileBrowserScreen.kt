@@ -564,6 +564,9 @@ private fun FileSystemRow(
     val isArchive = remember(file.name) {
         FileSystemAccess.isArchiveFile(file.name)
     }
+    val itemCount by produceState<Int?>(initialValue = null, file) {
+        value = if (file.isDirectory) file.listFiles()?.size ?: 0 else null
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -604,8 +607,13 @@ private fun FileSystemRow(
                     overflow = TextOverflow.Ellipsis
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val left = if (file.isDirectory) {
+                        val c = itemCount ?: 0
+                        "$c item${if (c == 1) "" else "s"}"
+                    } else formatFileSize(file.length())
+
                     Text(
-                        if (file.isDirectory) "Folder" else formatFileSize(file.length()),
+                        left,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
