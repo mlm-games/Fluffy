@@ -246,6 +246,7 @@ class DefaultArchiveEngine(
         TarArchiveInputStream(open()).use { tin ->
             val buf = ByteArray(128 * 1024)
             var e = tin.nextEntry
+            var totalWritten = 0L
             while (e != null) {
                 val name = e.name
                 if (e.isDirectory || name.endsWith("/")) {
@@ -255,6 +256,8 @@ class DefaultArchiveEngine(
                         var r = tin.read(buf)
                         while (r > 0) {
                             out.write(buf, 0, r)
+                            totalWritten += r
+                            onProgress(totalWritten, -1L)
                             r = tin.read(buf)
                         }
                     }
