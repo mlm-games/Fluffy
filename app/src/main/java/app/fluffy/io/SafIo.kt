@@ -186,7 +186,7 @@ class SafIo(val context: Context) {
 
     fun docFileFromUri(uri: Uri): DocumentFile? {
         return when (uri.scheme) {
-            "file" -> null // Return null for file URIs, handle separately
+            "file" -> null
             "content" -> DocumentFile.fromSingleUri(context, uri) ?: DocumentFile.fromTreeUri(context, uri)
             else -> null
         }
@@ -222,15 +222,13 @@ class SafIo(val context: Context) {
         when (srcUri.scheme) {
             "file" -> {
                 val srcFile = File(srcUri.path!!)
-                val targetDir = when (targetParent.scheme) {
-                    "file" -> File(targetParent.path!!)
-                    else -> return@withContext false
-                }
-                copyFileRecursive(srcFile, targetDir)
+                // Support both file:// and content:// targets
+                copyFileToTargetRecursive(srcFile, targetParent)
                 true
             }
             "content" -> {
                 val src = docFileFromUri(srcUri) ?: return@withContext false
+                // copyDocRecursive supports both file:// and content:// targets via createFile/ensureDir
                 copyDocRecursive(src, targetParent)
                 true
             }
@@ -238,22 +236,25 @@ class SafIo(val context: Context) {
         }
     }
 
-    private fun copyFileRecursive(src: File, targetDir: File) {
-        val target = File(targetDir, src.name)
+    private fun copyFileToTargetRecursive(src: File, targetParent: Uri) {
+        val name = src.name
         if (src.isDirectory) {
-            target.mkdirs()
+            val newParent = ensureDir(targetParent, name)
             src.listFiles()?.forEach { child ->
-                copyFileRecursive(child, target)
+                copyFileToTargetRecursive(child, newParent)
             }
         } else {
-            src.copyTo(target, overwrite = true)
+            val mime = FileSystemAccess.getMimeType(name)
+            val target = createFile(targetParent, name, mime)
+            FileInputStream(src).use { input ->
+                openOut(target).use { out -> input.copyTo(out) }
+            }
         }
     }
 
     suspend fun moveIntoDir(srcUri: Uri, targetParent: Uri): Boolean = withContext(Dispatchers.IO) {
         val ok = copyIntoDir(srcUri, targetParent)
-        if (ok) deleteTree(srcUri)
-        ok
+        if (ok) deleteTree(srcUri) else false
     }
 
     suspend fun deleteTree(uri: Uri): Boolean = withContext(Dispatchers.IO) {

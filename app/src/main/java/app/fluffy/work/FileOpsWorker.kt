@@ -31,12 +31,20 @@ class FileOpsWorker(appContext: Context, params: WorkerParameters) : CoroutineWo
         val total = sources.size.coerceAtLeast(1)
         sources.forEachIndexed { index, uri ->
             if (isStopped) return@withContext Result.failure()
-            try {
+            val ok = try {
                 when (op) {
                     OP_MOVE -> AppGraph.io.moveIntoDir(uri, target)
                     else -> AppGraph.io.copyIntoDir(uri, target)
                 }
-            } catch (_: Exception) { return@withContext Result.failure() }
+            } catch (e: Exception) {
+                e.printStackTrace()
+                false
+            }
+            if (!ok) {
+                return@withContext Result.failure(
+                    workDataOf("error" to "Failed to $op: ${uri}")
+                )
+            }
             val progress = (index + 1).toFloat() / total
             setProgress(workDataOf("progress" to progress))
         }
@@ -65,4 +73,3 @@ class FileOpsWorker(appContext: Context, params: WorkerParameters) : CoroutineWo
         const val OP_MOVE = "move"
     }
 }
-
