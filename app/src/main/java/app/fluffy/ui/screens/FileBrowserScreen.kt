@@ -279,6 +279,22 @@ fun FileBrowserScreen(
                                 Row(
                                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                                 ) {
+                                    if (count == 1) {
+                                        TextButton(onClick = {
+                                            renameTarget = allSelectedUris.first()
+                                            renameNewName = ""
+                                            showRenameDialog = true
+                                        }) {
+                                            Text("Rename")
+                                        }
+                                        TextButton(
+                                            onClick = {
+                                                onOpenWith(allSelectedUris.first(), "")
+                                            },
+                                        ) {
+                                            Text("Open With")
+                                        }
+                                    }
                                     TextButton(onClick = { showZipNameDialog = true }) {
                                         Text("Zip")
                                     }
@@ -297,15 +313,6 @@ fun FileBrowserScreen(
                                         selectedFiles.clear()
                                     }) {
                                         Text("Delete")
-                                    }
-                                    if (count == 1) {
-                                        TextButton(onClick = {
-                                            renameTarget = allSelectedUris.first()
-                                            renameNewName = ""
-                                            showRenameDialog = true
-                                        }) {
-                                            Text("Rename")
-                                        }
                                     }
                                 }
 
