@@ -11,7 +11,6 @@ import net.lingala.zip4j.model.enums.CompressionLevel
 import net.lingala.zip4j.model.enums.CompressionMethod
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry
 import org.apache.commons.compress.archivers.sevenz.SevenZFile
-import org.apache.commons.compress.archivers.sevenz.SevenZOutputFile
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveInputStream
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry
@@ -68,7 +67,6 @@ class DefaultArchiveEngine(
         password: CharArray?,
         onProgress: (Long, Long) -> Unit
     ) = withContext(Dispatchers.IO) {
-        // Ensure you’re using zip4j’s ZipOutputStream
         val out = if (password != null) {
             ZipOutputStream(writeTarget(), password)
         } else {
@@ -76,7 +74,6 @@ class DefaultArchiveEngine(
         }
 
         out.use { zout ->
-            // Map Int (0..9) to zip4j CompressionLevel
             val lvl = when (compressionLevel.coerceIn(0, 9)) {
                 0 -> CompressionLevel.NO_COMPRESSION
                 in 1..3 -> CompressionLevel.FASTEST
@@ -90,7 +87,6 @@ class DefaultArchiveEngine(
 
             for ((name, supplier) in sources) {
                 val params = ZipParameters().apply {
-                    // use setters to avoid "val cannot be reassigned"
                     compressionMethod = CompressionMethod.DEFLATE
                     setCompressionLevel(lvl)
                     fileNameInZip = name
@@ -103,7 +99,7 @@ class DefaultArchiveEngine(
                         while (read > 0) {
                             zout.write(buf, 0, read)
                             totalWritten += read
-                            onProgress(totalWritten, -1L) // unknown total, report bytes so far
+                            onProgress(totalWritten, -1L)
                             read = input.read(buf)
                         }
                     }
@@ -112,7 +108,6 @@ class DefaultArchiveEngine(
             }
         }
     }
-
 
     // ZIP
 
@@ -170,7 +165,7 @@ class DefaultArchiveEngine(
         val tmp = stageSevenZTemp(archiveName, open)
         var encrypted = false
         val list = mutableListOf<ArchiveEngine.Entry>()
-        kotlin.runCatching {
+        try {
             SevenZFile(tmp, password).use { z ->
                 var e: SevenZArchiveEntry? = z.nextEntry
                 while (e != null) {
@@ -183,9 +178,10 @@ class DefaultArchiveEngine(
                     e = z.nextEntry
                 }
             }
-        }.onFailure {
-            // If header is encrypted or password is required, mark encrypted flag and return empty list
+        } catch (_: Throwable) {
             encrypted = true
+        } finally {
+            tmp.delete()
         }
         return ArchiveEngine.ListResult(list, encrypted = encrypted)
     }
@@ -198,24 +194,28 @@ class DefaultArchiveEngine(
         onProgress: (Long, Long) -> Unit
     ) {
         val tmp = stageSevenZTemp(archiveName, open)
-        SevenZFile(tmp, password).use { z ->
-            val buf = ByteArray(128 * 1024)
-            var e: SevenZArchiveEntry? = z.nextEntry
-            while (e != null) {
-                val name = e.name
-                if (e.isDirectory || name.endsWith("/")) {
-                    create("$name/", true).use { /* ensure dir */ }
-                } else {
-                    create(name, false).use { out ->
-                        var r = z.read(buf) // reads current entry bytes
-                        while (r > 0) {
-                            out.write(buf, 0, r)
-                            r = z.read(buf)
+        try {
+            SevenZFile(tmp, password).use { z ->
+                val buf = ByteArray(128 * 1024)
+                var e: SevenZArchiveEntry? = z.nextEntry
+                while (e != null) {
+                    val name = e.name
+                    if (e.isDirectory || name.endsWith("/")) {
+                        create("$name/", true).use { /* ensure dir */ }
+                    } else {
+                        create(name, false).use { out ->
+                            var r = z.read(buf)
+                            while (r > 0) {
+                                out.write(buf, 0, r)
+                                r = z.read(buf)
+                            }
                         }
                     }
+                    e = z.nextEntry
                 }
-                e = z.nextEntry
             }
+        } finally {
+            tmp.delete()
         }
     }
 
@@ -224,7 +224,7 @@ class DefaultArchiveEngine(
         return io.stageToTemp(safe) { open() }
     }
 
-    // TAR rekated
+    // TAR related
 
     private fun listTar(open: () -> InputStream): ArchiveEngine.ListResult {
         TarArchiveInputStream(open()).use { tin ->
@@ -270,12 +270,12 @@ class DefaultArchiveEngine(
         val n = name.lowercase(Locale.ROOT)
         return when {
             n.endsWith(".7z") -> Kind.SEVENZ
-            n.endsWith(".zip") -> Kind.ZIP
+            n.endsWith(".zip") || n.endsWith(".jar") || n.endsWith(".apk") -> Kind.ZIP
             n.endsWith(".tar.gz") || n.endsWith(".tgz") -> Kind.TARGZ
             n.endsWith(".tar.bz2") || n.endsWith(".tbz2") -> Kind.TARBZ2
             n.endsWith(".tar.xz") || n.endsWith(".txz") -> Kind.TARXZ
             n.endsWith(".tar") -> Kind.TAR
-            else -> Kind.ZIP // default guess
+            else -> Kind.ZIP
         }
     }
 }

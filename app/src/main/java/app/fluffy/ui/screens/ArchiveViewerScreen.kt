@@ -1,7 +1,18 @@
+// File: app/fluffy/ui/screens/ArchiveViewerScreen.kt
 package app.fluffy.ui.screens
 
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -9,17 +20,48 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.FileOpen
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
 import app.fluffy.AppGraph
 import app.fluffy.archive.ArchiveEngine
+import app.fluffy.io.FileSystemAccess
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -30,6 +72,9 @@ fun ArchiveViewerScreen(
     onExtractSelected: (Uri, List<String>, String?) -> Unit = { _, _, _ -> },
     onOpenAsFolder: (Uri) -> Unit
 ) {
+    val ctx = LocalContext.current
+    val scope = rememberCoroutineScope()
+
     var listing by remember { mutableStateOf<List<ArchiveEngine.Entry>>(emptyList()) }
     var title by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(true) }
@@ -40,125 +85,139 @@ fun ArchiveViewerScreen(
     var canOpenAsFolder by remember { mutableStateOf(false) }
     var selectionMode by remember { mutableStateOf(false) }
     val selected = remember { mutableStateMapOf<String, Boolean>() }
+    var currentPath by remember { mutableStateOf("") }
+
+    // Visible (top-level directory within currentPath)
+    val visible = remember(listing, currentPath) {
+        val dirs = mutableMapOf<String, Int>()   // name -> child count
+        val files = mutableListOf<ArchiveEngine.Entry>()
+
+        val prefix = currentPath
+        listing.forEach { e ->
+            val p = e.path.replace('\\', '/')
+            if (!p.startsWith(prefix)) return@forEach
+            val rest = p.removePrefix(prefix)
+            val firstSeg = rest.substringBefore('/', missingDelimiterValue = rest)
+            val isDirectChildDir = rest.contains('/')
+            if (isDirectChildDir) {
+                if (firstSeg.isNotBlank()) dirs[firstSeg] = (dirs[firstSeg] ?: 0) + 1
+            } else if (rest.isNotBlank()) {
+                files += e.copy(path = rest) // leaf name
+            }
+        }
+
+        val dirEntries = dirs.keys.sorted().map { name ->
+            ArchiveEngine.Entry(path = ensureDirSuffix(name), isDir = true, size = 0, time = 0L)
+        }
+        dirEntries + files.sortedBy { it.path.lowercase() }
+    }
 
     suspend fun load() {
-    loading = true
-    error = null
-    canOpenAsFolder = false
-    val name = AppGraph.io.queryDisplayName(archiveUri)
-    title = name
+        loading = true
+        error = null
+        canOpenAsFolder = false
+        val name = AppGraph.io.queryDisplayName(archiveUri)
+        title = name
 
-    // Inspect mime and extension
-    val doc = AppGraph.io.docFileFromUri(archiveUri)
-    val mimeType = doc?.type ?: ""
-    val fileName = name.lowercase()
+        // Inspect mime and extension
+        val doc = AppGraph.io.docFileFromUri(archiveUri)
+        val mimeType = doc?.type ?: ""
+        val fileName = name.lowercase()
 
-    val isZipLike = fileName.endsWith(".zip") ||
-            fileName.endsWith(".apk") ||
-            fileName.endsWith(".jar")
+        val isZipLike = fileName.endsWith(".zip") ||
+                fileName.endsWith(".apk") ||
+                fileName.endsWith(".jar")
 
-    // Check if it's actually an archive file
-    val isArchive = mimeType.contains("zip") ||
-            mimeType.contains("x-7z") ||
-            mimeType.contains("x-tar") ||
-            fileName.endsWith(".zip") ||
-            fileName.endsWith(".7z") ||
-            fileName.endsWith(".tar") ||
-            fileName.endsWith(".tar.gz") ||
-            fileName.endsWith(".tar.bz2") ||
-            fileName.endsWith(".tar.xz")
+        // If DocumentFile reports it as directory but it has no archive traits, allow open-as-folder
+        if (doc?.isDirectory == true && mimeType.startsWith("vnd.android.document") ) {
+            loading = false
+            error = "Selected item is a folder."
+            canOpenAsFolder = true
+            listing = emptyList()
+            return
+        }
 
-    // If DocumentFile reports it as directory but it has archive extension,
-    // it might be a mounted archive by the system
-    if (doc?.isDirectory == true && !isArchive) {
-        loading = false
-        error = "Selected item is a folder."
-        canOpenAsFolder = true
-        listing = emptyList()
-        return
-    }
-
-    // Fallback lister for ZIP/APK using Apache Commons Compress (more tolerant than zip4j)
-    fun listWithCommonsZip(): List<ArchiveEngine.Entry> = runCatching {
-        AppGraph.io.openIn(archiveUri).use { input ->
-            ZipArchiveInputStream(input).use { zin ->
-                val out = mutableListOf<ArchiveEngine.Entry>()
-                var e = zin.nextZipEntry
-                while (e != null) {
-                    val n = e.name ?: ""
-                    if (n.isNotBlank()) {
-                        out.add(
-                            ArchiveEngine.Entry(
-                                path = n,
-                                isDir = e.isDirectory,
-                                size = if (e.size >= 0) e.size else 0L,
-                                time = e.time
+        // Fallback lister for ZIP/APK using Apache Commons Compress
+        fun listWithCommonsZip(): List<ArchiveEngine.Entry> = runCatching {
+            AppGraph.io.openIn(archiveUri).use { input ->
+                ZipArchiveInputStream(input).use { zin ->
+                    val out = mutableListOf<ArchiveEngine.Entry>()
+                    var e = zin.nextZipEntry
+                    while (e != null) {
+                        val n = e.name ?: ""
+                        if (n.isNotBlank()) {
+                            out.add(
+                                ArchiveEngine.Entry(
+                                    path = n,
+                                    isDir = e.isDirectory,
+                                    size = if (e.size >= 0) e.size else 0L,
+                                    time = e.time
+                                )
                             )
-                        )
+                        }
+                        e = zin.nextZipEntry
                     }
-                    e = zin.nextZipEntry
+                    out
                 }
-                out
             }
-        }
-    }.getOrElse { emptyList() }
+        }.getOrElse { emptyList() }
 
-    val result = runCatching {
-        withContext(Dispatchers.IO) {
-            AppGraph.archive.list(
-                name,
-                { AppGraph.io.openIn(archiveUri) },
-                password = password.ifBlank { null }?.toCharArray()
-            )
-        }
-    }
-
-    result.onSuccess { res ->
-        encrypted = res.encrypted
-        listing = res.entries
-        loading = false
-        if (encrypted && password.isBlank()) {
-            askPassword = true
-        }
-        // Handle case where archives with only folders appear empty due to strict parser
-        if (listing.isEmpty() && isZipLike) {
-            val fb = withContext(Dispatchers.IO) { listWithCommonsZip() }
-            if (fb.isNotEmpty()) listing = fb
-        }
-    }.onFailure { ex ->
-        loading = false
-        listing = emptyList()
-
-        // Fallback to Commons Compress for ZIP/APK on failure (e.g., zip4j ZipException)
-        if (isZipLike) {
-            val fb = withContext(Dispatchers.IO) { listWithCommonsZip() }
-            if (fb.isNotEmpty()) {
-                error = null
-                listing = fb
-                return@onFailure
+        val result = runCatching {
+            withContext(Dispatchers.IO) {
+                AppGraph.archive.list(
+                    name,
+                    { AppGraph.io.openIn(archiveUri) },
+                    password = password.ifBlank { null }?.toCharArray()
+                )
             }
         }
 
-        val msg = ex.localizedMessage ?: "Unknown error"
-        error = when {
-            msg.contains("EISDIR", ignoreCase = true) ||
-                    msg.contains("is a directory", ignoreCase = true) -> {
-                canOpenAsFolder = true
-                "This appears to be a folder, not an archive."
-            }
-            msg.contains("password", ignoreCase = true) -> {
+        result.onSuccess { res ->
+            encrypted = res.encrypted
+            listing = res.entries
+            loading = false
+            if (encrypted && password.isBlank()) {
                 askPassword = true
-                "This archive is password protected."
             }
-            msg.contains("not supported", ignoreCase = true) -> {
-                "Archive format not supported."
+            // Handle parser edge cases
+            if (listing.isEmpty() && isZipLike) {
+                val fb = withContext(Dispatchers.IO) { listWithCommonsZip() }
+                if (fb.isNotEmpty()) listing = fb
             }
-            else -> "Failed to open archive: $msg"
-        }
-    }
+        }.onFailure { ex ->
+            loading = false
+            listing = emptyList()
 
-    selected.clear()
-}
+            if (isZipLike) {
+                val fb = withContext(Dispatchers.IO) { listWithCommonsZip() }
+                if (fb.isNotEmpty()) {
+                    error = null
+                    listing = fb
+                    return@onFailure
+                }
+            }
+
+            val msg = ex.localizedMessage ?: "Unknown error"
+            error = when {
+                msg.contains("EISDIR", ignoreCase = true) ||
+                        msg.contains("is a directory", ignoreCase = true) -> {
+                    canOpenAsFolder = true
+                    "This appears to be a folder, not an archive."
+                }
+                msg.contains("password", ignoreCase = true) ||
+                        msg.contains("Wrong Password", ignoreCase = true) -> {
+                    askPassword = true
+                    "This archive is password protected."
+                }
+                msg.contains("not supported", ignoreCase = true) -> {
+                    "Archive format not supported."
+                }
+                else -> "Failed to open archive: $msg"
+            }
+        }
+
+        selected.clear()
+    }
 
     LaunchedEffect(archiveUri) { load() }
     LaunchedEffect(password) { if (password.isNotEmpty()) load() }
@@ -178,14 +237,14 @@ fun ArchiveViewerScreen(
                             Icon(Icons.Default.FileOpen, contentDescription = "Extract all…")
                         }
                         IconButton(onClick = { selectionMode = !selectionMode }) {
-                            Icon(Icons.Default.Checklist, contentDescription = "Select entries")
+                            Icon(Icons.Filled.Checklist, contentDescription = "Select entries")
                         }
                         if (selectionMode && selected.values.any { it }) {
                             IconButton(onClick = {
                                 val paths = selected.entries.filter { it.value }.map { it.key }
                                 onExtractSelected(archiveUri, paths, password.ifBlank { null })
                             }) {
-                                Icon(Icons.Default.DoneAll, contentDescription = "Extract selected")
+                                Icon(Icons.Filled.DoneAll, contentDescription = "Extract selected")
                             }
                         }
                     }
@@ -235,15 +294,34 @@ fun ArchiveViewerScreen(
                         contentPadding = PaddingValues(12.dp),
                         verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
-                        items(listing, key = { it.path }) { e ->
+                        items(visible, key = { it.path }) { e ->
                             Card(
                                 modifier = Modifier.fillMaxWidth(),
                                 colors = CardDefaults.cardColors(
                                     containerColor = MaterialTheme.colorScheme.surface
-                                )
+                                ),
+                                onClick = {
+                                    if (e.isDir) {
+                                        currentPath = ensureDirSuffix(
+                                            if (currentPath.isBlank()) e.path
+                                            else currentPath + e.path
+                                        )
+                                    } else {
+                                        scope.launch {
+                                            val uri = extractEntryToCache(
+                                                pathInArchive = currentPath + e.path,
+                                                ctx = ctx,
+                                                archiveName = title,
+                                                archive = archiveUri,
+                                                pwd = password.ifBlank { null }
+                                            )
+                                            if (uri != null) openPreview(uri, e.path, ctx)
+                                        }
+                                    }
+                                }
                             ) {
                                 ListItem(
-                                    headlineContent = { Text(e.path) },
+                                    headlineContent = { Text(e.path.trimEnd('/')) },
                                     supportingContent = {
                                         val meta = buildString {
                                             append(if (e.isDir) "Folder" else "File")
@@ -255,10 +333,11 @@ fun ArchiveViewerScreen(
                                     },
                                     trailingContent = {
                                         if (selectionMode) {
-                                            val checked = selected[e.path] == true
+                                            val fullKey = currentPath + e.path.trimEnd('/')
+                                            val checked = selected[fullKey] == true
                                             Checkbox(
                                                 checked = checked,
-                                                onCheckedChange = { selected[e.path] = it }
+                                                onCheckedChange = { selected[fullKey] = it }
                                             )
                                         }
                                     }
@@ -334,7 +413,8 @@ fun ArchiveViewerScreen(
     }
 }
 
-// Helper function to format file sizes
+// Helpers
+
 private fun formatSize(bytes: Long): String {
     return when {
         bytes < 1024 -> "$bytes B"
@@ -343,3 +423,57 @@ private fun formatSize(bytes: Long): String {
         else -> "${bytes / (1024 * 1024 * 1024)} GB"
     }
 }
+
+private suspend fun extractEntryToCache(
+    pathInArchive: String,
+    ctx: Context,
+    archiveName: String,
+    archive: Uri,
+    pwd: String?
+): Uri? = withContext(Dispatchers.IO) {
+    try {
+        fun norm(p: String) = p.trim().trimStart('/').replace('\\', '/')
+        val cleanTarget = norm(pathInArchive)
+        val outFileName = cleanTarget.substringAfterLast('/').ifEmpty { "item" }
+        val out = File(ctx.cacheDir, "preview_${System.currentTimeMillis()}_$outFileName")
+
+        AppGraph.archive.extractAll(
+            archiveName.ifBlank { "archive" },
+            { AppGraph.io.openIn(archive) },
+            create = { p, isDir ->
+                val candidate = norm(p)
+                if (candidate != cleanTarget || isDir) {
+                    object : OutputStream() {
+                        override fun write(b: Int) {}
+                        override fun write(b: ByteArray, off: Int, len: Int) {}
+                    }
+                } else {
+                    FileOutputStream(out)
+                }
+            },
+            password = pwd?.toCharArray(),
+            onProgress = { _, _ -> }
+        )
+        if (out.exists() && out.length() > 0) Uri.fromFile(out) else null
+    } catch (_: Exception) {
+        null
+    }
+}
+
+private fun openPreview(uri: Uri, name: String, ctx: Context) {
+    val finalUri = if (uri.scheme == "file") {
+        try {
+            FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", File(uri.path!!))
+        } catch (_: Exception) {
+            uri
+        }
+    } else uri
+    val mime = FileSystemAccess.getMimeType(name)
+    val intent = Intent(Intent.ACTION_VIEW).apply {
+        setDataAndType(finalUri, mime)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    ctx.startActivity(Intent.createChooser(intent, "Open with"))
+}
+
+private fun ensureDirSuffix(p: String) = if (p.endsWith("/")) p else "$p/"

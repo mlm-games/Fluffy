@@ -19,18 +19,17 @@ class FileSystemAccess(private val context: Context) {
                     lower.endsWith(".tar.gz") || lower.endsWith(".tgz") ||
                     lower.endsWith(".tar.bz2") || lower.endsWith(".tbz2") ||
                     lower.endsWith(".tar.xz") || lower.endsWith(".txz") ||
-                    lower.endsWith(".rar") ||
                     lower.endsWith(".jar") ||
                     lower.endsWith(".apk")
+            // Note: .rar -> need alt to unrar which is open source or a reimpl.
         }
 
         fun getMimeType(fileName: String): String {
             val lower = fileName.lowercase()
             return when {
-                lower.endsWith(".zip") -> "application/zip"
+                lower.endsWith(".zip") || lower.endsWith(".jar") -> "application/zip"
                 lower.endsWith(".7z") -> "application/x-7z-compressed"
                 lower.endsWith(".tar") -> "application/x-tar"
-                lower.endsWith(".rar") -> "application/x-rar-compressed"
                 lower.endsWith(".apk") -> "application/vnd.android.package-archive"
                 lower.endsWith(".pdf") -> "application/pdf"
                 lower.endsWith(".jpg") || lower.endsWith(".jpeg") -> "image/jpeg"
@@ -41,7 +40,6 @@ class FileSystemAccess(private val context: Context) {
             }
         }
     }
-
 
     fun hasStoragePermission(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
