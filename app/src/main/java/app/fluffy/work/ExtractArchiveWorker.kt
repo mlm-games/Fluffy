@@ -12,6 +12,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import app.fluffy.AppGraph
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import java.io.OutputStream
 import androidx.core.net.toUri
@@ -35,6 +36,14 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
         val name = AppGraph.io.queryDisplayName(archive)
         val open = { AppGraph.io.openIn(archive) }
 
+        val settings = AppGraph.settings.settingsFlow.first()
+        val actualTargetDir = if (settings.extractIntoSubfolder) {
+            val folder = baseNameForExtraction(name)
+            AppGraph.io.ensureDir(targetDir, folder)
+        } else {
+            targetDir
+        }
+
         var wroteAny = false
 
         try {
@@ -55,13 +64,13 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                     val parentRel = clean.substringBeforeLast('/', "")
                     val fileName = clean.substringAfterLast('/').ifEmpty { "item" }
                     if (isDir || clean.endsWith("/")) {
-                        AppGraph.io.ensureDir(targetDir, clean.removeSuffix("/"))
+                        AppGraph.io.ensureDir(actualTargetDir, clean.removeSuffix("/"))
                         wroteAny = true
                         object : OutputStream() { override fun write(b: Int) {} }
                     } else {
                         val parentUri = if (parentRel.isNotEmpty()) {
-                            AppGraph.io.ensureDir(targetDir, parentRel)
-                        } else targetDir
+                            AppGraph.io.ensureDir(actualTargetDir, parentRel)
+                        } else actualTargetDir
                         val mime = FileSystemAccess.getMimeType(fileName)
                         val fileUri = AppGraph.io.createFile(parentUri, fileName, mime)
                         wroteAny = true
@@ -79,7 +88,7 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                 }
             } catch (e: ZipException) {
                 e.printStackTrace()
-                println("Fallback for strict/invalid zips (e.g., some APKs")
+                // Fallback for strict/invalid zips (e.g., some APKs)
                 open().use { input ->
                     ZipArchiveInputStream(input).use { zin ->
                         var entry = zin.nextZipEntry
@@ -113,6 +122,21 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
 
     private fun normalize(path: String): String =
         path.trim().trimStart('/').replace('\\', '/').removeSuffix("/")
+
+    private fun baseNameForExtraction(fileName: String): String {
+        val n = fileName.lowercase()
+        val candidates = listOf(
+            ".tar.gz", ".tar.bz2", ".tar.xz",
+            ".tgz", ".tbz2", ".txz",
+            ".zip", ".jar", ".apk", ".7z", ".tar"
+        )
+        val hit = candidates.firstOrNull { n.endsWith(it) }
+        return if (hit != null) {
+            fileName.dropLast(hit.length)
+        } else {
+            fileName.substringBeforeLast('.', fileName)
+        }.ifBlank { "extracted" }
+    }
 
     private fun createForeground(title: String): ForegroundInfo {
         val channelId = "fluffy.work"

@@ -42,9 +42,9 @@ class SettingsRepository(private val context: Context) {
         val THEME_MODE = intPreferencesKey("theme_mode")
         val USE_AURORA_THEME = booleanPreferencesKey("use_aurora_theme")
 
-
         // Archives
         val ZIP_LEVEL = intPreferencesKey("zip_level")
+        val EXTRACT_INTO_SUBFOLDER = booleanPreferencesKey("extract_into_subfolder")
     }
 
     private val definitions: Map<String, SettingDefinition<*>> = mapOf(
@@ -52,7 +52,8 @@ class SettingsRepository(private val context: Context) {
         "showHidden" to SettingDefinition.BooleanSetting("showHidden", SHOW_HIDDEN) { it.showHidden },
         "themeMode" to SettingDefinition.IntSetting("themeMode", THEME_MODE) { it.themeMode },
         "zipCompressionLevel" to SettingDefinition.IntSetting("zipCompressionLevel", ZIP_LEVEL) { it.zipCompressionLevel },
-        "useAuroraTheme" to SettingDefinition.BooleanSetting("useAuroraTheme", USE_AURORA_THEME) { it.useAuroraTheme }
+        "useAuroraTheme" to SettingDefinition.BooleanSetting("useAuroraTheme", USE_AURORA_THEME) { it.useAuroraTheme },
+        "extractIntoSubfolder" to SettingDefinition.BooleanSetting("extractIntoSubfolder", EXTRACT_INTO_SUBFOLDER) { it.extractIntoSubfolder }
     )
 
     val settingsFlow: Flow<AppSettings> = context.ds.data.map { p ->
@@ -61,7 +62,8 @@ class SettingsRepository(private val context: Context) {
             showHidden = p[SHOW_HIDDEN] ?: false,
             useAuroraTheme = p[USE_AURORA_THEME] ?: true,
             themeMode = p[THEME_MODE] ?: 0,
-            zipCompressionLevel = p[ZIP_LEVEL] ?: 5
+            zipCompressionLevel = p[ZIP_LEVEL] ?: 5,
+            extractIntoSubfolder = p[EXTRACT_INTO_SUBFOLDER] ?: true
         )
     }.distinctUntilChanged()
 
@@ -96,7 +98,6 @@ class SettingsRepository(private val context: Context) {
         }
     }
 
-    // Generic cache clear for the file manager (no repo metadata anymore)
     suspend fun clearCache() {
         runCatching { context.cacheDir.deleteRecursively() }
     }

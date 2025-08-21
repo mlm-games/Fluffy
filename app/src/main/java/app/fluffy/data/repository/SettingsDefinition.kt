@@ -58,7 +58,6 @@ data class AppSettings(
     )
     val useAuroraTheme: Boolean = true,
 
-
     @Setting(
         title = "ZIP compression level",
         description = "0 = no compression, 9 = maximum compression",
@@ -66,7 +65,15 @@ data class AppSettings(
         type = SettingType.SLIDER,
         min = 0f, max = 9f, step = 1f
     )
-    val zipCompressionLevel: Int = 5
+    val zipCompressionLevel: Int = 5,
+
+    @Setting(
+        title = "Extract into subfolder",
+        description = "Create a folder named after the archive when extracting",
+        category = SettingCategory.ARCHIVES,
+        type = SettingType.TOGGLE
+    )
+    val extractIntoSubfolder: Boolean = true
 )
 
 class SettingsManager {
