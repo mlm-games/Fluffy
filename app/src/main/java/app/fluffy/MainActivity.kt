@@ -1,3 +1,4 @@
+// File: app/fluffy/MainActivity.kt
 package app.fluffy
 
 import android.Manifest
@@ -138,6 +139,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
         setContent {
             val settings by AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings())
             var showPermissionDialog by remember { mutableStateOf(false) }
@@ -158,6 +160,25 @@ class MainActivity : ComponentActivity() {
                     val currentRoute = nav.currentBackStackEntryAsState().value?.destination?.route
 
                     val browserState by filesVM.state.collectAsState()
+
+                    // Auto-refresh current directory when any background task completes (copy/move/extract/create)
+                    val workInfos by tasksVM.workInfos.collectAsState()
+                    val seenFinished = remember { mutableSetOf<String>() }
+                    LaunchedEffect(workInfos) {
+                        var refreshNeeded = false
+                        workInfos.forEach { wi ->
+                            if (wi.state.isFinished) {
+                                val id = wi.id.toString()
+                                if (seenFinished.add(id)) {
+                                    refreshNeeded = true
+                                }
+                            }
+                        }
+                        if (refreshNeeded) {
+                            filesVM.refreshCurrentDir()
+                        }
+                    }
+
                     LaunchedEffect(browserState.pendingFileOpen) {
                         browserState.pendingFileOpen?.let { uri ->
                             val name = uri.lastPathSegment?.lowercase() ?: ""
@@ -267,7 +288,6 @@ class MainActivity : ComponentActivity() {
                                         archiveUri = uri,
                                         onBack = { nav.popBackStack() },
                                         onExtractTo = { arch, pwd ->
-                                            // Get current directory from FileBrowserViewModel
                                             val currentDir = when (val location = browserState.currentLocation) {
                                                 is BrowseLocation.FileSystem -> Uri.fromFile(location.file)
                                                 is BrowseLocation.SAF -> browserState.currentDir
@@ -276,9 +296,8 @@ class MainActivity : ComponentActivity() {
 
                                             if (currentDir != null) {
                                                 tasksVM.enqueueExtract(arch, currentDir, pwd)
-                                                nav.popBackStack() // Go back to file browser
+                                                nav.popBackStack()
                                             } else {
-                                                // Fallback: let user pick directory
                                                 pendingExtractArchive = arch
                                                 pendingExtractPassword = pwd
                                                 pendingExtractPaths = null
@@ -334,7 +353,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Permission dialog
                 if (showPermissionDialog) {
                     AlertDialog(
                         onDismissRequest = { showPermissionDialog = false },
