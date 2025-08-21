@@ -342,54 +342,91 @@ fun FileBrowserScreen(
                 )
             }
             is BrowseLocation.FileSystem -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(pv),
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    items(state.fileItems, key = { it.absolutePath }) { file ->
-                        val isSelected = selectedFiles.contains(file)
-                        FileSystemRow(
-                            file = file,
-                            selected = isSelected,
-                            onToggleSelect = { toggled ->
-                                if (toggled) selectedFiles.add(file) else selectedFiles.remove(file)
-                            },
-                            onOpenFile = onOpenFile,
-                            onOpenArchive = { onOpenArchive(Uri.fromFile(file)) },
-                            onExtractHere = {
-                                // Extract directly to current directory
-                                currentDirUri?.let { targetDir ->
-                                    onExtractArchive(Uri.fromFile(file), targetDir)
-                                }
-                            }
+                if (state.fileItems.isEmpty()) {
+                    // Show an empty-state message similar to ArchiveViewerScreen
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(pv)
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "This folder is empty.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(pv),
+                        contentPadding = PaddingValues(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(state.fileItems, key = { it.absolutePath }) { file ->
+                            val isSelected = selectedFiles.contains(file)
+                            FileSystemRow(
+                                file = file,
+                                selected = isSelected,
+                                onToggleSelect = { toggled ->
+                                    if (toggled) selectedFiles.add(file) else selectedFiles.remove(file)
+                                },
+                                onOpenFile = onOpenFile,
+                                onOpenArchive = { onOpenArchive(Uri.fromFile(file)) },
+                                onExtractHere = {
+                                    // Extract directly to current directory
+                                    currentDirUri?.let { targetDir ->
+                                        onExtractArchive(Uri.fromFile(file), targetDir)
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
             is BrowseLocation.SAF -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(pv),
-                    contentPadding = PaddingValues(8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    items(state.items, key = { it.uri.toString() }) { df ->
-                        val isSelected = selected.contains(df.uri)
-                        FileRow(
-                            df = df,
-                            selected = isSelected,
-                            onToggleSelect = { toggled ->
-                                if (toggled) selected.add(df.uri) else selected.remove(df.uri)
-                            },
-                            onOpenDir = onOpenDir,
-                            onOpenArchive = onOpenArchive,
-                            onExtractHere = {
-                                // Extract directly to current directory
-                                currentDirUri?.let { targetDir ->
-                                    onExtractArchive(df.uri, targetDir)
-                                }
-                            }
+                if (state.items.isEmpty()) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(pv)
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            "This folder is empty.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+                } else {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(pv),
+                        contentPadding = PaddingValues(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(state.items, key = { it.uri.toString() }) { df ->
+                            val isSelected = selected.contains(df.uri)
+                            FileRow(
+                                df = df,
+                                selected = isSelected,
+                                onToggleSelect = { toggled ->
+                                    if (toggled) selected.add(df.uri) else selected.remove(df.uri)
+                                },
+                                onOpenDir = onOpenDir,
+                                onOpenArchive = onOpenArchive,
+                                onExtractHere = {
+                                    // Extract directly to current directory
+                                    currentDirUri?.let { targetDir ->
+                                        onExtractArchive(df.uri, targetDir)
+                                    }
+                                }
+                            )
+                        }
                     }
                 }
             }
