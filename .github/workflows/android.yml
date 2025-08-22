@@ -54,7 +54,6 @@ jobs:
         with:
           java-version: ${{ env.JAVA_VERSION }}
           distribution: ${{ env.JAVA_DISTRIBUTION }}
-          cache: 'gradle'
       
       - id: version
         name: Update Version Numbers
