@@ -1,11 +1,9 @@
 
-# Fluffy - Android TV F-Droid Client
+# Fluffy - Android TV File Manager
 
 ![Banner](assets/banner.svg)
 
-> The UI is TV oriented, Android UI is secondary.
-> 
-> For android (mobile) devices, would recommend Droidify or Fdroid Basic (for security and better UI).
+> The UI is mostly TV oriented, certain features that are not possible to be executed in minimal way (like extraction notifications not being possible on TV) are not present.
 
 
 ## Installation
@@ -13,8 +11,5 @@
 
 **Option 2**: Share through localsend (or send files to tv)
 
-## FOSS apps for Android TVs (reference)
-- https://github.com/Generator/Awesome-Android-TV-FOSS-Apps
-
 ## License
-GPL-3.0 (Derived)
+GPL-3.0
