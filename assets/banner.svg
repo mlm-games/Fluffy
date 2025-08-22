@@ -29,9 +29,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
-     inkscape:zoom="0.84765625"
-     inkscape:cx="127.41014"
-     inkscape:cy="-19.465438"
+     inkscape:zoom="2.3975339"
+     inkscape:cx="127.0055"
+     inkscape:cy="96.557549"
      inkscape:window-width="1536"
      inkscape:window-height="902"
      inkscape:window-x="0"
@@ -77,11 +77,11 @@
        id="linearGradient1"
        inkscape:collect="always">
       <stop
-         style="stop-color:#6d74aa;stop-opacity:1;"
+         style="stop-color:#171f56;stop-opacity:1;"
          offset="0"
          id="stop1" />
       <stop
-         style="stop-color:#6daa9b;stop-opacity:1;"
+         style="stop-color:#455a6a;stop-opacity:1;"
          offset="1"
          id="stop2" />
     </linearGradient>
@@ -98,19 +98,6 @@
        x="-196"
        y="-326.17972"
        ry="165.16129" />
-    <g
-       id="g3"
-       style="fill:#e6e6e6"
-       transform="matrix(0.18015459,0,0,0.18015459,68.037339,-30.962661)">
-      <path
-         style="fill:#e6e6e6;stroke:none;stroke-width:2.58787;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
-         d="m 526.15668,469.58869 c 0,0 84.94009,-212.35022 127.41013,-96.73732 42.47005,115.6129 -92.01843,172.23963 -92.01843,172.23963 0,0 153.36406,51.90783 108.53456,113.25345 -44.82949,61.34562 -153.36405,0 -153.36405,0 L 512,530.93432 Z"
-         id="path2" />
-      <path
-         style="fill:#e6e6e6;stroke:none;stroke-width:2.58787;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
-         d="m 497.84332,469.58869 c 0,0 -84.94009,-212.35022 -127.41013,-96.73732 -42.47005,115.6129 92.01843,172.23963 92.01843,172.23963 0,0 -153.36406,51.90783 -108.53456,113.25345 44.82949,61.34562 153.36405,0 153.36405,0 L 512,530.93432 Z"
-         id="path3" />
-    </g>
     <text
        xml:space="preserve"
        style="font-weight:bold;font-size:48px;line-height:0px;font-family:'Comic Sans MS';-inkscape-font-specification:'Comic Sans MS Bold';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#ffccaa;fill-opacity:1;stroke:none;stroke-width:2.58787;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
@@ -122,6 +109,171 @@
          x="92.710938"
          y="154.02344"
          style="fill:#ffccaa;fill-opacity:1;stroke:none">Fluffy</tspan></text>
+    <g
+       id="g24"
+       transform="translate(7.4230919,-2.6224537)"
+       style="mix-blend-mode:difference">
+      <rect
+         style="font-variation-settings:'opsz' 32;fill:#00ff00;stroke-width:12.621;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="rect3"
+         width="50.974548"
+         height="23.942444"
+         x="23.709393"
+         y="-143.4507"
+         ry="11.971223"
+         transform="rotate(90)" />
+      <rect
+         style="font-variation-settings:'opsz' 32;fill:#00ff00;stroke-width:12.7085;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="rect4"
+         width="50.974548"
+         height="24.275436"
+         x="23.709393"
+         y="-188.21227"
+         ry="12.137719"
+         transform="rotate(90)" />
+      <ellipse
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:4.90905;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="path4"
+         cx="-132.95613"
+         cy="-37.035488"
+         transform="scale(-1)"
+         rx="4.7959485"
+         ry="4.4689822" />
+      <ellipse
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:4.90905;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle4"
+         cx="-174.14281"
+         cy="-37.035488"
+         transform="scale(-1)"
+         rx="4.7959485"
+         ry="4.4689822" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="path5"
+         cx="112.92002"
+         cy="62.259975"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle5"
+         cx="122.92002"
+         cy="56.259975"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle6"
+         cx="130.92001"
+         cy="64.259979"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle7"
+         cx="120.92002"
+         cy="70.259979"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle8"
+         cx="144.92001"
+         cy="58.259975"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle9"
+         cx="140.92001"
+         cy="70.259979"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle10"
+         cx="148.79099"
+         cy="65.882095"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle11"
+         cx="156.36282"
+         cy="61.377903"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle12"
+         cx="166.36282"
+         cy="57.377903"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle13"
+         cx="174.36282"
+         cy="63.377907"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle14"
+         cx="164.36282"
+         cy="69.377907"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle15"
+         cx="188.36282"
+         cy="57.377903"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle16"
+         cx="184.36282"
+         cy="69.377907"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle17"
+         cx="192.2338"
+         cy="65.000023"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle18"
+         cx="133.3577"
+         cy="76.441216"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle19"
+         cx="143.3577"
+         cy="70.441216"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle20"
+         cx="151.3577"
+         cy="78.441216"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle21"
+         cx="141.3577"
+         cy="84.441216"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle22"
+         cx="165.3577"
+         cy="72.441216"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle23"
+         cx="161.3577"
+         cy="84.441216"
+         r="14.181238" />
+      <circle
+         style="font-variation-settings:'opsz' 32;fill:#c87137;stroke-width:8.29451;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+         id="circle24"
+         cx="169.22867"
+         cy="80.063332"
+         r="14.181238" />
+    </g>
   </g>
   <metadata
      id="metadata1">
