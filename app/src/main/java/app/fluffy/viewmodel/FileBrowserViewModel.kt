@@ -75,7 +75,6 @@ class FileBrowserViewModel(
             if (hasAccess) {
                 showQuickAccess()
             } else {
-                // Show empty state prompting for permission
                 _state.value = _state.value.copy(
                     quickAccessItems = getQuickAccessItems(),
                     currentLocation = BrowseLocation.QuickAccess
@@ -86,7 +85,6 @@ class FileBrowserViewModel(
 
     private fun getQuickAccessItems(): List<QuickAccessItem> {
         val items = mutableListOf<QuickAccessItem>()
-
         items.add(
             QuickAccessItem(
                 name = "Internal Storage",
@@ -95,7 +93,6 @@ class FileBrowserViewModel(
                 uri = null
             )
         )
-
         val folders = listOf(
             "Downloads" to Environment.DIRECTORY_DOWNLOADS,
             "Documents" to Environment.DIRECTORY_DOCUMENTS,
@@ -104,7 +101,6 @@ class FileBrowserViewModel(
             "Movies" to Environment.DIRECTORY_MOVIES,
             "DCIM" to Environment.DIRECTORY_DCIM
         )
-
         folders.forEach { (name, dir) ->
             val file = Environment.getExternalStoragePublicDirectory(dir)
             if (file.exists()) {
@@ -118,9 +114,6 @@ class FileBrowserViewModel(
                 )
             }
         }
-
-        // TODO: Load from preferences -> Recent SAF locations
-
         return items
     }
 
@@ -144,10 +137,14 @@ class FileBrowserViewModel(
             }
 
             val location = BrowseLocation.FileSystem(file)
-            val newStack = if (_state.value.currentLocation is BrowseLocation.QuickAccess) {
-                listOf(BrowseLocation.QuickAccess, location)
-            } else {
-                _state.value.stack + location
+
+            val base = listOf(BrowseLocation.QuickAccess)
+            val newStack = when (_state.value.currentLocation) {
+                is BrowseLocation.QuickAccess, null -> base + location
+                else -> {
+                    // Replace any previous chain with QuickAccess anchor + below location.
+                    base + location
+                }
             }
 
             _state.value = _state.value.copy(
@@ -158,16 +155,15 @@ class FileBrowserViewModel(
                 fileItems = loadFileSystemItems(file),
                 items = emptyList(),
                 quickAccessItems = emptyList(),
-                isLoading = false
+                isLoading = false,
+                error = null
             )
         }
     }
 
     private fun loadFileSystemItems(directory: File): List<File> {
         if (!fileSystemAccess.hasStoragePermission()) return emptyList()
-
         val files = directory.listFiles()?.toList() ?: emptyList()
-
         return files
             .filter { if (showHidden) true else !it.name.startsWith(".") }
             .sortedWith(
@@ -181,7 +177,7 @@ class FileBrowserViewModel(
         _state.value = FileBrowserState(
             currentLocation = location,
             currentDir = uri,
-            stack = listOf(location),
+            stack = listOf(BrowseLocation.QuickAccess, location), // ensure QuickAccess anchor
             items = filtered(io.listChildren(uri))
         )
     }
@@ -189,41 +185,44 @@ class FileBrowserViewModel(
     fun openDir(uri: Uri) {
         viewModelScope.launch {
             val location = BrowseLocation.SAF(uri)
-            _state.value = _state.value.copy(
+            val st = _state.value
+            val anchored = if (st.stack.isNotEmpty() && st.stack.first() is BrowseLocation.QuickAccess)
+                st.stack else listOf(BrowseLocation.QuickAccess)
+            _state.value = st.copy(
                 currentLocation = location,
                 currentDir = uri,
-                stack = _state.value.stack + location,
+                stack = anchored + location,
                 items = filtered(io.listChildren(uri)),
                 fileItems = emptyList(),
-                quickAccessItems = emptyList()
+                quickAccessItems = emptyList(),
+                error = null
             )
         }
     }
 
     fun goUp() {
         val st = _state.value
-
         when (val current = st.currentLocation) {
             is BrowseLocation.FileSystem -> {
                 val parent = current.file.parentFile
                 if (parent != null && parent.exists()) {
                     openFileSystemPath(parent)
                 } else if (st.stack.size > 1) {
-                    val newStack = st.stack.dropLast(1)
-                    val previous = newStack.last()
+                    val previous = st.stack.dropLast(1).last()
                     navigateToLocation(previous)
+                } else {
+                    showQuickAccess()
                 }
             }
             is BrowseLocation.SAF -> {
-                if (st.stack.size <= 1) return
-                val newStack = st.stack.dropLast(1)
-                val previous = newStack.last()
-                navigateToLocation(previous)
+                if (st.stack.size > 1) {
+                    val previous = st.stack.dropLast(1).last()
+                    navigateToLocation(previous)
+                } else {
+                    showQuickAccess()
+                }
             }
-            is BrowseLocation.QuickAccess -> {
-                // Can't go up from quick access
-            }
-            null -> {}
+            is BrowseLocation.QuickAccess, null -> { /* nowhere to go */ }
         }
     }
 
@@ -253,20 +252,16 @@ class FileBrowserViewModel(
         }
     }
 
-    fun refreshCurrentDir() {
-        refresh()
-    }
+    fun refreshCurrentDir() = refresh()
 
     private fun filtered(list: List<DocumentFile>): List<DocumentFile> {
-        return if (showHidden) list
-        else list.filter { f -> !(f.name ?: "").startsWith(".") }
+        return if (showHidden) list else list.filter { f -> !(f.name ?: "").startsWith(".") }
     }
 
     fun openFile(file: File) {
         if (file.isDirectory) {
             openFileSystemPath(file)
         } else {
-            // Handle file opening
             viewModelScope.launch {
                 handleFileOpen(Uri.fromFile(file))
             }
@@ -285,16 +280,11 @@ class FileBrowserViewModel(
     }
 
     private suspend fun handleFileOpen(uri: Uri) {
-        // Trigger navigation to archive viewer or other file viewer
-        _state.value = _state.value.copy(
-            pendingFileOpen = uri
-        )
+        _state.value = _state.value.copy(pendingFileOpen = uri)
     }
 
     fun clearPendingFileOpen() {
-        _state.value = _state.value.copy(
-            pendingFileOpen = null
-        )
+        _state.value = _state.value.copy(pendingFileOpen = null)
     }
 
     fun createNewFolder(name: String) {
