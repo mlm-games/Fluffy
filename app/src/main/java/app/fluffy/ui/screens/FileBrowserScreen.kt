@@ -1,8 +1,21 @@
 package app.fluffy.ui.screens
 
 import android.net.Uri
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -13,14 +26,61 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DriveFileMove
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.FolderZip
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.OpenWith
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -32,7 +92,8 @@ import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.QuickAccessItem
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -583,22 +644,20 @@ private fun FileSystemRow(
     onOpenArchive: () -> Unit,
     onExtractHere: () -> Unit = {}
 ) {
-    val isArchive = remember(file.name) {
-        FileSystemAccess.isArchiveFile(file.name)
-    }
+    val isArchive = remember(file.name) { FileSystemAccess.isArchiveFile(file.name) }
     val itemCount by produceState<Int?>(initialValue = null, file) {
         value = if (file.isDirectory) file.listFiles()?.size ?: 0 else null
     }
 
+    val mainFR = remember { FocusRequester() }
+    val extractFR = remember { FocusRequester() }
+    val cbFR = remember { FocusRequester() }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = {
-            when {
-                file.isDirectory -> onOpenFile(file)
-                isArchive -> onOpenArchive()
-                else -> onToggleSelect(!selected)
-            }
-        }
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusGroup()
+            .focusProperties { canFocus = false }, // parent won't steal focus
     ) {
         Row(
             Modifier
@@ -607,6 +666,7 @@ private fun FileSystemRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
+            // Main “open” area (icon + text), clickable focusable target
             Icon(
                 when {
                     file.isDirectory -> Icons.Filled.Folder
@@ -621,7 +681,21 @@ private fun FileSystemRow(
                 }
             )
 
-            Column(Modifier.weight(1f)) {
+            Column(
+                Modifier
+                                    .weight(1f)
+                                    .focusRequester(mainFR)
+                                    .focusable()
+                                    .semantics { role = Role.Button }
+                                    .clickable {
+                                        when {
+                                            file.isDirectory -> onOpenFile(file)
+                                            isArchive -> onOpenArchive()
+                                            else -> onToggleSelect(!selected)
+                                        }
+                                    }
+                    .focusProperties { right = if (isArchive) extractFR else cbFR }
+            ) {
                 Text(
                     file.name,
                     style = MaterialTheme.typography.bodyLarge,
@@ -634,24 +708,22 @@ private fun FileSystemRow(
                         "$c item${if (c == 1) "" else "s"}"
                     } else formatFileSize(file.length())
 
-                    Text(
-                        left,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        "• ${formatDate(file.lastModified())}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(left, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("• ${formatDate(file.lastModified())}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
-            // Quick extract button for archives
             if (isArchive) {
                 IconButton(
                     onClick = onExtractHere,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier
+                        .size(40.dp)
+                        .focusRequester(extractFR)
+                        .focusable()
+                        .focusProperties {
+                            left = mainFR
+                            right = cbFR
+                        }
                 ) {
                     Icon(
                         Icons.Default.Unarchive,
@@ -663,7 +735,12 @@ private fun FileSystemRow(
 
             Checkbox(
                 checked = selected,
-                onCheckedChange = { onToggleSelect(it) }
+                onCheckedChange = { onToggleSelect(it) },
+                modifier = Modifier
+                                    .focusRequester(cbFR)
+                                    .focusable()
+                                    .semantics { role = Role.Checkbox }
+                    .focusProperties { left = if (isArchive) extractFR else mainFR }
             )
         }
     }
@@ -679,68 +756,102 @@ private fun FileRow(
     onExtractHere: () -> Unit
 ) {
     val isArchive = remember(df.name, df.isDirectory) {
-        if (df.isDirectory) false else {
-            FileSystemAccess.isArchiveFile(df.name ?: "")
-        }
+        if (df.isDirectory) false else FileSystemAccess.isArchiveFile(df.name ?: "")
     }
 
+    val mainFR = remember { FocusRequester() }
+    val extractFR = remember { FocusRequester() }
+    val cbFR = remember { FocusRequester() }
+
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = {
-            if (df.isDirectory) onOpenDir(df.uri)
-            else if (isArchive) onOpenArchive(df.uri)
-            else onToggleSelect(!selected)
-        }
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusGroup()
+            .focusProperties { canFocus = false }
     ) {
         Row(
-            Modifier.fillMaxWidth().padding(12.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                when {
-                    df.isDirectory -> Icons.Filled.Folder
-                    isArchive -> Icons.Filled.FolderZip
-                    else -> Icons.AutoMirrored.Filled.InsertDriveFile
-                },
-                contentDescription = null,
-                tint = when {
-                    df.isDirectory -> MaterialTheme.colorScheme.primary
-                    isArchive -> MaterialTheme.colorScheme.secondary
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                }
-            )
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .focusRequester(mainFR)
+                    .focusable()
+                    .semantics { role = Role.Button }
+                    .clickable {
+                        when {
+                            df.isDirectory -> onOpenDir(df.uri)
+                            isArchive -> onOpenArchive(df.uri)
+                            else -> onToggleSelect(!selected)
+                        }
+                    }
+                    .focusProperties { right = if (isArchive) extractFR else cbFR },
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = when {
+                        df.isDirectory -> Icons.Filled.Folder
+                        isArchive -> Icons.Filled.FolderZip
+                        else -> Icons.AutoMirrored.Filled.InsertDriveFile
+                    },
+                    contentDescription = null,
+                    tint = when {
+                        df.isDirectory -> MaterialTheme.colorScheme.primary
+                        isArchive -> MaterialTheme.colorScheme.secondary
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
 
-            Column(Modifier.weight(1f)) {
-                Text(
-                    df.name ?: "(no name)",
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-                val sub = if (df.isDirectory) "Folder" else (df.type ?: "file")
-                Text(
-                    sub,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Column(Modifier.fillMaxWidth()) {
+                    Text(
+                        df.name ?: "(no name)",
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1
+                    )
+                    val sub = if (df.isDirectory) "Folder" else (df.type ?: "file")
+                    Text(
+                        sub,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1
+                    )
+                }
             }
 
-            // Quick extract button for archives
             if (isArchive) {
                 IconButton(
                     onClick = onExtractHere,
-                    modifier = Modifier.size(40.dp)
+                    modifier = Modifier
+                        .size(40.dp)
+                        .focusRequester(extractFR)
+                        .focusable()
+                        .focusProperties {
+                            left = mainFR
+                            right = cbFR
+                        }
                 ) {
                     Icon(
-                        Icons.Default.Unarchive,
+                        imageVector = Icons.Filled.Unarchive,
                         contentDescription = "Extract here",
                         tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
 
-            Checkbox(checked = selected, onCheckedChange = { onToggleSelect(it) })
+            Checkbox(
+                checked = selected,
+                onCheckedChange = { onToggleSelect(it) },
+                modifier = Modifier
+                    .focusRequester(cbFR)
+                    .focusable()
+                    .semantics { role = Role.Checkbox }
+                    .focusProperties { left = if (isArchive) extractFR else mainFR }
+            )
         }
     }
 }
