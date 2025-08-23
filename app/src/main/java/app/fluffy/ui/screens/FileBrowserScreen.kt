@@ -1,3 +1,4 @@
+// File: app/fluffy/ui/screens/FileBrowserScreen.kt
 package app.fluffy.ui.screens
 
 import android.net.Uri
@@ -47,6 +48,10 @@ fun FileBrowserScreen(
     onOpenTasks: () -> Unit,
     onOpenWith: (Uri, String) -> Unit = { _, _ -> },
     onOpenArchive: (Uri) -> Unit,
+    // direct-to-current-folder actions (fast path)
+    onCopyHere: (List<Uri>) -> Unit = {},
+    onMoveHere: (List<Uri>) -> Unit = {},
+    // target-picker actions (SAF path)
     onCopySelected: (List<Uri>) -> Unit = {},
     onMoveSelected: (List<Uri>) -> Unit = {},
     onDeleteSelected: (List<Uri>) -> Unit = {},
@@ -72,8 +77,6 @@ fun FileBrowserScreen(
     var showRenameDialog by remember { mutableStateOf(false) }
     var renameNewName by remember { mutableStateOf("") }
     var showNewFolderDialog by remember { mutableStateOf(false) }
-    var showExtractDialog by remember { mutableStateOf(false) }
-    var extractToCurrentDir by remember { mutableStateOf(true) }
 
     val currentDirUri: Uri? = when (currentLocation) {
         is BrowseLocation.FileSystem -> Uri.fromFile(currentLocation.file)
@@ -110,11 +113,6 @@ fun FileBrowserScreen(
                     },
                     actions = {
                         if (currentLocation !is BrowseLocation.QuickAccess) {
-                            IconButton(onClick = onShowQuickAccess) {
-                                Icon(Icons.Default.Home, contentDescription = "Home")
-                            }
-                        }
-                        if (currentLocation !is BrowseLocation.QuickAccess) {
                             IconButton(onClick = { showNewFolderDialog = true }) {
                                 Icon(Icons.Default.CreateNewFolder, contentDescription = "New Folder")
                             }
@@ -131,10 +129,188 @@ fun FileBrowserScreen(
                     }
                 )
 
-                // selection action row unchanged...
+                // SELECTION ACTION BAR — RESTORED (mobile + TV)
+                if ((selected.isNotEmpty() || selectedFiles.isNotEmpty()) &&
+                    currentLocation !is BrowseLocation.QuickAccess
+                ) {
+                    val count = selected.size + selectedFiles.size
+                    val allSelectedUris = selected + selectedFiles.map { Uri.fromFile(it) }
+
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+                    ) {
+                        if (isCompactScreen && !isTV) {
+                            // Mobile compact: stacked layout with chips
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        "$count selected",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                                    )
+                                    TextButton(
+                                        onClick = {
+                                            selected.clear()
+                                            selectedFiles.clear()
+                                        }
+                                    ) { Text("Clear") }
+                                }
+
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+                                    AssistChip(
+                                        onClick = { showZipNameDialog = true },
+                                        label = { Text("Zip") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.FolderZip, null, Modifier.size(18.dp))
+                                        }
+                                    )
+                                    AssistChip(
+                                        onClick = { show7zDialog = true },
+                                        label = { Text("7z") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Archive, null, Modifier.size(18.dp))
+                                        }
+                                    )
+
+                                    // Fast path: paste into current folder
+                                    AssistChip(
+                                        onClick = { onCopyHere(allSelectedUris) },
+                                        label = { Text("Copy here") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.ContentPaste, null, Modifier.size(18.dp))
+                                        }
+                                    )
+                                    AssistChip(
+                                        onClick = { onMoveHere(allSelectedUris) },
+                                        label = { Text("Move here") },
+                                        leadingIcon = {
+                                            Icon(Icons.AutoMirrored.Filled.DriveFileMove, null, Modifier.size(18.dp))
+                                        }
+                                    )
+
+                                    // Picker path: choose another folder
+                                    AssistChip(
+                                        onClick = { onCopySelected(allSelectedUris) },
+                                        label = { Text("Copy…") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.ContentCopy, null, Modifier.size(18.dp))
+                                        }
+                                    )
+                                    AssistChip(
+                                        onClick = { onMoveSelected(allSelectedUris) },
+                                        label = { Text("Move…") },
+                                        leadingIcon = {
+                                            Icon(Icons.AutoMirrored.Filled.DriveFileMove, null, Modifier.size(18.dp))
+                                        }
+                                    )
+                                    AssistChip(
+                                        onClick = {
+                                            onDeleteSelected(allSelectedUris)
+                                            selected.clear()
+                                            selectedFiles.clear()
+                                        },
+                                        label = { Text("Delete") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Delete, null, Modifier.size(18.dp))
+                                        }
+                                    )
+                                    if (count == 1) {
+                                        AssistChip(
+                                            onClick = {
+                                                renameTarget = allSelectedUris.first()
+                                                renameNewName = ""
+                                                showRenameDialog = true
+                                            },
+                                            label = { Text("Rename") },
+                                            leadingIcon = {
+                                                Icon(Icons.Default.Edit, null, Modifier.size(18.dp))
+                                            }
+                                        )
+                                        AssistChip(
+                                            onClick = {
+                                                onOpenWith(allSelectedUris.first(), "")
+                                            },
+                                            label = { Text("Open With") },
+                                            leadingIcon = {
+                                                Icon(Icons.Default.OpenWith, null, Modifier.size(18.dp))
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        } else {
+                            // TV/Tablet: single row of text buttons
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 12.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    "$count selected",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+
+                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    TextButton(onClick = { showZipNameDialog = true }) { Text("Zip") }
+                                    TextButton(onClick = { show7zDialog = true }) { Text("7z") }
+
+                                    // Fast path
+                                    TextButton(onClick = { onCopyHere(allSelectedUris) }) { Text("Copy here") }
+                                    TextButton(onClick = { onMoveHere(allSelectedUris) }) { Text("Move here") }
+
+                                    // Picker path
+                                    TextButton(onClick = { onCopySelected(allSelectedUris) }) { Text("Copy…") }
+                                    TextButton(onClick = { onMoveSelected(allSelectedUris) }) { Text("Move…") }
+
+                                    TextButton(onClick = {
+                                        onDeleteSelected(allSelectedUris)
+                                        selected.clear()
+                                        selectedFiles.clear()
+                                    }) { Text("Delete") }
+
+                                    if (count == 1) {
+                                        TextButton(onClick = {
+                                            renameTarget = allSelectedUris.first()
+                                            renameNewName = ""
+                                            showRenameDialog = true
+                                        }) { Text("Rename") }
+                                        TextButton(onClick = {
+                                            onOpenWith(allSelectedUris.first(), "")
+                                        }) { Text("Open With") }
+                                    }
+                                }
+
+                                Spacer(Modifier.weight(1f))
+
+                                TextButton(onClick = {
+                                    selected.clear()
+                                    selectedFiles.clear()
+                                }) { Text("Clear") }
+                            }
+                        }
+                    }
+                }
             }
         }
     ) { pv ->
+        // CONTENT (unchanged except for empty-folder message paths you added earlier)
         when (currentLocation) {
             is BrowseLocation.QuickAccess -> {
                 QuickAccessView(
@@ -147,7 +323,6 @@ fun FileBrowserScreen(
             }
             is BrowseLocation.FileSystem -> {
                 if (state.fileItems.isEmpty()) {
-                    // Empty or inaccessible state, offer escape actions
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -155,27 +330,15 @@ fun FileBrowserScreen(
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text(
-                                "This folder is empty or inaccessible.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                OutlinedButton(onClick = onBack, enabled = canUp) {
-                                    Text("Go up")
-                                }
-                                Button(onClick = onShowQuickAccess) {
-                                    Text("Open Quick Access")
-                                }
-                            }
-                        }
+                        Text(
+                            "This folder is empty.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 } else {
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(pv),
+                        modifier = Modifier.fillMaxSize().padding(pv),
                         contentPadding = PaddingValues(8.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
@@ -208,27 +371,15 @@ fun FileBrowserScreen(
                             .padding(16.dp),
                         contentAlignment = Alignment.Center
                     ) {
-                        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Text(
-                                "This folder is empty or inaccessible.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                OutlinedButton(onClick = onBack, enabled = canUp) {
-                                    Text("Go up")
-                                }
-                                Button(onClick = onShowQuickAccess) {
-                                    Text("Open Quick Access")
-                                }
-                            }
-                        }
+                        Text(
+                            "This folder is empty.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 } else {
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(pv),
+                        modifier = Modifier.fillMaxSize().padding(pv),
                         contentPadding = PaddingValues(8.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
@@ -267,19 +418,10 @@ fun FileBrowserScreen(
                             modifier = Modifier.size(64.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Text(
-                            "No location selected",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Button(onClick = onShowQuickAccess) {
-                                Text("Browse Files")
-                            }
-                            OutlinedButton(onClick = onPickRoot) {
-                                Text("Pick Folder")
-                            }
+                        Text("No location selected", style = MaterialTheme.typography.titleMedium)
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Button(onClick = onShowQuickAccess) { Text("Browse Files") }
+                            OutlinedButton(onClick = onPickRoot) { Text("Pick Folder") }
                         }
                     }
                 }
@@ -287,6 +429,7 @@ fun FileBrowserScreen(
         }
     }
 
+    // Dialogs — unchanged (ZIP name, 7z dialog, New folder, Rename)
     if (showZipNameDialog && currentDirUri != null) {
         var name by remember { mutableStateOf("archive.zip") }
         AlertDialog(
@@ -309,11 +452,7 @@ fun FileBrowserScreen(
                     selectedFiles.clear()
                 }) { Text("Create") }
             },
-            dismissButton = {
-                TextButton(onClick = { showZipNameDialog = false }) {
-                    Text("Cancel")
-                }
-            }
+            dismissButton = { TextButton(onClick = { showZipNameDialog = false }) { Text("Cancel") } }
         )
     }
 
@@ -325,16 +464,9 @@ fun FileBrowserScreen(
             title = { Text("Create 7z") },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(value = name, onValueChange = { name = it }, singleLine = true, label = { Text("Filename") })
                     OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it },
-                        singleLine = true,
-                        label = { Text("Filename") }
-                    )
-                    OutlinedTextField(
-                        value = pwd,
-                        onValueChange = { pwd = it },
-                        singleLine = true,
+                        value = pwd, onValueChange = { pwd = it }, singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         label = { Text("Password (optional)") }
                     )
@@ -349,11 +481,7 @@ fun FileBrowserScreen(
                     selectedFiles.clear()
                 }) { Text("Create") }
             },
-            dismissButton = {
-                TextButton(onClick = { show7zDialog = false }) {
-                    Text("Cancel")
-                }
-            }
+            dismissButton = { TextButton(onClick = { show7zDialog = false }) { Text("Cancel") } }
         )
     }
 
@@ -362,29 +490,16 @@ fun FileBrowserScreen(
         AlertDialog(
             onDismissRequest = { showNewFolderDialog = false },
             title = { Text("Create New Folder") },
-            text = {
-                OutlinedTextField(
-                    value = folderName,
-                    onValueChange = { folderName = it },
-                    singleLine = true,
-                    label = { Text("Folder name") }
-                )
-            },
+            text = { OutlinedTextField(value = folderName, onValueChange = { folderName = it }, singleLine = true, label = { Text("Folder name") }) },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (folderName.isNotBlank()) {
-                            onCreateFolder(folderName)
-                            showNewFolderDialog = false
-                        }
+                TextButton(onClick = {
+                    if (folderName.isNotBlank()) {
+                        onCreateFolder(folderName)
+                        showNewFolderDialog = false
                     }
-                ) { Text("Create") }
+                }) { Text("Create") }
             },
-            dismissButton = {
-                TextButton(onClick = { showNewFolderDialog = false }) {
-                    Text("Cancel")
-                }
-            }
+            dismissButton = { TextButton(onClick = { showNewFolderDialog = false }) { Text("Cancel") } }
         )
     }
 
@@ -409,11 +524,7 @@ fun FileBrowserScreen(
                     selectedFiles.clear()
                 }) { Text("Apply") }
             },
-            dismissButton = {
-                TextButton(onClick = { showRenameDialog = false }) {
-                    Text("Cancel")
-                }
-            }
+            dismissButton = { TextButton(onClick = { showRenameDialog = false }) { Text("Cancel") } }
         )
     }
 }

@@ -2,6 +2,7 @@ package app.fluffy.viewmodel
 
 import android.content.Context
 import android.net.Uri
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.work.WorkInfo
@@ -10,6 +11,7 @@ import app.fluffy.operations.ArchiveJobManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 
 class TasksViewModel(
     private val context: Context,
@@ -51,5 +53,8 @@ class TasksViewModel(
     fun cancelAll() {
         WorkManager.getInstance(context).cancelAllWorkByTag(ArchiveJobManager.TAG_ALL)
     }
-}
 
+    fun cancel(id: UUID) {
+        WorkManager.getInstance(context).cancelWorkById(id)
+    }
+}
