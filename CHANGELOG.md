@@ -1,3 +1,10 @@
+## v2.3.1
+
+- Suppress few more warns for compat
+- Suppress few warns
+- Move directory item counting off the UI thread, Skipping symlinks/hardlinks in TAR archives
+
+
 ## v2.2.15
 
 - Update android.yml
