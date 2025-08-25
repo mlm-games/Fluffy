@@ -1,3 +1,47 @@
+## v2.2.15
+
+- Update android.yml
+- Add the temp icon
+- Revert "rm unused files"
+- Allow checkboxes to be selected via dpad
+- Bring back quick access buttons
+- Show tasks in modal bottom bar for easy viewing
+- Update android.yml
+- add screenshots
+- add icon files
+- Update README.md
+- rm unused files
+- Empty folders now have a button directly to quick access
+- Update android.yml to fix gradle error
+- Bump actions/checkout from 4 to 5 in /.github/workflows
+- Bump gradle/actions from 3 to 4 in /.github/workflows
+- Empty folders now say they are empty
+- Refresh instantly on changes
+- Add a setting to extract files into a folder with the same name
+- Copying and moving files now works as intended
+- tar progress reporting
+- Opening files from an archive works
+- Add missing buttons for tv
+- move archive engine to app.fluffy
+- Add file count for folders
+- Add open with button
+- Fix quick archive button (pastes all files in current dir though)
+- Fix quick extract button, 7z still asks for a pass when viewing files, zipped folders do not show properly
+- Individual files unarchive works
+- do not navigate to tasks on extraction
+- Better options bar
+- Realised that it was due to dynamic colors, but hey, new setting!
+- Add latest changes
+- Try adding gradientish theme
+- Update android.yml
+- Update build.gradle.kts
+- Previous openAsFolder change commit
+- fix -Ptargetabi building all abis
+- Add error screen instead of just crashing
+- bootable, testable (basic) push with zipxtract like screen for now
+- first commit
+
+
 ## v2.2.14
 
 - Update android.yml
