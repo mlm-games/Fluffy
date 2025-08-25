@@ -69,3 +69,8 @@
 -keep class app.fluffy.data.repository.SettingsManager { *; }
 
 -keep class app.fluffy.ui.screens.SettingsScreenKt { *; }
+
+-keep class androidx.core.content.FileProvider { *; }
+-keep class ** extends androidx.work.ListenableWorker
+-keep class app.fluffy.work.** { *; }
+-keepnames class app.fluffy.work.**

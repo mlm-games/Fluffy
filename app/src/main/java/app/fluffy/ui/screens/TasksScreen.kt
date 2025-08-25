@@ -39,7 +39,7 @@ fun TasksScreen(
 
 @Composable
 private fun TaskRow(wi: WorkInfo) {
-    val progress = wi.progress.getFloat("progress", 0f)
+    val progress = wi.progress.getFloat("progress", -1f)
     val title = wi.tags.firstOrNull { it != "fluffy" } ?: wi.id.toString()
     val err = wi.outputData.getString("error")
     ElevatedCard(Modifier.fillMaxWidth()) {
@@ -58,12 +58,20 @@ private fun TaskRow(wi: WorkInfo) {
                     color = MaterialTheme.colorScheme.error
                 )
             }
-            LinearProgressIndicator(
-                progress = { progress },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp)
-            )
+            if (progress >= 0f) {
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                )
+            } else {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp)
+                )
+            }
         }
     }
 }

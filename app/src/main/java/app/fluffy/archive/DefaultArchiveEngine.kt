@@ -249,7 +249,9 @@ class DefaultArchiveEngine(
             var totalWritten = 0L
             while (e != null) {
                 val name = e.name
-                if (e.isDirectory || name.endsWith("/")) {
+                if (e.isSymbolicLink || e.isLink) {
+                    // Skip symlinks/hardlinks
+                } else if (e.isDirectory || name.endsWith("/")) {
                     create("$name/", true).use { /* dir ensure */ }
                 } else {
                     create(name, false).use { out ->

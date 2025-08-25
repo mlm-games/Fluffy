@@ -1,81 +1,32 @@
 package app.fluffy.ui.screens
 
 import android.net.Uri
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DriveFileMove
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
-import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.CameraAlt
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.CreateNewFolder
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Download
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.FolderOpen
-import androidx.compose.material.icons.filled.FolderZip
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Image
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Movie
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.OpenWith
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Unarchive
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -90,12 +41,13 @@ import app.fluffy.io.FileSystemAccess
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.QuickAccessItem
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun FileBrowserScreen(
     state: FileBrowserState,
@@ -192,7 +144,7 @@ fun FileBrowserScreen(
                     }
                 )
 
-                // SELECTION ACTION BAR — RESTORED (mobile + TV)
+                // SELECTION ACTION BAR
                 if ((selected.isNotEmpty() || selectedFiles.isNotEmpty()) &&
                     currentLocation !is BrowseLocation.QuickAccess
                 ) {
@@ -249,7 +201,6 @@ fun FileBrowserScreen(
                                         }
                                     )
 
-                                    // Picker path: choose another folder
                                     AssistChip(
                                         onClick = { onCopySelected(allSelectedUris) },
                                         label = { Text("Copy…") },
@@ -317,7 +268,6 @@ fun FileBrowserScreen(
                                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                     TextButton(onClick = { showZipNameDialog = true }) { Text("Zip") }
                                     TextButton(onClick = { show7zDialog = true }) { Text("7z") }
-                                    // Picker path
                                     TextButton(onClick = { onCopySelected(allSelectedUris) }) { Text("Copy…") }
                                     TextButton(onClick = { onMoveSelected(allSelectedUris) }) { Text("Move…") }
 
@@ -364,7 +314,6 @@ fun FileBrowserScreen(
             }
             is BrowseLocation.FileSystem -> {
                 if (state.fileItems.isEmpty()) {
-                    // Empty or inaccessible state, offer escape actions
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -635,6 +584,7 @@ fun FileBrowserScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FileSystemRow(
     file: File,
@@ -646,7 +596,9 @@ private fun FileSystemRow(
 ) {
     val isArchive = remember(file.name) { FileSystemAccess.isArchiveFile(file.name) }
     val itemCount by produceState<Int?>(initialValue = null, file) {
-        value = if (file.isDirectory) file.listFiles()?.size ?: 0 else null
+        value = withContext(Dispatchers.IO) {
+            if (file.isDirectory) file.listFiles()?.size ?: 0 else null
+        }
     }
 
     val mainFR = remember { FocusRequester() }
@@ -666,7 +618,6 @@ private fun FileSystemRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Main “open” area (icon + text), clickable focusable target
             Icon(
                 when {
                     file.isDirectory -> Icons.Filled.Folder
@@ -683,17 +634,17 @@ private fun FileSystemRow(
 
             Column(
                 Modifier
-                                    .weight(1f)
-                                    .focusRequester(mainFR)
-                                    .focusable()
-                                    .semantics { role = Role.Button }
-                                    .clickable {
-                                        when {
-                                            file.isDirectory -> onOpenFile(file)
-                                            isArchive -> onOpenArchive()
-                                            else -> onToggleSelect(!selected)
-                                        }
-                                    }
+                    .weight(1f)
+                    .focusRequester(mainFR)
+                    .focusable()
+                    .semantics { role = Role.Button }
+                    .clickable {
+                        when {
+                            file.isDirectory -> onOpenFile(file)
+                            isArchive -> onOpenArchive()
+                            else -> onToggleSelect(!selected)
+                        }
+                    }
                     .focusProperties { right = if (isArchive) extractFR else cbFR }
             ) {
                 Text(
@@ -737,15 +688,16 @@ private fun FileSystemRow(
                 checked = selected,
                 onCheckedChange = { onToggleSelect(it) },
                 modifier = Modifier
-                                    .focusRequester(cbFR)
-                                    .focusable()
-                                    .semantics { role = Role.Checkbox }
+                    .focusRequester(cbFR)
+                    .focusable()
+                    .semantics { role = Role.Checkbox }
                     .focusProperties { left = if (isArchive) extractFR else mainFR }
             )
         }
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FileRow(
     df: DocumentFile,
@@ -947,17 +899,15 @@ private fun QuickAccessCard(
     }
 }
 
-private fun getIconForQuickAccess(icon: String): ImageVector {
-    return when (icon.lowercase()) {
-        "storage" -> Icons.Default.Storage
-        "downloads" -> Icons.Default.Download
-        "documents" -> Icons.Default.Description
-        "pictures" -> Icons.Default.Image
-        "music" -> Icons.Default.MusicNote
-        "movies" -> Icons.Default.Movie
-        "dcim" -> Icons.Default.CameraAlt
-        else -> Icons.Default.Folder
-    }
+private fun getIconForQuickAccess(icon: String) = when (icon.lowercase()) {
+    "storage" -> Icons.Default.Storage
+    "downloads" -> Icons.Default.Download
+    "documents" -> Icons.Default.Description
+    "pictures" -> Icons.Default.Image
+    "music" -> Icons.Default.MusicNote
+    "movies" -> Icons.Default.Movie
+    "dcim" -> Icons.Default.CameraAlt
+    else -> Icons.Default.Folder
 }
 
 private fun formatFileSize(bytes: Long): String {

@@ -4,21 +4,22 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import app.fluffy.AppGraph
+import app.fluffy.io.FileSystemAccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import java.io.OutputStream
-import androidx.core.net.toUri
-import app.fluffy.io.FileSystemAccess
 import net.lingala.zip4j.exception.ZipException
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
+import java.io.OutputStream
 
 class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
 
@@ -44,6 +45,12 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
             targetDir
         }
 
+        // If writing to a file:// root, resolve its canonical path to enforce safety
+        val fileRoot = when (actualTargetDir.scheme) {
+            "file" -> kotlin.runCatching { java.io.File(requireNotNull(actualTargetDir.path)).canonicalFile }.getOrNull()
+            else -> null
+        }
+
         var wroteAny = false
 
         try {
@@ -54,27 +61,38 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
             }
 
             val create: (String, Boolean) -> OutputStream = { path, isDir ->
-                val clean = path.trimStart('/').replace('\\', '/')
-                if (!shouldInclude(clean)) {
-                    object : OutputStream() {
-                        override fun write(b: Int) {}
-                        override fun write(b: ByteArray, off: Int, len: Int) {}
-                    }
+                val safe = normalizeSafe(path)
+                if (safe == null) {
+                    devNull()
+                } else if (!shouldInclude(safe)) {
+                    devNull()
                 } else {
-                    val parentRel = clean.substringBeforeLast('/', "")
-                    val fileName = clean.substringAfterLast('/').ifEmpty { "item" }
-                    if (isDir || clean.endsWith("/")) {
-                        AppGraph.io.ensureDir(actualTargetDir, clean.removeSuffix("/"))
-                        wroteAny = true
-                        object : OutputStream() { override fun write(b: Int) {} }
+                    val parentRel = safe.substringBeforeLast('/', "")
+                    val fileName = safe.substringAfterLast('/').ifEmpty { "item" }
+                    if (isDir || safe.endsWith("/")) {
+                        val ensured = AppGraph.io.ensureDir(actualTargetDir, safe.removeSuffix("/"))
+                        if (!isSafeDestination(fileRoot, ensured, isDir = true)) {
+                            devNull()
+                        } else {
+                            wroteAny = true
+                            devNull()
+                        }
                     } else {
                         val parentUri = if (parentRel.isNotEmpty()) {
                             AppGraph.io.ensureDir(actualTargetDir, parentRel)
                         } else actualTargetDir
-                        val mime = FileSystemAccess.getMimeType(fileName)
-                        val fileUri = AppGraph.io.createFile(parentUri, fileName, mime)
-                        wroteAny = true
-                        AppGraph.io.openOut(fileUri)
+                        if (!isSafeDestination(fileRoot, parentUri, isDir = true)) {
+                            devNull()
+                        } else {
+                            val mime = FileSystemAccess.getMimeType(fileName)
+                            val fileUri = AppGraph.io.createFile(parentUri, fileName, mime)
+                            if (!isSafeDestination(fileRoot, fileUri, isDir = false)) {
+                                devNull()
+                            } else {
+                                wroteAny = true
+                                AppGraph.io.openOut(fileUri)
+                            }
+                        }
                     }
                 }
             }
@@ -120,8 +138,35 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
         }
     }
 
+    private fun devNull() = object : OutputStream() {
+        override fun write(b: Int) {}
+        override fun write(b: ByteArray, off: Int, len: Int) {}
+    }
+
     private fun normalize(path: String): String =
         path.trim().trimStart('/').replace('\\', '/').removeSuffix("/")
+
+    private fun normalizeSafe(path: String): String? {
+        val p = path.trim().replace('\\', '/')
+        if (p.startsWith("/") || p.contains('\u0000')) return null
+        // Windows drive or UNC
+        if (Regex("^[A-Za-z]:").containsMatchIn(p) || p.startsWith("//")) return null
+        val parts = p.split('/').filter { it.isNotEmpty() }
+        if (parts.any { it == "." || it == ".." }) return null
+        return parts.joinToString("/")
+    }
+
+    private fun isSafeDestination(root: java.io.File?, dest: Uri, isDir: Boolean): Boolean {
+        if (root == null || dest.scheme != "file") return true
+        return try {
+            val f = java.io.File(requireNotNull(dest.path)).canonicalFile
+            if (isDir) {
+                f.path.startsWith(root.path)
+            } else {
+                f.parentFile?.path?.startsWith(root.path) == true
+            }
+        } catch (_: Exception) { false }
+    }
 
     private fun baseNameForExtraction(fileName: String): String {
         val n = fileName.lowercase()

@@ -183,7 +183,6 @@ class MainActivity : ComponentActivity() {
                             if (refreshNeeded) filesVM.refreshCurrentDir()
                         }
 
-                        // NEW: Auto-open Task Center when a new RUNNING task appears
                         val seenRunning = remember { mutableSetOf<String>() }
                         LaunchedEffect(workInfos) {
                             val running = workInfos.filter { it.state == WorkInfo.State.RUNNING }
@@ -328,7 +327,6 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
 
-                                // Keep "tasks" route for debugging, but not necessary anymore
                                 composable("tasks") {
                                     TasksScreen(
                                         workInfos = tasksVM.workInfos.collectAsState().value,
@@ -367,7 +365,6 @@ class MainActivity : ComponentActivity() {
                             )
                         }
 
-                        // NEW: In-app Task Center sheet
                         if (showTaskCenter) {
                             ModalBottomSheet(
                                 onDismissRequest = { showTaskCenter = false },
@@ -377,7 +374,7 @@ class MainActivity : ComponentActivity() {
                                 TaskCenterSheet(
                                     workInfos = workInfos,
                                     onCancel = { id -> tasksVM.cancel(id) },
-                                    onClearFinished = { /* optional: let users dismiss finished tasks visually */ },
+                                    onClearFinished = { /* let users dismiss finished tasks visually */ },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .navigationBarsPadding()
@@ -626,18 +623,26 @@ private fun TaskRowCompact(
                     TextButton(onClick = { onCancel(wi.id) }) { Text("Cancel") }
                 }
             }
-            LinearProgressIndicator(
-                progress = { progress ?: 0f },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .padding(top = 8.dp)
-            )
+            if (progress != null) {
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .padding(top = 8.dp)
+                )
+            } else {
+                LinearProgressIndicator(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(6.dp)
+                        .padding(top = 8.dp)
+                )
+            }
         }
     }
 }
 
-// Reuse friendlyTitle from earlier patch
 private fun friendlyTitle(wi: WorkInfo): String {
     val t = wi.tags
     return when {

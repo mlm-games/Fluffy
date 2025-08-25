@@ -2,15 +2,13 @@ package app.fluffy.viewmodel
 
 import android.content.Context
 import android.net.Uri
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.Observer
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import app.fluffy.operations.ArchiveJobManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 import java.util.UUID
 
 class TasksViewModel(
@@ -21,13 +19,18 @@ class TasksViewModel(
     private val _workInfos = MutableStateFlow<List<WorkInfo>>(emptyList())
     val workInfos: StateFlow<List<WorkInfo>> = _workInfos
 
+    private val liveData = WorkManager.getInstance(context).getWorkInfosByTagLiveData(ArchiveJobManager.TAG_ALL)
+    private val observer = Observer<List<WorkInfo>?> { list ->
+        _workInfos.value = list ?: emptyList()
+    }
+
     init {
-        viewModelScope.launch {
-            WorkManager.getInstance(context).getWorkInfosByTagLiveData(ArchiveJobManager.TAG_ALL)
-                .observeForever { list ->
-                    _workInfos.value = list ?: emptyList()
-                }
-        }
+        liveData.observeForever(observer)
+    }
+
+    override fun onCleared() {
+        liveData.removeObserver(observer)
+        super.onCleared()
     }
 
     fun enqueueExtract(archive: Uri, targetDir: Uri, password: String?, includePaths: List<String>? = null) {

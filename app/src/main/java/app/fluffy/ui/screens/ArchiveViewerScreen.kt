@@ -1,59 +1,28 @@
-// File: app/fluffy/ui/screens/ArchiveViewerScreen.kt
 package app.fluffy.ui.screens
 
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.FactCheck
 import androidx.compose.material.icons.filled.FileOpen
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.ListItem
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import app.fluffy.AppGraph
 import app.fluffy.archive.ArchiveEngine
+import app.fluffy.helper.showToast
 import app.fluffy.io.FileSystemAccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -227,17 +196,23 @@ fun ArchiveViewerScreen(
             TopAppBar(
                 title = { Text(title.ifBlank { "Archive" }) },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    val canGoUp = currentPath.isNotBlank()
+                    IconButton(onClick = {
+                        if (canGoUp) {
+                            val parent = currentPath.trimEnd('/').substringBeforeLast('/', "")
+                            currentPath = if (parent.isNotBlank()) "$parent/" else ""
+                        } else onBack()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                     }
                 },
                 actions = {
                     if (listing.isNotEmpty()) {
                         IconButton(onClick = { onExtractTo(archiveUri, password.ifBlank { null }) }) {
-                            Icon(Icons.Default.FileOpen, contentDescription = "Extract all…")
+                            Icon(Icons.Filled.FileOpen, contentDescription = "Extract all…")
                         }
                         IconButton(onClick = { selectionMode = !selectionMode }) {
-                            Icon(Icons.Filled.Checklist, contentDescription = "Select entries")
+                            Icon(Icons.Filled.FactCheck, contentDescription = "Select entries")
                         }
                         if (selectionMode && selected.values.any { it }) {
                             IconButton(onClick = {
@@ -307,9 +282,10 @@ fun ArchiveViewerScreen(
                                             else currentPath + e.path
                                         )
                                     } else {
+                                        val pathInArchive = currentPath + e.path
                                         scope.launch {
                                             val uri = extractEntryToCache(
-                                                pathInArchive = currentPath + e.path,
+                                                pathInArchive = pathInArchive,
                                                 ctx = ctx,
                                                 archiveName = title,
                                                 archive = archiveUri,
@@ -463,17 +439,26 @@ private suspend fun extractEntryToCache(
 private fun openPreview(uri: Uri, name: String, ctx: Context) {
     val finalUri = if (uri.scheme == "file") {
         try {
-            FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", File(uri.path!!))
+            FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", File(requireNotNull(uri.path)))
         } catch (_: Exception) {
-            uri
+            null
         }
     } else uri
+    if (finalUri == null) {
+        ctx.showToast("No app available to open this file")
+        return
+    }
     val mime = FileSystemAccess.getMimeType(name)
     val intent = Intent(Intent.ACTION_VIEW).apply {
         setDataAndType(finalUri, mime)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
     }
-    ctx.startActivity(Intent.createChooser(intent, "Open with"))
+    val pm = ctx.packageManager
+    if (intent.resolveActivity(pm) != null) {
+        ctx.startActivity(Intent.createChooser(intent, "Open with"))
+    } else {
+        ctx.showToast("No app available to open this file")
+    }
 }
 
 private fun ensureDirSuffix(p: String) = if (p.endsWith("/")) p else "$p/"
