@@ -45,12 +45,12 @@ class TasksViewModel(
         jobs.enqueueCreate7z(sources, targetDir, outName, password)
     }
 
-    fun enqueueCopy(sources: List<Uri>, targetDir: Uri) {
-        jobs.enqueueCopy(sources, targetDir)
+    fun enqueueCopy(sources: List<Uri>, targetDir: Uri, overwrite: Boolean) {
+        jobs.enqueueCopy(sources, targetDir, overwrite)
     }
 
-    fun enqueueMove(sources: List<Uri>, targetDir: Uri) {
-        jobs.enqueueMove(sources, targetDir)
+    fun enqueueMove(sources: List<Uri>, targetDir: Uri, overwrite: Boolean) {
+        jobs.enqueueMove(sources, targetDir, overwrite)
     }
 
     fun cancelAll() {

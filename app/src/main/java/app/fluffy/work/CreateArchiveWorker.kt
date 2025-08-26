@@ -7,6 +7,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
@@ -15,7 +16,6 @@ import app.fluffy.AppGraph
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
-import androidx.core.net.toUri
 import java.io.File
 
 class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
@@ -35,12 +35,11 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
             collectFilesRec(src, AppGraph.io.queryDisplayName(src), pairs)
         }
 
-        val outUri = AppGraph.io.createFile(targetDir, outName, "application/zip")
+        val outUri = AppGraph.io.createFile(targetDir, outName, "application/zip", overwrite = true)
         val writeTarget: () -> java.io.OutputStream = { AppGraph.io.openOut(outUri) }
 
         setProgress(workDataOf("progress" to 0f))
 
-        // Correct parameter names or use positional args
         AppGraph.archive.createZip(
             sources = pairs,
             writeTarget = writeTarget,

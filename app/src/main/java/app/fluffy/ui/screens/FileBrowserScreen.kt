@@ -1,27 +1,79 @@
 package app.fluffy.ui.screens
 
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.ClickableText
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DriveFileMove
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.FolderZip
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.OpenWith
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Storage
+import androidx.compose.material.icons.filled.Unarchive
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -38,6 +90,7 @@ import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import app.fluffy.helper.DeviceUtils
 import app.fluffy.io.FileSystemAccess
+import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.QuickAccessItem
@@ -45,7 +98,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -76,6 +130,7 @@ fun FileBrowserScreen(
     val isTV = DeviceUtils.isTV(LocalContext.current)
     val configuration = LocalConfiguration.current
     val isCompactScreen = configuration.screenWidthDp < 600
+    val context = LocalContext.current
 
     val selected = remember { mutableStateListOf<Uri>() }
     val selectedFiles = remember { mutableStateListOf<File>() }
@@ -85,13 +140,59 @@ fun FileBrowserScreen(
     var showRenameDialog by remember { mutableStateOf(false) }
     var renameNewName by remember { mutableStateOf("") }
     var showNewFolderDialog by remember { mutableStateOf(false) }
-    var showExtractDialog by remember { mutableStateOf(false) }
-    var extractToCurrentDir by remember { mutableStateOf(true) }
 
+    // Overwrite confirmations (ZIP / 7z created into currentDir)
+    var pendingZipName by remember { mutableStateOf<String?>(null) }
+    var pending7zName by remember { mutableStateOf<String?>(null) }
+    var pending7zPwd by remember { mutableStateOf<String?>(null) }
+    var showOverwriteConfirm by remember { mutableStateOf(false) }
+    var overwriteMessage by remember { mutableStateOf("") }
     val currentDirUri: Uri? = when (currentLocation) {
         is BrowseLocation.FileSystem -> Uri.fromFile(currentLocation.file)
         is BrowseLocation.SAF -> state.currentDir
         else -> null
+    }
+
+    fun uriChildExists(parent: Uri, name: String): Boolean {
+        return when (parent.scheme) {
+            "file" -> {
+                val pf = File(parent.path!!)
+                File(pf, name).exists()
+            }
+            "content" -> {
+                val p = DocumentFile.fromTreeUri(context, parent)
+                    ?: DocumentFile.fromSingleUri(context, parent)
+                p?.findFile(name) != null
+            }
+            else -> false
+        }
+    }
+
+    fun confirmOrCreateZip(name: String) {
+        val dir = currentDirUri ?: return
+        val sources = selected + selectedFiles.map { Uri.fromFile(it) }
+        if (uriChildExists(dir, name)) {
+            pendingZipName = name
+            overwriteMessage = "A file named \"$name\" already exists here. Do you want to overwrite it?"
+            showOverwriteConfirm = true
+        } else {
+            onCreateZip(sources, name, dir)
+            selected.clear(); selectedFiles.clear()
+        }
+    }
+
+    fun confirmOrCreate7z(name: String, pwd: String?) {
+        val dir = currentDirUri ?: return
+        val sources = selected + selectedFiles.map { Uri.fromFile(it) }
+        if (uriChildExists(dir, name)) {
+            pending7zName = name
+            pending7zPwd = pwd
+            overwriteMessage = "A file named \"$name\" already exists here. Do you want to overwrite it?"
+            showOverwriteConfirm = true
+        } else {
+            onCreate7z(sources, name, pwd?.ifBlank { null }, dir)
+            selected.clear(); selectedFiles.clear()
+        }
     }
 
     Scaffold(
@@ -144,9 +245,11 @@ fun FileBrowserScreen(
                     }
                 )
 
-                // SELECTION ACTION BAR
-                if ((selected.isNotEmpty() || selectedFiles.isNotEmpty()) &&
-                    currentLocation !is BrowseLocation.QuickAccess
+                AnimatedVisibility(
+                    visible = (selected.isNotEmpty() || selectedFiles.isNotEmpty()) &&
+                            currentLocation !is BrowseLocation.QuickAccess,
+                    enter = androidx.compose.animation.fadeIn(animationSpec = tween(200)),
+                    exit = androidx.compose.animation.fadeOut(animationSpec = tween(200))
                 ) {
                     val count = selected.size + selectedFiles.size
                     val allSelectedUris = selected + selectedFiles.map { Uri.fromFile(it) }
@@ -453,6 +556,7 @@ fun FileBrowserScreen(
         }
     }
 
+    // Create ZIP dialog
     if (showZipNameDialog && currentDirUri != null) {
         var name by remember { mutableStateOf("archive.zip") }
         AlertDialog(
@@ -469,10 +573,7 @@ fun FileBrowserScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showZipNameDialog = false
-                    val sources = selected + selectedFiles.map { Uri.fromFile(it) }
-                    onCreateZip(sources, name, currentDirUri)
-                    selected.clear()
-                    selectedFiles.clear()
+                    confirmOrCreateZip(name)
                 }) { Text("Create") }
             },
             dismissButton = {
@@ -483,6 +584,7 @@ fun FileBrowserScreen(
         )
     }
 
+    // Create 7z dialog
     if (show7zDialog && currentDirUri != null) {
         var name by remember { mutableStateOf("archive.7z") }
         var pwd by remember { mutableStateOf("") }
@@ -509,10 +611,7 @@ fun FileBrowserScreen(
             confirmButton = {
                 TextButton(onClick = {
                     show7zDialog = false
-                    val sources = selected + selectedFiles.map { Uri.fromFile(it) }
-                    onCreate7z(sources, name, pwd.ifBlank { null }, currentDirUri)
-                    selected.clear()
-                    selectedFiles.clear()
+                    confirmOrCreate7z(name, pwd.ifBlank { null })
                 }) { Text("Create") }
             },
             dismissButton = {
@@ -582,6 +681,37 @@ fun FileBrowserScreen(
             }
         )
     }
+
+    // Overwrite confirmation (ZIP / 7z)
+    if (showOverwriteConfirm) {
+        ConfirmationDialog(
+            title = "Overwrite file?",
+            message = overwriteMessage,
+            onConfirm = {
+                showOverwriteConfirm = false
+                val dir = currentDirUri
+                if (dir != null) {
+                    val sources = selected + selectedFiles.map { Uri.fromFile(it) }
+                    pendingZipName?.let { n ->
+                        onCreateZip(sources, n, dir)
+                        pendingZipName = null
+                    }
+                    pending7zName?.let { n ->
+                        onCreate7z(sources, n, pending7zPwd, dir)
+                        pending7zName = null
+                        pending7zPwd = null
+                    }
+                    selected.clear(); selectedFiles.clear()
+                }
+            },
+            onDismiss = {
+                showOverwriteConfirm = false
+                pendingZipName = null
+                pending7zName = null
+                pending7zPwd = null
+            }
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -609,7 +739,8 @@ private fun FileSystemRow(
         modifier = Modifier
             .fillMaxWidth()
             .focusGroup()
-            .focusProperties { canFocus = false }, // parent won't steal focus
+            .focusProperties { canFocus = false } // parent won't steal focus
+            .animateContentSize(animationSpec = tween(200)),
     ) {
         Row(
             Modifier
@@ -720,6 +851,7 @@ private fun FileRow(
             .fillMaxWidth()
             .focusGroup()
             .focusProperties { canFocus = false }
+            .animateContentSize(animationSpec = tween(200))
     ) {
         Row(
             modifier = Modifier

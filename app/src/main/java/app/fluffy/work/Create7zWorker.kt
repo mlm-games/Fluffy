@@ -7,6 +7,7 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
@@ -17,7 +18,6 @@ import kotlinx.coroutines.withContext
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry
 import org.apache.commons.compress.archivers.sevenz.SevenZOutputFile
 import java.io.File
-import androidx.core.net.toUri
 import java.io.InputStream
 
 class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
@@ -45,7 +45,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                 }
             }
 
-            val outUri = AppGraph.io.createFile(targetDir, outName, "application/x-7z-compressed")
+            val outUri = AppGraph.io.createFile(targetDir, outName, "application/x-7z-compressed", overwrite = true)
             AppGraph.io.openOut(outUri).use { out ->
                 outTmp.inputStream().use { input -> input.copyTo(out) }
             }
@@ -128,7 +128,6 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
     }
 
     private fun ensureDirSuffix(name: String) = if (name.endsWith("/")) name else "$name/"
-
 
     companion object {
         const val KEY_SOURCES = "sources"

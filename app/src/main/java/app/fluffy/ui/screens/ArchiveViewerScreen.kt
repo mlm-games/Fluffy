@@ -3,6 +3,12 @@ package app.fluffy.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -63,7 +69,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
 fun ArchiveViewerScreen(
     archiveUri: Uri,
@@ -260,112 +266,118 @@ fun ArchiveViewerScreen(
         }
     ) { pv ->
         Column(Modifier.fillMaxSize().padding(pv)) {
-            when {
-                loading -> {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
+            AnimatedContent(
+                targetState = Triple(loading, error, listing.isNotEmpty()),
+                label = "archive_content_xfade",
+                transitionSpec = { fadeIn(tween(200)) togetherWith fadeOut(tween(200)) }
+            ) { (isLoading, err, hasList) ->
+                when {
+                    isLoading -> {
+                        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                            CircularProgressIndicator()
+                        }
                     }
-                }
-                error != null -> {
-                    Column(Modifier.padding(16.dp)) {
-                        Card(
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.errorContainer
-                            ),
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(Modifier.padding(16.dp)) {
-                                Text(
-                                    error!!,
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                                if (canOpenAsFolder) {
-                                    Spacer(Modifier.height(12.dp))
-                                    Button(
-                                        onClick = { onOpenAsFolder(archiveUri) },
-                                        colors = ButtonDefaults.buttonColors(
-                                            containerColor = MaterialTheme.colorScheme.primary
-                                        )
-                                    ) {
-                                        Text("Open as folder")
+                    err != null -> {
+                        Column(Modifier.padding(16.dp)) {
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.errorContainer
+                                ),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Column(Modifier.padding(16.dp)) {
+                                    Text(
+                                        err,
+                                        color = MaterialTheme.colorScheme.onErrorContainer,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    if (canOpenAsFolder) {
+                                        Spacer(Modifier.height(12.dp))
+                                        Button(
+                                            onClick = { onOpenAsFolder(archiveUri) },
+                                            colors = ButtonDefaults.buttonColors(
+                                                containerColor = MaterialTheme.colorScheme.primary
+                                            )
+                                        ) {
+                                            Text("Open as folder")
+                                        }
                                     }
                                 }
                             }
                         }
                     }
-                }
-                listing.isNotEmpty() -> {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        contentPadding = PaddingValues(12.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        items(visible, key = { it.path }) { e ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                colors = CardDefaults.cardColors(
-                                    containerColor = MaterialTheme.colorScheme.surface
-                                ),
-                                onClick = {
-                                    if (e.isDir) {
-                                        currentPath = ensureDirSuffix(
-                                            if (currentPath.isBlank()) e.path
-                                            else currentPath + e.path
-                                        )
-                                    } else {
-                                        val pathInArchive = currentPath + e.path
-                                        scope.launch {
-                                            val uri = extractEntryToCache(
-                                                pathInArchive = pathInArchive,
-                                                ctx = ctx,
-                                                archiveName = title,
-                                                archive = archiveUri,
-                                                pwd = password.ifBlank { null }
+                    hasList -> {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(12.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            items(visible, key = { it.path }) { e ->
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surface
+                                    ),
+                                    onClick = {
+                                        if (e.isDir) {
+                                            currentPath = ensureDirSuffix(
+                                                if (currentPath.isBlank()) e.path
+                                                else currentPath + e.path
                                             )
-                                            if (uri != null) openPreview(uri, e.path, ctx)
-                                        }
-                                    }
-                                }
-                            ) {
-                                ListItem(
-                                    headlineContent = { Text(e.path.trimEnd('/')) },
-                                    supportingContent = {
-                                        val meta = buildString {
-                                            append(if (e.isDir) "Folder" else "File")
-                                            if (!e.isDir && e.size > 0) {
-                                                append(" • ${formatSize(e.size)}")
+                                        } else {
+                                            val pathInArchive = currentPath + e.path
+                                            scope.launch {
+                                                val uri = extractEntryToCache(
+                                                    pathInArchive = pathInArchive,
+                                                    ctx = ctx,
+                                                    archiveName = title,
+                                                    archive = archiveUri,
+                                                    pwd = password.ifBlank { null }
+                                                )
+                                                if (uri != null) openPreview(uri, e.path, ctx)
                                             }
                                         }
-                                        Text(meta)
-                                    },
-                                    trailingContent = {
-                                        if (selectionMode) {
-                                            val fullKey = currentPath + e.path.trimEnd('/')
-                                            val checked = selected[fullKey] == true
-                                            Checkbox(
-                                                checked = checked,
-                                                onCheckedChange = { selected[fullKey] = it }
-                                            )
-                                        }
                                     }
-                                )
+                                ) {
+                                    ListItem(
+                                        headlineContent = { Text(e.path.trimEnd('/')) },
+                                        supportingContent = {
+                                            val meta = buildString {
+                                                append(if (e.isDir) "Folder" else "File")
+                                                if (!e.isDir && e.size > 0) {
+                                                    append(" • ${formatSize(e.size)}")
+                                                }
+                                            }
+                                            Text(meta)
+                                        },
+                                        trailingContent = {
+                                            if (selectionMode) {
+                                                val fullKey = currentPath + e.path.trimEnd('/')
+                                                val checked = selected[fullKey] == true
+                                                Checkbox(
+                                                    checked = checked,
+                                                    onCheckedChange = { selected[fullKey] = it }
+                                                )
+                                            }
+                                        }
+                                    )
+                                }
                             }
                         }
                     }
-                }
-                else -> {
-                    Box(
-                        Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            "No entries found in this archive.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    else -> {
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                "No entries found in this archive.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             }

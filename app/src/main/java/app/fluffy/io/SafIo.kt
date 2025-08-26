@@ -59,7 +59,7 @@ class SafIo(val context: Context) {
                 FileOutputStream(file)
             }
             "content" -> {
-                requireNotNull(cr.openOutputStream(uri)) { "openOutputStream null $uri" }
+                requireNotNull(cr.openOutputStream(uri, "w")) { "openOutputStream null $uri" }
             }
             else -> throw IOException("Unsupported URI scheme: ${uri.scheme}")
         }
@@ -77,24 +77,52 @@ class SafIo(val context: Context) {
                 val p = DocumentFile.fromTreeUri(context, parent)
                     ?: DocumentFile.fromSingleUri(context, parent)
                     ?: error("Invalid parent")
-                requireNotNull(p.createDirectory(name)?.uri) { "Failed to create dir" }
+                val existing = p.findFile(name)
+                if (existing != null && existing.isDirectory) {
+                    existing.uri
+                } else {
+                    requireNotNull(p.createDirectory(name)?.uri) { "Failed to create dir" }
+                }
             }
             else -> throw IOException("Unsupported URI scheme: ${parent.scheme}")
         }
     }
 
-    fun createFile(parent: Uri, name: String, mime: String = "application/octet-stream"): Uri {
+    /**
+     * Create a file under [parent] with [name] and [mime].
+     * If [overwrite] is true and a file with the same name exists, it will be deleted first.
+     */
+    fun createFile(
+        parent: Uri,
+        name: String,
+        mime: String = "application/octet-stream",
+        overwrite: Boolean = false
+    ): Uri {
         return when (parent.scheme) {
             "file" -> {
                 val parentFile = File(parent.path!!)
                 val newFile = File(parentFile, name)
-                newFile.createNewFile()
+                if (overwrite && newFile.exists()) {
+                    runCatching { newFile.delete() }
+                }
+                if (!newFile.exists()) {
+                    newFile.createNewFile()
+                }
                 Uri.fromFile(newFile)
             }
             "content" -> {
                 val p = DocumentFile.fromTreeUri(context, parent)
                     ?: DocumentFile.fromSingleUri(context, parent)
                     ?: error("Invalid parent")
+                val existing = p.findFile(name)
+                if (existing != null) {
+                    if (overwrite) {
+                        runCatching { existing.delete() }
+                    } else {
+                        // If not overwriting, let provider create a sibling (or fail)
+                        return requireNotNull(p.createFile(mime, name)?.uri) { "Failed to create file" }
+                    }
+                }
                 requireNotNull(p.createFile(mime, name)?.uri) { "Failed to create file" }
             }
             else -> throw IOException("Unsupported URI scheme: ${parent.scheme}")
@@ -126,9 +154,10 @@ class SafIo(val context: Context) {
         parent: Uri,
         name: String,
         input: () -> InputStream,
-        onProgress: (Long, Long) -> Unit = { _, _ -> }
+        onProgress: (Long, Long) -> Unit = { _, _ -> },
+        overwrite: Boolean = false
     ): Uri = withContext(Dispatchers.IO) {
-        val target = createFile(parent, name)
+        val target = createFile(parent, name, overwrite = overwrite)
         when (target.scheme) {
             "file" -> {
                 val file = File(target.path!!)
@@ -139,7 +168,7 @@ class SafIo(val context: Context) {
                 }
             }
             "content" -> {
-                cr.openOutputStream(target).use { out ->
+                cr.openOutputStream(target, "w").use { out ->
                     input().use { `in` ->
                         copyWithProgress(`in`, out!!, onProgress)
                     }
@@ -218,44 +247,48 @@ class SafIo(val context: Context) {
         }
     }
 
-    suspend fun copyIntoDir(srcUri: Uri, targetParent: Uri): Boolean = withContext(Dispatchers.IO) {
-        when (srcUri.scheme) {
-            "file" -> {
-                val srcFile = File(srcUri.path!!)
-                // Support both file:// and content:// targets
-                copyFileToTargetRecursive(srcFile, targetParent)
-                true
+    suspend fun copyIntoDir(srcUri: Uri, targetParent: Uri, overwrite: Boolean = false): Boolean =
+        withContext(Dispatchers.IO) {
+            when (srcUri.scheme) {
+                "file" -> {
+                    val srcFile = File(srcUri.path!!)
+                    copyFileToTargetRecursive(srcFile, targetParent, overwrite)
+                    true
+                }
+                "content" -> {
+                    val src = docFileFromUri(srcUri) ?: return@withContext false
+                    copyDocRecursive(src, targetParent, overwrite)
+                    true
+                }
+                else -> false
             }
-            "content" -> {
-                val src = docFileFromUri(srcUri) ?: return@withContext false
-                // copyDocRecursive supports both file:// and content:// targets via createFile/ensureDir
-                copyDocRecursive(src, targetParent)
-                true
-            }
-            else -> false
         }
-    }
 
-    private fun copyFileToTargetRecursive(src: File, targetParent: Uri) {
+    private fun copyFileToTargetRecursive(src: File, targetParent: Uri, overwrite: Boolean) {
         val name = src.name
         if (src.isDirectory) {
             val newParent = ensureDir(targetParent, name)
             src.listFiles()?.forEach { child ->
-                copyFileToTargetRecursive(child, newParent)
+                copyFileToTargetRecursive(child, newParent, overwrite)
             }
         } else {
             val mime = FileSystemAccess.getMimeType(name)
-            val target = createFile(targetParent, name, mime)
+            // If overwriting, delete existing before creating
+            if (overwrite) {
+                deleteChildIfExists(targetParent, name)
+            }
+            val target = createFile(targetParent, name, mime, overwrite = overwrite)
             FileInputStream(src).use { input ->
                 openOut(target).use { out -> input.copyTo(out) }
             }
         }
     }
 
-    suspend fun moveIntoDir(srcUri: Uri, targetParent: Uri): Boolean = withContext(Dispatchers.IO) {
-        val ok = copyIntoDir(srcUri, targetParent)
-        if (ok) deleteTree(srcUri) else false
-    }
+    suspend fun moveIntoDir(srcUri: Uri, targetParent: Uri, overwrite: Boolean = false): Boolean =
+        withContext(Dispatchers.IO) {
+            val ok = copyIntoDir(srcUri, targetParent, overwrite)
+            if (ok) deleteTree(srcUri) else false
+        }
 
     suspend fun deleteTree(uri: Uri): Boolean = withContext(Dispatchers.IO) {
         when (uri.scheme) {
@@ -269,16 +302,19 @@ class SafIo(val context: Context) {
         }
     }
 
-    private fun copyDocRecursive(src: DocumentFile, targetParent: Uri) {
+    private fun copyDocRecursive(src: DocumentFile, targetParent: Uri, overwrite: Boolean) {
         val name = src.name ?: "item"
         if (src.isDirectory) {
             val newDir = ensureDir(targetParent, name)
             src.listFiles().forEach { child ->
-                copyDocRecursive(child, newDir)
+                copyDocRecursive(child, newDir, overwrite)
             }
         } else {
             val mime = src.type ?: "application/octet-stream"
-            val target = createFile(targetParent, name, mime)
+            if (overwrite) {
+                deleteChildIfExists(targetParent, name)
+            }
+            val target = createFile(targetParent, name, mime, overwrite = overwrite)
             openIn(src.uri).use { input ->
                 openOut(target).use { out -> input.copyTo(out) }
             }
@@ -290,6 +326,25 @@ class SafIo(val context: Context) {
             doc.listFiles().forEach { child -> deleteDocRecursive(child) }
         }
         doc.delete()
+    }
+
+    private fun deleteChildIfExists(parent: Uri, name: String) {
+        when (parent.scheme) {
+            "file" -> {
+                val pf = File(parent.path!!)
+                val f = File(pf, name)
+                if (f.exists()) runCatching { f.deleteRecursively() }
+            }
+            "content" -> {
+                val p = DocumentFile.fromTreeUri(context, parent)
+                    ?: DocumentFile.fromSingleUri(context, parent)
+                    ?: return
+                val existing = p.findFile(name)
+                if (existing != null) {
+                    runCatching { existing.delete() }
+                }
+            }
+        }
     }
 
     companion object {

@@ -68,14 +68,15 @@ class ArchiveJobManager(
         return req.id.toString()
     }
 
-    fun enqueueCopy(sources: List<Uri>, targetDir: Uri): String {
+    fun enqueueCopy(sources: List<Uri>, targetDir: Uri, overwrite: Boolean = false): String {
         val req = OneTimeWorkRequestBuilder<FileOpsWorker>()
             .addTag(TAG_ALL).addTag(TAG_COPY)
             .setInputData(
                 workDataOf(
                     FileOpsWorker.KEY_SOURCES to sources.map { it.toString() }.toTypedArray(),
                     FileOpsWorker.KEY_TARGET_DIR to targetDir.toString(),
-                    FileOpsWorker.KEY_OP to FileOpsWorker.OP_COPY
+                    FileOpsWorker.KEY_OP to FileOpsWorker.OP_COPY,
+                    FileOpsWorker.KEY_OVERWRITE to overwrite
                 )
             )
             .build()
@@ -83,14 +84,15 @@ class ArchiveJobManager(
         return req.id.toString()
     }
 
-    fun enqueueMove(sources: List<Uri>, targetDir: Uri): String {
+    fun enqueueMove(sources: List<Uri>, targetDir: Uri, overwrite: Boolean = false): String {
         val req = OneTimeWorkRequestBuilder<FileOpsWorker>()
             .addTag(TAG_ALL).addTag(TAG_MOVE)
             .setInputData(
                 workDataOf(
                     FileOpsWorker.KEY_SOURCES to sources.map { it.toString() }.toTypedArray(),
                     FileOpsWorker.KEY_TARGET_DIR to targetDir.toString(),
-                    FileOpsWorker.KEY_OP to FileOpsWorker.OP_MOVE
+                    FileOpsWorker.KEY_OP to FileOpsWorker.OP_MOVE,
+                    FileOpsWorker.KEY_OVERWRITE to overwrite
                 )
             )
             .build()

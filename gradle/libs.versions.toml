@@ -35,6 +35,7 @@ datastorePreferencesCore = "1.1.7"
 xz = "1.10"
 zip4j = "2.11.5"
 zstdJni = "1.5.7-4"
+animation = "1.9.0"
 
 [libraries]
 activity-compose = { module = "androidx.activity:activity-compose", version.ref = "activityCompose" }
@@ -80,6 +81,7 @@ androidx-datastore-preferences-core = { group = "androidx.datastore", name = "da
 xz = { module = "org.tukaani:xz", version.ref = "xz" }
 zip4j = { module = "net.lingala.zip4j:zip4j", version.ref = "zip4j" }
 zstd-jni = { module = "com.github.luben:zstd-jni", version.ref = "zstdJni" }
+androidx-animation = { group = "androidx.compose.animation", name = "animation", version.ref = "animation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "androidGradlePlugin" }

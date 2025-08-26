@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.net.toUri
+import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -39,10 +39,12 @@ import app.fluffy.data.repository.AppSettings
 import app.fluffy.helper.DeviceUtils
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.operations.ArchiveJobManager
+import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.ui.screens.*
 import app.fluffy.ui.theme.FluffyTheme
 import app.fluffy.viewmodel.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -95,6 +97,10 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private val showOverwriteDialog = mutableStateOf(false)
+    private val overwriteMessage = mutableStateOf("")
+    private var onOverwriteConfirm: (() -> Unit)? = null
+
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -127,20 +133,88 @@ class MainActivity : ComponentActivity() {
                 )
             } catch (_: SecurityException) { }
 
+            fun namesInDir(parent: Uri): Set<String> {
+                return when (parent.scheme) {
+                    "file" -> {
+                        val f = File(parent.path!!)
+                        (f.listFiles()?.map { it.name } ?: emptyList()).toSet()
+                    }
+                    "content" -> {
+                        val p = DocumentFile.fromTreeUri(this, parent)
+                            ?: DocumentFile.fromSingleUri(this, parent)
+                        p?.listFiles()?.mapNotNull { it.name }?.toSet() ?: emptySet()
+                    }
+                    else -> emptySet()
+                }
+            }
+
             lifecycleScope.launch {
+                // COPY/MOVE conflicts
                 pendingCopy?.let { list ->
-                    tasksVM.enqueueCopy(list, target)
-                    pendingCopy = null
+                    val destNames = namesInDir(target)
+                    val sourceNames = list.map { AppGraph.io.queryDisplayName(it) }
+                    val collisions = sourceNames.count { it in destNames }
+                    val enqueue: (Boolean) -> Unit = { overwrite ->
+                        tasksVM.enqueueCopy(list, target, overwrite)
+                        pendingCopy = null
+                    }
+                    if (collisions > 0) {
+                        overwriteMessage.value = "$collisions item(s) with the same name exist in the destination. Overwrite them?"
+                        onOverwriteConfirm = { enqueue(true) }
+                        showOverwriteDialog.value = true
+                    } else {
+                        enqueue(false)
+                    }
                 }
                 pendingMove?.let { list ->
-                    tasksVM.enqueueMove(list, target)
-                    pendingMove = null
+                    val destNames = namesInDir(target)
+                    val sourceNames = list.map { AppGraph.io.queryDisplayName(it) }
+                    val collisions = sourceNames.count { it in destNames }
+                    val enqueue: (Boolean) -> Unit = { overwrite ->
+                        tasksVM.enqueueMove(list, target, overwrite)
+                        pendingMove = null
+                    }
+                    if (collisions > 0) {
+                        overwriteMessage.value = "$collisions item(s) with the same name exist in the destination. Overwrite them?"
+                        onOverwriteConfirm = { enqueue(true) }
+                        showOverwriteDialog.value = true
+                    } else {
+                        enqueue(false)
+                    }
                 }
+
+                // EXTRACT: if extracting into subfolder and it exists -> confirm
                 pendingExtractArchive?.let { arch ->
-                    tasksVM.enqueueExtract(arch, target, pendingExtractPassword, pendingExtractPaths)
-                    pendingExtractArchive = null
-                    pendingExtractPassword = null
-                    pendingExtractPaths = null
+                    val settings = AppGraph.settings.settingsFlow.first()
+                    val name = AppGraph.io.queryDisplayName(arch)
+                    val subfolder = baseNameForExtraction(name)
+                    val mayUseSubfolder = settings.extractIntoSubfolder
+                    val enqueueExtract = {
+                        tasksVM.enqueueExtract(arch, target, pendingExtractPassword, pendingExtractPaths)
+                        pendingExtractArchive = null
+                        pendingExtractPassword = null
+                        pendingExtractPaths = null
+                    }
+                    if (mayUseSubfolder) {
+                        val exists = when (target.scheme) {
+                            "file" -> File(File(target.path!!), subfolder).exists()
+                            "content" -> {
+                                val p = DocumentFile.fromTreeUri(this@MainActivity, target)
+                                    ?: DocumentFile.fromSingleUri(this@MainActivity, target)
+                                p?.findFile(subfolder) != null
+                            }
+                            else -> false
+                        }
+                        if (exists) {
+                            overwriteMessage.value = "Folder \"$subfolder\" already exists. Extract into it and overwrite files if needed?"
+                            onOverwriteConfirm = { enqueueExtract() }
+                            showOverwriteDialog.value = true
+                        } else {
+                            enqueueExtract()
+                        }
+                    } else {
+                        enqueueExtract()
+                    }
                 }
             }
         }
@@ -167,7 +241,6 @@ class MainActivity : ComponentActivity() {
                         val browserState by filesVM.state.collectAsState()
                         val workInfos by tasksVM.workInfos.collectAsState()
 
-                        // NEW: Task Center bottom sheet state
                         var showTaskCenter by rememberSaveable { mutableStateOf(false) }
                         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -193,7 +266,6 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
-                        // Existing pending file open navigation
                         LaunchedEffect(browserState.pendingFileOpen) {
                             browserState.pendingFileOpen?.let { uri ->
                                 val name = uri.lastPathSegment?.lowercase() ?: ""
@@ -218,14 +290,10 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onCreateZip = { sources, outName, targetDir ->
                                             tasksVM.enqueueCreateZip(sources, targetDir, outName)
-                                            // Instead of navigating away, open Task Center
                                             showTaskCenter = true
                                         },
                                         onOpenSettings = { nav.navigate("settings") },
-                                        onOpenTasks = {
-                                            // Open in-app Task Center instead of a separate screen
-                                            showTaskCenter = true
-                                        },
+                                        onOpenTasks = { showTaskCenter = true },
                                         onOpenArchive = { arch ->
                                             val encoded = URLEncoder.encode(arch.toString(), StandardCharsets.UTF_8.name())
                                             nav.navigate("archive/$encoded")
@@ -383,21 +451,41 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    if (showPermissionDialog) {
+                    // Storage permission helper dialog
+                    var showPermissionDialogState by remember { mutableStateOf(false) }
+                    LaunchedEffect(Unit) { showPermissionDialogState = false }
+                    if (showPermissionDialogState) {
                         AlertDialog(
-                            onDismissRequest = { showPermissionDialog = false },
+                            onDismissRequest = { showPermissionDialogState = false },
                             title = { Text("Storage Permission Required") },
                             text = { Text("Fluffy needs storage permission to browse and manage your files. Please grant the permission to continue.") },
                             confirmButton = {
                                 TextButton(onClick = {
-                                    showPermissionDialog = false
+                                    showPermissionDialogState = false
                                     requestStoragePermission()
                                 }) { Text("Grant Permission") }
                             },
                             dismissButton = {
-                                TextButton(onClick = { showPermissionDialog = false }) {
+                                TextButton(onClick = { showPermissionDialogState = false }) {
                                     Text("Cancel")
                                 }
+                            }
+                        )
+                    }
+
+                    // Global overwrite confirmation (copy/move/extract-to-subfolder)
+                    if (showOverwriteDialog.value) {
+                        ConfirmationDialog(
+                            title = "Overwrite?",
+                            message = overwriteMessage.value,
+                            onConfirm = {
+                                showOverwriteDialog.value = false
+                                onOverwriteConfirm?.invoke()
+                                onOverwriteConfirm = null
+                            },
+                            onDismiss = {
+                                showOverwriteDialog.value = false
+                                onOverwriteConfirm = null
                             }
                         )
                     }
@@ -405,6 +493,21 @@ class MainActivity : ComponentActivity() {
             }
 
         }
+    }
+
+    private fun baseNameForExtraction(fileName: String): String {
+        val n = fileName.lowercase()
+        val candidates = listOf(
+            ".tar.gz", ".tar.bz2", ".tar.xz",
+            ".tgz", ".tbz2", ".txz",
+            ".zip", ".jar", ".apk", ".7z", ".tar"
+        )
+        val hit = candidates.firstOrNull { n.endsWith(it) }
+        return if (hit != null) {
+            fileName.dropLast(hit.length)
+        } else {
+            fileName.substringBeforeLast('.', fileName)
+        }.ifBlank { "extracted" }
     }
 
     private fun checkStoragePermissions() {

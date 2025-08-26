@@ -6,6 +6,7 @@ import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
@@ -13,7 +14,6 @@ import androidx.work.workDataOf
 import app.fluffy.AppGraph
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import androidx.core.net.toUri
 
 class FileOpsWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
 
@@ -27,14 +27,15 @@ class FileOpsWorker(appContext: Context, params: WorkerParameters) : CoroutineWo
         val sources = inputData.getStringArray(KEY_SOURCES)?.map { it.toUri() } ?: return@withContext Result.failure()
         val target = inputData.getString(KEY_TARGET_DIR)?.toUri() ?: return@withContext Result.failure()
         val op = inputData.getString(KEY_OP) ?: OP_COPY
+        val overwrite = inputData.getBoolean(KEY_OVERWRITE, false)
 
         val total = sources.size.coerceAtLeast(1)
         sources.forEachIndexed { index, uri ->
             if (isStopped) return@withContext Result.failure()
             val ok = try {
                 when (op) {
-                    OP_MOVE -> AppGraph.io.moveIntoDir(uri, target)
-                    else -> AppGraph.io.copyIntoDir(uri, target)
+                    OP_MOVE -> AppGraph.io.moveIntoDir(uri, target, overwrite)
+                    else -> AppGraph.io.copyIntoDir(uri, target, overwrite)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -42,7 +43,7 @@ class FileOpsWorker(appContext: Context, params: WorkerParameters) : CoroutineWo
             }
             if (!ok) {
                 return@withContext Result.failure(
-                    workDataOf("error" to "Failed to $op: ${uri}")
+                    workDataOf("error" to "Failed to $op: $uri")
                 )
             }
             val progress = (index + 1).toFloat() / total
@@ -69,6 +70,7 @@ class FileOpsWorker(appContext: Context, params: WorkerParameters) : CoroutineWo
         const val KEY_SOURCES = "sources"
         const val KEY_TARGET_DIR = "targetDir"
         const val KEY_OP = "op"
+        const val KEY_OVERWRITE = "overwrite"
         const val OP_COPY = "copy"
         const val OP_MOVE = "move"
     }
