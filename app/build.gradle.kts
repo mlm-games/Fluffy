@@ -43,7 +43,9 @@ android {
         vectorDrawables.useSupportLibrary = true
     }
 
+   
     val enableApkSplits = (providers.gradleProperty("enableApkSplits").orNull ?: "true").toBoolean()
+    val includeUniversalApk = (providers.gradleProperty("includeUniversalApk").orNull ?: "true").toBoolean()
     val targetAbi = providers.gradleProperty("targetAbi").orNull
 
     splits {
@@ -57,7 +59,7 @@ android {
                     include("arm64-v8a", "armeabi-v7a", "x86", "x86_64")
                 }
             }
-            isUniversalApk = false
+            isUniversalApk = includeUniversalApk && enableApkSplits
         }
     }
 
@@ -69,8 +71,10 @@ android {
         outputs.all {
             if (this is ApkVariantOutputImpl) {
                 val abiName = filters.find { it.filterType == "ABI" }?.identifier
+                val base = variant.versionCode
+
                 if (abiName != null) {
-                    val base = variant.versionCode
+                    // Split APKs get stable per-ABI version codes and names
                     val abiVersionCode = when (abiName) {
                         "x86" -> base - 3
                         "x86_64" -> base - 2
@@ -79,7 +83,10 @@ android {
                         else -> base
                     }
                     versionCodeOverride = abiVersionCode
-                    outputFileName = "fluffy-${variant.versionName}-${abiName}.apk"
+                    outputFileName = "flicky-${variant.versionName}-${abiName}.apk"
+                } else {
+                    versionCodeOverride = base + 1
+                    outputFileName = "flicky-${variant.versionName}-universal.apk"
                 }
             }
         }
