@@ -1,3 +1,8 @@
+## v2.4.2
+
+- cp paste mistakes
+
+
 ## v2.4.1
 
 - Fix quick extract not showing confirmation dialog
