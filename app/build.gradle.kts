@@ -83,10 +83,10 @@ android {
                         else -> base
                     }
                     versionCodeOverride = abiVersionCode
-                    outputFileName = "flicky-${variant.versionName}-${abiName}.apk"
+                    outputFileName = "fluffy-${variant.versionName}-${abiName}.apk"
                 } else {
                     versionCodeOverride = base + 1
-                    outputFileName = "flicky-${variant.versionName}-universal.apk"
+                    outputFileName = "fluffy-${variant.versionName}-universal.apk"
                 }
             }
         }
