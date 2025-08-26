@@ -149,7 +149,7 @@ class MainActivity : ComponentActivity() {
             }
 
             lifecycleScope.launch {
-                // COPY
+                // COPY/MOVE conflicts
                 pendingCopy?.let { list ->
                     val destNames = namesInDir(target)
                     val sourceNames = list.map { AppGraph.io.queryDisplayName(it) }
@@ -166,8 +166,6 @@ class MainActivity : ComponentActivity() {
                         enqueue(false)
                     }
                 }
-
-                // MOVE
                 pendingMove?.let { list ->
                     val destNames = namesInDir(target)
                     val sourceNames = list.map { AppGraph.io.queryDisplayName(it) }
@@ -185,7 +183,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // EXTRACT: confirm only if subfolder exists (deep per-file scan is heavy)
+                // EXTRACT: if extracting into subfolder and it exists -> confirm
                 pendingExtractArchive?.let { arch ->
                     val settings = AppGraph.settings.settingsFlow.first()
                     val name = AppGraph.io.queryDisplayName(arch)
@@ -198,15 +196,7 @@ class MainActivity : ComponentActivity() {
                         pendingExtractPaths = null
                     }
                     if (mayUseSubfolder) {
-                        val exists = when (target.scheme) {
-                            "file" -> File(File(target.path!!), subfolder).exists()
-                            "content" -> {
-                                val p = DocumentFile.fromTreeUri(this@MainActivity, target)
-                                    ?: DocumentFile.fromSingleUri(this@MainActivity, target)
-                                p?.findFile(subfolder) != null
-                            }
-                            else -> false
-                        }
+                        val exists = childExists(target, subfolder)
                         if (exists) {
                             overwriteMessage.value = "Folder \"$subfolder\" already exists. Extract into it and overwrite files if needed?"
                             onOverwriteConfirm = { enqueueExtract() }
@@ -245,7 +235,6 @@ class MainActivity : ComponentActivity() {
                         var showTaskCenter by rememberSaveable { mutableStateOf(false) }
                         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-                        // Auto-refresh after tasks finish
                         val seenFinished = remember { mutableSetOf<String>() }
                         LaunchedEffect(workInfos) {
                             var refreshNeeded = false
@@ -287,7 +276,13 @@ class MainActivity : ComponentActivity() {
                                         onOpenDir = { filesVM.openDir(it) },
                                         onBack = { filesVM.goUp() },
                                         onExtractArchive = { archive, targetDir ->
-                                            tasksVM.enqueueExtract(archive, targetDir, null)
+                                            extractWithConfirm(
+                                                archive = archive,
+                                                password = null,
+                                                includePaths = null,
+                                                targetDir = targetDir,
+                                                onAfterEnqueue = { showTaskCenter = true }
+                                            )
                                         },
                                         onCreateZip = { sources, outName, targetDir, overwrite ->
                                             tasksVM.enqueueCreateZip(sources, targetDir, outName, overwrite)
@@ -359,9 +354,16 @@ class MainActivity : ComponentActivity() {
                                                     else -> null
                                                 }
                                                 if (currentDir != null) {
-                                                    tasksVM.enqueueExtract(arch, currentDir, pwd)
-                                                    showTaskCenter = true
-                                                    nav.popBackStack()
+                                                    extractWithConfirm(
+                                                        archive = arch,
+                                                        password = pwd,
+                                                        includePaths = null,
+                                                        targetDir = currentDir,
+                                                        onAfterEnqueue = {
+                                                            showTaskCenter = true
+                                                            nav.popBackStack()
+                                                        }
+                                                    )
                                                 } else {
                                                     pendingExtractArchive = arch
                                                     pendingExtractPassword = pwd
@@ -377,9 +379,16 @@ class MainActivity : ComponentActivity() {
                                                     else -> null
                                                 }
                                                 if (currentDir != null) {
-                                                    tasksVM.enqueueExtract(arch, currentDir, pwd, paths)
-                                                    showTaskCenter = true
-                                                    nav.popBackStack()
+                                                    extractWithConfirm(
+                                                        archive = arch,
+                                                        password = pwd,
+                                                        includePaths = paths,
+                                                        targetDir = currentDir,
+                                                        onAfterEnqueue = {
+                                                            showTaskCenter = true
+                                                            nav.popBackStack()
+                                                        }
+                                                    )
                                                 } else {
                                                     pendingExtractArchive = arch
                                                     pendingExtractPassword = pwd
@@ -434,7 +443,6 @@ class MainActivity : ComponentActivity() {
                         }
 
                         if (showTaskCenter) {
-                            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
                             ModalBottomSheet(
                                 onDismissRequest = { showTaskCenter = false },
                                 sheetState = sheetState,
@@ -469,6 +477,49 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun extractWithConfirm(
+        archive: Uri,
+        password: String?,
+        includePaths: List<String>?,
+        targetDir: Uri,
+        onAfterEnqueue: (() -> Unit)? = null
+    ) {
+        lifecycleScope.launch {
+            val settings = AppGraph.settings.settingsFlow.first()
+            if (settings.extractIntoSubfolder) {
+                val sub = baseNameForExtraction(AppGraph.io.queryDisplayName(archive))
+                val exists = childExists(targetDir, sub)
+                val enqueue = {
+                    tasksVM.enqueueExtract(archive, targetDir, password, includePaths)
+                    onAfterEnqueue?.invoke()
+                }
+                if (exists) {
+                    overwriteMessage.value = "Folder \"$sub\" already exists. Extract into it and overwrite files if needed?"
+                    onOverwriteConfirm = enqueue as (() -> Unit)?
+                    showOverwriteDialog.value = true
+                } else {
+                    enqueue()
+                }
+            } else {
+                // Not using a subfolder; proceed (doing per-file collision scan is heavy)
+                tasksVM.enqueueExtract(archive, targetDir, password, includePaths)
+                onAfterEnqueue?.invoke()
+            }
+        }
+    }
+
+    private fun childExists(parent: Uri, name: String): Boolean {
+        return when (parent.scheme) {
+            "file" -> File(File(parent.path!!), name).exists()
+            "content" -> {
+                val p = DocumentFile.fromTreeUri(this, parent)
+                    ?: DocumentFile.fromSingleUri(this, parent)
+                p?.findFile(name) != null
+            }
+            else -> false
         }
     }
 
