@@ -34,7 +34,13 @@ class ArchiveJobManager(
         return req.id.toString()
     }
 
-    fun enqueueCreateZip(sources: List<Uri>, targetDir: Uri, outName: String, password: String? = null): String {
+    fun enqueueCreateZip(
+        sources: List<Uri>,
+        targetDir: Uri,
+        outName: String,
+        overwrite: Boolean = false,
+        password: String? = null
+    ): String {
         val req = OneTimeWorkRequestBuilder<CreateArchiveWorker>()
             .addTag(TAG_ALL).addTag(TAG_CREATE_ZIP)
             .setInputData(
@@ -42,7 +48,8 @@ class ArchiveJobManager(
                     CreateArchiveWorker.KEY_SOURCES to sources.map { it.toString() }.toTypedArray(),
                     CreateArchiveWorker.KEY_TARGET_DIR to targetDir.toString(),
                     CreateArchiveWorker.KEY_OUT_NAME to outName,
-                    CreateArchiveWorker.KEY_PASSWORD to (password ?: "")
+                    CreateArchiveWorker.KEY_PASSWORD to (password ?: ""),
+                    CreateArchiveWorker.KEY_OVERWRITE to overwrite
                 )
             )
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
@@ -51,7 +58,13 @@ class ArchiveJobManager(
         return req.id.toString()
     }
 
-    fun enqueueCreate7z(sources: List<Uri>, targetDir: Uri, outName: String, password: String? = null): String {
+    fun enqueueCreate7z(
+        sources: List<Uri>,
+        targetDir: Uri,
+        outName: String,
+        password: String? = null,
+        overwrite: Boolean = false
+    ): String {
         val req = OneTimeWorkRequestBuilder<Create7zWorker>()
             .addTag(TAG_ALL).addTag(TAG_CREATE_7Z)
             .setInputData(
@@ -59,7 +72,8 @@ class ArchiveJobManager(
                     Create7zWorker.KEY_SOURCES to sources.map { it.toString() }.toTypedArray(),
                     Create7zWorker.KEY_TARGET_DIR to targetDir.toString(),
                     Create7zWorker.KEY_OUT_NAME to outName,
-                    Create7zWorker.KEY_PASSWORD to (password ?: "")
+                    Create7zWorker.KEY_PASSWORD to (password ?: ""),
+                    Create7zWorker.KEY_OVERWRITE to overwrite
                 )
             )
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)

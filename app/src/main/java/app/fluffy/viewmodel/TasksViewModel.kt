@@ -3,12 +3,14 @@ package app.fluffy.viewmodel
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.Observer
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
 import app.fluffy.operations.ArchiveJobManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 import java.util.UUID
 
 class TasksViewModel(
@@ -37,19 +39,19 @@ class TasksViewModel(
         jobs.enqueueExtract(archive, targetDir, password, includePaths)
     }
 
-    fun enqueueCreateZip(sources: List<Uri>, targetDir: Uri, outName: String) {
-        jobs.enqueueCreateZip(sources, targetDir, outName, password = null)
+    fun enqueueCreateZip(sources: List<Uri>, targetDir: Uri, outName: String, overwrite: Boolean = false) {
+        jobs.enqueueCreateZip(sources, targetDir, outName, overwrite, password = null)
     }
 
-    fun enqueueCreate7z(sources: List<Uri>, targetDir: Uri, outName: String, password: String?) {
-        jobs.enqueueCreate7z(sources, targetDir, outName, password)
+    fun enqueueCreate7z(sources: List<Uri>, targetDir: Uri, outName: String, password: String?, overwrite: Boolean = false) {
+        jobs.enqueueCreate7z(sources, targetDir, outName, password, overwrite)
     }
 
-    fun enqueueCopy(sources: List<Uri>, targetDir: Uri, overwrite: Boolean) {
+    fun enqueueCopy(sources: List<Uri>, targetDir: Uri, overwrite: Boolean = false) {
         jobs.enqueueCopy(sources, targetDir, overwrite)
     }
 
-    fun enqueueMove(sources: List<Uri>, targetDir: Uri, overwrite: Boolean) {
+    fun enqueueMove(sources: List<Uri>, targetDir: Uri, overwrite: Boolean = false) {
         jobs.enqueueMove(sources, targetDir, overwrite)
     }
 

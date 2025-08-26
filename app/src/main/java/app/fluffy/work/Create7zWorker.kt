@@ -29,6 +29,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
         val targetDir = inputData.getString(KEY_TARGET_DIR)?.toUri() ?: return@withContext Result.failure()
         val outName = inputData.getString(KEY_OUT_NAME)?.ifBlank { "archive.7z" } ?: "archive.7z"
         val password = inputData.getString(KEY_PASSWORD)?.takeIf { it.isNotEmpty() }?.toCharArray()
+        val overwrite = inputData.getBoolean(KEY_OVERWRITE, false)
 
         val outTmp = File(applicationContext.cacheDir, "create_${System.currentTimeMillis()}.7z")
 
@@ -45,7 +46,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                 }
             }
 
-            val outUri = AppGraph.io.createFile(targetDir, outName, "application/x-7z-compressed", overwrite = true)
+            val outUri = AppGraph.io.createFile(targetDir, outName, "application/x-7z-compressed", overwrite = overwrite)
             AppGraph.io.openOut(outUri).use { out ->
                 outTmp.inputStream().use { input -> input.copyTo(out) }
             }
@@ -80,7 +81,6 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
         val df = AppGraph.io.docFileFromUri(uri)
         if (uri.scheme == "content" && df != null) {
             if (df.isDirectory) {
-                // Directory entry
                 val dirEntry = SevenZArchiveEntry().apply {
                     name = ensureDirSuffix(relPath)
                     isDirectory = true
@@ -134,5 +134,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
         const val KEY_TARGET_DIR = "targetDir"
         const val KEY_OUT_NAME = "outName"
         const val KEY_PASSWORD = "password"
+        const val KEY_OVERWRITE = "overwrite"
     }
 }
+

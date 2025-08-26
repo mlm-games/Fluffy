@@ -88,7 +88,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
-import app.fluffy.helper.DeviceUtils
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.viewmodel.BrowseLocation
@@ -98,8 +97,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -109,7 +107,7 @@ fun FileBrowserScreen(
     onOpenDir: (Uri) -> Unit,
     onBack: () -> Unit,
     onExtractArchive: (Uri, Uri) -> Unit,
-    onCreateZip: (List<Uri>, String, Uri) -> Unit,
+    onCreateZip: (List<Uri>, String, Uri, Boolean) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenTasks: () -> Unit,
     onOpenWith: (Uri, String) -> Unit = { _, _ -> },
@@ -118,7 +116,7 @@ fun FileBrowserScreen(
     onMoveSelected: (List<Uri>) -> Unit = {},
     onDeleteSelected: (List<Uri>) -> Unit = {},
     onRenameOne: (Uri, String) -> Unit = { _, _ -> },
-    onCreate7z: (List<Uri>, String, String?, Uri) -> Unit = { _, _, _, _ -> },
+    onCreate7z: (List<Uri>, String, String?, Uri, Boolean) -> Unit = { _, _, _, _, _ -> },
     onOpenFile: (File) -> Unit = {},
     onQuickAccessClick: (QuickAccessItem) -> Unit = {},
     onRequestPermission: () -> Unit = {},
@@ -127,7 +125,6 @@ fun FileBrowserScreen(
 ) {
     val currentLocation = state.currentLocation
     val canUp = state.stack.size > 1
-    val isTV = DeviceUtils.isTV(LocalContext.current)
     val configuration = LocalConfiguration.current
     val isCompactScreen = configuration.screenWidthDp < 600
     val context = LocalContext.current
@@ -173,10 +170,10 @@ fun FileBrowserScreen(
         val sources = selected + selectedFiles.map { Uri.fromFile(it) }
         if (uriChildExists(dir, name)) {
             pendingZipName = name
-            overwriteMessage = "A file named \"$name\" already exists here. Do you want to overwrite it?"
+            overwriteMessage = "A file named \"$name\" already exists here. Overwrite it?"
             showOverwriteConfirm = true
         } else {
-            onCreateZip(sources, name, dir)
+            onCreateZip(sources, name, dir, false)
             selected.clear(); selectedFiles.clear()
         }
     }
@@ -187,10 +184,10 @@ fun FileBrowserScreen(
         if (uriChildExists(dir, name)) {
             pending7zName = name
             pending7zPwd = pwd
-            overwriteMessage = "A file named \"$name\" already exists here. Do you want to overwrite it?"
+            overwriteMessage = "A file named \"$name\" already exists here. Overwrite it?"
             showOverwriteConfirm = true
         } else {
-            onCreate7z(sources, name, pwd?.ifBlank { null }, dir)
+            onCreate7z(sources, name, pwd?.ifBlank { null }, dir, false)
             selected.clear(); selectedFiles.clear()
         }
     }
@@ -245,6 +242,7 @@ fun FileBrowserScreen(
                     }
                 )
 
+                // Animated selection action bar
                 AnimatedVisibility(
                     visible = (selected.isNotEmpty() || selectedFiles.isNotEmpty()) &&
                             currentLocation !is BrowseLocation.QuickAccess,
@@ -258,8 +256,7 @@ fun FileBrowserScreen(
                         modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                     ) {
-                        if (isCompactScreen && !isTV) {
-                            // Mobile compact: stacked layout with chips
+                        if (isCompactScreen) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -354,7 +351,6 @@ fun FileBrowserScreen(
                                 }
                             }
                         } else {
-                            // TV/Tablet: single row of text buttons
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -693,11 +689,11 @@ fun FileBrowserScreen(
                 if (dir != null) {
                     val sources = selected + selectedFiles.map { Uri.fromFile(it) }
                     pendingZipName?.let { n ->
-                        onCreateZip(sources, n, dir)
+                        onCreateZip(sources, n, dir, true)
                         pendingZipName = null
                     }
                     pending7zName?.let { n ->
-                        onCreate7z(sources, n, pending7zPwd, dir)
+                        onCreate7z(sources, n, pending7zPwd, dir, true)
                         pending7zName = null
                         pending7zPwd = null
                     }

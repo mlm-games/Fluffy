@@ -149,7 +149,7 @@ class MainActivity : ComponentActivity() {
             }
 
             lifecycleScope.launch {
-                // COPY/MOVE conflicts
+                // COPY
                 pendingCopy?.let { list ->
                     val destNames = namesInDir(target)
                     val sourceNames = list.map { AppGraph.io.queryDisplayName(it) }
@@ -166,6 +166,8 @@ class MainActivity : ComponentActivity() {
                         enqueue(false)
                     }
                 }
+
+                // MOVE
                 pendingMove?.let { list ->
                     val destNames = namesInDir(target)
                     val sourceNames = list.map { AppGraph.io.queryDisplayName(it) }
@@ -183,7 +185,7 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // EXTRACT: if extracting into subfolder and it exists -> confirm
+                // EXTRACT: confirm only if subfolder exists (deep per-file scan is heavy)
                 pendingExtractArchive?.let { arch ->
                     val settings = AppGraph.settings.settingsFlow.first()
                     val name = AppGraph.io.queryDisplayName(arch)
@@ -221,7 +223,6 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             val settings by AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings())
-            var showPermissionDialog by remember { mutableStateOf(false) }
 
             val dark = when (settings.themeMode) {
                 0 -> isSystemInDarkTheme()
@@ -244,7 +245,7 @@ class MainActivity : ComponentActivity() {
                         var showTaskCenter by rememberSaveable { mutableStateOf(false) }
                         val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-                        // Auto-refresh current dir when a task finishes (as before)
+                        // Auto-refresh after tasks finish
                         val seenFinished = remember { mutableSetOf<String>() }
                         LaunchedEffect(workInfos) {
                             var refreshNeeded = false
@@ -288,8 +289,8 @@ class MainActivity : ComponentActivity() {
                                         onExtractArchive = { archive, targetDir ->
                                             tasksVM.enqueueExtract(archive, targetDir, null)
                                         },
-                                        onCreateZip = { sources, outName, targetDir ->
-                                            tasksVM.enqueueCreateZip(sources, targetDir, outName)
+                                        onCreateZip = { sources, outName, targetDir, overwrite ->
+                                            tasksVM.enqueueCreateZip(sources, targetDir, outName, overwrite)
                                             showTaskCenter = true
                                         },
                                         onOpenSettings = { nav.navigate("settings") },
@@ -322,8 +323,8 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             }
                                         },
-                                        onCreate7z = { sources, outName, password, targetDir ->
-                                            tasksVM.enqueueCreate7z(sources, targetDir, outName, password)
+                                        onCreate7z = { sources, outName, password, targetDir, overwrite ->
+                                            tasksVM.enqueueCreate7z(sources, targetDir, outName, password, overwrite)
                                             showTaskCenter = true
                                         },
                                         onOpenFile = { file -> filesVM.openFile(file) },
@@ -418,7 +419,6 @@ class MainActivity : ComponentActivity() {
                             content()
                         }
 
-                        // Mini bottom overlay for the latest task (already present)
                         val active = remember(workInfos) {
                             val running = workInfos.filter { it.state == WorkInfo.State.RUNNING }
                             when {
@@ -434,6 +434,7 @@ class MainActivity : ComponentActivity() {
                         }
 
                         if (showTaskCenter) {
+                            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
                             ModalBottomSheet(
                                 onDismissRequest = { showTaskCenter = false },
                                 sheetState = sheetState,
@@ -442,7 +443,7 @@ class MainActivity : ComponentActivity() {
                                 TaskCenterSheet(
                                     workInfos = workInfos,
                                     onCancel = { id -> tasksVM.cancel(id) },
-                                    onClearFinished = { /* let users dismiss finished tasks visually */ },
+                                    onClearFinished = { /* visual clear only */ },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .navigationBarsPadding()
@@ -451,29 +452,6 @@ class MainActivity : ComponentActivity() {
                         }
                     }
 
-                    // Storage permission helper dialog
-                    var showPermissionDialogState by remember { mutableStateOf(false) }
-                    LaunchedEffect(Unit) { showPermissionDialogState = false }
-                    if (showPermissionDialogState) {
-                        AlertDialog(
-                            onDismissRequest = { showPermissionDialogState = false },
-                            title = { Text("Storage Permission Required") },
-                            text = { Text("Fluffy needs storage permission to browse and manage your files. Please grant the permission to continue.") },
-                            confirmButton = {
-                                TextButton(onClick = {
-                                    showPermissionDialogState = false
-                                    requestStoragePermission()
-                                }) { Text("Grant Permission") }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = { showPermissionDialogState = false }) {
-                                    Text("Cancel")
-                                }
-                            }
-                        )
-                    }
-
-                    // Global overwrite confirmation (copy/move/extract-to-subfolder)
                     if (showOverwriteDialog.value) {
                         ConfirmationDialog(
                             title = "Overwrite?",
@@ -491,7 +469,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-
         }
     }
 

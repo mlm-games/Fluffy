@@ -27,6 +27,7 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
         val targetDir = inputData.getString(KEY_TARGET_DIR)?.toUri() ?: return@withContext Result.failure()
         val outName = inputData.getString(KEY_OUT_NAME)?.ifBlank { "archive.zip" } ?: "archive.zip"
         val password = inputData.getString(KEY_PASSWORD)?.takeIf { it.isNotEmpty() }?.toCharArray()
+        val overwrite = inputData.getBoolean(KEY_OVERWRITE, false)
 
         val level = AppGraph.settings.settingsFlow.first().zipCompressionLevel.coerceIn(0, 9)
 
@@ -35,7 +36,7 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
             collectFilesRec(src, AppGraph.io.queryDisplayName(src), pairs)
         }
 
-        val outUri = AppGraph.io.createFile(targetDir, outName, "application/zip", overwrite = true)
+        val outUri = AppGraph.io.createFile(targetDir, outName, "application/zip", overwrite = overwrite)
         val writeTarget: () -> java.io.OutputStream = { AppGraph.io.openOut(outUri) }
 
         setProgress(workDataOf("progress" to 0f))
@@ -102,5 +103,7 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
         const val KEY_TARGET_DIR = "targetDir"
         const val KEY_OUT_NAME = "outName"
         const val KEY_PASSWORD = "password"
+        const val KEY_OVERWRITE = "overwrite"
     }
 }
+
