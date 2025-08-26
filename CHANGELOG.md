@@ -1,3 +1,13 @@
+## v2.4.1
+
+- Fix quick extract not showing confirmation dialog
+- Add Overwrite dialog for creating archive (
+- Add few anims, overwrite confirmation blueprint
+- Update build.gradle.kts
+- Update android.yml
+- Bump actions/setup-java from 4 to 5 in /.github/workflows
+
+
 ## v2.3.1
 
 - Suppress few more warns for compat
