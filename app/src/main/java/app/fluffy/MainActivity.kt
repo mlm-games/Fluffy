@@ -1,6 +1,8 @@
 package app.fluffy
 
 import android.Manifest
+import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -105,6 +107,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppGraph.init(applicationContext)
+
+        handleViewIntent(intent)
+
 
         checkStoragePermissions()
 
@@ -480,6 +485,41 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handleViewIntent(intent)
+    }
+
+    private fun handleViewIntent(inIntent: Intent) {
+        val action = inIntent.action ?: return
+        fun isImageMime(m: String?) = m?.startsWith("image/") == true
+
+        when (action) {
+            Intent.ACTION_VIEW -> {
+                val data = inIntent.data ?: return
+                val mime = inIntent.type ?: contentResolver.getType(data)
+                if (isImageMime(mime)) {
+                    openImageViewer(
+                        context = this,
+                        images = listOf(data),
+                        startIndex = 0,
+                        title = AppGraph.io.queryDisplayName(data)
+                    )
+                }
+            }
+            Intent.ACTION_SEND -> {
+                if (!isImageMime(inIntent.type)) return
+                val u = inIntent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM) ?: return
+                openImageViewer(this, listOf(u), 0, AppGraph.io.queryDisplayName(u))
+            }
+            Intent.ACTION_SEND_MULTIPLE -> {
+                if (!isImageMime(inIntent.type)) return
+                val arr = inIntent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM).orEmpty()
+                if (arr.isNotEmpty()) openImageViewer(this, arr, 0, "Gallery")
+            }
+        }
+    }
+
     private fun extractWithConfirm(
         archive: Uri,
         password: String?,
@@ -786,19 +826,34 @@ private fun friendlyTitle(wi: WorkInfo): String {
     }
 }
 
-
-
+fun openImageViewer(
+    context: Context,
+    images: List<Uri>,
+    startIndex: Int = 0,
+    title: String? = null
+) {
+    val imageStrings = ArrayList(images.map { it.toString() })
+    val intent = Intent(context, ImageViewerActivity::class.java).apply {
+        putStringArrayListExtra(ImageViewerActivity.EXTRA_IMAGES, imageStrings)
+        putExtra(ImageViewerActivity.EXTRA_INITIAL_INDEX, startIndex)
+        title?.let { putExtra(ImageViewerActivity.EXTRA_TITLE, it) }
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        if (context !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    context.startActivity(intent)
+}
 class ImageViewerActivity : ComponentActivity() {
     companion object {
         const val EXTRA_IMAGES = "images"
         const val EXTRA_INITIAL_INDEX = "initial"
+        const val EXTRA_TITLE = "title"
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val images = intent.getStringArrayListExtra(EXTRA_IMAGES) ?: arrayListOf()
         val start = intent.getIntExtra(EXTRA_INITIAL_INDEX, 0).coerceIn(0, (images.size - 1).coerceAtLeast(0))
         setContent {
-            FluffyTheme(true) {
+            FluffyTheme(darkTheme = true, useAuroraTheme = true) {
                 FullscreenImageViewer(
                     images = images,
                     initialPage = start,

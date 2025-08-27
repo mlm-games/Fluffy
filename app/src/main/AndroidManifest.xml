@@ -65,12 +65,12 @@
             android:name=".ImageViewerActivity"
             android:exported="true"
             android:theme="@style/Theme.Material3.DayNight.NoActionBar">
-        <intent-filter>
-            <action android:name="android.intent.action.VIEW" />
-            <category android:name="android.intent.category.DEFAULT" />
-            <category android:name="android.intent.category.BROWSABLE" />
-            <data android:mimeType="image/*" />
-        </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:mimeType="image/*" />
+            </intent-filter>
         </activity>
 
         <provider
