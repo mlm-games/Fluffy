@@ -1,3 +1,9 @@
+## v2.4.3
+
+- External image viewer intent handler
+- Remove unused perms, fix file colors, add more animations (and lag for older devices)
+
+
 ## v2.4.2
 
 - cp paste mistakes

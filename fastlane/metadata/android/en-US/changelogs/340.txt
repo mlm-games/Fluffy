@@ -1,0 +1,2 @@
+- External image viewer intent handler
+- Remove unused perms, fix file colors, add more animations (and lag for older devices)
