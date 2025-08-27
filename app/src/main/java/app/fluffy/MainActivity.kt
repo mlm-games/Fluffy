@@ -785,3 +785,26 @@ private fun friendlyTitle(wi: WorkInfo): String {
         else -> "Working…"
     }
 }
+
+
+
+class ImageViewerActivity : ComponentActivity() {
+    companion object {
+        const val EXTRA_IMAGES = "images"
+        const val EXTRA_INITIAL_INDEX = "initial"
+    }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val images = intent.getStringArrayListExtra(EXTRA_IMAGES) ?: arrayListOf()
+        val start = intent.getIntExtra(EXTRA_INITIAL_INDEX, 0).coerceIn(0, (images.size - 1).coerceAtLeast(0))
+        setContent {
+            FluffyTheme(true) {
+                FullscreenImageViewer(
+                    images = images,
+                    initialPage = start,
+                    onClose = { finish() }
+                )
+            }
+        }
+    }
+}
