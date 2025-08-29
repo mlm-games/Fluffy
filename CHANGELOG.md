@@ -1,3 +1,9 @@
+## v2.4.5
+
+- Change icon
+- Update android.yml to set alpha as default
+
+
 ## v2.4.4
 
 - Update short_description.txt
