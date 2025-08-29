@@ -1,3 +1,8 @@
+## v2.4.6
+
+- Add screenshots
+
+
 ## v2.4.5
 
 - Change icon
