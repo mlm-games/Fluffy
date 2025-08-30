@@ -13,26 +13,31 @@ object ShellIo {
     private fun shizukuProc(vararg args: String): Process? =
         ShizukuAccess.newProcess(args as Array<String>)
 
+    // ls by cd into directory (follows symlinks), try toybox/ls/busybox, silence stderr.
+    private fun listCmd(path: String): String =
+        "cd ${q(path)} 2>/dev/null && (toybox ls -1Ap 2>/dev/null || ls -1Ap 2>/dev/null || busybox ls -1Ap 2>/dev/null) || true"
+
+    private fun parseLsLines(lines: List<String>): List<Pair<String, Boolean>> =
+        lines.filter { it.isNotBlank() }.map { raw ->
+            val name = raw.removeSuffix("/")
+            val isDir = raw.endsWith("/")
+            name to isDir
+        }
+
     fun listRoot(path: String): List<Pair<String, Boolean>> {
         if (!RootAccess.isAvailable()) return emptyList()
-        val p = suProc("ls -1Ap ${q(path)} || true")
+        val p = suProc(listCmd(path))
         val lines = p.inputStream.bufferedReader().readLines()
         p.destroy()
-        return lines.filter { it.isNotBlank() }.map { n ->
-            val isDir = n.endsWith("/")
-            (if (isDir) n.removeSuffix("/") else n) to isDir
-        }
+        return parseLsLines(lines)
     }
 
     fun listShizuku(path: String): List<Pair<String, Boolean>> {
         if (!ShizukuAccess.isAvailable()) return emptyList()
-        val p = shizukuProc("sh", "-c", "ls -1Ap ${q(path)} || true") ?: return emptyList()
+        val p = shizukuProc("sh", "-c", listCmd(path)) ?: return emptyList()
         val lines = p.inputStream.bufferedReader().readLines()
         p.destroy()
-        return lines.filter { it.isNotBlank() }.map { n ->
-            val isDir = n.endsWith("/")
-            (if (isDir) n.removeSuffix("/") else n) to isDir
-        }
+        return parseLsLines(lines)
     }
 
     fun openInRoot(path: String): InputStream {
