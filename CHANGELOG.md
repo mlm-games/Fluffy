@@ -1,3 +1,14 @@
+## v3.0.1
+
+- Add external storage quick access buttons
+- Fix #5 (Add root and shizuku support in settings)
+- Update README.md
+- Update README.md
+- MAke dark theme the default
+- Theming improvements
+- remove unused files
+
+
 ## v2.4.6
 
 - Add screenshots
