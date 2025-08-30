@@ -48,7 +48,7 @@ data class AppSettings(
         type = SettingType.DROPDOWN,
         options = ["System", "Light", "Dark"]
     )
-    val themeMode: Int = 0,
+    val themeMode: Int = 2,
 
     @Setting(
         title = "Use Aurora Theme",

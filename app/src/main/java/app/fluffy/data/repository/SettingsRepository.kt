@@ -61,7 +61,7 @@ class SettingsRepository(private val context: Context) {
             defaultSort = p[DEFAULT_SORT] ?: 0,
             showHidden = p[SHOW_HIDDEN] ?: false,
             useAuroraTheme = p[USE_AURORA_THEME] ?: true,
-            themeMode = p[THEME_MODE] ?: 0,
+            themeMode = p[THEME_MODE] ?: 2,
             zipCompressionLevel = p[ZIP_LEVEL] ?: 5,
             extractIntoSubfolder = p[EXTRACT_INTO_SUBFOLDER] ?: true
         )
