@@ -3,6 +3,11 @@
 
 ![Banner](assets/banner.svg)
 
+
+[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroidButtonGreyBorder_nofont.png" height="80" alt="Get it at IzzyOnDroid">](https://apt.izzysoft.de/packages/app.fluffy)
+
+[<img src="https://shields.rbtlog.dev/simple/app.fluffy?style=for-the-badge" alt="RB Status">](https://shields.rbtlog.dev/app.fluffy)
+
 > The UI is mostly TV oriented, certain features that are not possible to be executed in minimal way (like extraction notifications not being possible on TV) are not present.
 
 A fast, modern file manager with powerful archive support and an Android TV–friendly UI.
