@@ -198,6 +198,10 @@ dependencies {
     implementation(libs.xz)
     implementation(libs.zstd.jni)
 
+    // Shizuku
+    implementation(libs.api)
+    implementation(libs.provider)
+
 
     // Testing
 //    androidTestImplementation(libs.androidx.ui.test.junit4)

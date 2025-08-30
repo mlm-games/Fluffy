@@ -66,6 +66,22 @@ data class AppSettings(
         min = 0f, max = 9f, step = 1f
     )
     val zipCompressionLevel: Int = 5,
+    @Setting(
+        title = "Enable Root access (beta)",
+        description = "Browse and write to system folders using root shell",
+        category = SettingCategory.SYSTEM,
+        type = SettingType.TOGGLE
+    )
+    val enableRoot: Boolean = false,
+
+    @Setting(
+        title = "Enable Shizuku (beta)",
+        description = "Use Shizuku for shell commands and APK install",
+        category = SettingCategory.SYSTEM,
+        type = SettingType.TOGGLE
+    )
+    val enableShizuku: Boolean = false,
+
 
     @Setting(
         title = "Extract into subfolder",
@@ -73,7 +89,9 @@ data class AppSettings(
         category = SettingCategory.ARCHIVES,
         type = SettingType.TOGGLE
     )
-    val extractIntoSubfolder: Boolean = true
+    val extractIntoSubfolder: Boolean = true,
+
+
 )
 
 class SettingsManager {

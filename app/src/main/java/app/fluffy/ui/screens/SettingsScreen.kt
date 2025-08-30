@@ -23,7 +23,10 @@ import app.fluffy.ui.components.SettingsItem
 import app.fluffy.ui.components.SettingsToggle
 import app.fluffy.ui.dialogs.DropdownSettingDialog
 import app.fluffy.ui.dialogs.SliderSettingDialog
+import app.fluffy.shell.RootAccess
+import app.fluffy.shell.ShizukuAccess
 import app.fluffy.viewmodel.SettingsViewModel
+import java.util.Locale
 import kotlin.reflect.KProperty1
 
 @Composable
@@ -39,6 +42,9 @@ fun SettingsScreen(vm: SettingsViewModel) {
     val grouped = remember { manager.getByCategory() }
     val cfg = LocalConfiguration.current
     val gridCells = remember(cfg.screenWidthDp) { GridCells.Adaptive(minSize = 420.dp) }
+
+    val rootAvail by remember { mutableStateOf(RootAccess.isAvailable()) }
+    val shizukuAvail by remember { mutableStateOf(ShizukuAccess.isAvailable()) }
 
     MyScreenScaffold(title = "Settings") { _ ->
         LazyVerticalGrid(
@@ -60,12 +66,25 @@ fun SettingsScreen(vm: SettingsViewModel) {
 
                 items(itemsForCat, key = { it.first.name }) { (prop, ann) ->
                     val enabled = manager.isEnabled(settings, prop, ann)
+
+                    val descriptionOverride = when (prop.name) {
+                        "enableRoot" -> {
+                            val suffix = if (rootAvail) "Available" else "Not available"
+                            listOf(ann.description, suffix).filter { it.isNotBlank() }.joinToString(" • ")
+                        }
+                        "enableShizuku" -> {
+                            val suffix = if (shizukuAvail) "Running" else "Not running"
+                            listOf(ann.description, suffix).filter { it.isNotBlank() }.joinToString(" • ")
+                        }
+                        else -> ann.description
+                    }.takeIf { it.isNotBlank() }
+
                     when (ann.type) {
                         SettingType.TOGGLE -> {
                             val value = prop.get(settings) as? Boolean ?: false
                             SettingsToggle(
                                 title = ann.title,
-                                description = ann.description.takeIf { it.isNotBlank() },
+                                description = descriptionOverride,
                                 isChecked = value,
                                 enabled = enabled,
                                 onCheckedChange = { vm.updateSetting(prop.name, it) }
@@ -88,7 +107,7 @@ fun SettingsScreen(vm: SettingsViewModel) {
                         SettingType.SLIDER -> {
                             val valueText = when (val v = prop.get(settings)) {
                                 is Int -> v.toString()
-                                is Float -> String.format("%.1f", v)
+                                is Float -> String.format(Locale.getDefault(),"%.1f", v)
                                 else -> ""
                             }
                             SettingsItem(

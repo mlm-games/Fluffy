@@ -139,7 +139,7 @@ class MainActivity : ComponentActivity() {
                 )
             } catch (_: SecurityException) { }
 
-            suspend fun confirmCollisionsAndEnqueue(
+            fun confirmCollisionsAndEnqueue(
                 target: Uri,
                 sourcesDisplayNames: List<String>,
                 onEnqueue: (overwrite: Boolean) -> Unit
@@ -325,8 +325,16 @@ class MainActivity : ComponentActivity() {
                                             showTaskCenter = true
                                         },
                                         onOpenFile = { file -> filesVM.openFile(file) },
-                                        onQuickAccessClick = { item -> filesVM.openQuickAccessItem(item) },
-                                        onRequestPermission = { requestStoragePermission() },
+                                        onQuickAccessClick = { item ->
+                                            lifecycleScope.launch {
+                                                val uri = item.uri
+                                                if (uri?.scheme == "shizuku") {
+                                                    val ok = app.fluffy.shell.ShizukuAccess.ensurePermission()
+                                                    if (!ok) return@launch
+                                                }
+                                                filesVM.openQuickAccessItem(item)
+                                            }
+                                        },                                        onRequestPermission = { requestStoragePermission() },
                                         onShowQuickAccess = { filesVM.showQuickAccess() },
                                         onCreateFolder = { name -> filesVM.createNewFolder(name) },
                                         onOpenWith = { uri, name ->

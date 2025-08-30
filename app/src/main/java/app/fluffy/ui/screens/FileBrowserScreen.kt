@@ -1,5 +1,6 @@
 package app.fluffy.ui.screens
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -49,6 +50,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.OpenWith
+import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
 import androidx.compose.material.icons.filled.Unarchive
@@ -68,6 +70,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -90,16 +93,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import app.fluffy.io.FileSystemAccess
-import app.fluffy.ui.components.AppTopBar
+import app.fluffy.io.ShellEntry
 import app.fluffy.ui.components.ConfirmationDialog
-import app.fluffy.util.UiFormat.formatDate
-import app.fluffy.util.UiFormat.formatSize
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.QuickAccessItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -158,13 +162,20 @@ fun FileBrowserScreen(
                 val pf = File(parent.path!!)
                 File(pf, name).exists()
             }
-
             "content" -> {
                 val p = DocumentFile.fromTreeUri(context, parent)
                     ?: DocumentFile.fromSingleUri(context, parent)
                 p?.findFile(name) != null
             }
-
+            "root", "shizuku" -> {
+                // We don't have stat; assume exists if listing finds it
+                val base = parent.path ?: "/"
+                val full = (if (base.endsWith("/")) base else "$base/") + name
+                when (parent.scheme) {
+                    "root" -> app.fluffy.io.ShellIo.listRoot(base).any { it.first == name }
+                    else -> app.fluffy.io.ShellIo.listShizuku(base).any { it.first == name }
+                }
+            }
             else -> false
         }
     }
@@ -199,12 +210,12 @@ fun FileBrowserScreen(
     Scaffold(
         topBar = {
             Column {
-                AppTopBar(
+                TopAppBar(
                     title = {
                         Text(
                             text = when (currentLocation) {
                                 is BrowseLocation.FileSystem -> currentLocation.file.absolutePath
-                                is BrowseLocation.SAF -> state.currentDir?.path ?: "SAF Location"
+                                is BrowseLocation.SAF -> state.currentDir?.toString() ?: "SAF Location"
                                 is BrowseLocation.QuickAccess -> "Quick Access"
                                 null -> "Select a location"
                             },
@@ -231,10 +242,7 @@ fun FileBrowserScreen(
                         }
                         if (currentLocation !is BrowseLocation.QuickAccess) {
                             IconButton(onClick = { showNewFolderDialog = true }) {
-                                Icon(
-                                    Icons.Default.CreateNewFolder,
-                                    contentDescription = "New Folder"
-                                )
+                                Icon(Icons.Default.CreateNewFolder, contentDescription = "New Folder")
                             }
                         }
                         IconButton(onClick = onOpenTasks) {
@@ -297,11 +305,7 @@ fun FileBrowserScreen(
                                         onClick = { showZipNameDialog = true },
                                         label = { Text("Zip") },
                                         leadingIcon = {
-                                            Icon(
-                                                Icons.Default.FolderZip,
-                                                null,
-                                                Modifier.size(18.dp)
-                                            )
+                                            Icon(Icons.Default.FolderZip, null, Modifier.size(18.dp))
                                         }
                                     )
                                     AssistChip(
@@ -316,22 +320,14 @@ fun FileBrowserScreen(
                                         onClick = { onCopySelected(allSelectedUris) },
                                         label = { Text("Copy…") },
                                         leadingIcon = {
-                                            Icon(
-                                                Icons.Default.ContentCopy,
-                                                null,
-                                                Modifier.size(18.dp)
-                                            )
+                                            Icon(Icons.Default.ContentCopy, null, Modifier.size(18.dp))
                                         }
                                     )
                                     AssistChip(
                                         onClick = { onMoveSelected(allSelectedUris) },
                                         label = { Text("Move…") },
                                         leadingIcon = {
-                                            Icon(
-                                                Icons.AutoMirrored.Filled.DriveFileMove,
-                                                null,
-                                                Modifier.size(18.dp)
-                                            )
+                                            Icon(Icons.AutoMirrored.Filled.DriveFileMove, null, Modifier.size(18.dp))
                                         }
                                     )
                                     AssistChip(
@@ -363,11 +359,7 @@ fun FileBrowserScreen(
                                             },
                                             label = { Text("Open With") },
                                             leadingIcon = {
-                                                Icon(
-                                                    Icons.Default.OpenWith,
-                                                    null,
-                                                    Modifier.size(18.dp)
-                                                )
+                                                Icon(Icons.Default.OpenWith, null, Modifier.size(18.dp))
                                             }
                                         )
                                     }
@@ -388,25 +380,13 @@ fun FileBrowserScreen(
                                 )
 
                                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    TextButton(onClick = {
-                                        showZipNameDialog = true
-                                    }) { Text("Zip") }
+                                    TextButton(onClick = { showZipNameDialog = true }) { Text("Zip") }
                                     TextButton(onClick = { show7zDialog = true }) { Text("7z") }
-                                    TextButton(onClick = { onCopySelected(allSelectedUris) }) {
-                                        Text(
-                                            "Copy…"
-                                        )
-                                    }
-                                    TextButton(onClick = { onMoveSelected(allSelectedUris) }) {
-                                        Text(
-                                            "Move…"
-                                        )
-                                    }
-
+                                    TextButton(onClick = { onCopySelected(allSelectedUris) }) { Text("Copy…") }
+                                    TextButton(onClick = { onMoveSelected(allSelectedUris) }) { Text("Move…") }
                                     TextButton(onClick = {
                                         onDeleteSelected(allSelectedUris)
-                                        selected.clear()
-                                        selectedFiles.clear()
+                                        selected.clear(); selectedFiles.clear()
                                     }) { Text("Delete") }
 
                                     if (count == 1) {
@@ -433,26 +413,7 @@ fun FileBrowserScreen(
                 }
             }
         }
-    ) { pv ->
-//        val navKey = remember(state.currentLocation, state.currentDir, state.currentFile) {
-//            when (val loc = state.currentLocation) {
-//                is BrowseLocation.FileSystem -> loc.file.absolutePath
-//                is BrowseLocation.SAF -> state.currentDir?.toString() ?: ""
-//                is BrowseLocation.QuickAccess, null -> "quick"
-//            }
-//        }
-
-//        AnimatedContent(
-//            targetState = navKey,
-//            transitionSpec = {
-//                (slideInHorizontally { it / 8 } + fadeIn(tween(180))) togetherWith
-//                        (slideOutHorizontally { -it / 8 } + fadeOut(tween(180)))
-//            },
-//            label = "folder_nav_anim",
-//            modifier = Modifier
-//                .fillMaxSize()
-//                .padding(pv)
-//        ) { currentKey -> if (currentKey.isEmpty()) { /* no-op */ }
+    ) {
         when (currentLocation) {
             is BrowseLocation.QuickAccess -> {
                 QuickAccessView(
@@ -460,43 +421,16 @@ fun FileBrowserScreen(
                     onItemClick = onQuickAccessClick,
                     onRequestPermission = onRequestPermission,
                     hasPermission = state.canAccessFileSystem,
-                    modifier = Modifier.padding(pv)
+                    modifier = Modifier.padding(it)
                 )
             }
 
             is BrowseLocation.FileSystem -> {
                 if (state.fileItems.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(pv)
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Text(
-                                "This folder is empty or inaccessible.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                OutlinedButton(onClick = onBack, enabled = canUp) {
-                                    Text("Go up")
-                                }
-                                Button(onClick = onShowQuickAccess) {
-                                    Text("Open Quick Access")
-                                }
-                            }
-                        }
-                    }
+                    EmptyFolderView(pv = it, onBack = onBack, canUp = canUp, onShowQuickAccess = onShowQuickAccess)
                 } else {
                     LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(pv),
+                        modifier = Modifier.fillMaxSize().padding(it),
                         contentPadding = PaddingValues(8.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
@@ -506,9 +440,7 @@ fun FileBrowserScreen(
                                 file = file,
                                 selected = isSelected,
                                 onToggleSelect = { toggled ->
-                                    if (toggled) selectedFiles.add(file) else selectedFiles.remove(
-                                        file
-                                    )
+                                    if (toggled) selectedFiles.add(file) else selectedFiles.remove(file)
                                 },
                                 onOpenFile = onOpenFile,
                                 onOpenArchive = { onOpenArchive(Uri.fromFile(file)) },
@@ -524,57 +456,62 @@ fun FileBrowserScreen(
             }
 
             is BrowseLocation.SAF -> {
-                if (state.items.isEmpty()) {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(pv)
-                            .padding(16.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(12.dp)
+                val scheme = state.currentDir?.scheme
+                val isShell = scheme == "root" || scheme == "shizuku"
+                if (isShell) {
+                    if (state.shellItems.isEmpty()) {
+                        EmptyFolderView(pv = it, onBack = onBack, canUp = canUp, onShowQuickAccess = onShowQuickAccess)
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize().padding(it),
+                            contentPadding = PaddingValues(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Text(
-                                "This folder is empty or inaccessible.",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                                OutlinedButton(onClick = onBack, enabled = canUp) {
-                                    Text("Go up")
-                                }
-                                Button(onClick = onShowQuickAccess) {
-                                    Text("Open Quick Access")
-                                }
+                            items(state.shellItems, key = { it.uri.toString() }) { entry ->
+                                val isSelected = selected.contains(entry.uri)
+                                ShellRow(
+                                    entry = entry,
+                                    selected = isSelected,
+                                    onToggleSelect = { toggled ->
+                                        if (toggled) selected.add(entry.uri) else selected.remove(entry.uri)
+                                    },
+                                    onOpenDir = onOpenDir,
+                                    onOpenArchive = onOpenArchive,
+                                    onExtractHere = {
+                                        currentDirUri?.let { targetDir ->
+                                            onExtractArchive(entry.uri, targetDir)
+                                        }
+                                    }
+                                )
                             }
                         }
                     }
                 } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(pv),
-                        contentPadding = PaddingValues(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        items(state.items, key = { it.uri.toString() }) { df ->
-                            val isSelected = selected.contains(df.uri)
-                            FileRow(
-                                df = df,
-                                selected = isSelected,
-                                onToggleSelect = { toggled ->
-                                    if (toggled) selected.add(df.uri) else selected.remove(df.uri)
-                                },
-                                onOpenDir = onOpenDir,
-                                onOpenArchive = onOpenArchive,
-                                onExtractHere = {
-                                    currentDirUri?.let { targetDir ->
-                                        onExtractArchive(df.uri, targetDir)
+                    if (state.items.isEmpty()) {
+                        EmptyFolderView(pv = it, onBack = onBack, canUp = canUp, onShowQuickAccess = onShowQuickAccess)
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize().padding(it),
+                            contentPadding = PaddingValues(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            items(state.items, key = { it.uri.toString() }) { df ->
+                                val isSelected = selected.contains(df.uri)
+                                FileRow(
+                                    df = df,
+                                    selected = isSelected,
+                                    onToggleSelect = { toggled ->
+                                        if (toggled) selected.add(df.uri) else selected.remove(df.uri)
+                                    },
+                                    onOpenDir = onOpenDir,
+                                    onOpenArchive = onOpenArchive,
+                                    onExtractHere = {
+                                        currentDirUri?.let { targetDir ->
+                                            onExtractArchive(df.uri, targetDir)
+                                        }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }
@@ -582,34 +519,18 @@ fun FileBrowserScreen(
 
             null -> {
                 Box(
-                    Modifier
-                        .fillMaxSize()
-                        .padding(pv),
+                    Modifier.fillMaxSize().padding(it),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Icon(
-                            Icons.Default.Folder,
-                            contentDescription = null,
-                            modifier = Modifier.size(64.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            "No location selected",
-                            style = MaterialTheme.typography.titleMedium
-                        )
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(12.dp)
-                        ) {
-                            Button(onClick = onShowQuickAccess) {
-                                Text("Browse Files")
-                            }
-                            OutlinedButton(onClick = onPickRoot) {
-                                Text("Pick Folder")
-                            }
+                        Icon(Icons.Default.Folder, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text("No location selected", style = MaterialTheme.typography.titleMedium)
+                        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            Button(onClick = onShowQuickAccess) { Text("Browse Files") }
+                            OutlinedButton(onClick = onPickRoot) { Text("Pick Folder") }
                         }
                     }
                 }
@@ -638,9 +559,7 @@ fun FileBrowserScreen(
                 }) { Text("Create") }
             },
             dismissButton = {
-                TextButton(onClick = { showZipNameDialog = false }) {
-                    Text("Cancel")
-                }
+                TextButton(onClick = { showZipNameDialog = false }) { Text("Cancel") }
             }
         )
     }
@@ -676,9 +595,7 @@ fun FileBrowserScreen(
                 }) { Text("Create") }
             },
             dismissButton = {
-                TextButton(onClick = { show7zDialog = false }) {
-                    Text("Cancel")
-                }
+                TextButton(onClick = { show7zDialog = false }) { Text("Cancel") }
             }
         )
     }
@@ -707,9 +624,7 @@ fun FileBrowserScreen(
                 ) { Text("Create") }
             },
             dismissButton = {
-                TextButton(onClick = { showNewFolderDialog = false }) {
-                    Text("Cancel")
-                }
+                TextButton(onClick = { showNewFolderDialog = false }) { Text("Cancel") }
             }
         )
     }
@@ -736,9 +651,7 @@ fun FileBrowserScreen(
                 }) { Text("Apply") }
             },
             dismissButton = {
-                TextButton(onClick = { showRenameDialog = false }) {
-                    Text("Cancel")
-                }
+                TextButton(onClick = { showRenameDialog = false }) { Text("Cancel") }
             }
         )
     }
@@ -805,9 +718,7 @@ private fun FileSystemRow(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            Modifier.fillMaxWidth().padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -840,58 +751,32 @@ private fun FileSystemRow(
                     }
                     .focusProperties { right = if (isArchive) extractFR else cbFR }
             ) {
-                Text(
-                    file.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Text(file.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     val left = if (file.isDirectory) {
                         val c = itemCount ?: 0
                         "$c item${if (c == 1) "" else "s"}"
-                    } else formatSize(file.length())
+                    } else formatFileSize(file.length())
 
-                    Text(
-                        left,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        "• ${formatDate(file.lastModified())}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Text(left, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("• ${formatDate(file.lastModified())}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
             if (isArchive) {
                 IconButton(
                     onClick = onExtractHere,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .focusRequester(extractFR)
-                        .focusable()
-                        .focusProperties {
-                            left = mainFR
-                            right = cbFR
-                        }
+                    modifier = Modifier.size(40.dp).focusRequester(extractFR).focusable()
+                        .focusProperties { left = mainFR; right = cbFR }
                 ) {
-                    Icon(
-                        Icons.Filled.Unarchive,
-                        contentDescription = "Extract here",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Icon(Icons.Filled.Unarchive, contentDescription = "Extract here", tint = MaterialTheme.colorScheme.primary)
                 }
             }
 
             Checkbox(
                 checked = selected,
                 onCheckedChange = { onToggleSelect(it) },
-                modifier = Modifier
-                    .focusRequester(cbFR)
-                    .focusable()
-                    .semantics { role = Role.Checkbox }
+                modifier = Modifier.focusRequester(cbFR).focusable().semantics { role = Role.Checkbox }
                     .focusProperties { left = if (isArchive) extractFR else mainFR }
             )
         }
@@ -925,9 +810,7 @@ private fun FileRow(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -963,48 +846,113 @@ private fun FileRow(
                 )
 
                 Column(Modifier.fillMaxWidth()) {
-                    Text(
-                        df.name ?: "(no name)",
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 1
-                    )
+                    Text(df.name ?: "(no name)", style = MaterialTheme.typography.bodyLarge, maxLines = 1)
                     val sub = if (df.isDirectory) "Folder" else (df.type ?: "file")
-                    Text(
-                        sub,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1
-                    )
+                    Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                 }
             }
 
             if (isArchive) {
                 IconButton(
                     onClick = onExtractHere,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .focusRequester(extractFR)
-                        .focusable()
-                        .focusProperties {
-                            left = mainFR
-                            right = cbFR
-                        }
+                    modifier = Modifier.size(40.dp).focusRequester(extractFR).focusable()
+                        .focusProperties { left = mainFR; right = cbFR }
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.Unarchive,
-                        contentDescription = "Extract here",
-                        tint = MaterialTheme.colorScheme.primary
-                    )
+                    Icon(imageVector = Icons.Filled.Unarchive, contentDescription = "Extract here", tint = MaterialTheme.colorScheme.primary)
                 }
             }
 
             Checkbox(
                 checked = selected,
                 onCheckedChange = { onToggleSelect(it) },
+                modifier = Modifier.focusRequester(cbFR).focusable().semantics { role = Role.Checkbox }
+                    .focusProperties { left = if (isArchive) extractFR else mainFR }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun ShellRow(
+    entry: ShellEntry,
+    selected: Boolean,
+    onToggleSelect: (Boolean) -> Unit,
+    onOpenDir: (Uri) -> Unit,
+    onOpenArchive: (Uri) -> Unit,
+    onExtractHere: () -> Unit
+) {
+    val isArchive = remember(entry.name) { FileSystemAccess.isArchiveFile(entry.name) }
+
+    val mainFR = remember { FocusRequester() }
+    val extractFR = remember { FocusRequester() }
+    val cbFR = remember { FocusRequester() }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .focusGroup()
+            .focusProperties { canFocus = false }
+            .animateContentSize(animationSpec = tween(200)),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
                 modifier = Modifier
-                    .focusRequester(cbFR)
+                    .weight(1f)
+                    .focusRequester(mainFR)
                     .focusable()
-                    .semantics { role = Role.Checkbox }
+                    .semantics { role = Role.Button }
+                    .clickable {
+                        when {
+                            entry.isDir -> onOpenDir(entry.uri)
+                            isArchive -> onOpenArchive(entry.uri)
+                            else -> onToggleSelect(!selected)
+                        }
+                    }
+                    .focusProperties { right = if (isArchive) extractFR else cbFR },
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = when {
+                        entry.isDir -> Icons.Filled.Folder
+                        isArchive -> Icons.Filled.FolderZip
+                        else -> Icons.AutoMirrored.Filled.InsertDriveFile
+                    },
+                    contentDescription = null,
+                    tint = when {
+                        entry.isDir -> MaterialTheme.colorScheme.primary
+                        isArchive -> MaterialTheme.colorScheme.secondary
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
+
+                Column(Modifier.fillMaxWidth()) {
+                    Text(entry.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1)
+                    val sub = if (entry.isDir) "Folder" else entry.uri.toString()
+                    Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                }
+            }
+
+            if (isArchive) {
+                IconButton(
+                    onClick = onExtractHere,
+                    modifier = Modifier.size(40.dp).focusRequester(extractFR).focusable()
+                        .focusProperties { left = mainFR; right = cbFR }
+                ) {
+                    Icon(imageVector = Icons.Filled.Unarchive, contentDescription = "Extract here", tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+
+            Checkbox(
+                checked = selected,
+                onCheckedChange = { onToggleSelect(it) },
+                modifier = Modifier.focusRequester(cbFR).focusable().semantics { role = Role.Checkbox }
                     .focusProperties { left = if (isArchive) extractFR else mainFR }
             )
         }
@@ -1020,32 +968,12 @@ private fun QuickAccessView(
     modifier: Modifier = Modifier
 ) {
     if (!hasPermission) {
-        Box(
-            modifier = modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Icon(
-                    Icons.Default.Lock,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.error
-                )
-                Text(
-                    "Storage Permission Required",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                Text(
-                    "Grant permission to browse files",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Button(onClick = onRequestPermission) {
-                    Text("Grant Permission")
-                }
+        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.error)
+                Text("Storage Permission Required", style = MaterialTheme.typography.titleMedium)
+                Text("Grant permission to browse files", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Button(onClick = onRequestPermission) { Text("Grant Permission") }
             }
         }
     } else {
@@ -1057,33 +985,21 @@ private fun QuickAccessView(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             items(items, key = { it.name }) { item ->
-                QuickAccessCard(
-                    item = item,
-                    onClick = { onItemClick(item) }
-                )
+                QuickAccessCard(item = item, onClick = { onItemClick(item) })
             }
         }
     }
 }
 
 @Composable
-private fun QuickAccessCard(
-    item: QuickAccessItem,
-    onClick: () -> Unit
-) {
+private fun QuickAccessCard(item: QuickAccessItem, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+        modifier = Modifier.fillMaxWidth().height(100.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxSize().padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -1094,12 +1010,7 @@ private fun QuickAccessCard(
                 tint = MaterialTheme.colorScheme.primary
             )
             Spacer(Modifier.height(8.dp))
-            Text(
-                item.name,
-                style = MaterialTheme.typography.bodyMedium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis
-            )
+            Text(item.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
 }
@@ -1112,5 +1023,39 @@ private fun getIconForQuickAccess(icon: String) = when (icon.lowercase()) {
     "music" -> Icons.Default.MusicNote
     "movies" -> Icons.Default.Movie
     "dcim" -> Icons.Default.CameraAlt
+    "root" -> Icons.Default.Security
+    "shizuku" -> Icons.Default.Settings
     else -> Icons.Default.Folder
+}
+
+private fun formatFileSize(bytes: Long): String {
+    return when {
+        bytes < 1024 -> "$bytes B"
+        bytes < 1024 * 1024 -> "${bytes / 1024} KB"
+        bytes < 1024 * 1024 * 1024 -> "${bytes / (1024 * 1024)} MB"
+        else -> "%.2f GB".format(bytes / (1024.0 * 1024 * 1024))
+    }
+}
+
+private fun formatDate(timestamp: Long): String {
+    val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
+    return sdf.format(Date(timestamp))
+}
+
+@Composable
+private fun EmptyFolderView(
+    pv: PaddingValues,
+    onBack: () -> Unit,
+    canUp: Boolean,
+    onShowQuickAccess: () -> Unit
+) {
+    Box(modifier = Modifier.fillMaxSize().padding(pv).padding(16.dp), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("This folder is empty or inaccessible.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                OutlinedButton(onClick = onBack, enabled = canUp) { Text("Go up") }
+                Button(onClick = onShowQuickAccess) { Text("Open Quick Access") }
+            }
+        }
+    }
 }

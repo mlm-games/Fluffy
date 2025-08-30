@@ -45,6 +45,9 @@ class SettingsRepository(private val context: Context) {
         // Archives
         val ZIP_LEVEL = intPreferencesKey("zip_level")
         val EXTRACT_INTO_SUBFOLDER = booleanPreferencesKey("extract_into_subfolder")
+
+        val ENABLE_ROOT = booleanPreferencesKey("enable_root")
+        val ENABLE_SHIZUKU = booleanPreferencesKey("enable_shizuku")
     }
 
     private val definitions: Map<String, SettingDefinition<*>> = mapOf(
@@ -53,7 +56,9 @@ class SettingsRepository(private val context: Context) {
         "themeMode" to SettingDefinition.IntSetting("themeMode", THEME_MODE) { it.themeMode },
         "zipCompressionLevel" to SettingDefinition.IntSetting("zipCompressionLevel", ZIP_LEVEL) { it.zipCompressionLevel },
         "useAuroraTheme" to SettingDefinition.BooleanSetting("useAuroraTheme", USE_AURORA_THEME) { it.useAuroraTheme },
-        "extractIntoSubfolder" to SettingDefinition.BooleanSetting("extractIntoSubfolder", EXTRACT_INTO_SUBFOLDER) { it.extractIntoSubfolder }
+        "extractIntoSubfolder" to SettingDefinition.BooleanSetting("extractIntoSubfolder", EXTRACT_INTO_SUBFOLDER) { it.extractIntoSubfolder },
+        "enableRoot" to SettingDefinition.BooleanSetting(AppSettings::enableRoot.name, ENABLE_ROOT) { it.enableRoot },
+        "enableShizuku" to SettingDefinition.BooleanSetting(AppSettings::enableShizuku.name, ENABLE_SHIZUKU) { it.enableShizuku },
     )
 
     val settingsFlow: Flow<AppSettings> = context.ds.data.map { p ->
@@ -63,7 +68,9 @@ class SettingsRepository(private val context: Context) {
             useAuroraTheme = p[USE_AURORA_THEME] ?: true,
             themeMode = p[THEME_MODE] ?: 2,
             zipCompressionLevel = p[ZIP_LEVEL] ?: 5,
-            extractIntoSubfolder = p[EXTRACT_INTO_SUBFOLDER] ?: true
+            extractIntoSubfolder = p[EXTRACT_INTO_SUBFOLDER] ?: true,
+            enableRoot = p[ENABLE_ROOT] ?: false,
+            enableShizuku = p[ENABLE_SHIZUKU] ?: false,
         )
     }.distinctUntilChanged()
 

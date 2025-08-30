@@ -9,10 +9,14 @@ import app.fluffy.archive.ArchiveEngine
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.SafIo
+import app.fluffy.io.ShellEntry
+import app.fluffy.shell.RootAccess
+import app.fluffy.shell.ShizukuAccess
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.File
+import androidx.core.net.toUri
 
 sealed class BrowseLocation {
     data class SAF(val uri: Uri) : BrowseLocation()
@@ -32,8 +36,9 @@ data class FileBrowserState(
     val currentDir: Uri? = null,
     val currentFile: File? = null,
     val stack: List<BrowseLocation> = emptyList(),
-    val items: List<DocumentFile> = emptyList(),
-    val fileItems: List<File> = emptyList(),
+    val items: List<DocumentFile> = emptyList(),   // SAF/content items
+    val shellItems: List<ShellEntry> = emptyList(),// root/shizuku items
+    val fileItems: List<File> = emptyList(),       // file:// items
     val quickAccessItems: List<QuickAccessItem> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -52,18 +57,26 @@ class FileBrowserViewModel(
     val state: StateFlow<FileBrowserState> = _state
 
     private var showHidden: Boolean = false
+    private var showRoot: Boolean = false
+    private var showShizuku: Boolean = false
 
     init {
         viewModelScope.launch {
             settings.settingsFlow.collect { s ->
-                val newVal = s.showHidden
-                if (newVal != showHidden) {
-                    showHidden = newVal
-                    refresh()
+                val changedHidden = s.showHidden != showHidden
+                val changedRoot = s.enableRoot != showRoot
+                val changedShizuku = s.enableShizuku != showShizuku
+                showHidden = s.showHidden
+                showRoot = s.enableRoot
+                showShizuku = s.enableShizuku
+                if (changedHidden) refresh()
+                if (changedRoot || changedShizuku) {
+                    if (_state.value.currentLocation is BrowseLocation.QuickAccess) {
+                        showQuickAccess()
+                    }
                 }
             }
         }
-
         initializeFileAccess()
     }
 
@@ -71,10 +84,7 @@ class FileBrowserViewModel(
         viewModelScope.launch {
             val hasAccess = fileSystemAccess.hasStoragePermission()
             _state.value = _state.value.copy(canAccessFileSystem = hasAccess)
-
-            if (hasAccess) {
-                showQuickAccess()
-            } else {
+            if (hasAccess) showQuickAccess() else {
                 _state.value = _state.value.copy(
                     quickAccessItems = getQuickAccessItems(),
                     currentLocation = BrowseLocation.QuickAccess
@@ -93,6 +103,19 @@ class FileBrowserViewModel(
                 uri = null
             )
         )
+        if (showRoot) {
+            val available = RootAccess.isAvailable()
+            items.add(QuickAccessItem(if (available) "Root /" else "Root / (not available)", "root", null,
+                "root:///".toUri()))
+            items.add(QuickAccessItem("System (/system)", "documents", null,
+                "root:///system".toUri()))
+            items.add(QuickAccessItem("Data (/data)", "documents", null, "root:///data".toUri()))
+        }
+        if (showShizuku) {
+            val available = ShizukuAccess.isAvailable()
+            items.add(QuickAccessItem(if (available) "Shizuku /" else "Shizuku / (not running)", "shizuku", null,
+                "shizuku:///".toUri()))
+        }
         val folders = listOf(
             "Downloads" to Environment.DIRECTORY_DOWNLOADS,
             "Documents" to Environment.DIRECTORY_DOCUMENTS,
@@ -104,14 +127,7 @@ class FileBrowserViewModel(
         folders.forEach { (name, dir) ->
             val file = Environment.getExternalStoragePublicDirectory(dir)
             if (file.exists()) {
-                items.add(
-                    QuickAccessItem(
-                        name = name,
-                        icon = name.lowercase(),
-                        file = file,
-                        uri = null
-                    )
-                )
+                items.add(QuickAccessItem(name, name.lowercase(), file, null))
             }
         }
         return items
@@ -123,6 +139,7 @@ class FileBrowserViewModel(
             currentDir = null,
             currentFile = null,
             items = emptyList(),
+            shellItems = emptyList(),
             fileItems = emptyList(),
             quickAccessItems = getQuickAccessItems(),
             stack = listOf(BrowseLocation.QuickAccess)
@@ -135,18 +152,9 @@ class FileBrowserViewModel(
                 _state.value = _state.value.copy(error = "Path does not exist")
                 return@launch
             }
-
             val location = BrowseLocation.FileSystem(file)
-
             val base = listOf(BrowseLocation.QuickAccess)
-            val newStack = when (_state.value.currentLocation) {
-                is BrowseLocation.QuickAccess, null -> base + location
-                else -> {
-                    // Replace any previous chain with QuickAccess anchor + below location.
-                    base + location
-                }
-            }
-
+            val newStack = base + location
             _state.value = _state.value.copy(
                 currentLocation = location,
                 currentFile = file,
@@ -154,6 +162,7 @@ class FileBrowserViewModel(
                 stack = newStack,
                 fileItems = loadFileSystemItems(file),
                 items = emptyList(),
+                shellItems = emptyList(),
                 quickAccessItems = emptyList(),
                 isLoading = false,
                 error = null
@@ -166,19 +175,16 @@ class FileBrowserViewModel(
         val files = directory.listFiles()?.toList() ?: emptyList()
         return files
             .filter { if (showHidden) true else !it.name.startsWith(".") }
-            .sortedWith(
-                compareBy<File> { !it.isDirectory }
-                    .thenBy { it.name.lowercase() }
-            )
+            .sortedWith(compareBy<File> { !it.isDirectory }.thenBy { it.name.lowercase() })
     }
 
-    fun openRoot(uri: Uri) {
+    fun openRoot(uri: Uri) { // for picked SAF trees; not used for root/shizuku
         val location = BrowseLocation.SAF(uri)
         _state.value = FileBrowserState(
             currentLocation = location,
             currentDir = uri,
-            stack = listOf(BrowseLocation.QuickAccess, location), // ensure QuickAccess anchor
-            items = filtered(io.listChildren(uri))
+            stack = listOf(BrowseLocation.QuickAccess, location),
+            items = io.listChildren(uri)
         )
     }
 
@@ -188,15 +194,30 @@ class FileBrowserViewModel(
             val st = _state.value
             val anchored = if (st.stack.isNotEmpty() && st.stack.first() is BrowseLocation.QuickAccess)
                 st.stack else listOf(BrowseLocation.QuickAccess)
-            _state.value = st.copy(
-                currentLocation = location,
-                currentDir = uri,
-                stack = anchored + location,
-                items = filtered(io.listChildren(uri)),
-                fileItems = emptyList(),
-                quickAccessItems = emptyList(),
-                error = null
-            )
+
+            if (uri.scheme == "root" || uri.scheme == "shizuku") {
+                _state.value = st.copy(
+                    currentLocation = location,
+                    currentDir = uri,
+                    stack = anchored + location,
+                    shellItems = io.listShell(uri).filter { showHidden || !it.name.startsWith(".") },
+                    items = emptyList(),
+                    fileItems = emptyList(),
+                    quickAccessItems = emptyList(),
+                    error = null
+                )
+            } else {
+                _state.value = st.copy(
+                    currentLocation = location,
+                    currentDir = uri,
+                    stack = anchored + location,
+                    items = filtered(io.listChildren(uri)),
+                    shellItems = emptyList(),
+                    fileItems = emptyList(),
+                    quickAccessItems = emptyList(),
+                    error = null
+                )
+            }
         }
     }
 
@@ -215,21 +236,43 @@ class FileBrowserViewModel(
                 }
             }
             is BrowseLocation.SAF -> {
-                if (st.stack.size > 1) {
-                    val previous = st.stack.dropLast(1).last()
-                    navigateToLocation(previous)
+                val cur = st.currentDir
+                if (cur != null && (cur.scheme == "root" || cur.scheme == "shizuku")) {
+                    val parent = upOfShell(cur)
+                    if (parent != null) {
+                        openDir(parent)
+                    } else {
+                        // We are at "/" for this scheme — go back to Quick Access
+                        showQuickAccess()
+                    }
                 } else {
-                    showQuickAccess()
+                    // Non-shell (content:// picked tree or similar) — fallback to previous in stack
+                    if (st.stack.size > 1) {
+                        val previous = st.stack.dropLast(1).last()
+                        navigateToLocation(previous)
+                    } else {
+                        showQuickAccess()
+                    }
                 }
             }
             is BrowseLocation.QuickAccess, null -> { /* nowhere to go */ }
         }
     }
 
+    private fun upOfShell(uri: Uri): Uri? {
+        val scheme = uri.scheme ?: return null
+        val raw = uri.path ?: "/"
+        val path = raw.trimEnd('/')
+        if (path.isEmpty() || path == "/") return null
+        val idx = path.lastIndexOf('/')
+        val parentPath = if (idx <= 0) "/" else path.substring(0, idx)
+        return Uri.Builder().scheme(scheme).path(parentPath).build()
+    }
+
     private fun navigateToLocation(location: BrowseLocation) {
         when (location) {
             is BrowseLocation.FileSystem -> openFileSystemPath(location.file)
-            is BrowseLocation.SAF -> openRoot(location.uri)
+            is BrowseLocation.SAF -> openDir(location.uri)
             is BrowseLocation.QuickAccess -> showQuickAccess()
         }
     }
@@ -241,7 +284,10 @@ class FileBrowserViewModel(
                 _state.value = st.copy(fileItems = loadFileSystemItems(location.file))
             }
             is BrowseLocation.SAF -> {
-                location.uri.let { uri ->
+                val uri = location.uri
+                if (uri.scheme == "root" || uri.scheme == "shizuku") {
+                    _state.value = st.copy(shellItems = io.listShell(uri).filter { showHidden || !it.name.startsWith(".") })
+                } else {
                     _state.value = st.copy(items = filtered(io.listChildren(uri)))
                 }
             }
