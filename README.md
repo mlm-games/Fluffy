@@ -18,9 +18,9 @@ A fast, modern file manager with powerful archive support and an Android TV–fr
 
 ## Downloads
 - GH Releases
-- F‑Droid: coming soon
-- Izzy: coming soon
-- Google Play: Somehow got approved, coming soon (currently testing with, uhm *test* accounts)
+- F‑Droid
+- IzzyOnDroid
+- Google Play: Coming soon (currently testing with, uhm *test* accounts)
 
 ## Permissions
 - Storage / All files access (Android 11+): optional. Use SAF-only mode if you don’t grant it.
