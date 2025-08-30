@@ -45,17 +45,17 @@ fun MyScreenScaffold(
                 color = MaterialTheme.colorScheme.surface,
                 tonalElevation = 3.dp
             ) {
-                TopAppBar(
+                AppTopBar(
                     title = {
                         Text(
                             title,
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     },
-                    colors = TopAppBarDefaults.topAppBarColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        titleContentColor = MaterialTheme.colorScheme.onSurface
-                    ),
+//                    colors = TopAppBarDefaults.topAppBarColors(
+//                        containerColor = MaterialTheme.colorScheme.surface,
+//                        titleContentColor = MaterialTheme.colorScheme.onSurface
+//                    ),
                     actions = actions
                 )
             }

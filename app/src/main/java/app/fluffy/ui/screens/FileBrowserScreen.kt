@@ -1,6 +1,5 @@
 package app.fluffy.ui.screens
 
-import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -69,7 +68,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -92,16 +90,16 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import app.fluffy.io.FileSystemAccess
+import app.fluffy.ui.components.AppTopBar
 import app.fluffy.ui.components.ConfirmationDialog
+import app.fluffy.util.UiFormat.formatDate
+import app.fluffy.util.UiFormat.formatSize
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.QuickAccessItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -201,7 +199,7 @@ fun FileBrowserScreen(
     Scaffold(
         topBar = {
             Column {
-                TopAppBar(
+                AppTopBar(
                     title = {
                         Text(
                             text = when (currentLocation) {
@@ -852,7 +850,7 @@ private fun FileSystemRow(
                     val left = if (file.isDirectory) {
                         val c = itemCount ?: 0
                         "$c item${if (c == 1) "" else "s"}"
-                    } else formatFileSize(file.length())
+                    } else formatSize(file.length())
 
                     Text(
                         left,
@@ -1115,18 +1113,4 @@ private fun getIconForQuickAccess(icon: String) = when (icon.lowercase()) {
     "movies" -> Icons.Default.Movie
     "dcim" -> Icons.Default.CameraAlt
     else -> Icons.Default.Folder
-}
-
-private fun formatFileSize(bytes: Long): String {
-    return when {
-        bytes < 1024 -> "$bytes B"
-        bytes < 1024 * 1024 -> "${bytes / 1024} KB"
-        bytes < 1024 * 1024 * 1024 -> "${bytes / (1024 * 1024)} MB"
-        else -> "%.2f GB".format(bytes / (1024.0 * 1024 * 1024))
-    }
-}
-
-private fun formatDate(timestamp: Long): String {
-    val sdf = SimpleDateFormat("MMM dd, yyyy", Locale.getDefault())
-    return sdf.format(Date(timestamp))
 }

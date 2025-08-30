@@ -1,7 +1,10 @@
 package app.fluffy.ui.theme
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
 object ThemeColors {
@@ -101,3 +104,16 @@ val AurLightTheme = lightColorScheme(
 
     surfaceTint = Color(0xFF00695C)
 )
+
+
+object ThemeDefaults {
+    @Composable
+    fun outlinedTextFieldColors() = OutlinedTextFieldDefaults.colors(
+        focusedBorderColor = MaterialTheme.colorScheme.primary,
+        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+        errorBorderColor = MaterialTheme.colorScheme.error,
+        focusedLabelColor = MaterialTheme.colorScheme.primary,
+        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        errorLabelColor = MaterialTheme.colorScheme.error
+    )
+}

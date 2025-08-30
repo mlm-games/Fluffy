@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.work.WorkInfo
+import app.fluffy.ui.components.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -19,7 +20,7 @@ fun TasksScreen(
 ) {
     Scaffold(
         topBar = {
-            TopAppBar(
+            AppTopBar(
                 title = { Text("Tasks") },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } }
             )

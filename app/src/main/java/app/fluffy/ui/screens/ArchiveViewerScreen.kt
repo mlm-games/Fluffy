@@ -61,6 +61,10 @@ import app.fluffy.AppGraph
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.helper.showToast
 import app.fluffy.io.FileSystemAccess
+import app.fluffy.ui.components.AppTopBar
+import app.fluffy.ui.theme.ThemeDefaults
+import app.fluffy.util.ArchiveTypes
+import app.fluffy.util.UiFormat.formatSize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -130,9 +134,7 @@ fun ArchiveViewerScreen(
         val mimeType = doc?.type ?: ""
         val fileName = name.lowercase()
 
-        val isZipLike = fileName.endsWith(".zip") ||
-                fileName.endsWith(".apk") ||
-                fileName.endsWith(".jar")
+        val isZipLike = ArchiveTypes.infer(fileName) == ArchiveTypes.Kind.ZIP
 
         // If DocumentFile reports it as directory but it has no archive traits, allow open-as-folder
         if (doc?.isDirectory == true && mimeType.startsWith("vnd.android.document") ) {
@@ -231,7 +233,7 @@ fun ArchiveViewerScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
+            AppTopBar(
                 title = { Text(title.ifBlank { "Archive" }) },
                 navigationIcon = {
                     val canGoUp = currentPath.isNotBlank()
@@ -398,10 +400,7 @@ fun ArchiveViewerScreen(
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
                         label = { Text("Password") },
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MaterialTheme.colorScheme.primary,
-                            unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                        ),
+                        colors = ThemeDefaults.outlinedTextFieldColors(),
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -434,15 +433,6 @@ fun ArchiveViewerScreen(
 }
 
 // Helpers
-
-private fun formatSize(bytes: Long): String {
-    return when {
-        bytes < 1024 -> "$bytes B"
-        bytes < 1024 * 1024 -> "${bytes / 1024} KB"
-        bytes < 1024 * 1024 * 1024 -> "${bytes / (1024 * 1024)} MB"
-        else -> "${bytes / (1024 * 1024 * 1024)} GB"
-    }
-}
 
 private suspend fun extractEntryToCache(
     pathInArchive: String,

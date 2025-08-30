@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.DialogProperties
+import app.fluffy.ui.theme.ThemeDefaults
 import java.util.Locale
 
 /**
@@ -152,7 +153,7 @@ fun DropdownSettingDialog(
         selectedItem = selectedIndex,
         onItemSelected = onOptionSelected,
         onDismiss = onDismiss,
-        itemContent = { index -> options[index] }
+        itemLabel = { index -> options[index] }
     )
 }
 
@@ -201,55 +202,6 @@ fun FluffyDialog(
         textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         tonalElevation = 6.dp
     )
-}
-
-/**
- * Confirmation dialog with standard buttons
- */
-@Composable
-fun ConfirmationDialog(
-    title: String,
-    message: String,
-    confirmText: String = "Confirm",
-    dismissText: String = "Cancel",
-    onConfirm: () -> Unit,
-    onDismiss: () -> Unit,
-    isDangerous: Boolean = false
-) {
-    FluffyDialog(
-        onDismissRequest = onDismiss,
-        title = title,
-        confirmButton = {
-            TextButton(
-                onClick = onConfirm,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = if (isDangerous) {
-                        MaterialTheme.colorScheme.error
-                    } else {
-                        MaterialTheme.colorScheme.primary
-                    }
-                )
-            ) {
-                Text(confirmText)
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss,
-                colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            ) {
-                Text(dismissText)
-            }
-        }
-    ) {
-        Text(
-            text = message,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
 }
 
 /**
@@ -303,14 +255,7 @@ fun InputDialog(
             placeholder = { Text(placeholder) },
             isError = !isValid && inputValue.isNotEmpty(),
             singleLine = true,
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = MaterialTheme.colorScheme.primary,
-                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                errorBorderColor = MaterialTheme.colorScheme.error,
-                focusedLabelColor = MaterialTheme.colorScheme.primary,
-                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                errorLabelColor = MaterialTheme.colorScheme.error
-            ),
+            colors = ThemeDefaults.outlinedTextFieldColors(),
             modifier = Modifier.fillMaxWidth()
         )
     }
@@ -326,7 +271,7 @@ fun <T> SelectionDialog(
     selectedItem: T? = null,
     onItemSelected: (T) -> Unit,
     onDismiss: () -> Unit,
-    itemContent: @Composable (T) -> String
+    itemLabel: (T) -> String
 ) {
     var selected by remember { mutableStateOf(selectedItem) }
 
@@ -383,7 +328,7 @@ fun <T> SelectionDialog(
                     )
                     Spacer(modifier = Modifier.width(12.dp))
                     Text(
-                        text = itemContent(item),
+                        text = itemLabel(item),
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurface
                     )

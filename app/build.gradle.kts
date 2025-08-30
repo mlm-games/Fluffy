@@ -156,15 +156,9 @@ dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
     implementation(libs.kotlin.stdlib)
     implementation(libs.core.ktx)
-    implementation(libs.appcompat)
-    implementation(libs.recyclerview)
 
     // Android lifecycle
-    implementation(libs.lifecycle.extensions)
     implementation(libs.lifecycle.viewmodel.ktx)
-
-    // Navigation
-    implementation(libs.navigation.fragment.ktx)
 
     // Work Manager
     implementation(libs.work.runtime.ktx)
@@ -175,7 +169,6 @@ dependencies {
     implementation(libs.androidx.material.icons.extended)
 
     implementation(libs.androidx.runtime)
-//    implementation(libs.okhttp)
 
 
     //Material dependencies
@@ -204,7 +197,6 @@ dependencies {
     implementation(libs.commons.compress)
     implementation(libs.xz)
     implementation(libs.zstd.jni)
-    implementation(libs.material.icons.extended)
 
 
     // Testing

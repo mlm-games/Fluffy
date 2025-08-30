@@ -14,6 +14,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import app.fluffy.AppGraph
 import app.fluffy.io.FileSystemAccess
+import app.fluffy.util.ArchiveTypes.baseNameForExtraction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -166,21 +167,6 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                 f.parentFile?.path?.startsWith(root.path) == true
             }
         } catch (_: Exception) { false }
-    }
-
-    private fun baseNameForExtraction(fileName: String): String {
-        val n = fileName.lowercase()
-        val candidates = listOf(
-            ".tar.gz", ".tar.bz2", ".tar.xz",
-            ".tgz", ".tbz2", ".txz",
-            ".zip", ".jar", ".apk", ".7z", ".tar"
-        )
-        val hit = candidates.firstOrNull { n.endsWith(it) }
-        return if (hit != null) {
-            fileName.dropLast(hit.length)
-        } else {
-            fileName.substringBeforeLast('.', fileName)
-        }.ifBlank { "extracted" }
     }
 
     private fun createForeground(title: String): ForegroundInfo {

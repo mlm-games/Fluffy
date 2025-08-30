@@ -4,6 +4,7 @@ package app.fluffy.archive
 
 import android.content.Context
 import app.fluffy.io.SafIo
+import app.fluffy.util.ArchiveTypes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import net.lingala.zip4j.ZipFile
@@ -35,13 +36,13 @@ class DefaultArchiveEngine(
         open: () -> InputStream,
         password: CharArray?
     ): ArchiveEngine.ListResult = withContext(Dispatchers.IO) {
-        when (infer(archiveName)) {
-            Kind.ZIP   -> listZip(archiveName, open)
-            Kind.SEVENZ -> listSevenZ(archiveName, open, password)
-            Kind.TAR   -> listTar(open)
-            Kind.TARGZ -> listTar { GzipCompressorInputStream(open()) }
-            Kind.TARBZ2 -> listTar { BZip2CompressorInputStream(open()) }
-            Kind.TARXZ -> listTar { XZCompressorInputStream(open()) }
+        when (ArchiveTypes.infer(archiveName)) {
+            ArchiveTypes.Kind.ZIP   -> listZip(archiveName, open)
+            ArchiveTypes.Kind.SEVENZ -> listSevenZ(archiveName, open, password)
+            ArchiveTypes.Kind.TAR   -> listTar(open)
+            ArchiveTypes.Kind.TARGZ -> listTar { GzipCompressorInputStream(open()) }
+            ArchiveTypes.Kind.TARBZ2 -> listTar { BZip2CompressorInputStream(open()) }
+            ArchiveTypes.Kind.TARXZ -> listTar { XZCompressorInputStream(open()) }
         }
     }
 
@@ -52,13 +53,13 @@ class DefaultArchiveEngine(
         password: CharArray?,
         onProgress: (Long, Long) -> Unit
     ) = withContext(Dispatchers.IO) {
-        when (infer(archiveName)) {
-            Kind.ZIP   -> extractZip(open, create, password, onProgress)
-            Kind.SEVENZ -> extractSevenZ(archiveName, open, create, password, onProgress)
-            Kind.TAR   -> extractTar(open, create, onProgress)
-            Kind.TARGZ -> extractTar({ GzipCompressorInputStream(open()) }, create, onProgress)
-            Kind.TARBZ2 -> extractTar({ BZip2CompressorInputStream(open()) }, create, onProgress)
-            Kind.TARXZ -> extractTar({ XZCompressorInputStream(open()) }, create, onProgress)
+        when (ArchiveTypes.infer(archiveName)) {
+            ArchiveTypes.Kind.ZIP   -> extractZip(open, create, password, onProgress)
+            ArchiveTypes.Kind.SEVENZ -> extractSevenZ(archiveName, open, create, password, onProgress)
+            ArchiveTypes.Kind.TAR   -> extractTar(open, create, onProgress)
+            ArchiveTypes.Kind.TARGZ -> extractTar({ GzipCompressorInputStream(open()) }, create, onProgress)
+            ArchiveTypes.Kind.TARBZ2 -> extractTar({ BZip2CompressorInputStream(open()) }, create, onProgress)
+            ArchiveTypes.Kind.TARXZ -> extractTar({ XZCompressorInputStream(open()) }, create, onProgress)
         }
     }
 
@@ -302,21 +303,6 @@ class DefaultArchiveEngine(
                 }
                 e = tin.nextEntry
             }
-        }
-    }
-
-    private enum class Kind { ZIP, SEVENZ, TAR, TARGZ, TARBZ2, TARXZ }
-
-    private fun infer(name: String): Kind {
-        val n = name.lowercase(Locale.ROOT)
-        return when {
-            n.endsWith(".7z") -> Kind.SEVENZ
-            n.endsWith(".zip") || n.endsWith(".jar") || n.endsWith(".apk") -> Kind.ZIP
-            n.endsWith(".tar.gz") || n.endsWith(".tgz") -> Kind.TARGZ
-            n.endsWith(".tar.bz2") || n.endsWith(".tbz2") -> Kind.TARBZ2
-            n.endsWith(".tar.xz") || n.endsWith(".txz") -> Kind.TARXZ
-            n.endsWith(".tar") -> Kind.TAR
-            else -> Kind.ZIP
         }
     }
 }

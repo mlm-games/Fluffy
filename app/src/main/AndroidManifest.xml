@@ -33,7 +33,7 @@
         android:localeConfig="@xml/locales_config"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme"
+        android:theme="@style/Theme.Fluffy"
         android:enableOnBackInvokedCallback="true"
         tools:ignore="UnusedAttribute">
 
@@ -63,9 +63,8 @@
         </activity>
         <activity
             android:name=".ImageViewerActivity"
-            android:exported="true"
-            android:theme="@style/Theme.Material3.DayNight.NoActionBar">
-            <intent-filter>
+            android:exported="true" >
+        <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />

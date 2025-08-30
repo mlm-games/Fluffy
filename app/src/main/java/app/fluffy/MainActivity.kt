@@ -44,6 +44,7 @@ import app.fluffy.operations.ArchiveJobManager
 import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.ui.screens.*
 import app.fluffy.ui.theme.FluffyTheme
+import app.fluffy.util.ArchiveTypes.baseNameForExtraction
 import app.fluffy.viewmodel.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
@@ -138,54 +139,50 @@ class MainActivity : ComponentActivity() {
                 )
             } catch (_: SecurityException) { }
 
-            fun namesInDir(parent: Uri): Set<String> {
-                return when (parent.scheme) {
-                    "file" -> {
-                        val f = File(parent.path!!)
-                        (f.listFiles()?.map { it.name } ?: emptyList()).toSet()
+            suspend fun confirmCollisionsAndEnqueue(
+                target: Uri,
+                sourcesDisplayNames: List<String>,
+                onEnqueue: (overwrite: Boolean) -> Unit
+            ) {
+                fun namesInDir(parent: Uri): Set<String> {
+                    return when (parent.scheme) {
+                        "file" -> {
+                            val f = File(parent.path!!)
+                            (f.listFiles()?.map { it.name } ?: emptyList()).toSet()
+                        }
+                        "content" -> {
+                            val p = DocumentFile.fromTreeUri(this, parent)
+                                ?: DocumentFile.fromSingleUri(this, parent)
+                            p?.listFiles()?.mapNotNull { it.name }?.toSet() ?: emptySet()
+                        }
+                        else -> emptySet()
                     }
-                    "content" -> {
-                        val p = DocumentFile.fromTreeUri(this, parent)
-                            ?: DocumentFile.fromSingleUri(this, parent)
-                        p?.listFiles()?.mapNotNull { it.name }?.toSet() ?: emptySet()
-                    }
-                    else -> emptySet()
+                }
+
+                val destNames = namesInDir(target)
+                val collisions = sourcesDisplayNames.count { it in destNames }
+                if (collisions > 0) {
+                    overwriteMessage.value = "$collisions item(s) with the same name exist in the destination. Overwrite them?"
+                    onOverwriteConfirm = { onEnqueue(true) }
+                    showOverwriteDialog.value = true
+                } else {
+                    onEnqueue(false)
                 }
             }
 
             lifecycleScope.launch {
                 // COPY/MOVE conflicts
                 pendingCopy?.let { list ->
-                    val destNames = namesInDir(target)
-                    val sourceNames = list.map { AppGraph.io.queryDisplayName(it) }
-                    val collisions = sourceNames.count { it in destNames }
-                    val enqueue: (Boolean) -> Unit = { overwrite ->
-                        tasksVM.enqueueCopy(list, target, overwrite)
-                        pendingCopy = null
-                    }
-                    if (collisions > 0) {
-                        overwriteMessage.value = "$collisions item(s) with the same name exist in the destination. Overwrite them?"
-                        onOverwriteConfirm = { enqueue(true) }
-                        showOverwriteDialog.value = true
-                    } else {
-                        enqueue(false)
-                    }
+                    confirmCollisionsAndEnqueue(target, list.map { AppGraph.io.queryDisplayName(it) },  { overwrite ->
+                    tasksVM.enqueueCopy(list, target, overwrite)
+                    pendingCopy = null
+                })
                 }
                 pendingMove?.let { list ->
-                    val destNames = namesInDir(target)
-                    val sourceNames = list.map { AppGraph.io.queryDisplayName(it) }
-                    val collisions = sourceNames.count { it in destNames }
-                    val enqueue: (Boolean) -> Unit = { overwrite ->
+                    confirmCollisionsAndEnqueue(target, list.map { AppGraph.io.queryDisplayName(it) },  { overwrite ->
                         tasksVM.enqueueMove(list, target, overwrite)
                         pendingMove = null
-                    }
-                    if (collisions > 0) {
-                        overwriteMessage.value = "$collisions item(s) with the same name exist in the destination. Overwrite them?"
-                        onOverwriteConfirm = { enqueue(true) }
-                        showOverwriteDialog.value = true
-                    } else {
-                        enqueue(false)
-                    }
+                    })
                 }
 
                 // EXTRACT: if extracting into subfolder and it exists -> confirm
@@ -563,21 +560,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun baseNameForExtraction(fileName: String): String {
-        val n = fileName.lowercase()
-        val candidates = listOf(
-            ".tar.gz", ".tar.bz2", ".tar.xz",
-            ".tgz", ".tbz2", ".txz",
-            ".zip", ".jar", ".apk", ".7z", ".tar"
-        )
-        val hit = candidates.firstOrNull { n.endsWith(it) }
-        return if (hit != null) {
-            fileName.dropLast(hit.length)
-        } else {
-            fileName.substringBeforeLast('.', fileName)
-        }.ifBlank { "extracted" }
-    }
-
     private fun checkStoragePermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
@@ -850,10 +832,17 @@ class ImageViewerActivity : ComponentActivity() {
     }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AppGraph.init(applicationContext)
         val images = intent.getStringArrayListExtra(EXTRA_IMAGES) ?: arrayListOf()
         val start = intent.getIntExtra(EXTRA_INITIAL_INDEX, 0).coerceIn(0, (images.size - 1).coerceAtLeast(0))
         setContent {
-            FluffyTheme(darkTheme = true, useAuroraTheme = true) {
+            val settings = AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings()).value
+            val dark = when (settings.themeMode) {
+                0 -> isSystemInDarkTheme()
+                1 -> false
+                else -> true
+            }
+            FluffyTheme(darkTheme = dark, useAuroraTheme = settings.useAuroraTheme) {
                 FullscreenImageViewer(
                     images = images,
                     initialPage = start,
