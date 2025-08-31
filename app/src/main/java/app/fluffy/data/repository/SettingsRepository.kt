@@ -48,6 +48,9 @@ class SettingsRepository(private val context: Context) {
 
         val ENABLE_ROOT = booleanPreferencesKey("enable_root")
         val ENABLE_SHIZUKU = booleanPreferencesKey("enable_shizuku")
+
+        val PREFER_CR_MIME = booleanPreferencesKey("prefer_cr_mime")
+        val WARN_SHELL_WRITES = booleanPreferencesKey("warn_shell_writes")
     }
 
     private val definitions: Map<String, SettingDefinition<*>> = mapOf(
@@ -59,6 +62,8 @@ class SettingsRepository(private val context: Context) {
         "extractIntoSubfolder" to SettingDefinition.BooleanSetting("extractIntoSubfolder", EXTRACT_INTO_SUBFOLDER) { it.extractIntoSubfolder },
         "enableRoot" to SettingDefinition.BooleanSetting(AppSettings::enableRoot.name, ENABLE_ROOT) { it.enableRoot },
         "enableShizuku" to SettingDefinition.BooleanSetting(AppSettings::enableShizuku.name, ENABLE_SHIZUKU) { it.enableShizuku },
+        "preferContentResolverMime" to SettingDefinition.BooleanSetting("preferContentResolverMime", PREFER_CR_MIME) { it.preferContentResolverMime },
+        "warnBeforeShellWrites" to SettingDefinition.BooleanSetting("warnBeforeShellWrites", WARN_SHELL_WRITES) { it.warnBeforeShellWrites },
     )
 
     val settingsFlow: Flow<AppSettings> = context.ds.data.map { p ->
@@ -71,6 +76,8 @@ class SettingsRepository(private val context: Context) {
             extractIntoSubfolder = p[EXTRACT_INTO_SUBFOLDER] ?: true,
             enableRoot = p[ENABLE_ROOT] ?: false,
             enableShizuku = p[ENABLE_SHIZUKU] ?: false,
+            preferContentResolverMime = p[PREFER_CR_MIME] ?: false,
+            warnBeforeShellWrites = p[WARN_SHELL_WRITES] ?: false,
         )
     }.distinctUntilChanged()
 

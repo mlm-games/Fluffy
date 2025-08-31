@@ -25,13 +25,13 @@ class SafIo(val context: Context) {
 
     // SAF (content tree) and local file listing only. Root/Shizuku are listed via listShell().
     fun listChildren(dir: Uri): List<DocumentFile> {
-        return when {
-            dir.scheme == "content" -> {
+        return when (dir.scheme) {
+            "content" -> {
                 val doc = DocumentFile.fromTreeUri(context, dir) ?: return emptyList()
                 val children = doc.listFiles().toList()
                 children.sortedWith(compareBy<DocumentFile> { !it.isDirectory }.thenBy { it.name?.lowercase() ?: "" })
             }
-            dir.scheme == "file" -> {
+            "file" -> {
                 val file = File(dir.path!!)
                 val df = DocumentFile.fromFile(file)
                 df.listFiles().sortedWith(compareBy<DocumentFile> { !it.isDirectory }.thenBy { it.name?.lowercase() ?: "" })

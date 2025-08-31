@@ -173,16 +173,20 @@ class MainActivity : ComponentActivity() {
             lifecycleScope.launch {
                 // COPY/MOVE conflicts
                 pendingCopy?.let { list ->
-                    confirmCollisionsAndEnqueue(target, list.map { AppGraph.io.queryDisplayName(it) },  { overwrite ->
-                    tasksVM.enqueueCopy(list, target, overwrite)
-                    pendingCopy = null
-                })
+                    confirmCollisionsAndEnqueue(target, list.map { AppGraph.io.queryDisplayName(it) }) { overwrite ->
+                        confirmShellWrite(target) {
+                            tasksVM.enqueueCopy(list, target, overwrite)
+                            pendingCopy = null
+                        }
+                    }
                 }
                 pendingMove?.let { list ->
-                    confirmCollisionsAndEnqueue(target, list.map { AppGraph.io.queryDisplayName(it) },  { overwrite ->
-                        tasksVM.enqueueMove(list, target, overwrite)
-                        pendingMove = null
-                    })
+                    confirmCollisionsAndEnqueue(target, list.map { AppGraph.io.queryDisplayName(it) }) { overwrite ->
+                        confirmShellWrite(target) {
+                            tasksVM.enqueueMove(list, target, overwrite)
+                            pendingMove = null
+                        }
+                    }
                 }
 
                 // EXTRACT: if extracting into subfolder and it exists -> confirm
@@ -192,10 +196,12 @@ class MainActivity : ComponentActivity() {
                     val subfolder = baseNameForExtraction(name)
                     val mayUseSubfolder = settings.extractIntoSubfolder
                     val enqueueExtract = {
-                        tasksVM.enqueueExtract(arch, target, pendingExtractPassword, pendingExtractPaths)
-                        pendingExtractArchive = null
-                        pendingExtractPassword = null
-                        pendingExtractPaths = null
+                        confirmShellWrite(target) {
+                            tasksVM.enqueueExtract(arch, target, pendingExtractPassword, pendingExtractPaths)
+                            pendingExtractArchive = null
+                            pendingExtractPassword = null
+                            pendingExtractPaths = null
+                        }
                     }
                     if (mayUseSubfolder) {
                         val exists = childExists(target, subfolder)
@@ -287,8 +293,16 @@ class MainActivity : ComponentActivity() {
                                             )
                                         },
                                         onCreateZip = { sources, outName, targetDir, overwrite ->
-                                            tasksVM.enqueueCreateZip(sources, targetDir, outName, overwrite)
-                                            showTaskCenter = true
+                                            confirmShellWrite(targetDir) {
+                                                tasksVM.enqueueCreateZip(sources, targetDir, outName, overwrite)
+                                                showTaskCenter = true
+                                            }
+                                        },
+                                        onCreate7z = { sources, outName, password, targetDir, overwrite ->
+                                            confirmShellWrite(targetDir) {
+                                                tasksVM.enqueueCreate7z(sources, targetDir, outName, password, overwrite)
+                                                showTaskCenter = true
+                                            }
                                         },
                                         onOpenSettings = { nav.navigate("settings") },
                                         onOpenTasks = { showTaskCenter = true },
@@ -308,8 +322,21 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onDeleteSelected = { list ->
                                             lifecycleScope.launch {
-                                                list.forEach { AppGraph.io.deleteTree(it) }
-                                                filesVM.refreshCurrentDir()
+                                                val s = AppGraph.settings.settingsFlow.first()
+                                                val touchesShell = list.any { it.scheme == "root" || it.scheme == "shizuku" }
+                                                val proceed: () -> Unit = {
+                                                    lifecycleScope.launch {
+                                                        list.forEach { AppGraph.io.deleteTree(it) }
+                                                        filesVM.refreshCurrentDir()
+                                                    }
+                                                }
+                                                if (s.warnBeforeShellWrites && touchesShell) {
+                                                    overwriteMessage.value = "You're about to delete using elevated (root/shizuku) access. Continue?"
+                                                    onOverwriteConfirm = proceed
+                                                    showOverwriteDialog.value = true
+                                                } else {
+                                                    proceed()
+                                                }
                                             }
                                         },
                                         onRenameOne = { uri, newName ->
@@ -319,10 +346,6 @@ class MainActivity : ComponentActivity() {
                                                     filesVM.refreshCurrentDir()
                                                 }
                                             }
-                                        },
-                                        onCreate7z = { sources, outName, password, targetDir, overwrite ->
-                                            tasksVM.enqueueCreate7z(sources, targetDir, outName, password, overwrite)
-                                            showTaskCenter = true
                                         },
                                         onOpenFile = { file -> filesVM.openFile(file) },
                                         onQuickAccessClick = { item ->
@@ -339,7 +362,7 @@ class MainActivity : ComponentActivity() {
                                         onCreateFolder = { name -> filesVM.createNewFolder(name) },
                                         onOpenWith = { uri, name ->
                                             val final = if (uri.scheme == "file") contentUriFor(File(uri.path!!)) else uri
-                                            openWith(final, name)
+                                            openWith(final, name, preferMime = settings.preferContentResolverMime)
                                         }
                                     )
                                 }
@@ -534,24 +557,35 @@ class MainActivity : ComponentActivity() {
     ) {
         lifecycleScope.launch {
             val settings = AppGraph.settings.settingsFlow.first()
-            if (settings.extractIntoSubfolder) {
-                val sub = baseNameForExtraction(AppGraph.io.queryDisplayName(archive))
-                val exists = childExists(targetDir, sub)
-                val enqueue = {
-                    tasksVM.enqueueExtract(archive, targetDir, password, includePaths)
-                    onAfterEnqueue?.invoke()
+            val proceedExtract: () -> Unit = {
+                lifecycleScope.launch {
+                    if (settings.extractIntoSubfolder) {
+                        val sub = baseNameForExtraction(AppGraph.io.queryDisplayName(archive))
+                        val exists = childExists(targetDir, sub)
+                        val enqueue = {
+                            tasksVM.enqueueExtract(archive, targetDir, password, includePaths)
+                            onAfterEnqueue?.invoke()
+                        }
+                        if (exists) {
+                            overwriteMessage.value = "Folder \"$sub\" already exists. Extract into it and overwrite files if needed?"
+                            onOverwriteConfirm = enqueue as (() -> Unit)?
+                            showOverwriteDialog.value = true
+                        } else {
+                            enqueue()
+                        }
+                    } else {
+                        tasksVM.enqueueExtract(archive, targetDir, password, includePaths)
+                        onAfterEnqueue?.invoke()
+                    }
                 }
-                if (exists) {
-                    overwriteMessage.value = "Folder \"$sub\" already exists. Extract into it and overwrite files if needed?"
-                    onOverwriteConfirm = enqueue as (() -> Unit)?
-                    showOverwriteDialog.value = true
-                } else {
-                    enqueue()
-                }
+            }
+            val needsWarn = settings.warnBeforeShellWrites && (targetDir.scheme == "root" || targetDir.scheme == "shizuku")
+            if (needsWarn) {
+                overwriteMessage.value = "You're about to write using ${targetDir.scheme?.uppercase()} permissions. This can modify system files. Continue?"
+                onOverwriteConfirm = proceedExtract
+                showOverwriteDialog.value = true
             } else {
-                // Not using a subfolder; proceed (doing per-file collision scan is heavy)
-                tasksVM.enqueueExtract(archive, targetDir, password, includePaths)
-                onAfterEnqueue?.invoke()
+                proceedExtract()
             }
         }
     }
@@ -622,8 +656,12 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun openWith(uri: Uri, displayName: String) {
-        val mime = FileSystemAccess.getMimeType(displayName)
+    private fun openWith(uri: Uri, displayName: String, preferMime: Boolean) {
+        val mime = if (preferMime) {
+            contentResolver.getType(uri) ?: FileSystemAccess.getMimeType(displayName)
+        } else {
+            FileSystemAccess.getMimeType(displayName)
+        }
         val view = Intent(Intent.ACTION_VIEW).apply {
             setDataAndType(uri, mime)
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -636,6 +674,20 @@ class MainActivity : ComponentActivity() {
             FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
         } catch (_: Exception) {
             Uri.fromFile(file)
+        }
+    }
+
+    private fun confirmShellWrite(target: Uri, proceed: () -> Unit) {
+        lifecycleScope.launch {
+            val s = AppGraph.settings.settingsFlow.first()
+            val needsWarn = s.warnBeforeShellWrites && (target.scheme == "root" || target.scheme == "shizuku")
+            if (needsWarn) {
+                overwriteMessage.value = "You're about to write using ${target.scheme?.uppercase()} permissions. This can modify system files. Continue?"
+                onOverwriteConfirm = proceed
+                showOverwriteDialog.value = true
+            } else {
+                proceed()
+            }
         }
     }
 }

@@ -91,6 +91,21 @@ data class AppSettings(
     )
     val extractIntoSubfolder: Boolean = true,
 
+    @Setting(
+        title = "Prefer ContentResolver MIME",
+        description = "Use ContentResolver.getType(...) for 'Open with' and previews when available",
+        category = SettingCategory.GENERAL,
+        type = SettingType.TOGGLE
+    )
+    val preferContentResolverMime: Boolean = false,
+
+    @Setting(
+        title = "Warn before elevated writes",
+        description = "Show a confirmation before writing/deleting via root or Shizuku",
+        category = SettingCategory.SYSTEM,
+        type = SettingType.TOGGLE
+    )
+    val warnBeforeShellWrites: Boolean = false,
 
 )
 

@@ -38,13 +38,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
@@ -59,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import app.fluffy.AppGraph
 import app.fluffy.archive.ArchiveEngine
+import app.fluffy.data.repository.AppSettings
 import app.fluffy.helper.showToast
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.ui.components.AppTopBar
@@ -96,6 +96,9 @@ fun ArchiveViewerScreen(
     var selectionMode by remember { mutableStateOf(false) }
     val selected = remember { mutableStateMapOf<String, Boolean>() }
     var currentPath by remember { mutableStateOf("") }
+
+    val settings = AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings()).value
+
 
     // Visible (top-level directory within currentPath)
     val visible = remember(listing, currentPath) {
@@ -336,7 +339,7 @@ fun ArchiveViewerScreen(
                                                     archive = archiveUri,
                                                     pwd = password.ifBlank { null }
                                                 )
-                                                if (uri != null) openPreview(uri, e.path, ctx)
+                                                if (uri != null) openPreview(uri, e.path, ctx, settings.preferContentResolverMime)
                                             }
                                         }
                                     }
@@ -470,7 +473,7 @@ private suspend fun extractEntryToCache(
     }
 }
 
-private fun openPreview(uri: Uri, name: String, ctx: Context) {
+private fun openPreview(uri: Uri, name: String, ctx: Context, preferMime: Boolean) {
     val finalUri = if (uri.scheme == "file") {
         try {
             FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", File(requireNotNull(uri.path)))
@@ -482,7 +485,11 @@ private fun openPreview(uri: Uri, name: String, ctx: Context) {
         ctx.showToast("No app available to open this file")
         return
     }
-    val mime = FileSystemAccess.getMimeType(name)
+    val mime = if (preferMime) {
+        ctx.contentResolver.getType(finalUri) ?: FileSystemAccess.getMimeType(name)
+    } else {
+        FileSystemAccess.getMimeType(name)
+    }
     val intent = Intent(Intent.ACTION_VIEW).apply {
         setDataAndType(finalUri, mime)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
