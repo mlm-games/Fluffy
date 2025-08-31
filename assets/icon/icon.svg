@@ -10,7 +10,7 @@
    inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
    sodipodi:docname="icon.svg"
    xml:space="preserve"
-   inkscape:export-filename="icon.png"
+   inkscape:export-filename="../../fastlane/metadata/android/en-US/images/icon.png"
    inkscape:export-xdpi="96"
    inkscape:export-ydpi="96"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -30,8 +30,8 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="px"
      inkscape:zoom="0.59938349"
-     inkscape:cx="528.87676"
-     inkscape:cy="548.06314"
+     inkscape:cx="586.43591"
+     inkscape:cy="413.75848"
      inkscape:window-width="1536"
      inkscape:window-height="902"
      inkscape:window-x="0"
@@ -47,7 +47,7 @@
        x2="197.93958"
        y2="210.37526"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="translate(-1.0302734e-5)" /><linearGradient
+       gradientTransform="matrix(1.4370861,0,0,1.4370861,-223.78811,-223.7881)" /><linearGradient
        id="linearGradient1"
        inkscape:collect="always"><stop
          style="stop-color:#4b563a;stop-opacity:1;"
@@ -73,13 +73,13 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"><rect
-       style="fill:url(#linearGradient2);stroke:none;stroke-width:2.58787;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
+       style="fill:url(#linearGradient2);stroke:none;stroke-width:3.71899;stroke-linecap:round;stroke-linejoin:round;paint-order:fill markers stroke"
        id="rect1"
-       width="712.55298"
-       height="712.55298"
-       x="155.72351"
-       y="155.72351"
-       ry="165.16129" /><g
+       width="1024"
+       height="1024"
+       x="0"
+       y="0"
+       ry="0" /><g
        id="g24"
        transform="matrix(4.5116577,0,0,4.5116577,-234.76811,1290.4571)"
        style="opacity:1;mix-blend-mode:difference;fill:#786721"><rect
@@ -219,7 +219,7 @@
          cy="80.063332"
          r="14.181238" /></g><g
        id="g6"
-       transform="matrix(0.82143344,0,0,0.82143344,91.426084,55.688834)"><path
+       transform="matrix(1.1804706,0,0,1.1804706,-92.40094,-143.75845)"><path
          d="m 300.95387,721.79312 c -43.96793,0 -87.93589,-42.63773 -87.93589,-85.27547 0,-63.95661 52.76154,-106.59433 109.91987,-106.59433 13.1904,-85.27548 87.9359,-149.23206 189.06215,-149.23206 101.12627,0 175.8718,63.95658 189.0622,149.23206 57.15834,0 109.91981,42.63772 109.91981,106.59433 0,42.63774 -43.9679,85.27547 -87.93587,85.27547 Q 652.69741,730.32065 512,730.32065 q -140.69742,0 -211.04613,-8.52753 z"
          fill="url(#aurora)"
          opacity="0.9"
