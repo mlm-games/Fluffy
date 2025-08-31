@@ -35,7 +35,7 @@ A fast, modern file manager with powerful archive support and an Android TV–fr
 - Large archives are streamed when possible; 7z listing may stage to cache.
 
 ## Contributing
-Issues and PRs are welcome. Do run ktlint/detekt if configured.
+Issues and PRs are welcome. Do run ktlint/detekt if present (will add it to ci later).
 
 ## Installation
 **Option 1**: Direct APK download from github using Downloader app by AFTV, or any other web broswer. 
