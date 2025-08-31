@@ -1,3 +1,8 @@
+## v3.0.2
+
+- Add options to use content resolver, instead of mime; and confirm on shell writes (false as default, you know you're using root)
+
+
 ## v3.0.1
 
 - Add external storage quick access buttons
