@@ -95,6 +95,10 @@ class SafIo(val context: Context) {
             uri.scheme == "content" -> {
                 requireNotNull(cr.openOutputStream(uri, "w")) { "openOutputStream null $uri" }
             }
+            uri.scheme == "rwt" -> {
+                cr.openOutputStream(uri, "w") ?: cr.openOutputStream(uri, "rwt")
+                ?: error("openOutputStream null $uri")
+            }
             else -> throw IOException("Unsupported URI scheme: ${uri.scheme}")
         }
     }

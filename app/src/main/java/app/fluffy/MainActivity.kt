@@ -2,6 +2,7 @@ package app.fluffy
 
 import android.Manifest
 import android.app.Activity
+import android.app.Application
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -275,6 +276,14 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
+                        LaunchedEffect(browserState.pendingArchiveOpen) {
+                            browserState.pendingArchiveOpen?.let { uri ->
+                                val encoded = URLEncoder.encode(uri.toString(), StandardCharsets.UTF_8.name())
+                                nav.navigate("archive/$encoded")
+                                filesVM.clearPendingArchiveOpen()
+                            }
+                        }
+
                         val content: @Composable () -> Unit = {
                             NavHost(navController = nav, startDestination = "files") {
                                 composable("files") {
@@ -520,30 +529,27 @@ class MainActivity : ComponentActivity() {
 
     private fun handleViewIntent(inIntent: Intent) {
         val action = inIntent.action ?: return
-        fun isImageMime(m: String?) = m?.startsWith("image/") == true
-
+        val data = inIntent.data ?: return
+        val mime = inIntent.type ?: contentResolver.getType(data)
+        fun isArchiveMime(m: String?) = m in setOf(
+            "application/zip","application/x-zip-compressed",
+            "application/x-7z-compressed","application/x-tar",
+            "application/gzip","application/x-bzip2","application/x-xz",
+            "application/java-archive","application/vnd.android.package-archive" // APK as archive
+        )
         when (action) {
             Intent.ACTION_VIEW -> {
-                val data = inIntent.data ?: return
-                val mime = inIntent.type ?: contentResolver.getType(data)
-                if (isImageMime(mime)) {
-                    openImageViewer(
-                        context = this,
-                        images = listOf(data),
-                        startIndex = 0,
-                        title = AppGraph.io.queryDisplayName(data)
-                    )
+                val name = AppGraph.io.queryDisplayName(data).lowercase()
+                when {
+                    mime?.startsWith("image/") == true -> openImageViewer(this, listOf(data), 0, AppGraph.io.queryDisplayName(data))
+                    isArchiveMime(mime) || FileSystemAccess.isArchiveFile(name) -> filesVM.setPendingArchiveOpen(data)
                 }
             }
             Intent.ACTION_SEND -> {
-                if (!isImageMime(inIntent.type)) return
                 val u = inIntent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM) ?: return
-                openImageViewer(this, listOf(u), 0, AppGraph.io.queryDisplayName(u))
-            }
-            Intent.ACTION_SEND_MULTIPLE -> {
-                if (!isImageMime(inIntent.type)) return
-                val arr = inIntent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM).orEmpty()
-                if (arr.isNotEmpty()) openImageViewer(this, arr, 0, "Gallery")
+                val t = inIntent.type
+                if (t?.startsWith("image/") == true) openImageViewer(this, listOf(u), 0, AppGraph.io.queryDisplayName(u))
+                else if (isArchiveMime(t)) filesVM.setPendingArchiveOpen(u)
             }
         }
     }
@@ -910,5 +916,12 @@ class ImageViewerActivity : ComponentActivity() {
                 )
             }
         }
+    }
+}
+
+class FluffyApp : Application() {
+    override fun onCreate() {
+        super.onCreate()
+        AppGraph.init(applicationContext)
     }
 }

@@ -43,7 +43,8 @@ data class FileBrowserState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val canAccessFileSystem: Boolean = false,
-    val pendingFileOpen: Uri? = null
+    val pendingFileOpen: Uri? = null,
+    val pendingArchiveOpen: Uri? = null,
 )
 
 class FileBrowserViewModel(
@@ -413,5 +414,12 @@ class FileBrowserViewModel(
             is BrowseLocation.QuickAccess -> "Quick Access"
             null -> ""
         }
+    }
+
+    fun setPendingArchiveOpen(uri: Uri) {
+        _state.value = _state.value.copy(pendingArchiveOpen = uri)
+    }
+    fun clearPendingArchiveOpen() {
+        _state.value = _state.value.copy(pendingArchiveOpen = null)
     }
 }

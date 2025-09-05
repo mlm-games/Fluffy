@@ -56,7 +56,9 @@ class FileOpsWorker(appContext: Context, params: WorkerParameters) : CoroutineWo
         val channelId = "fluffy.work"
         val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(channelId) == null) {
-            nm.createNotificationChannel(NotificationChannel(channelId, "Background tasks", NotificationManager.IMPORTANCE_LOW))
+            nm.createNotificationChannel(
+                NotificationChannel(channelId, "Background tasks", NotificationManager.IMPORTANCE_LOW)
+            )
         }
         val n: Notification = NotificationCompat.Builder(applicationContext, channelId)
             .setContentTitle(title)

@@ -25,6 +25,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.FactCheck
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.FileOpen
+import androidx.compose.material.icons.filled.InstallDesktop
+import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -263,6 +265,39 @@ fun ArchiveViewerScreen(
                                 onExtractSelected(archiveUri, paths, password.ifBlank { null })
                             }) {
                                 Icon(Icons.Filled.DoneAll, contentDescription = "Extract selected")
+                            }
+                        }
+                        val isApk = remember(title) { title.lowercase().endsWith(".apk") }
+                        if (isApk) {
+                            IconButton(onClick = {
+                                val installUri = when (archiveUri.scheme) {
+                                    "file" -> try {
+                                        FileProvider.getUriForFile(
+                                            ctx,
+                                            "${ctx.packageName}.fileprovider",
+                                            File(requireNotNull(archiveUri.path))
+                                        )
+                                    } catch (e: Exception) {
+                                        ctx.showToast("FileProvider not configured for this path")
+                                        return@IconButton
+                                    }
+                                    else -> archiveUri
+                                }
+
+                                val intent = Intent(Intent.ACTION_VIEW).apply {
+                                    setDataAndType(installUri, "application/vnd.android.package-archive")
+                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                    // addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // only if ctx is not an Activity
+                                }
+
+                                val pm = ctx.packageManager
+                                if (intent.resolveActivity(pm) != null) {
+                                    ctx.startActivity(intent)
+                                } else {
+                                    ctx.showToast("No installer found")
+                                }
+                            }) {
+                                Icon(Icons.Default.InstallDesktop, contentDescription = "Install (Open with)")
                             }
                         }
                     }
