@@ -1,3 +1,10 @@
+## v3.1.1
+
+- Update build.gradle.kts
+- Add option to install apks as a button (in the archive viewer screen, fix #8?) and other misc fixes
+- Update README.md
+
+
 ## v3.0.3
 
 - Update README.md
