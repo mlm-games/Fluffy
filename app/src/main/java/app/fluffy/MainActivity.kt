@@ -1,9 +1,7 @@
 package app.fluffy
 
 import android.Manifest
-import android.app.Activity
 import android.app.Application
-import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -20,7 +18,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +38,13 @@ import androidx.navigation.navArgument
 import androidx.work.WorkInfo
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.helper.DeviceUtils
+import app.fluffy.helper.OpenTarget
+import app.fluffy.helper.detectTarget
+import app.fluffy.helper.launchImageViewer
+import app.fluffy.helper.openWithExport
+import app.fluffy.helper.purgeOldExports
+import app.fluffy.helper.purgeOldViewerCache
+import app.fluffy.helper.toViewableUris
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.operations.ArchiveJobManager
 import app.fluffy.ui.components.ConfirmationDialog
@@ -48,10 +52,8 @@ import app.fluffy.ui.screens.*
 import app.fluffy.ui.theme.FluffyTheme
 import app.fluffy.util.ArchiveTypes.baseNameForExtraction
 import app.fluffy.viewmodel.*
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
 import java.io.File
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -118,6 +120,7 @@ class MainActivity : ComponentActivity() {
         checkStoragePermissions()
 
         purgeOldViewerCache()
+        purgeOldExports()
 
         val pickRoot = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
             uri?.let {
@@ -373,10 +376,17 @@ class MainActivity : ComponentActivity() {
                                         },                                        onRequestPermission = { requestStoragePermission() },
                                         onShowQuickAccess = { filesVM.showQuickAccess() },
                                         onCreateFolder = { name -> filesVM.createNewFolder(name) },
+
                                         onOpenWith = { uri, name ->
-                                            val final = if (uri.scheme == "file") contentUriFor(File(uri.path!!)) else uri
-                                            openWith(final, name, preferMime = settings.preferContentResolverMime)
-                                        }
+                                            lifecycleScope.launch {
+                                                openWithExport( // For sharable uri
+                                                    src = uri,
+                                                    displayName = name,
+                                                    preferMime = settings.preferContentResolverMime
+                                                )
+                                            }
+                                        },
+                                        showFileCount = settings.showFileCount
                                     )
                                 }
 
@@ -532,53 +542,15 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleViewIntent(inIntent: Intent) {
-        val action = inIntent.action ?: return
-        val data = inIntent.data
-        val mime = inIntent.type ?: (data?.let { contentResolver.getType(it) })
-
-        fun isImage(m: String?) = m?.startsWith("image/") == true
-
-        when (action) {
-            Intent.ACTION_VIEW -> {
-                if (isImage(mime) && data != null) {
-                    lifecycleScope.launch {
-                        val name = AppGraph.io.queryDisplayName(requireNotNull(data))
-                        val safe = applicationContext.materializeForViewer(data, name)
-                        openImageViewer(this@MainActivity, listOf(safe), 0, name)
-                    }
-                } else {
-                    val name = AppGraph.io.queryDisplayName(data ?: return).lowercase()
-                    if (FileSystemAccess.isArchiveFile(name)) filesVM.setPendingArchiveOpen(data)
+        when (val target = inIntent.detectTarget()) {
+            is OpenTarget.Images -> {
+                lifecycleScope.launch {
+                    val safe = applicationContext.toViewableUris(target.uris)
+                    applicationContext.launchImageViewer(safe, startIndex = 0, title = target.title)
                 }
             }
-            Intent.ACTION_SEND -> {
-                val u = inIntent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM) ?: return
-                if (isImage(mime)) {
-                    lifecycleScope.launch {
-                        val name = AppGraph.io.queryDisplayName(u)
-                        val safe = applicationContext.materializeForViewer(u, name)
-                        openImageViewer(this@MainActivity, listOf(safe), 0, name)
-                    }
-                } else if (FileSystemAccess.isArchiveFile(AppGraph.io.queryDisplayName(u))) {
-                    filesVM.setPendingArchiveOpen(u)
-                }
-            }
-            Intent.ACTION_SEND_MULTIPLE -> {
-                if (isImage(mime)) {
-                    lifecycleScope.launch {
-                        val list = inIntent.getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM) ?: return@launch
-                        val safe = list.map { uri -> applicationContext.materializeForViewer(uri, AppGraph.io.queryDisplayName(uri)) }
-                        if (safe.isNotEmpty()) openImageViewer(this@MainActivity, safe, 0, null)
-                    }
-                }
-            }
-        }
-    }
-
-    fun Context.purgeOldViewerCache(maxAgeMs: Long = 48L * 3600_000L) {
-        val now = System.currentTimeMillis()
-        File(cacheDir, "").listFiles()?.forEach { f ->
-            if (f.name.startsWith("img_") && (now - f.lastModified()) > maxAgeMs) runCatching { f.delete() }
+            is OpenTarget.Archive -> filesVM.setPendingArchiveOpen(target.uri)
+            OpenTarget.None -> Unit
         }
     }
 
@@ -688,19 +660,6 @@ class MainActivity : ComponentActivity() {
                 manageStoragePermissionLauncher.launch(intent)
             }
         }
-    }
-
-    private fun openWith(uri: Uri, displayName: String, preferMime: Boolean) {
-        val mime = if (preferMime) {
-            contentResolver.getType(uri) ?: FileSystemAccess.getMimeType(displayName)
-        } else {
-            FileSystemAccess.getMimeType(displayName)
-        }
-        val view = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, mime)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        startActivity(Intent.createChooser(view, "Open with"))
     }
 
     private fun contentUriFor(file: File): Uri {
@@ -900,45 +859,6 @@ private fun friendlyTitle(wi: WorkInfo): String {
         t.contains(ArchiveJobManager.TAG_COPY) -> "Copying files…"
         else -> "Working…"
     }
-}
-
-suspend fun Context.materializeForViewer(uri: Uri, displayName: String): Uri = withContext(
-    Dispatchers.IO) {
-    when (uri.scheme) {
-        "root", "shizuku" -> {
-            val safeName = displayName.ifBlank { "image" }
-            val out = File(cacheDir, "img_${System.currentTimeMillis()}_$safeName")
-            AppGraph.io.openIn(uri).use { input ->
-                out.outputStream().use { output -> input.copyTo(output) }
-            }
-            // fallback, for future “share” from viewer (keeps permissions)
-            runCatching { FileProvider.getUriForFile(this@materializeForViewer, "${packageName}.fileprovider", out) }
-                .getOrElse { Uri.fromFile(out) }
-        }
-        else -> uri
-    }
-}
-
-fun openImageViewer(
-    context: Context,
-    images: List<Uri>,
-    startIndex: Int = 0,
-    title: String? = null
-) {
-    val imageStrings = ArrayList(images.map { it.toString() })
-    val intent = Intent(context, ImageViewerActivity::class.java).apply {
-        putStringArrayListExtra(ImageViewerActivity.EXTRA_IMAGES, imageStrings)
-        putExtra(ImageViewerActivity.EXTRA_INITIAL_INDEX, startIndex)
-        title?.let { putExtra(ImageViewerActivity.EXTRA_TITLE, it) }
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        if (images.isNotEmpty()) {
-            val clip = ClipData.newUri(context.contentResolver, "images", images.first())
-            images.drop(1).forEach { clip.addItem(ClipData.Item(it)) }
-            clipData = clip
-        }
-        if (context !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-    }
-    context.startActivity(intent)
 }
 
 class ImageViewerActivity : ComponentActivity() {

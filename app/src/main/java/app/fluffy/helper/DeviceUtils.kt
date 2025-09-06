@@ -3,6 +3,9 @@ package app.fluffy.helper
 import android.app.UiModeManager
 import android.content.Context
 import android.content.res.Configuration
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.focusProperties
 
 object DeviceUtils {
     fun isTV(context: Context): Boolean {
@@ -14,3 +17,5 @@ object DeviceUtils {
         return uiModeManager?.currentModeType == Configuration.UI_MODE_TYPE_TELEVISION
     }
 }
+
+fun Modifier.cardAsFocusGroup() = this.focusGroup().focusProperties { canFocus = false }

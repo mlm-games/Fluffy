@@ -8,9 +8,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.focusGroup
-import androidx.compose.foundation.focusable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,7 +29,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DriveFileMove
-import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.ContentCopy
@@ -54,13 +50,11 @@ import androidx.compose.material.icons.filled.SdCard
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storage
-import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -77,33 +71,23 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusProperties
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
-import app.fluffy.io.FileSystemAccess
-import app.fluffy.io.ShellEntry
+import app.fluffy.helper.cardAsFocusGroup
 import app.fluffy.ui.components.ConfirmationDialog
-import app.fluffy.util.UiFormat.formatDate
-import app.fluffy.util.UiFormat.formatSize
+import app.fluffy.ui.components.FileListRow
+import app.fluffy.ui.components.toRowModel
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.QuickAccessItem
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -128,7 +112,8 @@ fun FileBrowserScreen(
     onQuickAccessClick: (QuickAccessItem) -> Unit = {},
     onRequestPermission: () -> Unit = {},
     onShowQuickAccess: () -> Unit = {},
-    onCreateFolder: (String) -> Unit = {}
+    onCreateFolder: (String) -> Unit = {},
+    showFileCount: Boolean = true,
 ) {
     val currentLocation = state.currentLocation
     val canUp = state.stack.size > 1
@@ -439,20 +424,18 @@ fun FileBrowserScreen(
                     ) {
                         items(state.fileItems, key = { it.absolutePath }) { file ->
                             val isSelected = selectedFiles.contains(file)
-                            FileSystemRow(
-                                file = file,
+                            val model = remember(file) { file.toRowModel() }
+                            FileListRow(
+                                model = model,
                                 selected = isSelected,
                                 hasSelection = anySelected,
-                                onToggleSelect = { toggled ->
-                                    if (toggled) selectedFiles.add(file) else selectedFiles.remove(file)
-                                },
-                                onOpenFile = onOpenFile,
+                                showFileCount = showFileCount,
+                                onToggleSelect = { toggled -> if (toggled) selectedFiles.add(file) else selectedFiles.remove(file) },
+                                onOpenDir = { onOpenFile(file) },
                                 onOpenArchive = { onOpenArchive(Uri.fromFile(file)) },
-                                onOpenWith = { f -> onOpenWith(Uri.fromFile(f), f.name) },
+                                onOpenWith = { _, _ -> onOpenWith(Uri.fromFile(file), file.name) },
                                 onExtractHere = {
-                                    currentDirUri?.let { targetDir ->
-                                        onExtractArchive(Uri.fromFile(file), targetDir)
-                                    }
+                                    currentDirUri?.let { targetDir -> onExtractArchive(Uri.fromFile(file), targetDir) }
                                 }
                             )
                         }
@@ -474,20 +457,18 @@ fun FileBrowserScreen(
                         ) {
                             items(state.shellItems, key = { it.uri.toString() }) { entry ->
                                 val isSelected = selected.contains(entry.uri)
-                                ShellRow(
-                                    entry = entry,
+                                val model = remember(entry.uri) { entry.toRowModel() }
+                                FileListRow(
+                                    model = model,
                                     selected = isSelected,
                                     hasSelection = anySelected,
-                                    onToggleSelect = { toggled ->
-                                        if (toggled) selected.add(entry.uri) else selected.remove(entry.uri)
-                                    },
+                                    showFileCount = showFileCount,
+                                    onToggleSelect = { toggled -> if (toggled) selected.add(entry.uri) else selected.remove(entry.uri) },
                                     onOpenDir = onOpenDir,
                                     onOpenArchive = onOpenArchive,
-                                    onOpenWith = { uri, name -> onOpenWith(uri, name) },
+                                    onOpenWith = onOpenWith,
                                     onExtractHere = {
-                                        currentDirUri?.let { targetDir ->
-                                            onExtractArchive(entry.uri, targetDir)
-                                        }
+                                        currentDirUri?.let { targetDir -> onExtractArchive(entry.uri, targetDir) }
                                     }
                                 )
                             }
@@ -504,20 +485,18 @@ fun FileBrowserScreen(
                         ) {
                             items(state.items, key = { it.uri.toString() }) { df ->
                                 val isSelected = selected.contains(df.uri)
-                                FileRow(
-                                    df = df,
+                                val model = remember(df.uri) { df.toRowModel() }
+                                FileListRow(
+                                    model = model,
                                     selected = isSelected,
                                     hasSelection = anySelected,
-                                    onToggleSelect = { toggled ->
-                                        if (toggled) selected.add(df.uri) else selected.remove(df.uri)
-                                    },
+                                    showFileCount = showFileCount,
+                                    onToggleSelect = { toggled -> if (toggled) selected.add(df.uri) else selected.remove(df.uri) },
                                     onOpenDir = onOpenDir,
                                     onOpenArchive = onOpenArchive,
-                                    onOpenWith = { uri, name -> onOpenWith(uri, name) },
+                                    onOpenWith = onOpenWith,
                                     onExtractHere = {
-                                        currentDirUri?.let { targetDir ->
-                                            onExtractArchive(df.uri, targetDir)
-                                        }
+                                        currentDirUri?.let { targetDir -> onExtractArchive(df.uri, targetDir) }
                                     }
                                 )
                             }
@@ -697,314 +676,6 @@ fun FileBrowserScreen(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun FileSystemRow(
-    file: File,
-    selected: Boolean,
-    hasSelection: Boolean,
-    onToggleSelect: (Boolean) -> Unit,
-    onOpenFile: (File) -> Unit,
-    onOpenArchive: () -> Unit,
-    onOpenWith: (File) -> Unit,
-    onExtractHere: () -> Unit = {}
-) {
-    val isArchive = remember(file.name) { FileSystemAccess.isArchiveFile(file.name) }
-
-    val itemCount by produceState<Int?>(initialValue = null, file) {
-        value = withContext(Dispatchers.IO) {
-            if (file.isDirectory) file.listFiles()?.size ?: 0 else null
-        }
-    }
-
-    val mainFR = remember { FocusRequester() }
-    val extractFR = remember { FocusRequester() }
-    val cbFR = remember { FocusRequester() }
-
-    val appeared = remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) { appeared.value = true }
-
-    AnimatedVisibility(
-        visible = appeared.value,
-        enter = fadeIn(animationSpec = tween(140)) + slideInVertically(initialOffsetY = { it / 8 }, animationSpec = tween(140))
-    ) {
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .animateContentSize(animationSpec = tween(180))
-                .focusGroup()
-                .focusProperties { canFocus = false }
-                .animateContentSize(animationSpec = tween(200)),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-        ) {
-            Row(
-                Modifier.fillMaxWidth().padding(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    when {
-                        file.isDirectory -> Icons.Filled.Folder
-                        isArchive -> Icons.Filled.FolderZip
-                        else -> Icons.AutoMirrored.Filled.InsertDriveFile
-                    },
-                    contentDescription = null,
-                    tint = when {
-                        file.isDirectory -> MaterialTheme.colorScheme.primary
-                        isArchive -> MaterialTheme.colorScheme.secondary
-                        else -> MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
-
-                Column(
-                    Modifier
-                        .weight(1f)
-                        .focusRequester(mainFR)
-                        .focusable()
-                        .semantics { role = Role.Button }
-                        .clickable {
-                            when {
-                                file.isDirectory -> onOpenFile(file)
-                                hasSelection -> onToggleSelect(!selected)
-                                isArchive -> onOpenArchive()
-                                else -> onOpenWith(file)
-                            }
-                        }
-                        .focusProperties { right = if (isArchive) extractFR else cbFR }
-                ) {
-                    Text(
-                        file.name,
-                        style = MaterialTheme.typography.bodyLarge,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        val left = if (file.isDirectory) {
-                            val c = itemCount ?: 0
-                            "$c item${if (c == 1) "" else "s"}"
-                        } else formatSize(file.length())
-
-                        Text(
-                            left,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            "• ${formatDate(file.lastModified())}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-
-                if (isArchive) {
-                    IconButton(
-                        onClick = onExtractHere,
-                        modifier = Modifier.size(40.dp).focusRequester(extractFR).focusable()
-                            .focusProperties { left = mainFR; right = cbFR }
-                    ) {
-                        Icon(
-                            Icons.Filled.Unarchive,
-                            contentDescription = "Extract here",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-
-                Checkbox(
-                    checked = selected,
-                    onCheckedChange = { onToggleSelect(it) },
-                    modifier = Modifier.focusRequester(cbFR).focusable()
-                        .semantics { role = Role.Checkbox }
-                        .focusProperties { left = if (isArchive) extractFR else mainFR }
-                )
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun FileRow(
-    df: DocumentFile,
-    selected: Boolean,
-    hasSelection: Boolean,
-    onToggleSelect: (Boolean) -> Unit,
-    onOpenDir: (Uri) -> Unit,
-    onOpenArchive: (Uri) -> Unit,
-    onOpenWith: (Uri, String) -> Unit,
-    onExtractHere: () -> Unit
-) {
-    val isArchive = remember(df.name, df.isDirectory) {
-        if (df.isDirectory) false else FileSystemAccess.isArchiveFile(df.name ?: "")
-    }
-
-    val mainFR = remember { FocusRequester() }
-    val extractFR = remember { FocusRequester() }
-    val cbFR = remember { FocusRequester() }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .focusGroup()
-            .focusProperties { canFocus = false }
-            .animateContentSize(animationSpec = tween(200)),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .focusRequester(mainFR)
-                    .focusable()
-                    .semantics { role = Role.Button }
-                    .clickable {
-                        when {
-                            df.isDirectory -> onOpenDir(df.uri)
-                            hasSelection -> onToggleSelect(!selected)
-                            isArchive -> onOpenArchive(df.uri)
-                            else -> onOpenWith(df.uri, df.name ?: "item")
-                        }
-                    }
-                    .focusProperties { right = if (isArchive) extractFR else cbFR },
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = when {
-                        df.isDirectory -> Icons.Filled.Folder
-                        isArchive -> Icons.Filled.FolderZip
-                        else -> Icons.AutoMirrored.Filled.InsertDriveFile
-                    },
-                    contentDescription = null,
-                    tint = when {
-                        df.isDirectory -> MaterialTheme.colorScheme.primary
-                        isArchive -> MaterialTheme.colorScheme.secondary
-                        else -> MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
-
-                Column(Modifier.fillMaxWidth()) {
-                    Text(df.name ?: "(no name)", style = MaterialTheme.typography.bodyLarge, maxLines = 1)
-                    val sub = if (df.isDirectory) "Folder" else (df.type ?: "file")
-                    Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-                }
-            }
-
-            if (isArchive) {
-                IconButton(
-                    onClick = onExtractHere,
-                    modifier = Modifier.size(40.dp).focusRequester(extractFR).focusable()
-                        .focusProperties { left = mainFR; right = cbFR }
-                ) {
-                    Icon(imageVector = Icons.Filled.Unarchive, contentDescription = "Extract here", tint = MaterialTheme.colorScheme.primary)
-                }
-            }
-
-            Checkbox(
-                checked = selected,
-                onCheckedChange = { onToggleSelect(it) },
-                modifier = Modifier.focusRequester(cbFR).focusable().semantics { role = Role.Checkbox }
-                    .focusProperties { left = if (isArchive) extractFR else mainFR }
-            )
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun ShellRow(
-    entry: ShellEntry,
-    selected: Boolean,
-    hasSelection: Boolean,
-    onToggleSelect: (Boolean) -> Unit,
-    onOpenDir: (Uri) -> Unit,
-    onOpenArchive: (Uri) -> Unit,
-    onOpenWith: (Uri, String) -> Unit,
-    onExtractHere: () -> Unit
-) {
-    val isArchive = remember(entry.name) { FileSystemAccess.isArchiveFile(entry.name) }
-
-    val mainFR = remember { FocusRequester() }
-    val extractFR = remember { FocusRequester() }
-    val cbFR = remember { FocusRequester() }
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .focusGroup()
-            .focusProperties { canFocus = false }
-            .animateContentSize(animationSpec = tween(200)),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-    ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Row(
-                modifier = Modifier
-                    .weight(1f)
-                    .focusRequester(mainFR)
-                    .focusable()
-                    .semantics { role = Role.Button }
-                    .clickable {
-                        when {
-                            entry.isDir -> onOpenDir(entry.uri)
-                            hasSelection -> onToggleSelect(!selected)
-                            isArchive -> onOpenArchive(entry.uri)
-                            else -> onOpenWith(entry.uri, entry.name)
-                        }
-                    }
-                    .focusProperties { right = if (isArchive) extractFR else cbFR },
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = when {
-                        entry.isDir -> Icons.Filled.Folder
-                        isArchive -> Icons.Filled.FolderZip
-                        else -> Icons.AutoMirrored.Filled.InsertDriveFile
-                    },
-                    contentDescription = null,
-                    tint = when {
-                        entry.isDir -> MaterialTheme.colorScheme.primary
-                        isArchive -> MaterialTheme.colorScheme.secondary
-                        else -> MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                )
-
-                Column(Modifier.fillMaxWidth()) {
-                    Text(entry.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1)
-                    val sub = if (entry.isDir) "Folder" else entry.uri.toString()
-                    Text(sub, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
-                }
-            }
-
-            if (isArchive) {
-                IconButton(
-                    onClick = onExtractHere,
-                    modifier = Modifier.size(40.dp).focusRequester(extractFR).focusable()
-                        .focusProperties { left = mainFR; right = cbFR }
-                ) {
-                    Icon(imageVector = Icons.Filled.Unarchive, contentDescription = "Extract here", tint = MaterialTheme.colorScheme.primary)
-                }
-            }
-
-            Checkbox(
-                checked = selected,
-                onCheckedChange = { onToggleSelect(it) },
-                modifier = Modifier.focusRequester(cbFR).focusable().semantics { role = Role.Checkbox }
-                    .focusProperties { left = if (isArchive) extractFR else mainFR }
-            )
-        }
-    }
-}
-
 @Composable
 private fun QuickAccessView(
     items: List<QuickAccessItem>,
@@ -1092,5 +763,28 @@ private fun EmptyFolderView(
                 Button(onClick = onShowQuickAccess) { Text("Open Quick Access") }
             }
         }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun AnimatedListCard(
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val appeared = remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { appeared.value = true }
+
+    AnimatedVisibility(
+        visible = appeared.value,
+        enter = fadeIn(tween(140)) + slideInVertically(initialOffsetY = { it / 8 }, animationSpec = tween(140))
+    ) {
+        Card(
+            modifier = modifier
+                .fillMaxWidth()
+                .cardAsFocusGroup()
+                .animateContentSize(animationSpec = tween(180)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) { content() }
     }
 }
