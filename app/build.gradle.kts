@@ -33,8 +33,8 @@ android {
         applicationId = "app.fluffy"
         minSdk = 24
         targetSdk = 36
-        versionCode = 410
-        versionName = "3.1.1"
+        versionCode = 420
+        versionName = "3.1.2"
 
         androidResources {
             localeFilters += setOf("en", "ar", "de", "es-rES", "es-rUS", "fr", "hr", "hu", "in", "it", "ja", "pl", "pt-rBR", "ru-rRU", "sv", "tr", "uk", "zh")

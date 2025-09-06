@@ -1,3 +1,11 @@
+## v3.1.2
+
+- Fix image viewer (and opening images from root works)
+- View data/data folders on root, clicking without a selection acts like "open with" button
+- keep aurora code for future use while removing from settings
+- Set content resolver to true by default
+
+
 ## v3.1.1
 
 - Update build.gradle.kts
