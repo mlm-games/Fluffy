@@ -40,7 +40,7 @@ class SettingsRepository(private val context: Context) {
 
         // Appearance
         val THEME_MODE = intPreferencesKey("theme_mode")
-        val USE_AURORA_THEME = booleanPreferencesKey("use_aurora_theme")
+//        val USE_AURORA_THEME = booleanPreferencesKey("use_aurora_theme")
 
         // Archives
         val ZIP_LEVEL = intPreferencesKey("zip_level")
@@ -58,7 +58,7 @@ class SettingsRepository(private val context: Context) {
         "showHidden" to SettingDefinition.BooleanSetting("showHidden", SHOW_HIDDEN) { it.showHidden },
         "themeMode" to SettingDefinition.IntSetting("themeMode", THEME_MODE) { it.themeMode },
         "zipCompressionLevel" to SettingDefinition.IntSetting("zipCompressionLevel", ZIP_LEVEL) { it.zipCompressionLevel },
-        "useAuroraTheme" to SettingDefinition.BooleanSetting("useAuroraTheme", USE_AURORA_THEME) { it.useAuroraTheme },
+//        "useAuroraTheme" to SettingDefinition.BooleanSetting("useAuroraTheme", USE_AURORA_THEME) { it.useAuroraTheme },
         "extractIntoSubfolder" to SettingDefinition.BooleanSetting("extractIntoSubfolder", EXTRACT_INTO_SUBFOLDER) { it.extractIntoSubfolder },
         "enableRoot" to SettingDefinition.BooleanSetting(AppSettings::enableRoot.name, ENABLE_ROOT) { it.enableRoot },
         "enableShizuku" to SettingDefinition.BooleanSetting(AppSettings::enableShizuku.name, ENABLE_SHIZUKU) { it.enableShizuku },
@@ -70,13 +70,13 @@ class SettingsRepository(private val context: Context) {
         AppSettings(
             defaultSort = p[DEFAULT_SORT] ?: 0,
             showHidden = p[SHOW_HIDDEN] ?: false,
-            useAuroraTheme = p[USE_AURORA_THEME] ?: true,
+//            useAuroraTheme = p[USE_AURORA_THEME] ?: true,
             themeMode = p[THEME_MODE] ?: 2,
             zipCompressionLevel = p[ZIP_LEVEL] ?: 5,
             extractIntoSubfolder = p[EXTRACT_INTO_SUBFOLDER] ?: true,
             enableRoot = p[ENABLE_ROOT] ?: false,
             enableShizuku = p[ENABLE_SHIZUKU] ?: false,
-            preferContentResolverMime = p[PREFER_CR_MIME] ?: false,
+            preferContentResolverMime = p[PREFER_CR_MIME] ?: true,
             warnBeforeShellWrites = p[WARN_SHELL_WRITES] ?: false,
         )
     }.distinctUntilChanged()

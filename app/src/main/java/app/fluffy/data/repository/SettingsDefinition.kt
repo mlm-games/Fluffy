@@ -50,13 +50,13 @@ data class AppSettings(
     )
     val themeMode: Int = 2,
 
-    @Setting(
-        title = "Use Aurora Theme",
-        description = "Enable the Aurora color theme with gradients",
-        category = SettingCategory.APPEARANCE,
-        type = SettingType.TOGGLE
-    )
-    val useAuroraTheme: Boolean = true,
+//    @Setting(
+//        title = "Use Aurora Theme",
+//        description = "Enable the Aurora color theme with gradients",
+//        category = SettingCategory.APPEARANCE,
+//        type = SettingType.TOGGLE
+//    )
+//    val useAuroraTheme: Boolean = true,
 
     @Setting(
         title = "ZIP compression level",
@@ -93,11 +93,11 @@ data class AppSettings(
 
     @Setting(
         title = "Prefer ContentResolver MIME",
-        description = "Use ContentResolver.getType(...) for 'Open with' and previews when available",
+        description = "Get type based on file and not from extension for 'Open with' and previews when available",
         category = SettingCategory.GENERAL,
         type = SettingType.TOGGLE
     )
-    val preferContentResolverMime: Boolean = false,
+    val preferContentResolverMime: Boolean = true,
 
     @Setting(
         title = "Warn before elevated writes",
