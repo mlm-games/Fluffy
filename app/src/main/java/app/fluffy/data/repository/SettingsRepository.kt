@@ -37,6 +37,7 @@ class SettingsRepository(private val context: Context) {
         // General
         val DEFAULT_SORT = intPreferencesKey("default_sort")
         val SHOW_HIDDEN = booleanPreferencesKey("show_hidden")
+        val SHOW_FILE_COUNT = booleanPreferencesKey("show_file_count")
 
         // Appearance
         val THEME_MODE = intPreferencesKey("theme_mode")
@@ -64,12 +65,14 @@ class SettingsRepository(private val context: Context) {
         "enableShizuku" to SettingDefinition.BooleanSetting(AppSettings::enableShizuku.name, ENABLE_SHIZUKU) { it.enableShizuku },
         "preferContentResolverMime" to SettingDefinition.BooleanSetting("preferContentResolverMime", PREFER_CR_MIME) { it.preferContentResolverMime },
         "warnBeforeShellWrites" to SettingDefinition.BooleanSetting("warnBeforeShellWrites", WARN_SHELL_WRITES) { it.warnBeforeShellWrites },
+        "showFileCount" to SettingDefinition.BooleanSetting("showFileCount", SHOW_FILE_COUNT) { it.showFileCount },
     )
 
     val settingsFlow: Flow<AppSettings> = context.ds.data.map { p ->
         AppSettings(
             defaultSort = p[DEFAULT_SORT] ?: 0,
             showHidden = p[SHOW_HIDDEN] ?: false,
+            showFileCount = p[SHOW_FILE_COUNT] ?: true,
 //            useAuroraTheme = p[USE_AURORA_THEME] ?: true,
             themeMode = p[THEME_MODE] ?: 2,
             zipCompressionLevel = p[ZIP_LEVEL] ?: 5,

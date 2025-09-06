@@ -40,6 +40,7 @@
 
         <activity
             android:name=".MainActivity"
+            android:label="Open in App"
             android:configChanges="uiMode"
             android:excludeFromRecents="true"
             android:exported="true"
@@ -73,12 +74,38 @@
         </activity>
         <activity
             android:name=".ImageViewerActivity"
+            android:label="View Image"
             android:exported="true" >
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:mimeType="image/*" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.viewers.MediaPlayerActivity"
+            android:label="View Audio/Video"
+            android:exported="true"
+            android:supportsPictureInPicture="true"
+            android:resizeableActivity="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:mimeType="video/*" />
+                <data android:mimeType="audio/*" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.viewers.TextViewerActivity"
+            android:label="View as Text"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
 

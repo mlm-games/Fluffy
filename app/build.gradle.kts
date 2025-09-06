@@ -34,7 +34,7 @@ android {
         minSdk = 24
         targetSdk = 36
         versionCode = 420
-        versionName = "3.1.2"
+        versionName = "3.2.0"
 
         androidResources {
             localeFilters += setOf("en", "ar", "de", "es-rES", "es-rUS", "fr", "hr", "hu", "in", "it", "ja", "pl", "pt-rBR", "ru-rRU", "sv", "tr", "uk", "zh")
@@ -192,6 +192,12 @@ dependencies {
     implementation(libs.coil.svg)
 
     implementation(libs.androidx.documentfile)
+    implementation(libs.androidx.media3.exoplayer)
+    implementation(libs.androidx.media3.ui)
+    implementation(libs.androidx.media3.ui.compose)
+    implementation("androidx.media3:media3-exoplayer-dash:1.8.0")
+
+
 
     implementation(libs.zip4j)
     implementation(libs.commons.compress)

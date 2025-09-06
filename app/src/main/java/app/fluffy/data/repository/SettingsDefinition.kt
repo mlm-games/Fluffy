@@ -43,6 +43,14 @@ data class AppSettings(
     val showHidden: Boolean = false,
 
     @Setting(
+        title = "Show file count in dirs",
+        description = "Show count of files in directories",
+        category = SettingCategory.GENERAL,
+        type = SettingType.TOGGLE
+    )
+    val showFileCount: Boolean = true,
+
+    @Setting(
         title = "Theme",
         category = SettingCategory.APPEARANCE,
         type = SettingType.DROPDOWN,
