@@ -56,7 +56,7 @@ data class AppSettings(
 //        category = SettingCategory.APPEARANCE,
 //        type = SettingType.TOGGLE
 //    )
-//    val useAuroraTheme: Boolean = true,
+    val useAuroraTheme: Boolean = true,
 
     @Setting(
         title = "ZIP compression level",
