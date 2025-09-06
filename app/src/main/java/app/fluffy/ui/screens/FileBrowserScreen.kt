@@ -6,6 +6,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
@@ -72,6 +73,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -719,77 +721,104 @@ private fun FileSystemRow(
     val extractFR = remember { FocusRequester() }
     val cbFR = remember { FocusRequester() }
 
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .focusGroup()
-            .focusProperties { canFocus = false }
-            .animateContentSize(animationSpec = tween(200)),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+    val appeared = remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) { appeared.value = true }
+
+    AnimatedVisibility(
+        visible = appeared.value,
+        enter = fadeIn(animationSpec = tween(140)) + slideInVertically(initialOffsetY = { it / 8 }, animationSpec = tween(140))
     ) {
-        Row(
-            Modifier.fillMaxWidth().padding(12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .animateContentSize(animationSpec = tween(180))
+                .focusGroup()
+                .focusProperties { canFocus = false }
+                .animateContentSize(animationSpec = tween(200)),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
-            Icon(
-                when {
-                    file.isDirectory -> Icons.Filled.Folder
-                    isArchive -> Icons.Filled.FolderZip
-                    else -> Icons.AutoMirrored.Filled.InsertDriveFile
-                },
-                contentDescription = null,
-                tint = when {
-                    file.isDirectory -> MaterialTheme.colorScheme.primary
-                    isArchive -> MaterialTheme.colorScheme.secondary
-                    else -> MaterialTheme.colorScheme.onSurfaceVariant
-                }
-            )
-
-            Column(
-                Modifier
-                    .weight(1f)
-                    .focusRequester(mainFR)
-                    .focusable()
-                    .semantics { role = Role.Button }
-                    .clickable {
-                        when {
-                            file.isDirectory -> onOpenFile(file)
-                            hasSelection -> onToggleSelect(!selected)
-                            isArchive -> onOpenArchive()
-                            else -> onOpenWith(file)
-                        }
-                    }
-                    .focusProperties { right = if (isArchive) extractFR else cbFR }
+            Row(
+                Modifier.fillMaxWidth().padding(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(file.name, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    val left = if (file.isDirectory) {
-                        val c = itemCount ?: 0
-                        "$c item${if (c == 1) "" else "s"}"
-                    } else formatSize(file.length())
+                Icon(
+                    when {
+                        file.isDirectory -> Icons.Filled.Folder
+                        isArchive -> Icons.Filled.FolderZip
+                        else -> Icons.AutoMirrored.Filled.InsertDriveFile
+                    },
+                    contentDescription = null,
+                    tint = when {
+                        file.isDirectory -> MaterialTheme.colorScheme.primary
+                        isArchive -> MaterialTheme.colorScheme.secondary
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                )
 
-                    Text(left, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text("• ${formatDate(file.lastModified())}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-
-            if (isArchive) {
-                IconButton(
-                    onClick = onExtractHere,
-                    modifier = Modifier.size(40.dp).focusRequester(extractFR).focusable()
-                        .focusProperties { left = mainFR; right = cbFR }
+                Column(
+                    Modifier
+                        .weight(1f)
+                        .focusRequester(mainFR)
+                        .focusable()
+                        .semantics { role = Role.Button }
+                        .clickable {
+                            when {
+                                file.isDirectory -> onOpenFile(file)
+                                hasSelection -> onToggleSelect(!selected)
+                                isArchive -> onOpenArchive()
+                                else -> onOpenWith(file)
+                            }
+                        }
+                        .focusProperties { right = if (isArchive) extractFR else cbFR }
                 ) {
-                    Icon(Icons.Filled.Unarchive, contentDescription = "Extract here", tint = MaterialTheme.colorScheme.primary)
-                }
-            }
+                    Text(
+                        file.name,
+                        style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        val left = if (file.isDirectory) {
+                            val c = itemCount ?: 0
+                            "$c item${if (c == 1) "" else "s"}"
+                        } else formatSize(file.length())
 
-            Checkbox(
-                checked = selected,
-                onCheckedChange = { onToggleSelect(it) },
-                modifier = Modifier.focusRequester(cbFR).focusable().semantics { role = Role.Checkbox }
-                    .focusProperties { left = if (isArchive) extractFR else mainFR }
-            )
+                        Text(
+                            left,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            "• ${formatDate(file.lastModified())}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                if (isArchive) {
+                    IconButton(
+                        onClick = onExtractHere,
+                        modifier = Modifier.size(40.dp).focusRequester(extractFR).focusable()
+                            .focusProperties { left = mainFR; right = cbFR }
+                    ) {
+                        Icon(
+                            Icons.Filled.Unarchive,
+                            contentDescription = "Extract here",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+
+                Checkbox(
+                    checked = selected,
+                    onCheckedChange = { onToggleSelect(it) },
+                    modifier = Modifier.focusRequester(cbFR).focusable()
+                        .semantics { role = Role.Checkbox }
+                        .focusProperties { left = if (isArchive) extractFR else mainFR }
+                )
+            }
         }
     }
 }
