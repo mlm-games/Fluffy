@@ -1,0 +1,3 @@
+- Reduce duplication
+- Add text viewer and audio/video viewer
+- Add small file row animation

@@ -1,3 +1,10 @@
+## v3.2.1
+
+- Reduce duplication
+- Add text viewer and audio/video viewer
+- Add small file row animation
+
+
 ## v3.1.2
 
 - Fix image viewer (and opening images from root works)
