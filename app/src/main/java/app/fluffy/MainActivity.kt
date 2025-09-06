@@ -87,7 +87,7 @@ class MainActivity : ComponentActivity() {
     ) { permissions ->
         val allGranted = permissions.values.all { it }
         if (allGranted) {
-            filesVM.refreshCurrentDir()
+            filesVM.onPermissionsChanged()
         }
     }
 
@@ -96,7 +96,7 @@ class MainActivity : ComponentActivity() {
     ) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (Environment.isExternalStorageManager()) {
-                filesVM.refreshCurrentDir()
+                filesVM.onPermissionsChanged()
             }
         }
     }

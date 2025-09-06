@@ -185,6 +185,7 @@ class FileBrowserViewModel(
     }
 
     fun showQuickAccess() {
+        updatePermissionFlag()
         _state.value = _state.value.copy(
             currentLocation = BrowseLocation.QuickAccess,
             currentDir = null,
@@ -329,6 +330,7 @@ class FileBrowserViewModel(
     }
 
     fun refresh() {
+        updatePermissionFlag()
         val st = _state.value
         when (val location = st.currentLocation) {
             is BrowseLocation.FileSystem -> {
@@ -413,6 +415,20 @@ class FileBrowserViewModel(
             is BrowseLocation.SAF -> st.currentDir?.path ?: ""
             is BrowseLocation.QuickAccess -> "Quick Access"
             null -> ""
+        }
+    }
+
+    private fun updatePermissionFlag() {
+        val has = fileSystemAccess.hasStoragePermission()
+        _state.value = _state.value.copy(canAccessFileSystem = has)
+    }
+
+    fun onPermissionsChanged() {
+        updatePermissionFlag()
+        if (_state.value.currentLocation is BrowseLocation.QuickAccess) {
+            showQuickAccess()
+        } else {
+            refresh()
         }
     }
 

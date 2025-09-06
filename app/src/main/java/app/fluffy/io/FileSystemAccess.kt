@@ -35,6 +35,7 @@ class FileSystemAccess(private val context: Context) {
                 lower.endsWith(".png") -> "image/png"
                 lower.endsWith(".mp4") -> "video/mp4"
                 lower.endsWith(".mp3") -> "audio/mpeg"
+                lower.endsWith(".svg") -> "image/svg"
                 else -> "application/octet-stream"
             }
         }
@@ -61,7 +62,6 @@ class FileSystemAccess(private val context: Context) {
         return directory.listFiles()?.toList() ?: emptyList()
     }
 
-    fun getInternalStorage(): File = Environment.getExternalStorageDirectory()
 
     fun getDownloadsFolder(): File =
         Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)

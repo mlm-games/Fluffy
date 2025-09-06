@@ -155,6 +155,8 @@ fun FileBrowserScreen(
         else -> null
     }
 
+    val anySelected = selected.isNotEmpty() || selectedFiles.isNotEmpty()
+
     fun uriChildExists(parent: Uri, name: String): Boolean {
         return when (parent.scheme) {
             "file" -> {
@@ -438,11 +440,13 @@ fun FileBrowserScreen(
                             FileSystemRow(
                                 file = file,
                                 selected = isSelected,
+                                hasSelection = anySelected,
                                 onToggleSelect = { toggled ->
                                     if (toggled) selectedFiles.add(file) else selectedFiles.remove(file)
                                 },
                                 onOpenFile = onOpenFile,
                                 onOpenArchive = { onOpenArchive(Uri.fromFile(file)) },
+                                onOpenWith = { f -> onOpenWith(Uri.fromFile(f), f.name) },
                                 onExtractHere = {
                                     currentDirUri?.let { targetDir ->
                                         onExtractArchive(Uri.fromFile(file), targetDir)
@@ -471,11 +475,13 @@ fun FileBrowserScreen(
                                 ShellRow(
                                     entry = entry,
                                     selected = isSelected,
+                                    hasSelection = anySelected,
                                     onToggleSelect = { toggled ->
                                         if (toggled) selected.add(entry.uri) else selected.remove(entry.uri)
                                     },
                                     onOpenDir = onOpenDir,
                                     onOpenArchive = onOpenArchive,
+                                    onOpenWith = { uri, name -> onOpenWith(uri, name) },
                                     onExtractHere = {
                                         currentDirUri?.let { targetDir ->
                                             onExtractArchive(entry.uri, targetDir)
@@ -499,11 +505,13 @@ fun FileBrowserScreen(
                                 FileRow(
                                     df = df,
                                     selected = isSelected,
+                                    hasSelection = anySelected,
                                     onToggleSelect = { toggled ->
                                         if (toggled) selected.add(df.uri) else selected.remove(df.uri)
                                     },
                                     onOpenDir = onOpenDir,
                                     onOpenArchive = onOpenArchive,
+                                    onOpenWith = { uri, name -> onOpenWith(uri, name) },
                                     onExtractHere = {
                                         currentDirUri?.let { targetDir ->
                                             onExtractArchive(df.uri, targetDir)
@@ -692,12 +700,15 @@ fun FileBrowserScreen(
 private fun FileSystemRow(
     file: File,
     selected: Boolean,
+    hasSelection: Boolean,
     onToggleSelect: (Boolean) -> Unit,
     onOpenFile: (File) -> Unit,
     onOpenArchive: () -> Unit,
+    onOpenWith: (File) -> Unit,
     onExtractHere: () -> Unit = {}
 ) {
     val isArchive = remember(file.name) { FileSystemAccess.isArchiveFile(file.name) }
+
     val itemCount by produceState<Int?>(initialValue = null, file) {
         value = withContext(Dispatchers.IO) {
             if (file.isDirectory) file.listFiles()?.size ?: 0 else null
@@ -744,8 +755,9 @@ private fun FileSystemRow(
                     .clickable {
                         when {
                             file.isDirectory -> onOpenFile(file)
+                            hasSelection -> onToggleSelect(!selected)
                             isArchive -> onOpenArchive()
-                            else -> onToggleSelect(!selected)
+                            else -> onOpenWith(file)
                         }
                     }
                     .focusProperties { right = if (isArchive) extractFR else cbFR }
@@ -787,9 +799,11 @@ private fun FileSystemRow(
 private fun FileRow(
     df: DocumentFile,
     selected: Boolean,
+    hasSelection: Boolean,
     onToggleSelect: (Boolean) -> Unit,
     onOpenDir: (Uri) -> Unit,
     onOpenArchive: (Uri) -> Unit,
+    onOpenWith: (Uri, String) -> Unit,
     onExtractHere: () -> Unit
 ) {
     val isArchive = remember(df.name, df.isDirectory) {
@@ -822,8 +836,9 @@ private fun FileRow(
                     .clickable {
                         when {
                             df.isDirectory -> onOpenDir(df.uri)
+                            hasSelection -> onToggleSelect(!selected)
                             isArchive -> onOpenArchive(df.uri)
-                            else -> onToggleSelect(!selected)
+                            else -> onOpenWith(df.uri, df.name ?: "item")
                         }
                     }
                     .focusProperties { right = if (isArchive) extractFR else cbFR },
@@ -876,9 +891,11 @@ private fun FileRow(
 private fun ShellRow(
     entry: ShellEntry,
     selected: Boolean,
+    hasSelection: Boolean,
     onToggleSelect: (Boolean) -> Unit,
     onOpenDir: (Uri) -> Unit,
     onOpenArchive: (Uri) -> Unit,
+    onOpenWith: (Uri, String) -> Unit,
     onExtractHere: () -> Unit
 ) {
     val isArchive = remember(entry.name) { FileSystemAccess.isArchiveFile(entry.name) }
@@ -909,8 +926,9 @@ private fun ShellRow(
                     .clickable {
                         when {
                             entry.isDir -> onOpenDir(entry.uri)
+                            hasSelection -> onToggleSelect(!selected)
                             isArchive -> onOpenArchive(entry.uri)
-                            else -> onToggleSelect(!selected)
+                            else -> onOpenWith(entry.uri, entry.name)
                         }
                     }
                     .focusProperties { right = if (isArchive) extractFR else cbFR },
@@ -971,7 +989,7 @@ private fun QuickAccessView(
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.error)
                 Text("Storage Permission Required", style = MaterialTheme.typography.titleMedium)
-                Text("Grant permission to browse files", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Grant permission to browse files (reopen on granting)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Button(onClick = onRequestPermission) { Text("Grant Permission") }
             }
         }

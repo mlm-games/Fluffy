@@ -9,7 +9,19 @@ object ShellIo {
 
     private fun q(path: String) = "'${path.replace("'", "'\"'\"'")}'"
 
-    private fun suProc(cmd: String): Process = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
+    private fun suProc(cmd: String): Process {
+        // Prefer global namespace (for viewing /data/data folders for other apps)
+        return try {
+            Runtime.getRuntime().exec(arrayOf("su", "--mount-master", "-c", cmd))
+        } catch (_: Exception) {
+            try {
+                Runtime.getRuntime().exec(arrayOf("su", "-mm", "-c", cmd))
+            } catch (_: Exception) {
+                Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
+            }
+        }
+    }
+
     private fun shizukuProc(vararg args: String): Process? =
         ShizukuAccess.newProcess(args as Array<String>)
 
