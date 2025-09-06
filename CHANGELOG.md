@@ -1,3 +1,8 @@
+## v3.2.2
+
+- change name being shown as "Open in app" back to fluffy
+
+
 ## v3.2.1
 
 - Reduce duplication

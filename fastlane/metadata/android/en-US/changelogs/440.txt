@@ -1,0 +1,1 @@
+- change name being shown as "Open in app" back to fluffy
