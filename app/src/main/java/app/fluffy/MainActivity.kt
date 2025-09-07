@@ -14,10 +14,35 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -47,11 +72,17 @@ import app.fluffy.helper.toViewableUris
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.operations.ArchiveJobManager
 import app.fluffy.ui.components.ConfirmationDialog
-import app.fluffy.ui.screens.*
+import app.fluffy.ui.screens.ArchiveViewerScreen
+import app.fluffy.ui.screens.FileBrowserScreen
+import app.fluffy.ui.screens.SettingsScreen
+import app.fluffy.ui.screens.TasksScreen
+import app.fluffy.ui.screens.TvMainScreen
 import app.fluffy.ui.theme.FluffyTheme
-import app.fluffy.ui.viewers.FullscreenImageViewer
 import app.fluffy.util.ArchiveTypes.baseNameForExtraction
-import app.fluffy.viewmodel.*
+import app.fluffy.viewmodel.BrowseLocation
+import app.fluffy.viewmodel.FileBrowserViewModel
+import app.fluffy.viewmodel.SettingsViewModel
+import app.fluffy.viewmodel.TasksViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.io.File
@@ -861,55 +892,7 @@ private fun friendlyTitle(wi: WorkInfo): String {
     }
 }
 
-class ImageViewerActivity : ComponentActivity() {
-    companion object {
-        const val EXTRA_IMAGES = "images"
-        const val EXTRA_INITIAL_INDEX = "initial"
-        const val EXTRA_TITLE = "title"
-    }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        AppGraph.init(applicationContext)
-
-        val fromExtras = intent.getStringArrayListExtra(EXTRA_IMAGES)?.mapNotNull { runCatching { it.toUri() }.getOrNull() }.orEmpty()
-        val fromData = intent.data?.let { listOf(it) }.orEmpty()
-        val fromClip = buildList {
-            intent.clipData?.let { cd ->
-                for (i in 0 until cd.itemCount) {
-                    cd.getItemAt(i)?.uri?.let { add(it) }
-                }
-            }
-        }
-
-        val allUris = (fromExtras + fromData + fromClip).distinct()
-        if (allUris.isEmpty()) {
-            finish()
-            return
-        }
-
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-
-        val start = intent.getIntExtra(EXTRA_INITIAL_INDEX, 0).coerceIn(0, (allUris.size - 1).coerceAtLeast(0))
-        val title = intent.getStringExtra(EXTRA_TITLE)
-
-        setContent {
-            val settings = AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings()).value
-            val dark = when (settings.themeMode) {
-                0 -> isSystemInDarkTheme()
-                1 -> false
-                else -> true
-            }
-            FluffyTheme(darkTheme = dark, useAuroraTheme = settings.useAuroraTheme) {
-                FullscreenImageViewer(
-                    images = allUris.map { it.toString() },
-                    initialPage = start,
-                    onClose = { finish() }
-                )
-            }
-        }
-    }
-}
 
 class FluffyApp : Application() {
     override fun onCreate() {

@@ -8,8 +8,8 @@ import android.content.Intent
 import android.net.Uri
 import androidx.core.content.FileProvider
 import app.fluffy.AppGraph
-import app.fluffy.ImageViewerActivity
 import app.fluffy.io.FileSystemAccess
+import app.fluffy.ui.viewers.ImageViewerActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
