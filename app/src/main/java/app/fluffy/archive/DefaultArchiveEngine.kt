@@ -178,48 +178,54 @@ class DefaultArchiveEngine(
     }
 
     // 7Z
+    // 7Z
     private fun listSevenZ(
         archiveName: String,
         open: () -> InputStream,
         password: CharArray?
     ): ArchiveEngine.ListResult {
         val tmp = stageSevenZTemp(archiveName, open)
-        var encrypted = false
         val list = mutableListOf<ArchiveEngine.Entry>()
+        var encrypted = false
 
         try {
             val sevenZ = if (password?.isNotEmpty() == true) SevenZFile(tmp, password) else SevenZFile(tmp)
             sevenZ.use { z ->
-                val buf = ByteArray(128 * 1024)
                 var e: SevenZArchiveEntry? = z.nextEntry
                 while (e != null) {
+                    // Collect metadata only; DO NOT read entry data here.
                     list += ArchiveEngine.Entry(
                         path = e.name,
                         isDir = e.isDirectory,
-                        size = e.size,
+                        size = if (e.size >= 0) e.size else 0L,
                         time = e.lastModifiedDate?.time ?: 0L
                     )
-                    if (!e.isDirectory) {
-                        while (true) {
-                            val r = z.read(buf)
-                            if (r < 0) break // must read to EOF to advance reliably
+
+                    // Best-effort encrypted flag: mark true if any entry uses AES
+                    val methods = e.contentMethods
+                    if (methods != null) {
+                        // Avoid extra imports; check method name
+                        if (methods.any { cfg -> cfg.method.name.contains("AES", ignoreCase = true) }) {
+                            encrypted = true
                         }
                     }
+
                     e = z.nextEntry
                 }
             }
         } catch (t: Throwable) {
+            // If opening/listing failed with a password/encryption hint, reflect that
             val msg = (t.message ?: "").lowercase(Locale.ROOT)
             val type = t::class.java.simpleName.lowercase(Locale.ROOT)
-            encrypted = type.contains("password") ||
+            encrypted = encrypted || type.contains("password") ||
                     type.contains("crypt") ||
                     msg.contains("password") ||
                     msg.contains("encrypted") ||
-                    msg.contains("wrong pass") ||
-                    msg.contains("cannot read encrypted")
+                    msg.contains("wrong pass")
         } finally {
             tmp.delete()
         }
+
         return ArchiveEngine.ListResult(list, encrypted = encrypted)
     }
 

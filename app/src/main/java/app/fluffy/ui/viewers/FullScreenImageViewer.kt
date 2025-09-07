@@ -1,5 +1,4 @@
-
-package app.fluffy.ui.screens
+package app.fluffy.ui.viewers
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.ExperimentalFoundationApi

@@ -84,6 +84,8 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                 val dirEntry = SevenZArchiveEntry().apply {
                     name = ensureDirSuffix(relPath)
                     isDirectory = true
+                    // optional but nice for readers
+                    runCatching { lastModifiedDate = java.util.Date(df.lastModified()) }
                 }
                 archive.putArchiveEntry(dirEntry)
                 archive.closeArchiveEntry()
@@ -92,7 +94,12 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                     addTo7z(archive, child.uri, childName)
                 }
             } else {
-                val entry = SevenZArchiveEntry().apply { name = relPath }
+                val entry = SevenZArchiveEntry().apply {
+                    name = relPath
+                    // Provide size so readers don't need to scan streams during listing
+                    size = runCatching { df.length() }.getOrElse { -1L }.coerceAtLeast(0L)
+                    runCatching { lastModifiedDate = java.util.Date(df.lastModified()) }
+                }
                 archive.putArchiveEntry(entry)
                 AppGraph.io.openIn(uri).use { copyToSevenZ(it, archive) }
                 archive.closeArchiveEntry()
@@ -103,6 +110,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                 val dirEntry = SevenZArchiveEntry().apply {
                     name = ensureDirSuffix(relPath)
                     isDirectory = true
+                    runCatching { lastModifiedDate = java.util.Date(f.lastModified()) }
                 }
                 archive.putArchiveEntry(dirEntry)
                 archive.closeArchiveEntry()
@@ -110,7 +118,11 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                     addTo7z(archive, Uri.fromFile(child), "${relPath.trimEnd('/')}/${child.name}")
                 }
             } else {
-                val entry = SevenZArchiveEntry().apply { name = relPath }
+                val entry = SevenZArchiveEntry().apply {
+                    name = relPath
+                    size = f.length().coerceAtLeast(0L)
+                    runCatching { lastModifiedDate = java.util.Date(f.lastModified()) }
+                }
                 archive.putArchiveEntry(entry)
                 f.inputStream().use { copyToSevenZ(it, archive) }
                 archive.closeArchiveEntry()

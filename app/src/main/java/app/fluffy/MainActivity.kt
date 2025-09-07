@@ -2,7 +2,6 @@ package app.fluffy
 
 import android.Manifest
 import android.app.Application
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -50,6 +49,7 @@ import app.fluffy.operations.ArchiveJobManager
 import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.ui.screens.*
 import app.fluffy.ui.theme.FluffyTheme
+import app.fluffy.ui.viewers.FullscreenImageViewer
 import app.fluffy.util.ArchiveTypes.baseNameForExtraction
 import app.fluffy.viewmodel.*
 import kotlinx.coroutines.flow.first
