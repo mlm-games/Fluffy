@@ -3,6 +3,7 @@ package app.fluffy.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -80,6 +81,7 @@ fun SettingsItem(
     SettingRowContainer(
         enabled = enabled,
         onClick = onClick,
+        role = Role.Button,
         modifier = modifier
     ) {
         // Text block
@@ -224,6 +226,8 @@ fun SettingsAction(
         Button(
             onClick = onClick,
             enabled = enabled,
+            modifier = Modifier.semantics(mergeDescendants = false) {}
+            .focusable(false),
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,

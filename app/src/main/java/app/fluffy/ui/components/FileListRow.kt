@@ -240,8 +240,8 @@ private object DirectoryCounter {
                 f.listFiles()?.size ?: 0
             }
             "content" -> {
-                val doc = androidx.documentfile.provider.DocumentFile.fromSingleUri(context, uri)
-                    ?: androidx.documentfile.provider.DocumentFile.fromTreeUri(context, uri)
+                val doc = DocumentFile.fromSingleUri(context, uri)
+                    ?: DocumentFile.fromTreeUri(context, uri)
                 doc?.listFiles()?.size ?: 0
             }
             "root" -> {

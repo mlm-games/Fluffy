@@ -1,5 +1,6 @@
 package app.fluffy.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -50,6 +51,8 @@ fun SettingsScreen(vm: SettingsViewModel) {
         LazyVerticalGrid(
             columns = gridCells,
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+//            horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
             for (category in SettingCategory.entries) {

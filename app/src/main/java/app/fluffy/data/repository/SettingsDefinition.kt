@@ -75,7 +75,7 @@ data class AppSettings(
     )
     val zipCompressionLevel: Int = 5,
     @Setting(
-        title = "Enable Root access (beta)",
+        title = "Enable Root access",
         description = "Browse and write to system folders using root shell",
         category = SettingCategory.SYSTEM,
         type = SettingType.TOGGLE
@@ -83,7 +83,7 @@ data class AppSettings(
     val enableRoot: Boolean = false,
 
     @Setting(
-        title = "Enable Shizuku (beta)",
+        title = "Enable Shizuku",
         description = "Use Shizuku for shell commands and APK install",
         category = SettingCategory.SYSTEM,
         type = SettingType.TOGGLE
