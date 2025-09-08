@@ -1,3 +1,11 @@
+## v3.2.3
+
+- Add zoom func to image viewer (from flicky)
+- Update android.yml
+- modularise image viewer too
+- Viewing 7z with multiple files works with proper 7z metadata (some may not be previewed, fix #3)
+
+
 ## v3.2.2
 
 - change name being shown as "Open in app" back to fluffy
