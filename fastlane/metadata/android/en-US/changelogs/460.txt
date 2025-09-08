@@ -1,0 +1,5 @@
+- Update android.yml
+- Add zoom func to image viewer (from flicky)
+- Update android.yml
+- modularise image viewer too
+- Viewing 7z with multiple files works with proper 7z metadata (some may not be previewed, fix #3)
