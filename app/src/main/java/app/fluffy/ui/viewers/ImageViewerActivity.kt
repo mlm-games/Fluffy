@@ -194,7 +194,7 @@ fun FullscreenImageViewer(
                             true
                         }
                         // Zoom controls
-                        Key.Plus, Key.NumPadAdd -> {
+                        Key.Plus, Key.NumPadAdd, Key.Equals -> {
                             zoomIn?.invoke()
                             true
                         }
