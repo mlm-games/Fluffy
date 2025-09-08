@@ -4,12 +4,14 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.drawable.Icon
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.Bundle
 import android.os.ParcelFileDescriptor
 import android.util.LruCache
 import android.view.KeyEvent
+import android.widget.ToggleButton
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -18,26 +20,40 @@ import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.FolderZip
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconToggleButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MaterialTheme.colorScheme
+import androidx.compose.material3.OutlinedIconToggleButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -52,6 +68,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
@@ -71,6 +89,9 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 import androidx.core.graphics.createBitmap
+import app.fluffy.AppGraph
+import app.fluffy.data.repository.AppSettings
+import app.fluffy.ui.theme.FluffyTheme
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 
@@ -90,7 +111,13 @@ class PdfViewerActivity : ComponentActivity() {
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
         setContent {
-            MaterialTheme {
+            val settings = AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings()).value
+            val dark = when (settings.themeMode) {
+                0 -> isSystemInDarkTheme()
+                1 -> false
+                else -> true
+            }
+            FluffyTheme(darkTheme = dark, useAuroraTheme = settings.useAuroraTheme) {
                 FullscreenPdfViewer(
                     uri = inputUri,
                     onClose = { finish() }
@@ -171,6 +198,7 @@ private fun PdfPageImage(
     viewportW: Int,
     viewportH: Int,
     scaleForQuality: Float,
+    nightInvertEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     var bmp by remember(pageIndex) { mutableStateOf<Bitmap?>(null) }
@@ -201,12 +229,24 @@ private fun PdfPageImage(
         }
     }
 
+    val invert = remember {
+        ColorMatrix(
+            floatArrayOf(
+                -1f, 0f, 0f, 0f, 255f,
+                0f, -1f, 0f, 0f, 255f,
+                0f, 0f, -1f, 0f, 255f,
+                0f, 0f, 0f, 1f, 0f
+            )
+        )
+    }
+
     bmp?.let {
         Image(
             bitmap = it.asImageBitmap(),
             contentDescription = null,
             modifier = modifier,
-            contentScale = ContentScale.Fit
+            contentScale = ContentScale.Fit,
+            colorFilter = if (nightInvertEnabled) ColorFilter.colorMatrix(invert) else null
         )
     }
 }
@@ -257,12 +297,29 @@ private fun FullscreenPdfViewer(
 
     val title = "${pagerState.currentPage + 1} / $pageCount"
 
+    val settings = AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings()).value
+    val dark = when (settings.themeMode) {
+        0 -> isSystemInDarkTheme()
+        1 -> false
+        else -> true
+    }
+
+    var invertColorScheme by remember { mutableStateOf(dark) }
+
     Scaffold(
         topBar = {
             Box(modifier = Modifier.focusable(false)) {
                 TopAppBar(
                     title = { Text(title) },
                     actions = {
+//                        ToggleButton( checked = dark, onCheckedChange = { invertColorScheme = !invertColorScheme } ) {
+//                            Icon(
+//                                imageVector =
+//                                     Icons.Outlined.DarkMode,
+//                                contentDescription = null,
+//                                tint = colorScheme.background.copy(alpha = 0.3f),
+//                            )
+//                        }
                         TextButton(onClick = onClose, modifier = Modifier.focusable(false)) {
                             Text("Close")
                         }
@@ -283,42 +340,71 @@ private fun FullscreenPdfViewer(
                     left = FocusRequester.Cancel
                     right = FocusRequester.Cancel
                 }
+                .background(MaterialTheme.colorScheme.background)
                 .onPreviewKeyEvent { ev ->
                     if (ev.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                     when (ev.key) {
-                        Key.Back, Key.Escape -> { onClose(); true }
-                        Key.Plus, Key.NumPadAdd, Key.Equals -> { zoomIn?.invoke(); true }
-                        Key.Minus, Key.NumPadSubtract -> { zoomOut?.invoke(); true }
-                        Key.Enter, Key.NumPadEnter -> { toggleZoom?.invoke(); true }
+                        Key.Back, Key.Escape -> {
+                            onClose(); true
+                        }
+
+                        Key.Plus, Key.NumPadAdd, Key.Equals -> {
+                            zoomIn?.invoke(); true
+                        }
+
+                        Key.Minus, Key.NumPadSubtract -> {
+                            zoomOut?.invoke(); true
+                        }
+
+                        Key.Enter, Key.NumPadEnter -> {
+                            toggleZoom?.invoke(); true
+                        }
+
                         Key.DirectionLeft -> {
                             if (currentPageScale <= 1.01f) {
                                 if (!isNavigating && pagerState.currentPage > 0) {
                                     isNavigating = true
                                     viewerScope.launch {
-                                        try { pagerState.scrollToPage(pagerState.currentPage - 1) }
-                                        finally { isNavigating = false }
+                                        try {
+                                            pagerState.scrollToPage(pagerState.currentPage - 1)
+                                        } finally {
+                                            isNavigating = false
+                                        }
                                     }
                                 }
                             } else panLeft?.invoke()
                             true
                         }
+
                         Key.DirectionRight -> {
                             if (currentPageScale <= 1.01f) {
                                 if (!isNavigating && pagerState.currentPage < pageCount - 1) {
                                     isNavigating = true
                                     viewerScope.launch {
-                                        try { pagerState.scrollToPage(pagerState.currentPage + 1) }
-                                        finally { isNavigating = false }
+                                        try {
+                                            pagerState.scrollToPage(pagerState.currentPage + 1)
+                                        } finally {
+                                            isNavigating = false
+                                        }
                                     }
                                 }
                             } else panRight?.invoke()
                             true
                         }
-                        Key.DirectionUp -> { if (currentPageScale > 1.01f) panUp?.invoke(); true }
-                        Key.DirectionDown -> { if (currentPageScale > 1.01f) panDown?.invoke(); true }
+
+                        Key.DirectionUp -> {
+                            if (currentPageScale > 1.01f) panUp?.invoke(); true
+                        }
+
+                        Key.DirectionDown -> {
+                            if (currentPageScale > 1.01f) panDown?.invoke(); true
+                        }
+
                         else -> {
                             val isCenter = ev.nativeKeyEvent.keyCode == KeyEvent.KEYCODE_DPAD_CENTER
-                            if (isCenter) { toggleZoom?.invoke(); true } else false
+                            if (isCenter) {
+                                toggleZoom?.invoke(); true
+                            } else false
                         }
                     }
                 },
@@ -397,7 +483,10 @@ private fun FullscreenPdfViewer(
                                     }
                                 )
                             }
-                            .transformable(state = transformState, enabled = scaleAnim.value > 1.01f)
+                            .transformable(
+                                state = transformState,
+                                enabled = scaleAnim.value > 1.01f
+                            )
                             .graphicsLayer {
                                 translationX = offsetAnim.value.x
                                 translationY = offsetAnim.value.y
@@ -412,6 +501,7 @@ private fun FullscreenPdfViewer(
                             viewportW = viewportW,
                             viewportH = viewportH,
                             scaleForQuality = scaleAnim.value,
+                            nightInvertEnabled = invertColorScheme,
                             modifier = Modifier.fillMaxSize()
                         )
                     }
