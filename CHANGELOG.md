@@ -1,3 +1,11 @@
+## v3.2.5
+
+- rm unused line and add id
+- Increase settings header gap
+- Adapt pdf viewer colors based on theme
+- Add pdf viewer (basic, no dark)
+
+
 ## v3.2.4
 
 - Update android.yml
