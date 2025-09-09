@@ -1,3 +1,8 @@
+## v3.2.6
+
+- Update android.yml
+
+
 ## v3.2.5
 
 - rm unused line and add id
