@@ -34,7 +34,6 @@ env:
   JAVA_VERSION: '21'
   JAVA_DISTRIBUTION: 'corretto'
   BUILD_GRADLE_PATH: 'app/build.gradle.kts'
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.workers.max=2 -Dorg.gradle.caching=true"
 
 jobs:
   prepare-version:
@@ -97,6 +96,7 @@ jobs:
           auto-commit: 'false'
 
       - name: Commit Changes
+        id: commit-and-push
         run: |
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
