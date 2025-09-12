@@ -1,3 +1,8 @@
+## v3.2.7
+
+- rem network state perm
+
+
 ## v3.2.6
 
 - Update android.yml
