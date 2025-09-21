@@ -31,6 +31,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DriveFileMove
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Delete
@@ -121,7 +122,7 @@ fun FileBrowserScreen(
     val isCompactScreen = configuration.screenWidthDp < 600
     val context = LocalContext.current
 
-    val selected = remember { mutableStateListOf<Uri>() }
+    val selected = state.selectedItems
     val selectedFiles = remember { mutableStateListOf<File>() }
     var showZipNameDialog by remember { mutableStateOf(false) }
     var show7zDialog by remember { mutableStateOf(false) }
@@ -143,6 +144,14 @@ fun FileBrowserScreen(
     }
 
     val anySelected = selected.isNotEmpty() || selectedFiles.isNotEmpty()
+
+    val totalItems = when (state.currentLocation) {
+        is BrowseLocation.FileSystem -> state.fileItems.size
+        is BrowseLocation.SAF -> if (state.currentDir?.scheme in listOf("root", "shizuku"))
+            state.shellItems.size else state.items.size
+        else -> 0
+    }
+    val allSelected = (selected.size + selectedFiles.size) == totalItems && totalItems > 0
 
     fun uriChildExists(parent: Uri, name: String): Boolean {
         return when (parent.scheme) {
@@ -224,13 +233,34 @@ fun FileBrowserScreen(
                     },
                     actions = {
                         if (currentLocation !is BrowseLocation.QuickAccess) {
-                            IconButton(onClick = onShowQuickAccess) {
-                                Icon(Icons.Default.Home, contentDescription = "Home")
+                            if (totalItems > 0) {
+                                IconButton(onClick = {
+                                    if (allSelected) {
+                                        selected.clear(); selectedFiles.clear()
+                                    } else when (state.currentLocation) {
+                                        is BrowseLocation.FileSystem -> {
+                                            selectedFiles.clear(); selectedFiles.addAll(state.fileItems)
+                                        }
+                                        is BrowseLocation.SAF -> {
+                                            selected.clear()
+                                            selected.addAll(
+                                                if (state.currentDir?.scheme in listOf("root", "shizuku"))
+                                                    state.shellItems.map { it.uri }
+                                                else state.items.map { it.uri }
+                                            )
+                                        }
+                                        else -> {}
+                                    }
+                                }) {
+                                    Icon(Icons.Default.Checklist, contentDescription =
+                                        if (allSelected) "Deselect All" else "Select All")
+                                }
                             }
-                        }
-                        if (currentLocation !is BrowseLocation.QuickAccess) {
                             IconButton(onClick = { showNewFolderDialog = true }) {
                                 Icon(Icons.Default.CreateNewFolder, contentDescription = "New Folder")
+                            }
+                            IconButton(onClick = onShowQuickAccess) {
+                                Icon(Icons.Default.Home, contentDescription = "Home")
                             }
                         }
                         IconButton(onClick = onOpenTasks) {
@@ -312,7 +342,7 @@ fun FileBrowserScreen(
                                         }
                                     )
                                     AssistChip(
-                                        onClick = { onMoveSelected(allSelectedUris) },
+                                        onClick = { onMoveSelected(allSelectedUris); selected.clear(); selectedFiles.clear() },
                                         label = { Text("Move…") },
                                         leadingIcon = {
                                             Icon(Icons.AutoMirrored.Filled.DriveFileMove, null, Modifier.size(18.dp))

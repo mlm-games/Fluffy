@@ -227,7 +227,7 @@ fun FileListRow(
     }
 }
 
-private object DirectoryCounter {
+object DirectoryCounter {
     private val cache = ConcurrentHashMap<String, Int>()
 
     suspend fun count(context: Context, uri: Uri): Int = withContext(Dispatchers.IO) {
@@ -235,27 +235,18 @@ private object DirectoryCounter {
         cache[key]?.let { return@withContext it }
 
         val n = when (uri.scheme) {
-            "file" -> {
-                val f = File(requireNotNull(uri.path))
-                f.listFiles()?.size ?: 0
-            }
+            "file" -> File(requireNotNull(uri.path)).listFiles()?.size ?: 0
             "content" -> {
-                val doc = DocumentFile.fromSingleUri(context, uri)
-                    ?: DocumentFile.fromTreeUri(context, uri)
+                val doc = DocumentFile.fromSingleUri(context, uri) ?: DocumentFile.fromTreeUri(context, uri)
                 doc?.listFiles()?.size ?: 0
             }
-            "root" -> {
-                val p = uri.path ?: "/"
-                ShellIo.listRoot(p).size
-            }
-            "shizuku" -> {
-                val p = uri.path ?: "/"
-                ShellIo.listShizuku(p).size
-            }
+            "root" -> ShellIo.listRoot(uri.path ?: "/").size
+            "shizuku" -> ShellIo.listShizuku(uri.path ?: "/").size
             else -> 0
         }
-
         cache[key] = n
         n
     }
+
+    fun invalidateAll() = cache.clear()
 }

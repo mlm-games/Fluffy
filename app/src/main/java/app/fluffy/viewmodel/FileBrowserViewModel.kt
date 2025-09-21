@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import androidx.core.net.toUri
+import kotlinx.coroutines.flow.update
 
 sealed class BrowseLocation {
     data class SAF(val uri: Uri) : BrowseLocation()
@@ -45,6 +46,7 @@ data class FileBrowserState(
     val canAccessFileSystem: Boolean = false,
     val pendingFileOpen: Uri? = null,
     val pendingArchiveOpen: Uri? = null,
+    val selectedItems: MutableList<Uri> = mutableListOf(),
 )
 
 class FileBrowserViewModel(
@@ -437,5 +439,9 @@ class FileBrowserViewModel(
     }
     fun clearPendingArchiveOpen() {
         _state.value = _state.value.copy(pendingArchiveOpen = null)
+    }
+
+    fun clearSelection() {
+        _state.update { it.copy(selectedItems = mutableListOf()) }
     }
 }

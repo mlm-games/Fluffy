@@ -114,8 +114,4 @@ class SettingsRepository(private val context: Context) {
             }
         }
     }
-
-    suspend fun clearCache() {
-        runCatching { context.cacheDir.deleteRecursively() }
-    }
 }

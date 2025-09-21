@@ -72,6 +72,7 @@ import app.fluffy.helper.toViewableUris
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.operations.ArchiveJobManager
 import app.fluffy.ui.components.ConfirmationDialog
+import app.fluffy.ui.components.DirectoryCounter
 import app.fluffy.ui.screens.ArchiveViewerScreen
 import app.fluffy.ui.screens.FileBrowserScreen
 import app.fluffy.ui.screens.SettingsScreen
@@ -140,6 +141,8 @@ class MainActivity : ComponentActivity() {
     private val showOverwriteDialog = mutableStateOf(false)
     private val overwriteMessage = mutableStateOf("")
     private var onOverwriteConfirm: (() -> Unit)? = null
+
+
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -303,6 +306,27 @@ class MainActivity : ComponentActivity() {
                             }
                         }
 
+                        LaunchedEffect(workInfos) {
+                            var refreshNeeded = false
+                            workInfos.forEach { wi ->
+                                if (wi.state == WorkInfo.State.SUCCEEDED) {
+                                    val workId = wi.id.toString()
+                                    if (seenFinished.add(workId)) {
+                                        refreshNeeded = true
+
+                                        // Clear selection here later, for now nothing
+                                        if (wi.tags.contains(ArchiveJobManager.TAG_MOVE) ||
+                                            wi.tags.contains(ArchiveJobManager.TAG_CREATE_ZIP) ||
+                                            wi.tags.contains(ArchiveJobManager.TAG_CREATE_7Z)) {
+                                            DirectoryCounter.invalidateAll()
+                                        }
+                                    }
+                                }
+                            }
+                            if (refreshNeeded) filesVM.refreshCurrentDir()
+                        }
+
+
                         LaunchedEffect(browserState.pendingFileOpen) {
                             browserState.pendingFileOpen?.let { uri ->
                                 val name = uri.lastPathSegment?.lowercase() ?: ""
@@ -404,7 +428,8 @@ class MainActivity : ComponentActivity() {
                                                 }
                                                 filesVM.openQuickAccessItem(item)
                                             }
-                                        },                                        onRequestPermission = { requestStoragePermission() },
+                                        },
+                                        onRequestPermission = { requestStoragePermission() },
                                         onShowQuickAccess = { filesVM.showQuickAccess() },
                                         onCreateFolder = { name -> filesVM.createNewFolder(name) },
 

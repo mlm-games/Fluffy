@@ -25,10 +25,6 @@ class SettingsViewModel(private val repo: SettingsRepository) : ViewModel() {
 
     fun performAction(propertyName: String) = viewModelScope.launch {
         when (propertyName) {
-            "clearCache" -> {
-                repo.clearCache()
-                _events.emit(UiEvent.Toast("Cache cleared"))
-            }
             else -> _events.emit(UiEvent.Toast("No action attached"))
         }
     }
