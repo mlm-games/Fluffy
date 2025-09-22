@@ -1,3 +1,8 @@
+## v3.2.8
+
+- Clear selection on move/delete, misc cleanup
+
+
 ## v3.2.7
 
 - rem network state perm
