@@ -291,6 +291,8 @@ class MainActivity : ComponentActivity() {
                             workInfos.forEach { wi ->
                                 if (wi.state.isFinished && seenFinished.add(wi.id.toString())) {
                                     refreshNeeded = true
+
+                                    DirectoryCounter.invalidateAll()
                                 }
                             }
                             if (refreshNeeded) filesVM.refreshCurrentDir()
@@ -397,7 +399,8 @@ class MainActivity : ComponentActivity() {
                                                 val touchesShell = list.any { it.scheme == "root" || it.scheme == "shizuku" }
                                                 val proceed: () -> Unit = {
                                                     lifecycleScope.launch {
-                                                        list.forEach { AppGraph.io.deleteTree(it) }
+                                                        list.forEach { AppGraph.io.deleteTree(it); DirectoryCounter.invalidateParent(it) }
+                                                        DirectoryCounter.invalidateAll()
                                                         filesVM.refreshCurrentDir()
                                                     }
                                                 }

@@ -51,6 +51,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
+import androidx.core.net.toUri
 
 data class RowModel(
     val name: String,
@@ -235,18 +236,54 @@ object DirectoryCounter {
         cache[key]?.let { return@withContext it }
 
         val n = when (uri.scheme) {
-            "file" -> File(requireNotNull(uri.path)).listFiles()?.size ?: 0
+            "file" -> {
+                val f = File(requireNotNull(uri.path))
+                f.listFiles()?.size ?: 0
+            }
             "content" -> {
-                val doc = DocumentFile.fromSingleUri(context, uri) ?: DocumentFile.fromTreeUri(context, uri)
+                val doc = DocumentFile.fromSingleUri(context, uri)
+                    ?: DocumentFile.fromTreeUri(context, uri)
                 doc?.listFiles()?.size ?: 0
             }
-            "root" -> ShellIo.listRoot(uri.path ?: "/").size
-            "shizuku" -> ShellIo.listShizuku(uri.path ?: "/").size
+            "root" -> {
+                val p = uri.path ?: "/"
+                ShellIo.listRoot(p).size
+            }
+            "shizuku" -> {
+                val p = uri.path ?: "/"
+                ShellIo.listShizuku(p).size
+            }
             else -> 0
         }
+
         cache[key] = n
         n
     }
 
-    fun invalidateAll() = cache.clear()
+    fun invalidate(uri: Uri) {
+        cache.remove(uri.toString())
+    }
+
+    fun invalidateAll() {
+        cache.clear()
+    }
+
+    fun invalidateParent(uri: Uri) {
+        when (uri.scheme) {
+            "file" -> {
+                val file = File(uri.path!!)
+                val parent = file.parentFile
+                parent?.let { invalidate(Uri.fromFile(it)) }
+            }
+            "content" -> {
+                // can't easily determine parent
+                invalidateAll()
+            }
+            "root", "shizuku" -> {
+                val path = uri.path ?: "/"
+                val parentPath = File(path).parent ?: "/"
+                invalidate("${uri.scheme}://$parentPath".toUri())
+            }
+        }
+    }
 }

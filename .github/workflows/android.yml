@@ -8,12 +8,12 @@ on:
       upload_releases:
         description: 'Upload releases'
         required: true
-        default: 'true'
+        default: true
         type: boolean
       mark_prerelease:
         description: 'Mark as prerelease'
         required: true
-        default: 'false'
+        default: false
         type: boolean
       play_track:
         description: 'Google Play track (internal, alpha, beta, production)'
