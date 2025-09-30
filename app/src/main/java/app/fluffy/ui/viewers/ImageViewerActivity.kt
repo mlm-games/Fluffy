@@ -1,11 +1,14 @@
 package app.fluffy.ui.viewers
 
+import android.content.ContentUris
 import android.content.Intent
+import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.compose.animation.Animatable
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
@@ -44,7 +47,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
@@ -62,9 +64,7 @@ import app.fluffy.ui.theme.FluffyTheme
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
-import kotlin.collections.distinct
-import kotlin.collections.orEmpty
-import kotlin.collections.plus
+import java.io.File
 
 class ImageViewerActivity : ComponentActivity() {
     companion object {
@@ -87,7 +87,19 @@ class ImageViewerActivity : ComponentActivity() {
             }
         }
 
-        val allUris = (fromExtras + fromData + fromClip).distinct()
+        var allUris = (fromExtras + fromData + fromClip).distinct()
+        var startIndex = intent.getIntExtra(EXTRA_INITIAL_INDEX, 0)
+
+        // If we only have one image, try to find siblings in the directory
+        if (allUris.size == 1) {
+            val singleUri = allUris.first()
+            val discovered = discoverSiblingImages(singleUri)
+            if (discovered.isNotEmpty()) {
+                allUris = discovered
+                startIndex = discovered.indexOf(singleUri).coerceAtLeast(0)
+            }
+        }
+
         if (allUris.isEmpty()) {
             finish()
             return
@@ -95,8 +107,7 @@ class ImageViewerActivity : ComponentActivity() {
 
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
-        val start = intent.getIntExtra(EXTRA_INITIAL_INDEX, 0).coerceIn(0, (allUris.size - 1).coerceAtLeast(0))
-        val title = intent.getStringExtra(EXTRA_TITLE)
+        val title = intent.getStringExtra(EXTRA_TITLE) ?: deriveTitle(allUris, startIndex)
 
         setContent {
             val settings = AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings()).value
@@ -108,10 +119,235 @@ class ImageViewerActivity : ComponentActivity() {
             FluffyTheme(darkTheme = dark, useAuroraTheme = settings.useAuroraTheme) {
                 FullscreenImageViewer(
                     images = allUris.map { it.toString() },
-                    initialPage = start,
+                    initialPage = startIndex,
                     onClose = { finish() }
                 )
             }
+        }
+    }
+
+    private fun discoverSiblingImages(uri: Uri): List<Uri> {
+        val imageExtensions = setOf("jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic", "heif")
+
+        fun isImage(name: String): Boolean {
+            val ext = name.substringAfterLast('.', "").lowercase()
+            return ext in imageExtensions
+        }
+
+        return when (uri.scheme) {
+            "file" -> {
+                // For file:// URIs, we can directly access the directory
+                val file = File(uri.path ?: return listOf(uri))
+                val parent = file.parentFile ?: return listOf(uri)
+
+                if (!parent.canRead()) return listOf(uri)
+
+                parent.listFiles()
+                    ?.filter { it.isFile && isImage(it.name) }
+                    ?.sortedBy { it.name.lowercase() }
+                    ?.map { Uri.fromFile(it) }
+                    ?: listOf(uri)
+            }
+
+            "content" -> {
+
+                // Approach 1: Try to get the actual file path and use file system access
+                val filePath = getFilePathFromContentUri(uri)
+                if (filePath != null) {
+                    val file = File(filePath)
+                    val parent = file.parentFile
+                    if (parent?.canRead() == true) {
+                        val images = parent.listFiles()
+                            ?.filter { it.isFile && isImage(it.name) }
+                            ?.sortedBy { it.name.lowercase() }
+                            ?.map {
+                                // Try to get content URI for each file, fallback to file URI
+                                tryGetContentUri(it) ?: Uri.fromFile(it)
+                            }
+                            ?: listOf(uri)
+
+                        if (images.size > 1) return images
+                    }
+                }
+
+                // Approach 2: Check if this is a media content URI and query MediaStore
+                val mediaImages = tryQueryMediaStore(uri)
+                if (mediaImages.size > 1) return mediaImages
+
+                // Approach 3: Try using DocumentFile with tree URI if available
+                // This would only work if we have persistent permission to a tree
+                val treeImages = tryDocumentTree(uri)
+                if (treeImages.isNotEmpty()) return treeImages
+
+                // Fallback
+                listOf(uri)
+            }
+
+            "root", "shizuku" -> {
+                // For root/shizuku URIs, use ShellIo to list directory
+                try {
+                    val path = uri.path ?: return listOf(uri)
+                    val parentPath = File(path).parent ?: return listOf(uri)
+
+                    val siblings = when (uri.scheme) {
+                        "root" -> app.fluffy.io.ShellIo.listRoot(parentPath)
+                        "shizuku" -> app.fluffy.io.ShellIo.listShizuku(parentPath)
+                        else -> emptyList()
+                    }
+
+                    siblings
+                        .filter { (name, isDir) -> !isDir && isImage(name) }
+                        .sortedBy { (name, _) -> name.lowercase() }
+                        .map { (name, _) ->
+                            Uri.Builder()
+                                .scheme(uri.scheme)
+                                .path("$parentPath/$name")
+                                .build()
+                        }
+                        .takeIf { it.isNotEmpty() }
+                        ?: listOf(uri)
+                } catch (_: Exception) {
+                    listOf(uri)
+                }
+            }
+
+            else -> listOf(uri)
+        }
+    }
+
+    private fun getFilePathFromContentUri(uri: Uri): String? {
+        return try {
+            when {
+                // Check if this is a media URI
+                uri.authority == "media" -> {
+                    contentResolver.query(uri, arrayOf(MediaStore.Images.Media.DATA), null, null, null)?.use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            cursor.getString(0)
+                        } else null
+                    }
+                }
+                // Check for file path in the URI itself (some file managers include this)
+                uri.path?.contains("/storage/") == true -> {
+                    val path = uri.path ?: return null
+                    val startIndex = path.indexOf("/storage/")
+                    if (startIndex >= 0) {
+                        path.substring(startIndex)
+                    } else null
+                }
+                // Try to extract from common content provider patterns
+                else -> {
+                    val projection = arrayOf("_data", MediaStore.MediaColumns.DATA)
+                    contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                        val columnIndex = cursor.getColumnIndexOrThrow(projection[0])
+                        if (cursor.moveToFirst()) {
+                            cursor.getString(columnIndex)
+                        } else null
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun tryGetContentUri(file: File): Uri? {
+        return try {
+            // Try to get a content:// URI using MediaScannerConnection or FileProvider
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val projection = arrayOf(
+                    MediaStore.Images.Media._ID,
+                    MediaStore.Images.Media.DATA
+                )
+                val selection = "${MediaStore.Images.Media.DATA} = ?"
+                val selectionArgs = arrayOf(file.absolutePath)
+
+                contentResolver.query(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    projection,
+                    selection,
+                    selectionArgs,
+                    null
+                )?.use { cursor ->
+                    if (cursor.moveToFirst()) {
+                        val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
+                        ContentUris.withAppendedId(
+                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                            id
+                        )
+                    } else null
+                }
+            } else {
+                null
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun tryQueryMediaStore(uri: Uri): List<Uri> {
+        val images = mutableListOf<Uri>()
+
+        try {
+            // Extract bucket/folder information from the current image
+            val projection = arrayOf(
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.DATA,
+                MediaStore.Images.Media.BUCKET_ID,
+                MediaStore.Images.Media.BUCKET_DISPLAY_NAME
+            )
+
+            var bucketId: String? = null
+            contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
+                if (cursor.moveToFirst()) {
+                    bucketId = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID))
+                }
+            }
+
+            // If we found a bucket ID, query all images in the same bucket
+            if (bucketId != null) {
+                val selection = "${MediaStore.Images.Media.BUCKET_ID} = ?"
+                val selectionArgs = arrayOf(bucketId)
+                val sortOrder = "${MediaStore.Images.Media.DISPLAY_NAME} ASC"
+
+                contentResolver.query(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    arrayOf(
+                        MediaStore.Images.Media._ID,
+                        MediaStore.Images.Media.DISPLAY_NAME
+                    ),
+                    selection,
+                    selectionArgs,
+                    sortOrder
+                )?.use { cursor ->
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
+                        val contentUri = ContentUris.withAppendedId(
+                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                            id
+                        )
+                        images.add(contentUri)
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            // ignore and return what we have
+        }
+
+        return if (images.size > 1) images else listOf(uri)
+    }
+
+    private fun tryDocumentTree(uri: Uri): List<Uri> {
+        //TODO? Not needed for now, could implement this by saving directory access when browsing in the app
+        return emptyList()
+    }
+
+    private fun deriveTitle(uris: List<Uri>, currentIndex: Int): String {
+        return if (uris.size > 1) {
+            val currentUri = uris.getOrNull(currentIndex)
+            val name = currentUri?.lastPathSegment?.substringAfterLast('/') ?: "Image"
+            "$name (${currentIndex + 1}/${uris.size})"
+        } else {
+            uris.firstOrNull()?.lastPathSegment?.substringAfterLast('/') ?: "Image Viewer"
         }
     }
 }
