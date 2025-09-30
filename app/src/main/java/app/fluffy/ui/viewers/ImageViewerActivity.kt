@@ -93,10 +93,11 @@ class ImageViewerActivity : ComponentActivity() {
         // If we only have one image, try to find siblings in the directory
         if (allUris.size == 1) {
             val singleUri = allUris.first()
+            val originalName = getFileName(singleUri)
             val discovered = discoverSiblingImages(singleUri)
-            if (discovered.isNotEmpty()) {
+            if (discovered.size > 1) {
                 allUris = discovered
-                startIndex = discovered.indexOf(singleUri).coerceAtLeast(0)
+                startIndex = startIndexFor(discovered, singleUri, originalName)
             }
         }
 
@@ -173,11 +174,6 @@ class ImageViewerActivity : ComponentActivity() {
                 // Approach 2: Check if this is a media content URI and query MediaStore
                 val mediaImages = tryQueryMediaStore(uri)
                 if (mediaImages.size > 1) return mediaImages
-
-                // Approach 3: Try using DocumentFile with tree URI if available
-                // This would only work if we have persistent permission to a tree
-                val treeImages = tryDocumentTree(uri)
-                if (treeImages.isNotEmpty()) return treeImages
 
                 // Fallback
                 listOf(uri)
@@ -336,10 +332,49 @@ class ImageViewerActivity : ComponentActivity() {
         return if (images.size > 1) images else listOf(uri)
     }
 
-    private fun tryDocumentTree(uri: Uri): List<Uri> {
-        //TODO? Not needed for now, could implement this by saving directory access when browsing in the app
-        return emptyList()
+    private fun startIndexFor(images: List<Uri>, original: Uri, originalName: String): Int {
+        val origId = mediaIdOf(original)
+        if (origId != null) {
+            val idxById = images.indexOfFirst { mediaIdOf(it) == origId }
+            if (idxById >= 0) return idxById
+        }
+
+        // Fallback: filename match (case-insensitive)
+        val idxByName = images.indexOfFirst { getFileName(it).equals(originalName, ignoreCase = true) }
+        if (idxByName >= 0) return idxByName
+
+        // else
+        return 0
     }
+    private fun getFileName(uri: Uri): String {
+        return when (uri.scheme) {
+            "file" -> File(uri.path ?: "").name
+            "content" -> {
+                // Try to get display name from content resolver
+                try {
+                    contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                        if (cursor.moveToFirst()) {
+                            cursor.getString(0)
+                        } else null
+                    }
+                } catch (_: Exception) {
+                    null
+                } ?: uri.lastPathSegment?.substringAfterLast('/') ?: "image"
+            }
+            "root", "shizuku" -> File(uri.path ?: "").name
+            else -> uri.lastPathSegment?.substringAfterLast('/') ?: "image"
+        }
+    }
+
+
+
+
+    private fun mediaIdOf(uri: Uri): Long? = try {
+        // Works for content://media/external/images/media/<id> and similar
+        if (uri.scheme == "content" && uri.authority?.contains("media") == true) {
+            ContentUris.parseId(uri)
+        } else null
+    } catch (_: Exception) { null }
 
     private fun deriveTitle(uris: List<Uri>, currentIndex: Int): String {
         return if (uris.size > 1) {
