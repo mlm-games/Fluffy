@@ -1,0 +1,3 @@
+- opens with correct index from external apps
+- Allow scrolling through images in the directory (for image viewer)
+- clear item counts on ops

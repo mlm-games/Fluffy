@@ -1,3 +1,10 @@
+## v3.2.9
+
+- opens with correct index from external apps
+- Allow scrolling through images in the directory (for image viewer)
+- clear item counts on ops
+
+
 ## v3.2.8
 
 - Clear selection on move/delete, misc cleanup
