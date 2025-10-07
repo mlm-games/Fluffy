@@ -386,12 +386,12 @@ class MainActivity : ComponentActivity() {
                                         onCopySelected = { list ->
                                             pendingCopy = list
                                             pickTargetDir.launch(null)
-                                            showTaskCenter = true
+
                                         },
                                         onMoveSelected = { list ->
                                             pendingMove = list
                                             pickTargetDir.launch(null)
-                                            showTaskCenter = true
+
                                         },
                                         onDeleteSelected = { list ->
                                             lifecycleScope.launch {
@@ -475,7 +475,7 @@ class MainActivity : ComponentActivity() {
                                                         includePaths = null,
                                                         targetDir = currentDir,
                                                         onAfterEnqueue = {
-                                                            showTaskCenter = true
+
                                                             nav.popBackStack()
                                                         }
                                                     )
@@ -484,7 +484,7 @@ class MainActivity : ComponentActivity() {
                                                     pendingExtractPassword = pwd
                                                     pendingExtractPaths = null
                                                     pickTargetDir.launch(null)
-                                                    showTaskCenter = true
+
                                                 }
                                             },
                                             onExtractSelected = { arch, paths, pwd ->
@@ -500,7 +500,7 @@ class MainActivity : ComponentActivity() {
                                                         includePaths = paths,
                                                         targetDir = currentDir,
                                                         onAfterEnqueue = {
-                                                            showTaskCenter = true
+
                                                             nav.popBackStack()
                                                         }
                                                     )
@@ -509,7 +509,7 @@ class MainActivity : ComponentActivity() {
                                                     pendingExtractPassword = pwd
                                                     pendingExtractPaths = paths
                                                     pickTargetDir.launch(null)
-                                                    showTaskCenter = true
+
                                                 }
                                             },
                                             onOpenAsFolder = { dirUri ->
