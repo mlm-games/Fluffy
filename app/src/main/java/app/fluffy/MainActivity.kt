@@ -137,6 +137,8 @@ class MainActivity : ComponentActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (Environment.isExternalStorageManager()) {
                 filesVM.onPermissionsChanged()
+            } else {
+                requestRegularStoragePermissions()
             }
         }
     }
@@ -711,40 +713,63 @@ class MainActivity : ComponentActivity() {
     private fun checkStoragePermissions() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
-                requestManageStoragePermission()
-            }
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val permissions = mutableListOf<String>()
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-            }
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-                if (ContextCompat.checkSelfPermission(
-                        this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                if (canRequestManageStorage()) {
+                    requestManageStoragePermission()
+                } else {
+                    requestRegularStoragePermissions()
                 }
-            }
-            if (permissions.isNotEmpty()) {
-                storagePermissionLauncher.launch(permissions.toTypedArray())
             }
         }
     }
 
     private fun requestStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            requestManageStoragePermission()
+            if (canRequestManageStorage()) {
+                requestManageStoragePermission()
+            } else {
+                requestRegularStoragePermissions()
+            }
         } else {
-            val permissions = mutableListOf(Manifest.permission.READ_EXTERNAL_STORAGE)
-            if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            requestRegularStoragePermissions()
+        }
+    }
+
+    private fun canRequestManageStorage(): Boolean {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return false
+
+        val specificIntent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
+            data = "package:$packageName".toUri()
+        }
+        if (specificIntent.resolveActivity(packageManager) != null) {
+            return true
+        }
+
+        val generalIntent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+        return generalIntent.resolveActivity(packageManager) != null
+    }
+
+    private fun requestRegularStoragePermissions() {
+        val permissions = mutableListOf<String>()
+
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
+        }
+
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
                 permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
             }
+        }
+
+        if (permissions.isNotEmpty()) {
             storagePermissionLauncher.launch(permissions.toTypedArray())
         }
     }
@@ -754,10 +779,19 @@ class MainActivity : ComponentActivity() {
             try {
                 val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
                 intent.data = "package:$packageName".toUri()
-                manageStoragePermissionLauncher.launch(intent)
+
+                if (intent.resolveActivity(packageManager) != null) {
+                    manageStoragePermissionLauncher.launch(intent)
+                } else {
+                    val generalIntent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
+                    if (generalIntent.resolveActivity(packageManager) != null) {
+                        manageStoragePermissionLauncher.launch(generalIntent)
+                    } else {
+                        requestRegularStoragePermissions()
+                    }
+                }
             } catch (_: Exception) {
-                val intent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                manageStoragePermissionLauncher.launch(intent)
+                requestRegularStoragePermissions()
             }
         }
     }
