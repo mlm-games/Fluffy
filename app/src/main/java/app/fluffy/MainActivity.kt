@@ -100,6 +100,9 @@ class MainActivity : ComponentActivity() {
             override fun <VM : ViewModel> create(modelClass: Class<VM>): VM = create() as VM
         }
 
+    private var isPickerMode = false
+    private var pickerMimeType: String? = null
+
     private val filesVM: FileBrowserViewModel by viewModels {
         vm {
             FileBrowserViewModel(
@@ -148,6 +151,29 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppGraph.init(applicationContext)
+
+        isPickerMode = intent?.action in listOf(
+            Intent.ACTION_GET_CONTENT,
+            Intent.ACTION_OPEN_DOCUMENT
+        )
+        pickerMimeType = intent?.type
+
+        if (isPickerMode) {
+            filesVM.setPickerMode(true, pickerMimeType)
+        }
+
+        handleViewIntent(intent)
+
+        isPickerMode = intent?.action in listOf(
+            Intent.ACTION_GET_CONTENT,
+            Intent.ACTION_OPEN_DOCUMENT
+        )
+        pickerMimeType = intent?.type
+
+        // Notify ViewModel about picker mode
+        if (isPickerMode) {
+            filesVM.setPickerMode(true, pickerMimeType)
+        }
 
         handleViewIntent(intent)
 
@@ -353,7 +379,9 @@ class MainActivity : ComponentActivity() {
                                 composable("files") {
                                     FileBrowserScreen(
                                         state = browserState,
-                                        onPickRoot = { pickRoot.launch(null) },
+                                        isPickerMode = isPickerMode,
+                                        onPickFile = { uri -> returnPickedFile(uri) },
+                                        onPickRoot = {  pickRoot.launch(null) },
                                         onOpenDir = { filesVM.openDir(it) },
                                         onBack = { filesVM.goUp() },
                                         onExtractArchive = { archive, targetDir ->
@@ -653,6 +681,19 @@ class MainActivity : ComponentActivity() {
                 proceedExtract()
             }
         }
+    }
+
+    private fun returnPickedFile(uri: Uri) {
+        val resultIntent = Intent().apply {
+            data = uri
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+            if (intent?.action == Intent.ACTION_OPEN_DOCUMENT) {
+                addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            }
+        }
+        setResult(RESULT_OK, resultIntent)
+        finish()
     }
 
     private fun childExists(parent: Uri, name: String): Boolean {

@@ -95,6 +95,8 @@ import java.io.File
 @Composable
 fun FileBrowserScreen(
     state: FileBrowserState,
+    isPickerMode: Boolean = false,
+    onPickFile: (Uri) -> Unit = {},
     onPickRoot: () -> Unit,
     onOpenDir: (Uri) -> Unit,
     onBack: () -> Unit,
@@ -121,6 +123,7 @@ fun FileBrowserScreen(
     val configuration = LocalConfiguration.current
     val isCompactScreen = configuration.screenWidthDp < 600
     val context = LocalContext.current
+
 
     val selected = state.selectedItems
     val selectedFiles = remember { mutableStateListOf<File>() }
@@ -275,10 +278,25 @@ fun FileBrowserScreen(
                     }
                 )
 
+                if (isPickerMode && currentLocation !is BrowseLocation.QuickAccess) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Text(
+                            text = "Select a file",
+                            modifier = Modifier.padding(12.dp),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
+                }
+
                 // Animated selection action bar
                 AnimatedVisibility(
                     visible = (selected.isNotEmpty() || selectedFiles.isNotEmpty()) &&
-                            currentLocation !is BrowseLocation.QuickAccess,
+                            currentLocation !is BrowseLocation.QuickAccess &&
+                            !isPickerMode,
                     enter = fadeIn(animationSpec = tween(200)),
                     exit = fadeOut(animationSpec = tween(200))
                 ) {
@@ -466,7 +484,16 @@ fun FileBrowserScreen(
                                 onOpenWith = { _, _ -> onOpenWith(Uri.fromFile(file), file.name) },
                                 onExtractHere = {
                                     currentDirUri?.let { targetDir -> onExtractArchive(Uri.fromFile(file), targetDir) }
-                                }
+                                },
+                                onClick = if (isPickerMode) {
+                                    {
+                                        if (file.isDirectory) {
+                                            onOpenFile(file)
+                                        } else {
+                                            onPickFile(Uri.fromFile(file))
+                                        }
+                                    }
+                                } else null
                             )
                         }
                     }
@@ -499,7 +526,17 @@ fun FileBrowserScreen(
                                     onOpenWith = onOpenWith,
                                     onExtractHere = {
                                         currentDirUri?.let { targetDir -> onExtractArchive(entry.uri, targetDir) }
-                                    }
+                                    },
+                                    onClick = if (isPickerMode) {
+                                        {
+                                            if (entry.isDir) {
+                                                onOpenDir(entry.uri)
+                                            } else {
+                                                onPickFile(entry.uri)
+                                            }
+                                        }
+                                    } else null
+
                                 )
                             }
                         }
@@ -527,7 +564,17 @@ fun FileBrowserScreen(
                                     onOpenWith = onOpenWith,
                                     onExtractHere = {
                                         currentDirUri?.let { targetDir -> onExtractArchive(df.uri, targetDir) }
-                                    }
+                                    },
+                                    onClick = if (isPickerMode) {
+                                        {
+                                            if (df.isDirectory) {
+                                                onOpenDir(df.uri)
+                                            } else {
+                                                onPickFile(df.uri)
+                                            }
+                                        }
+                                    } else null
+
                                 )
                             }
                         }

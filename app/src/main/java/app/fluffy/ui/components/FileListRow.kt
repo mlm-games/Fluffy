@@ -108,7 +108,8 @@ fun FileListRow(
     onOpenDir: (Uri) -> Unit,
     onOpenArchive: (Uri) -> Unit,
     onOpenWith: (Uri, String) -> Unit,
-    onExtractHere: (() -> Unit)? = null // only shown when archive
+    onClick: (() -> Unit)? = null,
+    onExtractHere: (() -> Unit)? = null
 ) {
     val ctx = LocalContext.current
 
@@ -138,11 +139,15 @@ fun FileListRow(
                     .focusable()
                     .semantics { role = Role.Button }
                     .clickable {
-                        when {
-                            model.isDir -> onOpenDir(model.uri)
-                            hasSelection -> onToggleSelect(!selected)
-                            model.isArchive -> onOpenArchive(model.uri)
-                            else -> onOpenWith(model.uri, model.name)
+                        if (onClick != null) {
+                            onClick()
+                        } else {
+                            when {
+                                model.isDir -> onOpenDir(model.uri)
+                                hasSelection -> onToggleSelect(!selected)
+                                model.isArchive -> onOpenArchive(model.uri)
+                                else -> onOpenWith(model.uri, model.name)
+                            }
                         }
                     }
                     .focusProperties { right = if (model.isArchive && onExtractHere != null) rightFR else cbFR },

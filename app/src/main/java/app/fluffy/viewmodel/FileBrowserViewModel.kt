@@ -47,6 +47,8 @@ data class FileBrowserState(
     val pendingFileOpen: Uri? = null,
     val pendingArchiveOpen: Uri? = null,
     val selectedItems: MutableList<Uri> = mutableListOf(),
+    val isPickerMode: Boolean = false,
+    val pickerMimeType: String? = null
 )
 
 class FileBrowserViewModel(
@@ -443,5 +445,12 @@ class FileBrowserViewModel(
 
     fun clearSelection() {
         _state.update { it.copy(selectedItems = mutableListOf()) }
+    }
+
+    fun setPickerMode(enabled: Boolean, mimeType: String?) {
+        _state.update { it.copy(
+            isPickerMode = enabled,
+            pickerMimeType = mimeType
+        )}
     }
 }
