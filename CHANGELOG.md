@@ -1,3 +1,15 @@
+## v3.2.10
+
+- Bump actions/upload-artifact from 4 to 5 in /.github/workflows
+- [chore] add folder part
+- Add monochrome icon, and change svg only (looks congested on small screens)
+- Remove Google Play link from README
+- Refactor README for better structure and content
+- Do not show tasks screen for ops (bottom bar is sufficient)
+- Do not exclude from recents
+- Bump gradle/actions from 4 to 5 in /.github/workflows
+
+
 ## v3.2.9
 
 - opens with correct index from external apps
