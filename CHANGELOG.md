@@ -1,3 +1,10 @@
+## v3.3.2
+
+- [chore] Bump ver
+- add canRequestManageStorage check (#13)
+- add file picker intents (#14)
+
+
 ## v3.3.1
 
 - [chore] Bump ver
