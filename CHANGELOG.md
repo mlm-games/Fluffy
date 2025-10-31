@@ -1,3 +1,10 @@
+## v3.3.1
+
+- [chore] Bump ver
+- add canRequestManageStorage check (#13)
+- add file picker intents (#14)
+
+
 ## v3.2.10
 
 - Bump actions/upload-artifact from 4 to 5 in /.github/workflows
