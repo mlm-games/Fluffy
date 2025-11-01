@@ -1,3 +1,11 @@
+## v3.3.4
+
+- Update android.yml
+- [chore] Bump ver
+- add canRequestManageStorage check (#13)
+- add file picker intents (#14)
+
+
 ## v3.3.3
 
 - Update android.yml
