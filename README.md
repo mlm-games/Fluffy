@@ -10,9 +10,9 @@
   <!-- <a href="https://play.google.com/store/apps/details?id=app.fluffy">
     <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="80" alt="Get it on Google Play (Alpha)">
   </a> -->
-  <a href="https://github.com/mlm-games/fluffy/releases/latest">
+  <!-- <a href="https://github.com/mlm-games/fluffy/releases/latest">
     <img src="https://img.shields.io/badge/Get%20it%20on-GitHub%20Releases-24292e?style=for-the-badge&logo=github&logoColor=white" height="80" alt="Get it on GitHub Releases">
-  </a>
+  </a> -->
 </p>
 
 <p align="center">
