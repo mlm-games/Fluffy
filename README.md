@@ -7,9 +7,9 @@
   <a href="https://apt.izzysoft.de/packages/app.fluffy">
     <img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroidButtonGreyBorder_nofont.png" height="54" alt="Get it at IzzyOnDroid">
   </a>
-  <!-- <a href="https://play.google.com/store/apps/details?id=app.fluffy">
-    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="80" alt="Get it on Google Play (Alpha)">
-  </a> -->
+  <a href="https://play.google.com/store/apps/details?id=app.fluffy">
+    <img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" height="80" alt="Get it on Google Play">
+  </a>
   <!-- <a href="https://github.com/mlm-games/fluffy/releases/latest">
     <img src="https://img.shields.io/badge/Get%20it%20on-GitHub%20Releases-24292e?style=for-the-badge&logo=github&logoColor=white" height="80" alt="Get it on GitHub Releases">
   </a> -->
@@ -62,6 +62,7 @@ Issues and PRs are welcome :)
 ## Installation
 - Option 1: Direct APK from GitHub Releases (e.g., Downloader app on Fire TV, or a browser).
 - Option 2: Share via LocalSend (or any file transfer to TV).
+- Option 3: Available on GPlay Store for Android TV
 
 ## License
 See [LICENSE](LICENSE).
