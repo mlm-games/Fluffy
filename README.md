@@ -62,7 +62,7 @@ Issues and PRs are welcome :)
 ## Installation
 - Option 1: Direct APK from GitHub Releases (e.g., Downloader app on Fire TV, or a browser).
 - Option 2: Share via LocalSend (or any file transfer to TV).
-- Option 3: Available on GPlay Store for Android TV
+- Option 3: Available on GPlay Store for Android TV.
 
 ## License
 See [LICENSE](LICENSE).
