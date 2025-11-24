@@ -17,7 +17,7 @@ jobs:
       PR_URL: ${{github.event.pull_request.html_url}}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           
