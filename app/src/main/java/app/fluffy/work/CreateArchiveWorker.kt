@@ -23,6 +23,7 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
     override suspend fun getForegroundInfo(): ForegroundInfo = createForeground("Creating archive")
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        setForeground(getForegroundInfo())
         val sourcesIn = inputData.getStringArray(KEY_SOURCES)?.map { it.toUri() } ?: return@withContext Result.failure()
         val targetDir = inputData.getString(KEY_TARGET_DIR)?.toUri() ?: return@withContext Result.failure()
         val outName = inputData.getString(KEY_OUT_NAME)?.ifBlank { "archive.zip" } ?: "archive.zip"

@@ -25,6 +25,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
     override suspend fun getForegroundInfo(): ForegroundInfo = createForeground("Creating 7z archive")
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        setForeground(getForegroundInfo())
         val sources = inputData.getStringArray(KEY_SOURCES)?.map { it.toUri() } ?: return@withContext Result.failure()
         val targetDir = inputData.getString(KEY_TARGET_DIR)?.toUri() ?: return@withContext Result.failure()
         val outName = inputData.getString(KEY_OUT_NAME)?.ifBlank { "archive.7z" } ?: "archive.7z"

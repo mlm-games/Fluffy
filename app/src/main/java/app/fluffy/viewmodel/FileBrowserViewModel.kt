@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.File
-import androidx.core.net.toUri
 import kotlinx.coroutines.flow.update
 
 sealed class BrowseLocation {
@@ -321,7 +320,7 @@ class FileBrowserViewModel(
         val path = raw.trimEnd('/')
         if (path.isEmpty() || path == "/") return null
         val idx = path.lastIndexOf('/')
-        val parentPath = if (idx <= 0) "/" else path.substring(0, idx)
+        val parentPath = if (idx <= 0) "/" else path.take(idx)
         return Uri.Builder().scheme(scheme).path(parentPath).build()
     }
 

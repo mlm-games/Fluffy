@@ -27,6 +27,7 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
     override suspend fun getForegroundInfo(): ForegroundInfo = createForeground("Extracting archive")
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        setForeground(getForegroundInfo())
         val archive = inputData.getString(KEY_ARCHIVE)?.toUri() ?: return@withContext Result.failure()
         val targetDir = inputData.getString(KEY_TARGET_DIR)?.toUri() ?: return@withContext Result.failure()
         val password = inputData.getString(KEY_PASSWORD)?.takeIf { it.isNotEmpty() }?.toCharArray()

@@ -24,6 +24,7 @@ class FileOpsWorker(appContext: Context, params: WorkerParameters) : CoroutineWo
     }
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        setForeground(getForegroundInfo())
         val sources = inputData.getStringArray(KEY_SOURCES)?.map { it.toUri() } ?: return@withContext Result.failure()
         val target = inputData.getString(KEY_TARGET_DIR)?.toUri() ?: return@withContext Result.failure()
         val op = inputData.getString(KEY_OP) ?: OP_COPY
