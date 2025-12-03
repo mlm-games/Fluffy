@@ -12,11 +12,13 @@ import app.fluffy.io.SafIo
 import app.fluffy.io.ShellEntry
 import app.fluffy.shell.RootAccess
 import app.fluffy.shell.ShizukuAccess
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.withContext
 
 sealed class BrowseLocation {
     data class SAF(val uri: Uri) : BrowseLocation()
@@ -251,22 +253,24 @@ class FileBrowserViewModel(
                 st.stack else listOf(BrowseLocation.QuickAccess)
 
             if (uri.scheme == "root" || uri.scheme == "shizuku") {
+                val shellList = withContext(Dispatchers.IO) { io.listShell(uri) }
                 _state.value = st.copy(
-                    currentLocation = location,
+                    currentLocation = BrowseLocation.SAF(uri),
                     currentDir = uri,
-                    stack = anchored + location,
-                    shellItems = io.listShell(uri).filter { showHidden || !it.name.startsWith(".") },
+                    stack = anchored + BrowseLocation.SAF(uri),
+                    shellItems = shellList.filter { showHidden || !it.name.startsWith(".") },
                     items = emptyList(),
                     fileItems = emptyList(),
                     quickAccessItems = emptyList(),
                     error = null
                 )
             } else {
+                val safList = withContext(Dispatchers.IO) { io.listChildren(uri) }
                 _state.value = st.copy(
-                    currentLocation = location,
+                    currentLocation = BrowseLocation.SAF(uri),
                     currentDir = uri,
-                    stack = anchored + location,
-                    items = filtered(io.listChildren(uri)),
+                    stack = anchored + BrowseLocation.SAF(uri),
+                    items = filtered(safList),
                     shellItems = emptyList(),
                     fileItems = emptyList(),
                     quickAccessItems = emptyList(),

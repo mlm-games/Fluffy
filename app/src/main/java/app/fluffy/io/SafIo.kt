@@ -273,7 +273,9 @@ class SafIo(val context: Context) {
 
     fun stageToTemp(name: String, input: () -> InputStream): File {
         val base = File(context.cacheDir, "stage").apply { mkdirs() }
-        val f = File(base, name)
+        val safeName = name.substringAfterLast('/').substringAfterLast('\\')
+        val unique = "${System.currentTimeMillis()}_${safeName}"
+        val f = File(base, unique)
         input().use { i -> f.outputStream().use { o -> i.copyTo(o) } }
         return f
     }
