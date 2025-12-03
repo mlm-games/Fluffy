@@ -1,3 +1,23 @@
+## v3.3.5
+
+- use the file uri for a unique key (for multiple external storage issues)
+- Bump actions/checkout from 5 to 6 in /.github/workflows
+- [chore] Revert readme
+- [chore] Add Gplay banner
+- [chore] punctuation in readme
+- Show gplay now that it has been accepted
+- Rename Screenshot_20250822_213749.png to 4.png
+- Rename Screenshot_20250822_213720.png to 3.png
+- Rename Screenshot_20250822_213711.png to 2.png
+- Rename Screenshot_20250822_213651.png to 1.png
+- Rename Screenshot_20250829_161340.png to 5.png
+- Rename Screenshot_20250829_161243.png to 4.png
+- Rename Screenshot_20250829_161145.png to 3.png
+- Rename Screenshot_20250829_161111.png to 2.png
+- Rename Screenshot_20250829_161048.png to 1.png
+- Update README.md
+
+
 ## v3.3.4
 
 - Update android.yml
