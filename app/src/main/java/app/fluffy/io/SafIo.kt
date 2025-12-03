@@ -176,10 +176,11 @@ class SafIo(val context: Context) {
                     ?: error("Invalid parent")
                 val existing = p.findFile(name)
                 if (existing != null) {
-                    if (overwrite) {
+                    return if (overwrite) {
                         runCatching { existing.delete() }
+                        requireNotNull(p.createFile(mime, name)?.uri) { "Failed to recreate file" }
                     } else {
-                        return requireNotNull(p.createFile(mime, name)?.uri) { "Failed to create file" }
+                        existing.uri
                     }
                 }
                 requireNotNull(p.createFile(mime, name)?.uri) { "Failed to create file" }
@@ -397,8 +398,8 @@ class SafIo(val context: Context) {
     private fun copyAnyRecursive(srcUri: Uri, targetParent: Uri, overwrite: Boolean) {
         val srcPath = path(srcUri)
         val isDir = when {
-            isRoot(srcUri) -> ShellIo.listRoot(srcPath).isNotEmpty() && !File(srcPath).isFile
-            isShizuku(srcUri) -> ShellIo.listShizuku(srcPath).isNotEmpty() && !File(srcPath).isFile
+            isRoot(srcUri) -> !File(srcPath).isFile
+            isShizuku(srcUri) -> !File(srcPath).isFile
             srcUri.scheme == "file" -> File(srcUri.path!!).isDirectory
             srcUri.scheme == "content" -> docFileFromUri(srcUri)?.isDirectory == true
             else -> false
