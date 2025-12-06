@@ -103,21 +103,23 @@ class FileBrowserViewModel(
         val items = mutableListOf<QuickAccessItem>()
 
         val storageRoots = fileSystemAccess.getAllStorageRoots()
+
         val seenFilePaths = mutableSetOf<String>()
         storageRoots.forEachIndexed { idx, root ->
-            val label = if (idx == 0) "Internal Storage" else "External Storage"
-            items.add(
-                QuickAccessItem(
-                    name = label,
-                    icon = if (idx == 0) "storage" else "sd",
-                    file = root,
-                    uri = null
+            if (seenFilePaths.add(root.absolutePath)) {
+                val label = if (idx == 0) "Internal Storage" else "External Storage"
+                items.add(
+                    QuickAccessItem(
+                        name = label,
+                        icon = if (idx == 0) "storage" else "sd",
+                        file = root,
+                        uri = null
+                    )
                 )
-            )
-            seenFilePaths += root.absolutePath
+            }
         }
 
-        // Common public folders (still useful shortcuts)
+        // Common public folders (unchanged)
         val folders = listOf(
             "Downloads" to Environment.DIRECTORY_DOWNLOADS,
             "Documents" to Environment.DIRECTORY_DOCUMENTS,
@@ -135,19 +137,34 @@ class FileBrowserViewModel(
 
         if (showRoot) {
             val available = RootAccess.isAvailable()
-            items.add(QuickAccessItem(if (available) "Root /" else "Root / (not available)", "root", null, Uri.Builder().scheme("root").path("/").build()))
+            items.add(
+                QuickAccessItem(
+                    if (available) "Root /" else "Root / (not available)",
+                    "root",
+                    null,
+                    Uri.Builder().scheme("root").path("/").build()
+                )
+            )
 
-            items.add(QuickAccessItem("Internal Storage (root)", "root", null, Uri.Builder().scheme("root").path("/storage/emulated/0").build()))
+            val rootSeenPaths = mutableSetOf<String>()
+            val internalPath = "/storage/emulated/0"
+            rootSeenPaths.add(internalPath)
+            items.add(
+                QuickAccessItem(
+                    "Internal Storage (root)",
+                    "root",
+                    null,
+                    Uri.Builder().scheme("root").path(internalPath).build()
+                )
+            )
 
-            // any detected storage roots (including removable SDs)
-            val seenRootPaths = mutableSetOf<String>()
             storageRoots.forEachIndexed { idx, root ->
                 val path = root.absolutePath
-                if (seenRootPaths.add(path)) {
+                if (rootSeenPaths.add(path)) {
                     val name = if (idx == 0) "Internal Root" else "External Root"
                     items.add(
                         QuickAccessItem(
-                            name = "$name (${path})",
+                            name = "$name ($path)",
                             icon = if (idx == 0) "root" else "sd",
                             file = null,
                             uri = Uri.Builder().scheme("root").path(path).build()
@@ -156,24 +173,58 @@ class FileBrowserViewModel(
                 }
             }
 
-            items.add(QuickAccessItem("Termux Home (root)", "terminal", null, Uri.Builder().scheme("root").path("/data/data/com.termux/files/home").build()))
-            items.add(QuickAccessItem("Termux Storage (root)", "terminal", null, Uri.Builder().scheme("root").path("/data/data/com.termux/files/home/storage").build()))
+            items.add(
+                QuickAccessItem(
+                    "Termux Home (root)",
+                    "terminal",
+                    null,
+                    Uri.Builder().scheme("root")
+                        .path("/data/data/com.termux/files/home")
+                        .build()
+                )
+            )
+            items.add(
+                QuickAccessItem(
+                    "Termux Storage (root)",
+                    "terminal",
+                    null,
+                    Uri.Builder().scheme("root")
+                        .path("/data/data/com.termux/files/home/storage")
+                        .build()
+                )
+            )
         }
 
         if (showShizuku) {
             val available = ShizukuAccess.isAvailable()
-            items.add(QuickAccessItem(if (available) "Shizuku /" else "Shizuku / (not running)", "shizuku", null, Uri.Builder().scheme("shizuku").path("/").build()))
-            // Internal storage via shizuku
-            items.add(QuickAccessItem("Internal Storage (shizuku)", "shizuku", null, Uri.Builder().scheme("shizuku").path("/storage/emulated/0").build()))
+            items.add(
+                QuickAccessItem(
+                    if (available) "Shizuku /" else "Shizuku / (not running)",
+                    "shizuku",
+                    null,
+                    Uri.Builder().scheme("shizuku").path("/").build()
+                )
+            )
 
-            val seenShizukuPaths = mutableSetOf<String>()
+            val shizukuSeenPaths = mutableSetOf<String>()
+            val internalPath = "/storage/emulated/0"
+            shizukuSeenPaths.add(internalPath)
+            items.add(
+                QuickAccessItem(
+                    "Internal Storage (shizuku)",
+                    "shizuku",
+                    null,
+                    Uri.Builder().scheme("shizuku").path(internalPath).build()
+                )
+            )
+
             storageRoots.forEachIndexed { idx, root ->
                 val path = root.absolutePath
-                if (seenShizukuPaths.add(path)) {
+                if (shizukuSeenPaths.add(path)) {
                     val name = if (idx == 0) "Internal (shizuku)" else "External (shizuku)"
                     items.add(
                         QuickAccessItem(
-                            name = "$name (${path})",
+                            name = "$name ($path)",
                             icon = if (idx == 0) "shizuku" else "sd",
                             file = null,
                             uri = Uri.Builder().scheme("shizuku").path(path).build()
@@ -182,8 +233,26 @@ class FileBrowserViewModel(
                 }
             }
 
-            items.add(QuickAccessItem("Termux Home (shizuku)", "terminal", null, Uri.Builder().scheme("shizuku").path("/data/data/com.termux/files/home").build()))
-            items.add(QuickAccessItem("Termux Storage (shizuku)", "terminal", null, Uri.Builder().scheme("shizuku").path("/data/data/com.termux/files/home/storage").build()))
+            items.add(
+                QuickAccessItem(
+                    "Termux Home (shizuku)",
+                    "terminal",
+                    null,
+                    Uri.Builder().scheme("shizuku")
+                        .path("/data/data/com.termux/files/home")
+                        .build()
+                )
+            )
+            items.add(
+                QuickAccessItem(
+                    "Termux Storage (shizuku)",
+                    "terminal",
+                    null,
+                    Uri.Builder().scheme("shizuku")
+                        .path("/data/data/com.termux/files/home/storage")
+                        .build()
+                )
+            )
         }
 
         return items

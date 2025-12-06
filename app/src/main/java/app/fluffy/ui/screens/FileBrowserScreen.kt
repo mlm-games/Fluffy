@@ -771,25 +771,29 @@ private fun QuickAccessView(
             }
         }
     } else {
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 120.dp),
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(
-            items,
-            key = { item ->
-                item.file?.absolutePath
-                    ?: item.uri?.toString()
-                    ?: item.name
+        val uniqueItems = remember(items) {
+            items.distinctBy { it.file?.absolutePath ?: it.uri?.toString() ?: it.name }
+        }
+
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 120.dp),
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            items(
+                uniqueItems,
+                key = { item ->
+                    item.file?.absolutePath
+                        ?: item.uri?.toString()
+                        ?: item.name
+                }
+            ) { item ->
+                QuickAccessCard(item = item, onClick = { onItemClick(item) })
             }
-        ) { item ->
-            QuickAccessCard(item = item, onClick = { onItemClick(item) })
         }
     }
-}
 }
 
 @Composable

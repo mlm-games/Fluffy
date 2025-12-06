@@ -246,9 +246,19 @@ object DirectoryCounter {
                 f.listFiles()?.size ?: 0
             }
             "content" -> {
-                val doc = DocumentFile.fromSingleUri(context, uri)
-                    ?: DocumentFile.fromTreeUri(context, uri)
-                doc?.listFiles()?.size ?: 0
+                val doc = DocumentFile.fromTreeUri(context, uri)
+                    ?: DocumentFile.fromSingleUri(context, uri)
+
+                if (doc == null || !doc.isDirectory) {
+                    0
+                } else {
+                    try {
+                        doc.listFiles().size
+                    } catch (_: UnsupportedOperationException) {
+                        // SingleDocumentFile can't list children..
+                        0
+                    }
+                }
             }
             "root" -> {
                 val p = uri.path ?: "/"
