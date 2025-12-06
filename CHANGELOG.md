@@ -1,3 +1,12 @@
+## v3.4.1
+
+- Fix Shizuku (duplicacy) crash from prev. update (fix #18); Fix crash on opening few folders via SAF
+- Update 570.txt
+- Fix lists lag for older devices
+- Fix empty folders being detected as files for root/shizuku specific areas + overwrite ux improvement
+- set all work calls to act in foreground
+
+
 ## v3.3.5
 
 - use the file uri for a unique key (for multiple external storage issues)
