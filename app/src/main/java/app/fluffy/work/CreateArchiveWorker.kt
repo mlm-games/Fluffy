@@ -4,6 +4,7 @@ import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
+import android.content.pm.ServiceInfo
 import android.net.Uri
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -86,17 +87,31 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
     private fun createForeground(title: String): ForegroundInfo {
         val channelId = "fluffy.work"
         val nm = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= 26 && nm.getNotificationChannel(channelId) == null) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            nm.getNotificationChannel(channelId) == null
+        ) {
             nm.createNotificationChannel(
-                NotificationChannel(channelId, "Background tasks", NotificationManager.IMPORTANCE_LOW)
+                NotificationChannel(
+                    channelId,
+                    "Background tasks",
+                    NotificationManager.IMPORTANCE_LOW
+                )
             )
         }
+
         val n: Notification = NotificationCompat.Builder(applicationContext, channelId)
             .setContentTitle(title)
-            .setSmallIcon(android.R.drawable.stat_sys_upload)
+            .setSmallIcon(android.R.drawable.stat_sys_download)
             .setOngoing(true)
             .build()
-        return ForegroundInfo((System.currentTimeMillis() % Int.MAX_VALUE).toInt(), n)
+
+        val id = (System.currentTimeMillis() % Int.MAX_VALUE).toInt()
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ForegroundInfo(id, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC)
+        } else {
+            ForegroundInfo(id, n)
+        }
     }
 
     companion object {
