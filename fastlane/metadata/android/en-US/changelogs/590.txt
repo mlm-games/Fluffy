@@ -1,0 +1,1 @@
+- Update AndroidManifest.xml to fix fg crash

@@ -1,3 +1,8 @@
+## v3.4.2
+
+- Update AndroidManifest.xml to fix fg crash
+
+
 ## v3.4.1
 
 - Fix Shizuku (duplicacy) crash from prev. update (fix #18); Fix crash on opening few folders via SAF
