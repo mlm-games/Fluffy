@@ -16,6 +16,8 @@
 <!--    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />-->
 <!--    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />-->
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <queries>
@@ -133,6 +135,11 @@
                 <data android:mimeType="application/pdf" />
             </intent-filter>
         </activity>
+
+        <service
+        android:name="androidx.work.impl.foreground.SystemForegroundService"
+        android:foregroundServiceType="dataSync"
+        tools:node="merge" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
