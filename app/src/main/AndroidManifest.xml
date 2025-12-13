@@ -2,31 +2,43 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" tools:node="remove" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"
+        tools:node="remove" />
     <uses-permission android:name="android.permission.EXPAND_STATUS_BAR" />
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"
         tools:ignore="RequestInstallPackagesPolicy" />
+
+    <!-- for older Android versions -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
         tools:ignore="AllFilesAccessPolicy,ScopedStorage" />
-<!--    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />-->
-<!--    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />-->
-<!--    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />-->
+
+    <!-- Media permissions for newer versions -->
+    <!--
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    -->
     <uses-permission android:name="android.permission.READ_MEDIA_VISUAL_USER_SELECTED" />
+
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
+
     <queries>
         <intent>
             <action android:name="android.intent.action.VIEW" />
-            <data android:scheme="content"
+            <data
+                android:scheme="content"
                 android:mimeType="application/vnd.android.package-archive" />
         </intent>
     </queries>
+
     <application
         android:name=".FluffyApp"
         android:allowBackup="true"
@@ -50,13 +62,15 @@
             android:launchMode="singleTask"
             android:windowSoftInputMode="stateAlwaysHidden"
             android:resumeWhilePausing="true">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.LAUNCHER" />
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER"/>
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
+
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -73,13 +87,14 @@
                 <data android:mimeType="application/java-archive" />
                 <data android:mimeType="application/vnd.android.package-archive" />
             </intent-filter>
+
             <intent-filter>
                 <action android:name="android.intent.action.GET_CONTENT" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.OPENABLE" />
                 <data android:mimeType="*/*" />
             </intent-filter>
-            
+
             <intent-filter>
                 <action android:name="android.intent.action.OPEN_DOCUMENT" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -87,10 +102,11 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.viewers.ImageViewerActivity"
             android:label="View Image"
-            android:exported="true" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -98,12 +114,13 @@
                 <data android:mimeType="image/*" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.viewers.MediaPlayerActivity"
             android:label="View Audio/Video"
             android:exported="true"
             android:supportsPictureInPicture="true"
-            android:resizeableActivity="true" >
+            android:resizeableActivity="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -112,10 +129,11 @@
                 <data android:mimeType="audio/*" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.viewers.TextViewerActivity"
             android:label="View as Text"
-            android:exported="true" >
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -123,12 +141,13 @@
                 <data android:mimeType="*/*" />
             </intent-filter>
         </activity>
+
         <activity
             android:name=".ui.viewers.PdfViewerActivity"
             android:configChanges="orientation|screenSize"
             android:label="PDF Viewer"
             android:exported="true"
-        android:theme="@style/AppTheme">
+            android:theme="@style/AppTheme">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -137,9 +156,9 @@
         </activity>
 
         <service
-        android:name="androidx.work.impl.foreground.SystemForegroundService"
-        android:foregroundServiceType="dataSync"
-        tools:node="merge" />
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
 
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -148,8 +167,9 @@
             android:exported="false">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/filepaths"/>
+                android:resource="@xml/filepaths" />
         </provider>
+
         <provider
             android:name="rikka.shizuku.ShizukuProvider"
             android:authorities="${applicationId}.shizuku"
@@ -158,6 +178,5 @@
             android:exported="true"
             android:permission="android.permission.INTERACT_ACROSS_USERS_FULL" />
     </application>
-
 
 </manifest>
