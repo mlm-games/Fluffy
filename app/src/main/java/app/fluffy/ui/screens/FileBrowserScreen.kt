@@ -117,13 +117,17 @@ fun FileBrowserScreen(
     onShowQuickAccess: () -> Unit = {},
     onCreateFolder: (String) -> Unit = {},
     showFileCount: Boolean = true,
+
+    pickFolderMode: Boolean = false,
+    pickFolderTitle: String = "Choose destination folder",
+    onPickFolder: (Uri) -> Unit = {},
+    onCancelPickFolder: () -> Unit = {},
 ) {
     val currentLocation = state.currentLocation
     val canUp = state.stack.size > 1
     val configuration = LocalConfiguration.current
     val isCompactScreen = configuration.screenWidthDp < 600
     val context = LocalContext.current
-
 
     val selected = state.selectedItems
     val selectedFiles = remember { mutableStateListOf<File>() }
@@ -140,6 +144,7 @@ fun FileBrowserScreen(
     var pending7zPwd by remember { mutableStateOf<String?>(null) }
     var showOverwriteConfirm by remember { mutableStateOf(false) }
     var overwriteMessage by remember { mutableStateOf("") }
+
     val currentDirUri: Uri? = when (currentLocation) {
         is BrowseLocation.FileSystem -> Uri.fromFile(currentLocation.file)
         is BrowseLocation.SAF -> state.currentDir
@@ -168,9 +173,7 @@ fun FileBrowserScreen(
                 p?.findFile(name) != null
             }
             "root", "shizuku" -> {
-                // We don't have stat; assume exists if listing finds it
                 val base = parent.path ?: "/"
-                val full = (if (base.endsWith("/")) base else "$base/") + name
                 when (parent.scheme) {
                     "root" -> app.fluffy.io.ShellIo.listRoot(base).any { it.first == name }
                     else -> app.fluffy.io.ShellIo.listShizuku(base).any { it.first == name }
@@ -237,29 +240,37 @@ fun FileBrowserScreen(
                     actions = {
                         if (currentLocation !is BrowseLocation.QuickAccess) {
                             if (totalItems > 0) {
-                                IconButton(onClick = {
-                                    if (allSelected) {
-                                        selected.clear(); selectedFiles.clear()
-                                    } else when (state.currentLocation) {
-                                        is BrowseLocation.FileSystem -> {
-                                            selectedFiles.clear(); selectedFiles.addAll(state.fileItems)
+                                IconButton(
+                                    onClick = {
+                                        if (allSelected) {
+                                            selected.clear(); selectedFiles.clear()
+                                        } else when (state.currentLocation) {
+                                            is BrowseLocation.FileSystem -> {
+                                                selectedFiles.clear(); selectedFiles.addAll(state.fileItems)
+                                            }
+                                            is BrowseLocation.SAF -> {
+                                                selected.clear()
+                                                selected.addAll(
+                                                    if (state.currentDir?.scheme in listOf("root", "shizuku"))
+                                                        state.shellItems.map { it.uri }
+                                                    else state.items.map { it.uri }
+                                                )
+                                            }
+                                            else -> {}
                                         }
-                                        is BrowseLocation.SAF -> {
-                                            selected.clear()
-                                            selected.addAll(
-                                                if (state.currentDir?.scheme in listOf("root", "shizuku"))
-                                                    state.shellItems.map { it.uri }
-                                                else state.items.map { it.uri }
-                                            )
-                                        }
-                                        else -> {}
-                                    }
-                                }) {
-                                    Icon(Icons.Default.Checklist, contentDescription =
-                                        if (allSelected) "Deselect All" else "Select All")
+                                    },
+                                    enabled = !pickFolderMode
+                                ) {
+                                    Icon(
+                                        Icons.Default.Checklist,
+                                        contentDescription = if (allSelected) "Deselect All" else "Select All"
+                                    )
                                 }
                             }
-                            IconButton(onClick = { showNewFolderDialog = true }) {
+                            IconButton(
+                                onClick = { showNewFolderDialog = true },
+                                enabled = !pickFolderMode
+                            ) {
                                 Icon(Icons.Default.CreateNewFolder, contentDescription = "New Folder")
                             }
                             IconButton(onClick = onShowQuickAccess) {
@@ -272,13 +283,46 @@ fun FileBrowserScreen(
                         IconButton(onClick = onOpenSettings) {
                             Icon(Icons.Default.Settings, contentDescription = "Settings")
                         }
-                        IconButton(onClick = onPickRoot) {
-                            Icon(Icons.Default.FolderOpen, contentDescription = "Pick SAF Folder")
+
+                        // Avoid confusing UX while in folder-pick mode
+                        if (!pickFolderMode) {
+                            IconButton(onClick = onPickRoot) {
+                                Icon(Icons.Default.FolderOpen, contentDescription = "Pick SAF Folder")
+                            }
                         }
                     }
                 )
 
-                if (isPickerMode && currentLocation !is BrowseLocation.QuickAccess) {
+                // In-app picker banner
+                if (pickFolderMode) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = pickFolderTitle,
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                TextButton(onClick = onCancelPickFolder) { Text("Cancel") }
+                                Button(
+                                    onClick = { currentDirUri?.let(onPickFolder) },
+                                    enabled = currentDirUri != null
+                                ) { Text("Use this folder") }
+                            }
+                        }
+                    }
+                } else if (isPickerMode && currentLocation !is BrowseLocation.QuickAccess) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.primaryContainer
@@ -292,11 +336,12 @@ fun FileBrowserScreen(
                     }
                 }
 
-                // Animated selection action bar
+                // Animated selection action bar (disabled during picker/folder-pick mode)
                 AnimatedVisibility(
                     visible = (selected.isNotEmpty() || selectedFiles.isNotEmpty()) &&
                             currentLocation !is BrowseLocation.QuickAccess &&
-                            !isPickerMode,
+                            !isPickerMode &&
+                            !pickFolderMode,
                     enter = fadeIn(animationSpec = tween(200)),
                     exit = fadeOut(animationSpec = tween(200))
                 ) {
@@ -463,37 +508,56 @@ fun FileBrowserScreen(
 
             is BrowseLocation.FileSystem -> {
                 if (state.fileItems.isEmpty()) {
-                    EmptyFolderView(pv = it, onBack = onBack, canUp = canUp, onShowQuickAccess = onShowQuickAccess)
+                    EmptyFolderView(
+                        pv = it,
+                        onBack = onBack,
+                        canUp = canUp,
+                        onShowQuickAccess = onShowQuickAccess
+                    )
                 } else {
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize().padding(it),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(it),
                         contentPadding = PaddingValues(8.dp),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        items(state.fileItems, key = { it.absolutePath }) { file ->
-                            val isSelected = selectedFiles.contains(file)
+                        items(state.fileItems, key = { f -> f.absolutePath }) { file ->
+                            val isSelected = !pickFolderMode && selectedFiles.contains(file)
                             val model = remember(file) { file.toRowModel() }
+
                             FileListRow(
                                 model = model,
                                 selected = isSelected,
-                                hasSelection = anySelected,
+                                hasSelection = !pickFolderMode && anySelected,
                                 showFileCount = showFileCount,
-                                onToggleSelect = { toggled -> if (toggled) selectedFiles.add(file) else selectedFiles.remove(file) },
+                                onToggleSelect = { toggled ->
+                                    if (pickFolderMode) return@FileListRow
+                                    if (toggled) selectedFiles.add(file) else selectedFiles.remove(file)
+                                },
                                 onOpenDir = { onOpenFile(file) },
                                 onOpenArchive = { onOpenArchive(Uri.fromFile(file)) },
                                 onOpenWith = { _, _ -> onOpenWith(Uri.fromFile(file), file.name) },
                                 onExtractHere = {
                                     currentDirUri?.let { targetDir -> onExtractArchive(Uri.fromFile(file), targetDir) }
                                 },
-                                onClick = if (isPickerMode) {
-                                    {
+                                onClick = when {
+                                    pickFolderMode -> {
                                         if (file.isDirectory) {
-                                            onOpenFile(file)
-                                        } else {
-                                            onPickFile(Uri.fromFile(file))
+                                            { onOpenFile(file) }
+                                        } else null
+                                    }
+                                    isPickerMode -> {
+                                        {
+                                            if (file.isDirectory) {
+                                                onOpenFile(file)
+                                            } else {
+                                                onPickFile(Uri.fromFile(file))
+                                            }
                                         }
                                     }
-                                } else null
+                                    else -> null
+                                }
                             )
                         }
                     }
@@ -505,76 +569,112 @@ fun FileBrowserScreen(
                 val isShell = scheme == "root" || scheme == "shizuku"
                 if (isShell) {
                     if (state.shellItems.isEmpty()) {
-                        EmptyFolderView(pv = it, onBack = onBack, canUp = canUp, onShowQuickAccess = onShowQuickAccess)
+                        EmptyFolderView(
+                            pv = it,
+                            onBack = onBack,
+                            canUp = canUp,
+                            onShowQuickAccess = onShowQuickAccess
+                        )
                     } else {
                         LazyColumn(
-                            modifier = Modifier.fillMaxSize().padding(it),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(it),
                             contentPadding = PaddingValues(8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            items(state.shellItems, key = { it.uri.toString() }) { entry ->
-                                val isSelected = selected.contains(entry.uri)
+                            items(state.shellItems, key = { e -> e.uri.toString() }) { entry ->
+                                val isSelected = !pickFolderMode && selected.contains(entry.uri)
                                 val model = remember(entry.uri) { entry.toRowModel() }
+
                                 FileListRow(
                                     model = model,
                                     selected = isSelected,
-                                    hasSelection = anySelected,
+                                    hasSelection = !pickFolderMode && anySelected,
                                     showFileCount = showFileCount,
-                                    onToggleSelect = { toggled -> if (toggled) selected.add(entry.uri) else selected.remove(entry.uri) },
+                                    onToggleSelect = { toggled ->
+                                        if (pickFolderMode) return@FileListRow
+                                        if (toggled) selected.add(entry.uri) else selected.remove(entry.uri)
+                                    },
                                     onOpenDir = onOpenDir,
                                     onOpenArchive = onOpenArchive,
                                     onOpenWith = onOpenWith,
                                     onExtractHere = {
                                         currentDirUri?.let { targetDir -> onExtractArchive(entry.uri, targetDir) }
                                     },
-                                    onClick = if (isPickerMode) {
-                                        {
+                                    onClick = when {
+                                        pickFolderMode -> {
                                             if (entry.isDir) {
-                                                onOpenDir(entry.uri)
-                                            } else {
-                                                onPickFile(entry.uri)
+                                                { onOpenDir(entry.uri) }
+                                            } else null
+                                        }
+                                        isPickerMode -> {
+                                            {
+                                                if (entry.isDir) {
+                                                    onOpenDir(entry.uri)
+                                                } else {
+                                                    onPickFile(entry.uri)
+                                                }
                                             }
                                         }
-                                    } else null
-
+                                        else -> null
+                                    }
                                 )
                             }
                         }
                     }
                 } else {
                     if (state.items.isEmpty()) {
-                        EmptyFolderView(pv = it, onBack = onBack, canUp = canUp, onShowQuickAccess = onShowQuickAccess)
+                        EmptyFolderView(
+                            pv = it,
+                            onBack = onBack,
+                            canUp = canUp,
+                            onShowQuickAccess = onShowQuickAccess
+                        )
                     } else {
                         LazyColumn(
-                            modifier = Modifier.fillMaxSize().padding(it),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(it),
                             contentPadding = PaddingValues(8.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            items(state.items, key = { it.uri.toString() }) { df ->
-                                val isSelected = selected.contains(df.uri)
+                            items(state.items, key = { df -> df.uri.toString() }) { df ->
+                                val isSelected = !pickFolderMode && selected.contains(df.uri)
                                 val model = remember(df.uri) { df.toRowModel() }
+
                                 FileListRow(
                                     model = model,
                                     selected = isSelected,
-                                    hasSelection = anySelected,
+                                    hasSelection = !pickFolderMode && anySelected,
                                     showFileCount = showFileCount,
-                                    onToggleSelect = { toggled -> if (toggled) selected.add(df.uri) else selected.remove(df.uri) },
+                                    onToggleSelect = { toggled ->
+                                        if (pickFolderMode) return@FileListRow
+                                        if (toggled) selected.add(df.uri) else selected.remove(df.uri)
+                                    },
                                     onOpenDir = onOpenDir,
                                     onOpenArchive = onOpenArchive,
                                     onOpenWith = onOpenWith,
                                     onExtractHere = {
                                         currentDirUri?.let { targetDir -> onExtractArchive(df.uri, targetDir) }
                                     },
-                                    onClick = if (isPickerMode) {
-                                        {
+                                    onClick = when {
+                                        pickFolderMode -> {
                                             if (df.isDirectory) {
-                                                onOpenDir(df.uri)
-                                            } else {
-                                                onPickFile(df.uri)
+                                                { onOpenDir(df.uri) }
+                                            } else null
+                                        }
+                                        isPickerMode -> {
+                                            {
+                                                if (df.isDirectory) {
+                                                    onOpenDir(df.uri)
+                                                } else {
+                                                    onPickFile(df.uri)
+                                                }
                                             }
                                         }
-                                    } else null
-
+                                        else -> null
+                                    }
                                 )
                             }
                         }
@@ -584,14 +684,21 @@ fun FileBrowserScreen(
 
             null -> {
                 Box(
-                    Modifier.fillMaxSize().padding(it),
+                    Modifier
+                        .fillMaxSize()
+                        .padding(it),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        Icon(Icons.Default.Folder, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Icon(
+                            Icons.Default.Folder,
+                            contentDescription = null,
+                            modifier = Modifier.size(64.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                         Text("No location selected", style = MaterialTheme.typography.titleMedium)
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             Button(onClick = onShowQuickAccess) { Text("Browse Files") }
@@ -764,9 +871,18 @@ private fun QuickAccessView(
     if (!hasPermission) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Icon(Icons.Default.Lock, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.error)
+                Icon(
+                    Icons.Default.Lock,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.error
+                )
                 Text("Storage Permission Required", style = MaterialTheme.typography.titleMedium)
-                Text("Grant permission to browse files (reopen on granting)", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    "Grant permission to browse files (reopen on granting)",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
                 Button(onClick = onRequestPermission) { Text("Grant Permission") }
             }
         }
@@ -800,11 +916,15 @@ private fun QuickAccessView(
 private fun QuickAccessCard(item: QuickAccessItem, onClick: () -> Unit) {
     Card(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(100.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(12.dp),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
@@ -835,7 +955,6 @@ private fun getIconForQuickAccess(icon: String) = when (icon.lowercase()) {
     else -> Icons.Default.Folder
 }
 
-
 @Composable
 private fun EmptyFolderView(
     pv: PaddingValues,
@@ -845,7 +964,11 @@ private fun EmptyFolderView(
 ) {
     Box(modifier = Modifier.fillMaxSize().padding(pv).padding(16.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text("This folder is empty or inaccessible.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(
+                "This folder is empty or inaccessible.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedButton(onClick = onBack, enabled = canUp) { Text("Go up") }
                 Button(onClick = onShowQuickAccess) { Text("Open Quick Access") }

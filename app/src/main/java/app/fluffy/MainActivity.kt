@@ -65,6 +65,7 @@ import androidx.work.WorkInfo
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.helper.DeviceUtils
 import app.fluffy.helper.OpenTarget
+import app.fluffy.helper.SafAvailability
 import app.fluffy.helper.detectTarget
 import app.fluffy.helper.launchImageViewer
 import app.fluffy.helper.openWithExport
@@ -105,8 +106,20 @@ class MainActivity : ComponentActivity() {
     private var isPickerMode = false
     private var pickerMimeType: String? = null
 
+    // Pending operations that need a destination folder
     private var pendingCopy: List<Uri>? = null
+    private var pendingMove: List<Uri>? = null
+    private var pendingExtractArchive: Uri? = null
+    private var pendingExtractPassword: String? = null
+    private var pendingExtractPaths: List<String>? = null
+
+    // SAF tree pickers
+    private lateinit var pickRoot: ActivityResultLauncher<Uri?>
     private lateinit var pickTargetDir: ActivityResultLauncher<Uri?>
+
+    private val showInAppFolderPicker = mutableStateOf(false)
+    private val inAppFolderPickerTitle = mutableStateOf("Choose destination folder")
+    private var pendingFolderPickCallback: ((Uri) -> Unit)? = null
 
     private val filesVM: FileBrowserViewModel by viewModels {
         vm {
@@ -152,146 +165,44 @@ class MainActivity : ComponentActivity() {
     private val overwriteMessage = mutableStateOf("")
     private var onOverwriteConfirm: (() -> Unit)? = null
 
-
-
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppGraph.init(applicationContext)
 
+        // Picker mode (GET_CONTENT / OPEN_DOCUMENT)
         isPickerMode = intent?.action in listOf(
             Intent.ACTION_GET_CONTENT,
             Intent.ACTION_OPEN_DOCUMENT
         )
         pickerMimeType = intent?.type
-
         if (isPickerMode) {
             filesVM.setPickerMode(true, pickerMimeType)
         }
 
         handleViewIntent(intent)
-
-        isPickerMode = intent?.action in listOf(
-            Intent.ACTION_GET_CONTENT,
-            Intent.ACTION_OPEN_DOCUMENT
-        )
-        pickerMimeType = intent?.type
-
-        // Notify ViewModel about picker mode
-        if (isPickerMode) {
-            filesVM.setPickerMode(true, pickerMimeType)
-        }
-
-        handleViewIntent(intent)
-
         checkStoragePermissions()
 
         purgeOldViewerCache()
         purgeOldExports()
         purgeOldIncoming()
 
-        val pickRoot = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        pickRoot = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
             uri?.let {
-                contentResolver.takePersistableUriPermission(
-                    it,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
+                // SAF tree selection; persistable grants only make sense for content://
+                runCatching {
+                    contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                    )
+                }
                 filesVM.openRoot(it)
             }
         }
 
-        var pendingMove: List<Uri>? = null
-        var pendingExtractArchive: Uri? = null
-        var pendingExtractPassword: String? = null
-        var pendingExtractPaths: List<String>? = null
-
         pickTargetDir = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
             val target = uri ?: return@registerForActivityResult
-            try {
-                contentResolver.takePersistableUriPermission(
-                    target,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-            } catch (_: SecurityException) { }
-
-            fun confirmCollisionsAndEnqueue(
-                target: Uri,
-                sourcesDisplayNames: List<String>,
-                onEnqueue: (overwrite: Boolean) -> Unit
-            ) {
-                fun namesInDir(parent: Uri): Set<String> {
-                    return when (parent.scheme) {
-                        "file" -> {
-                            val f = File(parent.path!!)
-                            (f.listFiles()?.map { it.name } ?: emptyList()).toSet()
-                        }
-                        "content" -> {
-                            val p = DocumentFile.fromTreeUri(this, parent)
-                                ?: DocumentFile.fromSingleUri(this, parent)
-                            p?.listFiles()?.mapNotNull { it.name }?.toSet() ?: emptySet()
-                        }
-                        else -> emptySet()
-                    }
-                }
-
-                val destNames = namesInDir(target)
-                val collisions = sourcesDisplayNames.count { it in destNames }
-                if (collisions > 0) {
-                    overwriteMessage.value = "$collisions item(s) with the same name exist in the destination. Overwrite them?"
-                    onOverwriteConfirm = { onEnqueue(true) }
-                    showOverwriteDialog.value = true
-                } else {
-                    onEnqueue(false)
-                }
-            }
-
-            lifecycleScope.launch {
-                // COPY/MOVE conflicts
-                pendingCopy?.let { list ->
-                    confirmCollisionsAndEnqueue(target, list.map { AppGraph.io.queryDisplayName(it) }) { overwrite ->
-                        confirmShellWrite(target) {
-                            tasksVM.enqueueCopy(list, target, overwrite)
-                            pendingCopy = null
-                        }
-                    }
-                }
-                pendingMove?.let { list ->
-                    confirmCollisionsAndEnqueue(target, list.map { AppGraph.io.queryDisplayName(it) }) { overwrite ->
-                        confirmShellWrite(target) {
-                            tasksVM.enqueueMove(list, target, overwrite)
-                            pendingMove = null
-                        }
-                    }
-                }
-
-                // EXTRACT: if extracting into subfolder and it exists -> confirm
-                pendingExtractArchive?.let { arch ->
-                    val settings = AppGraph.settings.settingsFlow.first()
-                    val name = AppGraph.io.queryDisplayName(arch)
-                    val subfolder = baseNameForExtraction(name)
-                    val mayUseSubfolder = settings.extractIntoSubfolder
-                    val enqueueExtract = {
-                        confirmShellWrite(target) {
-                            tasksVM.enqueueExtract(arch, target, pendingExtractPassword, pendingExtractPaths)
-                            pendingExtractArchive = null
-                            pendingExtractPassword = null
-                            pendingExtractPaths = null
-                        }
-                    }
-                    if (mayUseSubfolder) {
-                        val exists = childExists(target, subfolder)
-                        if (exists) {
-                            overwriteMessage.value = "Folder \"$subfolder\" already exists. Extract into it and overwrite files if needed?"
-                            onOverwriteConfirm = { enqueueExtract() }
-                            showOverwriteDialog.value = true
-                        } else {
-                            enqueueExtract()
-                        }
-                    } else {
-                        enqueueExtract()
-                    }
-                }
-            }
+            handleTargetDirPicked(target)
         }
 
         setContent {
@@ -324,7 +235,6 @@ class MainActivity : ComponentActivity() {
                             workInfos.forEach { wi ->
                                 if (wi.state.isFinished && seenFinished.add(wi.id.toString())) {
                                     refreshNeeded = true
-
                                     DirectoryCounter.invalidateAll()
                                 }
                             }
@@ -349,10 +259,10 @@ class MainActivity : ComponentActivity() {
                                     if (seenFinished.add(workId)) {
                                         refreshNeeded = true
 
-                                        // Clear selection here later, for now nothing
                                         if (wi.tags.contains(ArchiveJobManager.TAG_MOVE) ||
                                             wi.tags.contains(ArchiveJobManager.TAG_CREATE_ZIP) ||
-                                            wi.tags.contains(ArchiveJobManager.TAG_CREATE_7Z)) {
+                                            wi.tags.contains(ArchiveJobManager.TAG_CREATE_7Z)
+                                        ) {
                                             DirectoryCounter.invalidateAll()
                                         }
                                     }
@@ -360,7 +270,6 @@ class MainActivity : ComponentActivity() {
                             }
                             if (refreshNeeded) filesVM.refreshCurrentDir()
                         }
-
 
                         LaunchedEffect(browserState.pendingFileOpen) {
                             browserState.pendingFileOpen?.let { uri ->
@@ -388,7 +297,20 @@ class MainActivity : ComponentActivity() {
                                         state = browserState,
                                         isPickerMode = isPickerMode,
                                         onPickFile = { uri -> returnPickedFile(uri) },
-                                        onPickRoot = {  pickRoot.launch(null) },
+
+                                        // SAF pick root if usable; else fallback to in-app folder picker
+                                        onPickRoot = { launchPickRootOrFallback() },
+
+                                        // In-app folder picker (fallback) wiring
+                                        pickFolderMode = showInAppFolderPicker.value,
+                                        pickFolderTitle = inAppFolderPickerTitle.value,
+                                        onPickFolder = { folderUri ->
+                                            val cb = pendingFolderPickCallback
+                                            dismissInAppFolderPicker()
+                                            cb?.invoke(folderUri)
+                                        },
+                                        onCancelPickFolder = { dismissInAppFolderPicker() },
+
                                         onOpenDir = { filesVM.openDir(it) },
                                         onBack = { filesVM.goUp() },
                                         onExtractArchive = { archive, targetDir ->
@@ -420,13 +342,11 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onCopySelected = { list ->
                                             pendingCopy = list
-                                            pickTargetDir.launch(null)
-
+                                            launchPickTargetDirOrFallback()
                                         },
                                         onMoveSelected = { list ->
                                             pendingMove = list
-                                            pickTargetDir.launch(null)
-
+                                            launchPickTargetDirOrFallback()
                                         },
                                         onDeleteSelected = { list ->
                                             lifecycleScope.launch {
@@ -473,7 +393,7 @@ class MainActivity : ComponentActivity() {
 
                                         onOpenWith = { uri, name ->
                                             lifecycleScope.launch {
-                                                openWithExport( // For sharable uri
+                                                openWithExport(
                                                     src = uri,
                                                     displayName = name,
                                                     preferMime = settings.preferContentResolverMime
@@ -509,17 +429,13 @@ class MainActivity : ComponentActivity() {
                                                         password = pwd,
                                                         includePaths = null,
                                                         targetDir = currentDir,
-                                                        onAfterEnqueue = {
-
-                                                            nav.popBackStack()
-                                                        }
+                                                        onAfterEnqueue = { nav.popBackStack() }
                                                     )
                                                 } else {
                                                     pendingExtractArchive = arch
                                                     pendingExtractPassword = pwd
                                                     pendingExtractPaths = null
-                                                    pickTargetDir.launch(null)
-
+                                                    launchPickTargetDirOrFallback()
                                                 }
                                             },
                                             onExtractSelected = { arch, paths, pwd ->
@@ -534,17 +450,13 @@ class MainActivity : ComponentActivity() {
                                                         password = pwd,
                                                         includePaths = paths,
                                                         targetDir = currentDir,
-                                                        onAfterEnqueue = {
-
-                                                            nav.popBackStack()
-                                                        }
+                                                        onAfterEnqueue = { nav.popBackStack() }
                                                     )
                                                 } else {
                                                     pendingExtractArchive = arch
                                                     pendingExtractPassword = pwd
                                                     pendingExtractPaths = paths
-                                                    pickTargetDir.launch(null)
-
+                                                    launchPickTargetDirOrFallback()
                                                 }
                                             },
                                             onOpenAsFolder = { dirUri ->
@@ -653,6 +565,164 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun launchPickRootOrFallback() {
+        // Prefer SAF tree picker when it’s actually usable; otherwise fall back to in-app folder picker.
+        if (SafAvailability.canOpenDocumentTree(this)) {
+            runCatching {
+                pickRoot.launch(null)
+                return
+            }
+        }
+
+        // Fallback: choose a folder in-app and open it for browsing.
+        startInAppFolderPicker("Choose folder to browse") { folderUri ->
+            openFolderUriInBrowser(folderUri)
+        }
+    }
+
+    private fun launchPickTargetDirOrFallback() {
+        // Prefer SAF tree picker when it’s actually usable; otherwise fall back to in-app folder picker.
+        if (SafAvailability.canOpenDocumentTree(this)) {
+            runCatching {
+                pickTargetDir.launch(null)
+                return
+            }
+        }
+
+        startInAppFolderPicker("Choose destination folder") { folderUri ->
+            handleTargetDirPicked(folderUri)
+        }
+    }
+
+    private fun startInAppFolderPicker(title: String, onPicked: (Uri) -> Unit) {
+        inAppFolderPickerTitle.value = title
+        pendingFolderPickCallback = onPicked
+        showInAppFolderPicker.value = true
+    }
+
+    private fun dismissInAppFolderPicker() {
+        showInAppFolderPicker.value = false
+        pendingFolderPickCallback = null
+        inAppFolderPickerTitle.value = "Choose destination folder"
+    }
+
+    private fun openFolderUriInBrowser(uri: Uri) {
+        when (uri.scheme) {
+            "content" -> {
+                // Treat as SAF tree root
+                filesVM.openRoot(uri)
+            }
+            "file" -> {
+                val p = uri.path ?: return
+                filesVM.openFileSystemPath(File(p))
+            }
+            "root", "shizuku" -> {
+                filesVM.openDir(uri)
+            }
+        }
+    }
+
+    private fun handleTargetDirPicked(target: Uri) {
+        // If we came from the in-app picker, hide it now.
+        showInAppFolderPicker.value = false
+        pendingFolderPickCallback = null
+
+        // Persist SAF grants only for content:// trees (and only if we can)
+        if (target.scheme == "content") {
+            runCatching {
+                contentResolver.takePersistableUriPermission(
+                    target,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+            }
+        }
+
+        fun confirmCollisionsAndEnqueue(
+            target: Uri,
+            sourcesDisplayNames: List<String>,
+            onEnqueue: (overwrite: Boolean) -> Unit
+        ) {
+            fun namesInDir(parent: Uri): Set<String> {
+                return when (parent.scheme) {
+                    "file" -> {
+                        val f = File(parent.path!!)
+                        (f.listFiles()?.map { it.name } ?: emptyList()).toSet()
+                    }
+                    "content" -> {
+                        val p = DocumentFile.fromTreeUri(this, parent)
+                            ?: DocumentFile.fromSingleUri(this, parent)
+                        p?.listFiles()?.mapNotNull { it.name }?.toSet() ?: emptySet()
+                    }
+                    else -> emptySet()
+                }
+            }
+
+            val destNames = namesInDir(target)
+            val collisions = sourcesDisplayNames.count { it in destNames }
+            if (collisions > 0) {
+                overwriteMessage.value =
+                    "$collisions item(s) with the same name exist in the destination. Overwrite them?"
+                onOverwriteConfirm = { onEnqueue(true) }
+                showOverwriteDialog.value = true
+            } else {
+                onEnqueue(false)
+            }
+        }
+
+        lifecycleScope.launch {
+            // COPY
+            pendingCopy?.let { list ->
+                confirmCollisionsAndEnqueue(target, list.map { AppGraph.io.queryDisplayName(it) }) { overwrite ->
+                    confirmShellWrite(target) {
+                        tasksVM.enqueueCopy(list, target, overwrite)
+                        pendingCopy = null
+                    }
+                }
+            }
+
+            // MOVE
+            pendingMove?.let { list ->
+                confirmCollisionsAndEnqueue(target, list.map { AppGraph.io.queryDisplayName(it) }) { overwrite ->
+                    confirmShellWrite(target) {
+                        tasksVM.enqueueMove(list, target, overwrite)
+                        pendingMove = null
+                    }
+                }
+            }
+
+            // EXTRACT (from archive viewer fallback)
+            pendingExtractArchive?.let { arch ->
+                val settings = AppGraph.settings.settingsFlow.first()
+                val name = AppGraph.io.queryDisplayName(arch)
+                val subfolder = baseNameForExtraction(name)
+                val mayUseSubfolder = settings.extractIntoSubfolder
+
+                val enqueueExtract = {
+                    confirmShellWrite(target) {
+                        tasksVM.enqueueExtract(arch, target, pendingExtractPassword, pendingExtractPaths)
+                        pendingExtractArchive = null
+                        pendingExtractPassword = null
+                        pendingExtractPaths = null
+                    }
+                }
+
+                if (mayUseSubfolder) {
+                    val exists = childExists(target, subfolder)
+                    if (exists) {
+                        overwriteMessage.value =
+                            "Folder \"$subfolder\" already exists. Extract into it and overwrite files if needed?"
+                        onOverwriteConfirm = { enqueueExtract() }
+                        showOverwriteDialog.value = true
+                    } else {
+                        enqueueExtract()
+                    }
+                } else {
+                    enqueueExtract()
+                }
+            }
+        }
+    }
+
     private fun extractWithConfirm(
         archive: Uri,
         password: String?,
@@ -672,7 +742,8 @@ class MainActivity : ComponentActivity() {
                             onAfterEnqueue?.invoke()
                         }
                         if (exists) {
-                            overwriteMessage.value = "Folder \"$sub\" already exists. Extract into it and overwrite files if needed?"
+                            overwriteMessage.value =
+                                "Folder \"$sub\" already exists. Extract into it and overwrite files if needed?"
                             onOverwriteConfirm = enqueue as (() -> Unit)?
                             showOverwriteDialog.value = true
                         } else {
@@ -684,9 +755,11 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-            val needsWarn = settings.warnBeforeShellWrites && (targetDir.scheme == "root" || targetDir.scheme == "shizuku")
+            val needsWarn =
+                settings.warnBeforeShellWrites && (targetDir.scheme == "root" || targetDir.scheme == "shizuku")
             if (needsWarn) {
-                overwriteMessage.value = "You're about to write using ${targetDir.scheme?.uppercase()} permissions. This can modify system files. Continue?"
+                overwriteMessage.value =
+                    "You're about to write using ${targetDir.scheme?.uppercase()} permissions. This can modify system files. Continue?"
                 onOverwriteConfirm = proceedExtract
                 showOverwriteDialog.value = true
             } else {
@@ -819,7 +892,8 @@ class MainActivity : ComponentActivity() {
             val s = AppGraph.settings.settingsFlow.first()
             val needsWarn = s.warnBeforeShellWrites && (target.scheme == "root" || target.scheme == "shizuku")
             if (needsWarn) {
-                overwriteMessage.value = "You're about to write using ${target.scheme?.uppercase()} permissions. This can modify system files. Continue?"
+                overwriteMessage.value =
+                    "You're about to write using ${target.scheme?.uppercase()} permissions. This can modify system files. Continue?"
                 onOverwriteConfirm = proceed
                 showOverwriteDialog.value = true
             } else {
@@ -835,7 +909,6 @@ class MainActivity : ComponentActivity() {
         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             uris.map { u ->
                 if (u.scheme == "file") return@map u
-
                 if (u.scheme == "root" || u.scheme == "shizuku") return@map u
 
                 // Most shared URIs are content:// and may be temporary.
@@ -863,7 +936,7 @@ class MainActivity : ComponentActivity() {
             val staged = stageSharedIfNeeded(uris)
 
             pendingCopy = staged
-            pickTargetDir.launch(null)
+            launchPickTargetDirOrFallback()
         }
     }
 
@@ -940,7 +1013,6 @@ private fun MiniTaskIndicator(
         }
     }
 }
-
 
 @Composable
 private fun TaskCenterSheet(
@@ -1052,8 +1124,6 @@ private fun friendlyTitle(wi: WorkInfo): String {
         else -> "Working…"
     }
 }
-
-
 
 class FluffyApp : Application() {
     override fun onCreate() {

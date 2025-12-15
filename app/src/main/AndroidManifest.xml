@@ -38,6 +38,11 @@
                 android:scheme="content"
                 android:mimeType="application/vnd.android.package-archive" />
         </intent>
+
+        <!-- to resolve handlers on modern vers -->
+        <intent>
+            <action android:name="android.intent.action.OPEN_DOCUMENT_TREE" />
+        </intent>
     </queries>
 
     <application
