@@ -2,6 +2,7 @@ package app.fluffy
 
 import android.Manifest
 import android.app.Application
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -11,6 +12,7 @@ import android.os.Environment
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -103,6 +105,9 @@ class MainActivity : ComponentActivity() {
     private var isPickerMode = false
     private var pickerMimeType: String? = null
 
+    private var pendingCopy: List<Uri>? = null
+    private lateinit var pickTargetDir: ActivityResultLauncher<Uri?>
+
     private val filesVM: FileBrowserViewModel by viewModels {
         vm {
             FileBrowserViewModel(
@@ -183,6 +188,7 @@ class MainActivity : ComponentActivity() {
 
         purgeOldViewerCache()
         purgeOldExports()
+        purgeOldIncoming()
 
         val pickRoot = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
             uri?.let {
@@ -194,13 +200,12 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        var pendingCopy: List<Uri>? = null
         var pendingMove: List<Uri>? = null
         var pendingExtractArchive: Uri? = null
         var pendingExtractPassword: String? = null
         var pendingExtractPaths: List<String>? = null
 
-        val pickTargetDir = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+        pickTargetDir = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
             val target = uri ?: return@registerForActivityResult
             try {
                 contentResolver.takePersistableUriPermission(
@@ -639,6 +644,11 @@ class MainActivity : ComponentActivity() {
                 }
             }
             is OpenTarget.Archive -> filesVM.setPendingArchiveOpen(target.uri)
+
+            is OpenTarget.Shared -> {
+                handleSharedUris(target.uris)
+            }
+
             OpenTarget.None -> Unit
         }
     }
@@ -814,6 +824,54 @@ class MainActivity : ComponentActivity() {
                 showOverwriteDialog.value = true
             } else {
                 proceed()
+            }
+        }
+    }
+
+    private fun sanitizeName(name: String): String =
+        name.replace('/', '_').replace('\\', '_').ifBlank { "item" }
+
+    private suspend fun stageSharedIfNeeded(uris: List<Uri>): List<Uri> =
+        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            uris.map { u ->
+                if (u.scheme == "file") return@map u
+
+                if (u.scheme == "root" || u.scheme == "shizuku") return@map u
+
+                // Most shared URIs are content:// and may be temporary.
+                if (u.scheme == "content") {
+                    val name = sanitizeName(AppGraph.io.queryDisplayName(u))
+                    val out = File(cacheDir, "incoming_${System.currentTimeMillis()}_$name")
+                    runCatching {
+                        AppGraph.io.openIn(u).use { input ->
+                            out.outputStream().use { input.copyTo(it) }
+                        }
+                        return@map Uri.fromFile(out)
+                    }.getOrElse {
+                        // fall back to original URI
+                        return@map u
+                    }
+                }
+
+                u
+            }
+        }
+
+    private fun handleSharedUris(uris: List<Uri>) {
+        lifecycleScope.launch {
+            // Stage first so work won’t break later
+            val staged = stageSharedIfNeeded(uris)
+
+            pendingCopy = staged
+            pickTargetDir.launch(null)
+        }
+    }
+
+    fun Context.purgeOldIncoming(maxAgeMs: Long = 72L * 3600_000L) {
+        val now = System.currentTimeMillis()
+        cacheDir.listFiles()?.forEach { f ->
+            if (f.name.startsWith("incoming_") && now - f.lastModified() > maxAgeMs) {
+                runCatching { f.delete() }
             }
         }
     }

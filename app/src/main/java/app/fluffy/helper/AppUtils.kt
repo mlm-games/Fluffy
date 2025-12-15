@@ -18,46 +18,61 @@ import java.io.File
 sealed class OpenTarget {
     data class Images(val uris: List<Uri>, val title: String? = null) : OpenTarget()
     data class Archive(val uri: Uri) : OpenTarget()
+    data class Shared(val uris: List<Uri>, val mime: String? = null) : OpenTarget()
     data object None : OpenTarget()
 }
 
 fun Intent.detectTarget(): OpenTarget {
     val action = this.action ?: return OpenTarget.None
-    val data = this.data
     val mime = this.type
 
     fun isImage(m: String?) = m?.startsWith("image/") == true
-    fun pickImages(): List<Uri> {
+
+    fun extractUris(): List<Uri> {
         val list = mutableListOf<Uri>()
         data?.let { list += it }
-        getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM)?.let { list += it }
+
+        // SEND
+        runCatching { getParcelableExtra<Uri>(Intent.EXTRA_STREAM) }.getOrNull()?.let { list += it }
+
+        // SEND_MULTIPLE
+        runCatching { getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM) }.getOrNull()?.let { list += it }
+
         clipData?.let { cd ->
-            for (i in 0 until cd.itemCount) cd.getItemAt(i)?.uri?.let { list += it }
+            for (i in 0 until cd.itemCount) {
+                cd.getItemAt(i)?.uri?.let { list += it }
+            }
         }
         return list.distinct()
     }
 
     return when (action) {
         Intent.ACTION_VIEW -> {
-            if (isImage(mime) && data != null) {
-                OpenTarget.Images(listOf(data), AppGraph.io.queryDisplayName(data))
-            } else if (data != null) {
-                val name = AppGraph.io.queryDisplayName(data).lowercase()
-                if (FileSystemAccess.isArchiveFile(name)) OpenTarget.Archive(data) else OpenTarget.None
-            } else OpenTarget.None
-        }
-        Intent.ACTION_SEND -> {
-            val u = getParcelableExtra<Uri>(Intent.EXTRA_STREAM)
-            if (u != null && isImage(mime)) OpenTarget.Images(listOf(u), AppGraph.io.queryDisplayName(u))
-            else if (u != null && FileSystemAccess.isArchiveFile(AppGraph.io.queryDisplayName(u))) OpenTarget.Archive(u)
-            else OpenTarget.None
-        }
-        Intent.ACTION_SEND_MULTIPLE -> {
+            val u = data ?: return OpenTarget.None
             if (isImage(mime)) {
-                val images = pickImages()
-                if (images.isNotEmpty()) OpenTarget.Images(images, null) else OpenTarget.None
-            } else OpenTarget.None
+                OpenTarget.Images(listOf(u), AppGraph.io.queryDisplayName(u))
+            } else {
+                val name = AppGraph.io.queryDisplayName(u).lowercase()
+                if (FileSystemAccess.isArchiveFile(name)) OpenTarget.Archive(u) else OpenTarget.None
+            }
         }
+
+        Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> {
+            val uris = extractUris()
+            if (uris.isEmpty()) return OpenTarget.None
+
+            if (isImage(mime)) {
+                return OpenTarget.Images(uris, uris.firstOrNull()?.let { AppGraph.io.queryDisplayName(it) })
+            }
+
+            if (uris.size == 1) {
+                val name = AppGraph.io.queryDisplayName(uris[0])
+                if (FileSystemAccess.isArchiveFile(name)) return OpenTarget.Archive(uris[0])
+            }
+
+            OpenTarget.Shared(uris, mime)
+        }
+
         else -> OpenTarget.None
     }
 }
