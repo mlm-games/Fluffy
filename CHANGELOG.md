@@ -1,3 +1,9 @@
+## v3.5.1
+
+- Fixed "No app available to perform this action" Error for devices that have a stub SAF interface (fix #14)
+- Handle share intents (opens copy-flow for non archive/image file types)
+
+
 ## v3.4.3
 
 
