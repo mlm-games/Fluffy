@@ -181,7 +181,7 @@ jobs:
           done
   
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         if: inputs.upload_releases == false || github.event_name != 'workflow_dispatch'
         with:
           name: release-${{ needs.prepare-version.outputs.version_name }}
