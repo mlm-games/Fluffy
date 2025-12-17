@@ -52,6 +52,8 @@ class SettingsRepository(private val context: Context) {
 
         val PREFER_CR_MIME = booleanPreferencesKey("prefer_cr_mime")
         val WARN_SHELL_WRITES = booleanPreferencesKey("warn_shell_writes")
+
+        val ALWAYS_INAPP_FOLDER_PICKER = booleanPreferencesKey("always_inapp_folder_picker")
     }
 
     private val definitions: Map<String, SettingDefinition<*>> = mapOf(
@@ -66,6 +68,7 @@ class SettingsRepository(private val context: Context) {
         "preferContentResolverMime" to SettingDefinition.BooleanSetting("preferContentResolverMime", PREFER_CR_MIME) { it.preferContentResolverMime },
         "warnBeforeShellWrites" to SettingDefinition.BooleanSetting("warnBeforeShellWrites", WARN_SHELL_WRITES) { it.warnBeforeShellWrites },
         "showFileCount" to SettingDefinition.BooleanSetting("showFileCount", SHOW_FILE_COUNT) { it.showFileCount },
+        "alwaysUseInAppFolderPicker" to SettingDefinition.BooleanSetting("alwaysUseInAppFolderPicker", ALWAYS_INAPP_FOLDER_PICKER) { it.alwaysUseInAppFolderPicker },
     )
 
     val settingsFlow: Flow<AppSettings> = context.ds.data.map { p ->
@@ -81,6 +84,7 @@ class SettingsRepository(private val context: Context) {
             enableShizuku = p[ENABLE_SHIZUKU] ?: false,
             preferContentResolverMime = p[PREFER_CR_MIME] ?: true,
             warnBeforeShellWrites = p[WARN_SHELL_WRITES] ?: false,
+            alwaysUseInAppFolderPicker = p[ALWAYS_INAPP_FOLDER_PICKER] ?: false,
         )
     }.distinctUntilChanged()
 

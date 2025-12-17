@@ -51,6 +51,14 @@ data class AppSettings(
     val showFileCount: Boolean = true,
 
     @Setting(
+        title = "Show In-App Folder Picker Everywhere",
+        description = "Helps prevent stub issues (if not handled), and helps with root ops",
+        category = SettingCategory.SYSTEM,
+        type = SettingType.TOGGLE
+    )
+    val alwaysUseInAppFolderPicker: Boolean = false,
+
+    @Setting(
         title = "Theme",
         category = SettingCategory.APPEARANCE,
         type = SettingType.DROPDOWN,

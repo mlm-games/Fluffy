@@ -206,9 +206,9 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val settings by AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings())
+            val s by AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings())
 
-            val dark = when (settings.themeMode) {
+            val dark = when (s.themeMode) {
                 0 -> isSystemInDarkTheme()
                 1 -> false
                 else -> true
@@ -216,7 +216,7 @@ class MainActivity : ComponentActivity() {
 
             FluffyTheme(
                 darkTheme = dark,
-                useAuroraTheme = settings.useAuroraTheme
+                useAuroraTheme = s.useAuroraTheme
             ) {
                 Box(Modifier.fillMaxSize()) {
                     Surface {
@@ -298,10 +298,9 @@ class MainActivity : ComponentActivity() {
                                         isPickerMode = isPickerMode,
                                         onPickFile = { uri -> returnPickedFile(uri) },
 
-                                        // SAF pick root if usable; else fallback to in-app folder picker
-                                        onPickRoot = { launchPickRootOrFallback() },
+                                        onPickRoot = { launchPickRootOrFallback(s.alwaysUseInAppFolderPicker) },
 
-                                        // In-app folder picker (fallback) wiring
+                                        // In-app folder picker (fallback)
                                         pickFolderMode = showInAppFolderPicker.value,
                                         pickFolderTitle = inAppFolderPickerTitle.value,
                                         onPickFolder = { folderUri ->
@@ -342,11 +341,11 @@ class MainActivity : ComponentActivity() {
                                         },
                                         onCopySelected = { list ->
                                             pendingCopy = list
-                                            launchPickTargetDirOrFallback()
+                                            launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
                                         },
                                         onMoveSelected = { list ->
                                             pendingMove = list
-                                            launchPickTargetDirOrFallback()
+                                            launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
                                         },
                                         onDeleteSelected = { list ->
                                             lifecycleScope.launch {
@@ -396,11 +395,11 @@ class MainActivity : ComponentActivity() {
                                                 openWithExport(
                                                     src = uri,
                                                     displayName = name,
-                                                    preferMime = settings.preferContentResolverMime
+                                                    preferMime = s.preferContentResolverMime
                                                 )
                                             }
                                         },
-                                        showFileCount = settings.showFileCount
+                                        showFileCount = s.showFileCount
                                     )
                                 }
 
@@ -435,7 +434,7 @@ class MainActivity : ComponentActivity() {
                                                     pendingExtractArchive = arch
                                                     pendingExtractPassword = pwd
                                                     pendingExtractPaths = null
-                                                    launchPickTargetDirOrFallback()
+                                                    launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
                                                 }
                                             },
                                             onExtractSelected = { arch, paths, pwd ->
@@ -456,7 +455,7 @@ class MainActivity : ComponentActivity() {
                                                     pendingExtractArchive = arch
                                                     pendingExtractPassword = pwd
                                                     pendingExtractPaths = paths
-                                                    launchPickTargetDirOrFallback()
+                                                    launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
                                                 }
                                             },
                                             onOpenAsFolder = { dirUri ->
@@ -565,28 +564,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun launchPickRootOrFallback() {
-        // Prefer SAF tree picker when it’s actually usable; otherwise fall back to in-app folder picker.
-        if (SafAvailability.canOpenDocumentTree(this)) {
-            runCatching {
-                pickRoot.launch(null)
-                return
-            }
+    private fun launchPickRootOrFallback(alwaysInApp: Boolean) {
+        if (!alwaysInApp && SafAvailability.canOpenDocumentTree(this)) {
+            runCatching { pickRoot.launch(null); return }
         }
 
-        // Fallback: choose a folder in-app and open it for browsing.
         startInAppFolderPicker("Choose folder to browse") { folderUri ->
             openFolderUriInBrowser(folderUri)
         }
     }
 
-    private fun launchPickTargetDirOrFallback() {
-        // Prefer SAF tree picker when it’s actually usable; otherwise fall back to in-app folder picker.
-        if (SafAvailability.canOpenDocumentTree(this)) {
-            runCatching {
-                pickTargetDir.launch(null)
-                return
-            }
+    private fun launchPickTargetDirOrFallback(alwaysInApp: Boolean) {
+        if (!alwaysInApp && SafAvailability.canOpenDocumentTree(this)) {
+            runCatching { pickTargetDir.launch(null); return }
         }
 
         startInAppFolderPicker("Choose destination folder") { folderUri ->
@@ -936,7 +926,8 @@ class MainActivity : ComponentActivity() {
             val staged = stageSharedIfNeeded(uris)
 
             pendingCopy = staged
-            launchPickTargetDirOrFallback()
+            val s = AppGraph.settings.settingsFlow.first()
+            launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
         }
     }
 
