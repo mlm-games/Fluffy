@@ -46,7 +46,7 @@
     </queries>
 
     <application
-        android:name=".FluffyApp"
+        android:name=".FluffyApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"

@@ -4,6 +4,7 @@ import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
@@ -42,7 +43,7 @@ fun FluffyTheme(
         }
     }
 
-    val shapes = androidx.compose.material3.Shapes(
+    val shapes = Shapes(
         extraSmall = RoundedCornerShape(6.dp),
         small = RoundedCornerShape(8.dp),
         medium = RoundedCornerShape(12.dp),

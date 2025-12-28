@@ -1,147 +1,125 @@
 package app.fluffy.data.repository
 
-import kotlin.annotation.AnnotationRetention.RUNTIME
-import kotlin.annotation.AnnotationTarget.PROPERTY
-import kotlin.reflect.KProperty1
-import kotlin.reflect.full.findAnnotation
-import kotlin.reflect.full.memberProperties
+import io.github.mlmgames.settings.core.annotations.CategoryDefinition
+import io.github.mlmgames.settings.core.annotations.Persisted
+import io.github.mlmgames.settings.core.annotations.SchemaVersion
+import io.github.mlmgames.settings.core.annotations.Setting
+import io.github.mlmgames.settings.core.types.Dropdown
+import io.github.mlmgames.settings.core.types.Slider
+import io.github.mlmgames.settings.core.types.Toggle
 
-@Target(PROPERTY)
-@Retention(RUNTIME)
-annotation class Setting(
-    val title: String,
-    val description: String = "",
-    val category: SettingCategory,
-    val type: SettingType,
-    val dependsOn: String = "",
-    val min: Float = 0f,
-    val max: Float = 100f,
-    val step: Float = 1f,
-    val options: Array<String> = []
-)
-
-enum class SettingCategory { GENERAL, APPEARANCE, ARCHIVES, SYSTEM }
-enum class SettingType { TOGGLE, DROPDOWN, SLIDER, BUTTON }
-
+@SchemaVersion(1)
 data class AppSettings(
 
     @Setting(
         title = "Default Sort",
         description = "Default sorting for lists",
-        category = SettingCategory.GENERAL,
-        type = SettingType.DROPDOWN,
-        options = ["Name", "Recently Updated", "Size", "Recently Added"]
+        category = General::class,
+        type = Dropdown::class,
+        options = ["Name", "Recently Updated", "Size", "Recently Added"],
+        key = "default_sort"
     )
     val defaultSort: Int = 0,
 
     @Setting(
         title = "Show hidden files",
         description = "Show files and folders starting with a dot (.)",
-        category = SettingCategory.GENERAL,
-        type = SettingType.TOGGLE
+        category = General::class,
+        type = Toggle::class,
+        key = "show_hidden"
     )
     val showHidden: Boolean = false,
 
     @Setting(
         title = "Show file count in dirs",
         description = "Show count of files in directories",
-        category = SettingCategory.GENERAL,
-        type = SettingType.TOGGLE
+        category = General::class,
+        type = Toggle::class,
+        key = "show_file_count"
     )
     val showFileCount: Boolean = true,
 
     @Setting(
         title = "Show In-App Folder Picker Everywhere",
-        description = "Helps prevent stub issues (if not handled), and helps with root ops",
-        category = SettingCategory.SYSTEM,
-        type = SettingType.TOGGLE
+        description = "Helps prevent stub issues (if not handled), and also for root ops",
+        category = System::class,
+        type = Toggle::class,
+        key = "always_inapp_folder_picker"
     )
-    val alwaysUseInAppFolderPicker: Boolean = false,
+    val alwaysUseInAppFolderPicker: Boolean = true,
 
     @Setting(
         title = "Theme",
-        category = SettingCategory.APPEARANCE,
-        type = SettingType.DROPDOWN,
-        options = ["System", "Light", "Dark"]
+        category = Appearance::class,
+        type = Dropdown::class,
+        options = ["System", "Light", "Dark"],
+        key = "theme_mode"
     )
     val themeMode: Int = 2,
 
-//    @Setting(
-//        title = "Use Aurora Theme",
-//        description = "Enable the Aurora color theme with gradients",
-//        category = SettingCategory.APPEARANCE,
-//        type = SettingType.TOGGLE
-//    )
+    // Not currently shown in settings UI, but used by FluffyTheme
+    @Persisted(key = "use_aurora_theme")
     val useAuroraTheme: Boolean = true,
 
     @Setting(
         title = "ZIP compression level",
         description = "0 = no compression, 9 = maximum compression",
-        category = SettingCategory.ARCHIVES,
-        type = SettingType.SLIDER,
-        min = 0f, max = 9f, step = 1f
+        category = Archives::class,
+        type = Slider::class,
+        min = 0f, max = 9f, step = 1f,
+        key = "zip_level"
     )
     val zipCompressionLevel: Int = 5,
+
     @Setting(
         title = "Enable Root access",
         description = "Browse and write to system folders using root shell",
-        category = SettingCategory.SYSTEM,
-        type = SettingType.TOGGLE
+        category = System::class,
+        type = Toggle::class,
+        key = "enable_root"
     )
     val enableRoot: Boolean = false,
 
     @Setting(
         title = "Enable Shizuku",
         description = "Use Shizuku for shell commands and APK install",
-        category = SettingCategory.SYSTEM,
-        type = SettingType.TOGGLE
+        category = System::class,
+        type = Toggle::class,
+        key = "enable_shizuku"
     )
     val enableShizuku: Boolean = false,
-
 
     @Setting(
         title = "Extract into subfolder",
         description = "Create a folder named after the archive when extracting",
-        category = SettingCategory.ARCHIVES,
-        type = SettingType.TOGGLE
+        category = Archives::class,
+        type = Toggle::class,
+        key = "extract_into_subfolder"
     )
     val extractIntoSubfolder: Boolean = true,
 
     @Setting(
         title = "Prefer ContentResolver MIME",
         description = "Get type based on file and not from extension for 'Open with' and previews when available",
-        category = SettingCategory.GENERAL,
-        type = SettingType.TOGGLE
+        category = General::class,
+        type = Toggle::class,
+        key = "prefer_cr_mime"
     )
     val preferContentResolverMime: Boolean = true,
 
     @Setting(
         title = "Warn before elevated writes",
         description = "Show a confirmation before writing/deleting via root or Shizuku",
-        category = SettingCategory.SYSTEM,
-        type = SettingType.TOGGLE
+        category = System::class,
+        type = Toggle::class,
+        key = "warn_shell_writes"
     )
     val warnBeforeShellWrites: Boolean = false,
-
 )
 
-class SettingsManager {
-    fun getAll(): List<Pair<KProperty1<AppSettings, *>, Setting>> {
-        return AppSettings::class.memberProperties.mapNotNull { p ->
-            val ann = p.findAnnotation<Setting>()
-            if (ann != null) p to ann else null
-        }
-    }
-    fun getByCategory(): Map<SettingCategory, List<Pair<KProperty1<AppSettings, *>, Setting>>> {
-        return getAll().groupBy { it.second.category }
-    }
-    fun isEnabled(settings: AppSettings, property: KProperty1<AppSettings, *>, annotation: Setting): Boolean {
-        val depends = annotation.dependsOn
-        if (depends.isBlank()) return true
-        val depProp = AppSettings::class.memberProperties.find { it.name == depends }
-        return if (depProp != null) {
-            val v = depProp.get(settings)
-            (v as? Boolean) ?: true
-        } else true
-    }
-}
+
+
+@CategoryDefinition(order = 0) object General
+@CategoryDefinition(order = 1) object Appearance
+@CategoryDefinition(order = 2) object Archives
+@CategoryDefinition(order = 3) object System

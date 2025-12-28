@@ -1,7 +1,7 @@
 package app.fluffy
 
 import android.Manifest
-import android.app.Application
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -14,7 +14,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,12 +26,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -49,23 +51,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
-import androidx.navigation.NavType
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
+import androidx.navigation3.runtime.rememberNavBackStack
+import androidx.navigation3.ui.NavDisplay
+import androidx.navigation3.runtime.entryProvider
+import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.work.WorkInfo
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.helper.DeviceUtils
 import app.fluffy.helper.OpenTarget
-import app.fluffy.helper.SafAvailability
 import app.fluffy.helper.detectTarget
 import app.fluffy.helper.launchImageViewer
 import app.fluffy.helper.openWithExport
@@ -76,33 +73,29 @@ import app.fluffy.io.FileSystemAccess
 import app.fluffy.operations.ArchiveJobManager
 import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.ui.components.DirectoryCounter
+import app.fluffy.ui.components.snackbar.LauncherSnackbarHost
+import app.fluffy.ui.components.snackbar.SnackbarManager
 import app.fluffy.ui.screens.ArchiveViewerScreen
 import app.fluffy.ui.screens.FileBrowserScreen
 import app.fluffy.ui.screens.SettingsScreen
 import app.fluffy.ui.screens.TasksScreen
 import app.fluffy.ui.screens.TvMainScreen
 import app.fluffy.ui.theme.FluffyTheme
-import app.fluffy.util.ArchiveTypes.baseNameForExtraction
+import app.fluffy.ui.util.ScreenKey
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserViewModel
 import app.fluffy.viewmodel.SettingsViewModel
 import app.fluffy.viewmodel.TasksViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.koin.androidx.viewmodel.ext.android.viewModel
+import org.koin.compose.koinInject
 import java.io.File
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 import java.util.UUID
 
 class MainActivity : ComponentActivity() {
 
-    private inline fun <reified T : ViewModel> vm(crossinline create: () -> T) =
-        object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <VM : ViewModel> create(modelClass: Class<VM>): VM = create() as VM
-        }
-
+    // Picker mode (GET_CONTENT / OPEN_DOCUMENT)
     private var isPickerMode = false
     private var pickerMimeType: String? = null
 
@@ -121,24 +114,9 @@ class MainActivity : ComponentActivity() {
     private val inAppFolderPickerTitle = mutableStateOf("Choose destination folder")
     private var pendingFolderPickCallback: ((Uri) -> Unit)? = null
 
-    private val filesVM: FileBrowserViewModel by viewModels {
-        vm {
-            FileBrowserViewModel(
-                AppGraph.io,
-                AppGraph.fileSystemAccess,
-                AppGraph.archive,
-                AppGraph.settings
-            )
-        }
-    }
-
-    private val tasksVM: TasksViewModel by viewModels {
-        vm { TasksViewModel(this@MainActivity, AppGraph.archiveJobs) }
-    }
-
-    private val settingsVM: SettingsViewModel by viewModels {
-        vm { SettingsViewModel(AppGraph.settings) }
-    }
+    private val filesVM: FileBrowserViewModel by viewModel()
+    private val tasksVM: TasksViewModel by viewModel()
+    private val settingsVM: SettingsViewModel by viewModel()
 
     private val storagePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -165,6 +143,7 @@ class MainActivity : ComponentActivity() {
     private val overwriteMessage = mutableStateOf("")
     private var onOverwriteConfirm: (() -> Unit)? = null
 
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -185,7 +164,7 @@ class MainActivity : ComponentActivity() {
 
         purgeOldViewerCache()
         purgeOldExports()
-        purgeOldIncoming()
+        applicationContext.purgeOldIncoming()
 
         pickRoot = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
             uri?.let {
@@ -218,81 +197,79 @@ class MainActivity : ComponentActivity() {
                 darkTheme = dark,
                 useAuroraTheme = s.useAuroraTheme
             ) {
-                Box(Modifier.fillMaxSize()) {
+                val backStack = rememberNavBackStack(
+                    ScreenKey.Files
+                )
+
+                val currentRoute: String? = when (backStack.lastOrNull()) {
+                    is ScreenKey.Files -> "files"
+                    is ScreenKey.Tasks -> "tasks"
+                    is ScreenKey.Settings -> "settings"
+                    is ScreenKey.Archive -> "archive"
+                    else -> null
+                }
+
+                val browserState by filesVM.state.collectAsState()
+                val workInfos by tasksVM.workInfos.collectAsState()
+
+                var showTaskCenter by rememberSaveable { mutableStateOf(false) }
+                val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+                // Refresh after jobs finish
+                val seenFinished = remember { mutableSetOf<String>() }
+                LaunchedEffect(workInfos) {
+                    var refreshNeeded = false
+                    workInfos.forEach { wi ->
+                        if (wi.state.isFinished && seenFinished.add(wi.id.toString())) {
+                            refreshNeeded = true
+                            DirectoryCounter.invalidateAll()
+                        }
+                    }
+                    if (refreshNeeded) filesVM.refreshCurrentDir()
+                }
+
+                // Auto-open task center when new RUNNING appears
+                val seenRunning = remember { mutableSetOf<String>() }
+                LaunchedEffect(workInfos) {
+                    val running = workInfos.filter { it.state == WorkInfo.State.RUNNING }
+                    val newId = running.map { it.id.toString() }.firstOrNull { it !in seenRunning }
+                    if (newId != null) {
+                        seenRunning.addAll(running.map { it.id.toString() })
+                        showTaskCenter = true
+                    }
+                }
+
+                LaunchedEffect(browserState.pendingFileOpen) {
+                    browserState.pendingFileOpen?.let { uri ->
+                        val name = uri.lastPathSegment?.lowercase() ?: ""
+                        if (FileSystemAccess.isArchiveFile(name)) {
+                            backStack.add(ScreenKey.Archive(uri = uri.toString()))
+                            filesVM.clearPendingFileOpen()
+                        }
+                    }
+                }
+
+                LaunchedEffect(browserState.pendingArchiveOpen) {
+                    browserState.pendingArchiveOpen?.let { uri ->
+                        backStack.add(ScreenKey.Archive(uri = uri.toString()))
+                        filesVM.clearPendingArchiveOpen()
+                    }
+                }
+
+                val content: @Composable () -> Unit = {
+                    // Root surface for background; keep transparent if you rely on wallpaper etc.
                     Surface {
-                        val nav = rememberNavController()
-                        val currentRoute = nav.currentBackStackEntryAsState().value?.destination?.route
-
-                        val browserState by filesVM.state.collectAsState()
-                        val workInfos by tasksVM.workInfos.collectAsState()
-
-                        var showTaskCenter by rememberSaveable { mutableStateOf(false) }
-                        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
-                        val seenFinished = remember { mutableSetOf<String>() }
-                        LaunchedEffect(workInfos) {
-                            var refreshNeeded = false
-                            workInfos.forEach { wi ->
-                                if (wi.state.isFinished && seenFinished.add(wi.id.toString())) {
-                                    refreshNeeded = true
-                                    DirectoryCounter.invalidateAll()
-                                }
-                            }
-                            if (refreshNeeded) filesVM.refreshCurrentDir()
-                        }
-
-                        val seenRunning = remember { mutableSetOf<String>() }
-                        LaunchedEffect(workInfos) {
-                            val running = workInfos.filter { it.state == WorkInfo.State.RUNNING }
-                            val newId = running.map { it.id.toString() }.firstOrNull { it !in seenRunning }
-                            if (newId != null) {
-                                seenRunning.addAll(running.map { it.id.toString() })
-                                showTaskCenter = true
-                            }
-                        }
-
-                        LaunchedEffect(workInfos) {
-                            var refreshNeeded = false
-                            workInfos.forEach { wi ->
-                                if (wi.state == WorkInfo.State.SUCCEEDED) {
-                                    val workId = wi.id.toString()
-                                    if (seenFinished.add(workId)) {
-                                        refreshNeeded = true
-
-                                        if (wi.tags.contains(ArchiveJobManager.TAG_MOVE) ||
-                                            wi.tags.contains(ArchiveJobManager.TAG_CREATE_ZIP) ||
-                                            wi.tags.contains(ArchiveJobManager.TAG_CREATE_7Z)
-                                        ) {
-                                            DirectoryCounter.invalidateAll()
-                                        }
-                                    }
-                                }
-                            }
-                            if (refreshNeeded) filesVM.refreshCurrentDir()
-                        }
-
-                        LaunchedEffect(browserState.pendingFileOpen) {
-                            browserState.pendingFileOpen?.let { uri ->
-                                val name = uri.lastPathSegment?.lowercase() ?: ""
-                                if (FileSystemAccess.isArchiveFile(name)) {
-                                    val encoded = URLEncoder.encode(uri.toString(), StandardCharsets.UTF_8.name())
-                                    nav.navigate("archive/$encoded")
-                                    filesVM.clearPendingFileOpen()
-                                }
-                            }
-                        }
-
-                        LaunchedEffect(browserState.pendingArchiveOpen) {
-                            browserState.pendingArchiveOpen?.let { uri ->
-                                val encoded = URLEncoder.encode(uri.toString(), StandardCharsets.UTF_8.name())
-                                nav.navigate("archive/$encoded")
-                                filesVM.clearPendingArchiveOpen()
-                            }
-                        }
-
-                        val content: @Composable () -> Unit = {
-                            NavHost(navController = nav, startDestination = "files") {
-                                composable("files") {
+                        NavDisplay(
+                            backStack = backStack,
+                            onBack = {
+                                if (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
+                            },
+                            entryDecorators = listOf(
+                                rememberSaveableStateHolderNavEntryDecorator(),
+                                rememberViewModelStoreNavEntryDecorator(),
+                            ),
+                            entryProvider = entryProvider {
+                                entry<ScreenKey.Files> {
                                     FileBrowserScreen(
                                         state = browserState,
                                         isPickerMode = isPickerMode,
@@ -312,6 +289,7 @@ class MainActivity : ComponentActivity() {
 
                                         onOpenDir = { filesVM.openDir(it) },
                                         onBack = { filesVM.goUp() },
+
                                         onExtractArchive = { archive, targetDir ->
                                             extractWithConfirm(
                                                 archive = archive,
@@ -321,45 +299,55 @@ class MainActivity : ComponentActivity() {
                                                 onAfterEnqueue = { showTaskCenter = true }
                                             )
                                         },
+
                                         onCreateZip = { sources, outName, targetDir, overwrite ->
                                             confirmShellWrite(targetDir) {
                                                 tasksVM.enqueueCreateZip(sources, targetDir, outName, overwrite)
                                                 showTaskCenter = true
                                             }
                                         },
+
                                         onCreate7z = { sources, outName, password, targetDir, overwrite ->
                                             confirmShellWrite(targetDir) {
                                                 tasksVM.enqueueCreate7z(sources, targetDir, outName, password, overwrite)
                                                 showTaskCenter = true
                                             }
                                         },
-                                        onOpenSettings = { nav.navigate("settings") },
+
+                                        onOpenSettings = { backStack.add(ScreenKey.Settings) },
                                         onOpenTasks = { showTaskCenter = true },
+
                                         onOpenArchive = { arch ->
-                                            val encoded = URLEncoder.encode(arch.toString(), StandardCharsets.UTF_8.name())
-                                            nav.navigate("archive/$encoded")
+                                            backStack.add(ScreenKey.Archive(uri = arch.toString()))
                                         },
+
                                         onCopySelected = { list ->
                                             pendingCopy = list
                                             launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
                                         },
+
                                         onMoveSelected = { list ->
                                             pendingMove = list
                                             launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
                                         },
+
                                         onDeleteSelected = { list ->
                                             lifecycleScope.launch {
-                                                val s = AppGraph.settings.settingsFlow.first()
+                                                val ss = AppGraph.settings.settingsFlow.first()
                                                 val touchesShell = list.any { it.scheme == "root" || it.scheme == "shizuku" }
                                                 val proceed: () -> Unit = {
                                                     lifecycleScope.launch {
-                                                        list.forEach { AppGraph.io.deleteTree(it); DirectoryCounter.invalidateParent(it) }
+                                                        list.forEach {
+                                                            AppGraph.io.deleteTree(it)
+                                                            DirectoryCounter.invalidateParent(it)
+                                                        }
                                                         DirectoryCounter.invalidateAll()
                                                         filesVM.refreshCurrentDir()
                                                     }
                                                 }
-                                                if (s.warnBeforeShellWrites && touchesShell) {
-                                                    overwriteMessage.value = "You're about to delete using elevated (root/shizuku) access. Continue?"
+                                                if (ss.warnBeforeShellWrites && touchesShell) {
+                                                    overwriteMessage.value =
+                                                        "You're about to delete using elevated (root/shizuku) access. Continue?"
                                                     onOverwriteConfirm = proceed
                                                     showOverwriteDialog.value = true
                                                 } else {
@@ -367,6 +355,7 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             }
                                         },
+
                                         onRenameOne = { uri, newName ->
                                             lifecycleScope.launch {
                                                 if (newName.isNotBlank()) {
@@ -375,7 +364,9 @@ class MainActivity : ComponentActivity() {
                                                 }
                                             }
                                         },
+
                                         onOpenFile = { file -> filesVM.openFile(file) },
+
                                         onQuickAccessClick = { item ->
                                             lifecycleScope.launch {
                                                 val uri = item.uri
@@ -386,6 +377,7 @@ class MainActivity : ComponentActivity() {
                                                 filesVM.openQuickAccessItem(item)
                                             }
                                         },
+
                                         onRequestPermission = { requestStoragePermission() },
                                         onShowQuickAccess = { filesVM.showQuickAccess() },
                                         onCreateFolder = { name -> filesVM.createNewFolder(name) },
@@ -399,143 +391,172 @@ class MainActivity : ComponentActivity() {
                                                 )
                                             }
                                         },
+
                                         showFileCount = s.showFileCount
                                     )
                                 }
 
-                                composable(
-                                    route = "archive/{uri}",
-                                    arguments = listOf(navArgument("uri") { type = NavType.StringType })
-                                ) { backStack ->
-                                    val encoded = backStack.arguments?.getString("uri") ?: ""
-                                    val uri = runCatching {
-                                        URLDecoder.decode(encoded, StandardCharsets.UTF_8.name()).toUri()
-                                    }.getOrNull()
-
-                                    if (uri != null) {
-                                        ArchiveViewerScreen(
-                                            archiveUri = uri,
-                                            onBack = { nav.popBackStack() },
-                                            onExtractTo = { arch, pwd ->
-                                                val currentDir = when (val location = browserState.currentLocation) {
-                                                    is BrowseLocation.FileSystem -> Uri.fromFile(location.file)
-                                                    is BrowseLocation.SAF -> browserState.currentDir
-                                                    else -> null
-                                                }
-                                                if (currentDir != null) {
-                                                    extractWithConfirm(
-                                                        archive = arch,
-                                                        password = pwd,
-                                                        includePaths = null,
-                                                        targetDir = currentDir,
-                                                        onAfterEnqueue = { nav.popBackStack() }
-                                                    )
-                                                } else {
-                                                    pendingExtractArchive = arch
-                                                    pendingExtractPassword = pwd
-                                                    pendingExtractPaths = null
-                                                    launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
-                                                }
-                                            },
-                                            onExtractSelected = { arch, paths, pwd ->
-                                                val currentDir = when (val location = browserState.currentLocation) {
-                                                    is BrowseLocation.FileSystem -> Uri.fromFile(location.file)
-                                                    is BrowseLocation.SAF -> browserState.currentDir
-                                                    else -> null
-                                                }
-                                                if (currentDir != null) {
-                                                    extractWithConfirm(
-                                                        archive = arch,
-                                                        password = pwd,
-                                                        includePaths = paths,
-                                                        targetDir = currentDir,
-                                                        onAfterEnqueue = { nav.popBackStack() }
-                                                    )
-                                                } else {
-                                                    pendingExtractArchive = arch
-                                                    pendingExtractPassword = pwd
-                                                    pendingExtractPaths = paths
-                                                    launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
-                                                }
-                                            },
-                                            onOpenAsFolder = { dirUri ->
-                                                filesVM.openDir(dirUri)
-                                                nav.popBackStack()
+                                entry<ScreenKey.Archive> { args ->
+                                    val uri = runCatching { args.uri.toUri() }.getOrNull() ?: return@entry
+                                    ArchiveViewerScreen(
+                                        archiveUri = uri,
+                                        onBack = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) },
+                                        onExtractTo = { arch, pwd ->
+                                            // reuse your existing logic: try current dir first; else prompt
+                                            val currentDir = when (val location = browserState.currentLocation) {
+                                                is BrowseLocation.FileSystem -> Uri.fromFile(location.file)
+                                                is BrowseLocation.SAF -> browserState.currentDir
+                                                else -> null
                                             }
-                                        )
-                                    }
-                                }
-
-                                composable("tasks") {
-                                    TasksScreen(
-                                        workInfos = tasksVM.workInfos.collectAsState().value,
-                                        onBack = { nav.popBackStack() }
+                                            if (currentDir != null) {
+                                                extractWithConfirm(
+                                                    archive = arch,
+                                                    password = pwd,
+                                                    includePaths = null,
+                                                    targetDir = currentDir,
+                                                    onAfterEnqueue = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) }
+                                                )
+                                            } else {
+                                                pendingExtractArchive = arch
+                                                pendingExtractPassword = pwd
+                                                pendingExtractPaths = null
+                                                launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
+                                            }
+                                        },
+                                        onExtractSelected = { arch, paths, pwd ->
+                                            val currentDir = when (val location = browserState.currentLocation) {
+                                                is BrowseLocation.FileSystem -> Uri.fromFile(location.file)
+                                                is BrowseLocation.SAF -> browserState.currentDir
+                                                else -> null
+                                            }
+                                            if (currentDir != null) {
+                                                extractWithConfirm(
+                                                    archive = arch,
+                                                    password = pwd,
+                                                    includePaths = paths,
+                                                    targetDir = currentDir,
+                                                    onAfterEnqueue = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) }
+                                                )
+                                            } else {
+                                                pendingExtractArchive = arch
+                                                pendingExtractPassword = pwd
+                                                pendingExtractPaths = paths
+                                                launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
+                                            }
+                                        },
+                                        onOpenAsFolder = { dirUri ->
+                                            filesVM.openDir(dirUri)
+                                            if (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
+                                        }
                                     )
                                 }
 
-                                composable("settings") {
+                                entry<ScreenKey.Tasks> {
+                                    TasksScreen(
+                                        workInfos = workInfos,
+                                        onBack = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) }
+                                    )
+                                }
+
+                                entry<ScreenKey.Settings> {
                                     SettingsScreen(vm = settingsVM)
                                 }
                             }
-                        }
-
-                        val isTV = DeviceUtils.isTV(this@MainActivity)
-                        if (isTV) {
-                            TvMainScreen(
-                                onNavigate = { route -> nav.navigate(route) },
-                                currentRoute = currentRoute
-                            ) { content() }
-                        } else {
-                            content()
-                        }
-
-                        val active = remember(workInfos) {
-                            val running = workInfos.filter { it.state == WorkInfo.State.RUNNING }
-                            when {
-                                running.isNotEmpty() -> running.last()
-                                else -> workInfos.lastOrNull { it.state == WorkInfo.State.ENQUEUED }
-                            }
-                        }
-                        if (active != null) {
-                            MiniTaskIndicator(
-                                wi = active,
-                                onOpenTasks = { showTaskCenter = true }
-                            )
-                        }
-
-                        if (showTaskCenter) {
-                            ModalBottomSheet(
-                                onDismissRequest = { showTaskCenter = false },
-                                sheetState = sheetState,
-                                dragHandle = { BottomSheetDefaults.DragHandle() }
-                            ) {
-                                TaskCenterSheet(
-                                    workInfos = workInfos,
-                                    onCancel = { id -> tasksVM.cancel(id) },
-                                    onClearFinished = { /* visual clear only */ },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .navigationBarsPadding()
-                                )
-                            }
-                        }
-                    }
-
-                    if (showOverwriteDialog.value) {
-                        ConfirmationDialog(
-                            title = "Overwrite?",
-                            message = overwriteMessage.value,
-                            onConfirm = {
-                                showOverwriteDialog.value = false
-                                onOverwriteConfirm?.invoke()
-                                onOverwriteConfirm = null
-                            },
-                            onDismiss = {
-                                showOverwriteDialog.value = false
-                                onOverwriteConfirm = null
-                            }
                         )
                     }
+                }
+
+                val isTV = DeviceUtils.isTV(this@MainActivity)
+
+                val snackbarHostState = remember { SnackbarHostState() }
+                val snackbarManager: SnackbarManager = koinInject()
+
+
+                Scaffold(
+                    snackbarHost = {
+                        LauncherSnackbarHost(
+                            hostState = snackbarHostState,
+                            manager = snackbarManager
+                        )
+                    }
+                ) {
+                    if (isTV) {
+                        TvMainScreen(
+                            onNavigate = { route ->
+                                when (route) {
+                                    "files" -> {
+                                        while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
+                                        if (backStack.lastOrNull() != ScreenKey.Files) {
+                                            backStack.add(ScreenKey.Files)
+                                        }
+                                    }
+
+                                    "tasks" -> {
+                                        while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
+                                        backStack.add(ScreenKey.Tasks)
+                                    }
+
+                                    "settings" -> {
+                                        while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
+                                        backStack.add(ScreenKey.Settings)
+                                    }
+
+                                    else -> Unit
+                                }
+                            },
+                            currentRoute = currentRoute
+                        ) { content() }
+                    } else {
+                        content()
+                    }
+                }
+
+                val active = remember(workInfos) {
+                    val running = workInfos.filter { it.state == WorkInfo.State.RUNNING }
+                    when {
+                        running.isNotEmpty() -> running.last()
+                        else -> workInfos.lastOrNull { it.state == WorkInfo.State.ENQUEUED }
+                    }
+                }
+
+                if (active != null) {
+                    MiniTaskIndicator(
+                        wi = active,
+                        onOpenTasks = { showTaskCenter = true }
+                    )
+                }
+
+                if (showTaskCenter) {
+                    ModalBottomSheet(
+                        onDismissRequest = { showTaskCenter = false },
+                        sheetState = sheetState,
+                        dragHandle = { BottomSheetDefaults.DragHandle() }
+                    ) {
+                        TaskCenterSheet(
+                            workInfos = workInfos,
+                            onCancel = { id -> tasksVM.cancel(id) },
+                            onClearFinished = { /* visual clear only */ },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .navigationBarsPadding()
+                        )
+                    }
+                }
+
+                if (showOverwriteDialog.value) {
+                    ConfirmationDialog(
+                        title = "Confirm",
+                        message = overwriteMessage.value,
+                        onConfirm = {
+                            showOverwriteDialog.value = false
+                            onOverwriteConfirm?.invoke()
+                            onOverwriteConfirm = null
+                        },
+                        onDismiss = {
+                            showOverwriteDialog.value = false
+                            onOverwriteConfirm = null
+                        }
+                    )
                 }
             }
         }
@@ -546,214 +567,111 @@ class MainActivity : ComponentActivity() {
         handleViewIntent(intent)
     }
 
-    private fun handleViewIntent(inIntent: Intent) {
-        when (val target = inIntent.detectTarget()) {
-            is OpenTarget.Images -> {
-                lifecycleScope.launch {
-                    val safe = applicationContext.toViewableUris(target.uris)
-                    applicationContext.launchImageViewer(safe, startIndex = 0, title = target.title)
-                }
-            }
-            is OpenTarget.Archive -> filesVM.setPendingArchiveOpen(target.uri)
-
-            is OpenTarget.Shared -> {
-                handleSharedUris(target.uris)
-            }
-
-            OpenTarget.None -> Unit
-        }
-    }
-
-    private fun launchPickRootOrFallback(alwaysInApp: Boolean) {
-        if (!alwaysInApp && SafAvailability.canOpenDocumentTree(this)) {
-            runCatching { pickRoot.launch(null); return }
-        }
-
-        startInAppFolderPicker("Choose folder to browse") { folderUri ->
-            openFolderUriInBrowser(folderUri)
-        }
-    }
-
-    private fun launchPickTargetDirOrFallback(alwaysInApp: Boolean) {
-        if (!alwaysInApp && SafAvailability.canOpenDocumentTree(this)) {
-            runCatching { pickTargetDir.launch(null); return }
-        }
-
-        startInAppFolderPicker("Choose destination folder") { folderUri ->
-            handleTargetDirPicked(folderUri)
-        }
-    }
-
-    private fun startInAppFolderPicker(title: String, onPicked: (Uri) -> Unit) {
-        inAppFolderPickerTitle.value = title
-        pendingFolderPickCallback = onPicked
-        showInAppFolderPicker.value = true
-    }
-
-    private fun dismissInAppFolderPicker() {
-        showInAppFolderPicker.value = false
-        pendingFolderPickCallback = null
-        inAppFolderPickerTitle.value = "Choose destination folder"
-    }
-
-    private fun openFolderUriInBrowser(uri: Uri) {
-        when (uri.scheme) {
-            "content" -> {
-                // Treat as SAF tree root
-                filesVM.openRoot(uri)
-            }
-            "file" -> {
-                val p = uri.path ?: return
-                filesVM.openFileSystemPath(File(p))
-            }
-            "root", "shizuku" -> {
-                filesVM.openDir(uri)
-            }
-        }
-    }
-
-    private fun handleTargetDirPicked(target: Uri) {
-        // If we came from the in-app picker, hide it now.
-        showInAppFolderPicker.value = false
-        pendingFolderPickCallback = null
-
-        // Persist SAF grants only for content:// trees (and only if we can)
-        if (target.scheme == "content") {
-            runCatching {
-                contentResolver.takePersistableUriPermission(
-                    target,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
-                )
-            }
-        }
-
-        fun confirmCollisionsAndEnqueue(
-            target: Uri,
-            sourcesDisplayNames: List<String>,
-            onEnqueue: (overwrite: Boolean) -> Unit
-        ) {
-            fun namesInDir(parent: Uri): Set<String> {
-                return when (parent.scheme) {
-                    "file" -> {
-                        val f = File(parent.path!!)
-                        (f.listFiles()?.map { it.name } ?: emptyList()).toSet()
-                    }
-                    "content" -> {
-                        val p = DocumentFile.fromTreeUri(this, parent)
-                            ?: DocumentFile.fromSingleUri(this, parent)
-                        p?.listFiles()?.mapNotNull { it.name }?.toSet() ?: emptySet()
-                    }
-                    else -> emptySet()
-                }
-            }
-
-            val destNames = namesInDir(target)
-            val collisions = sourcesDisplayNames.count { it in destNames }
-            if (collisions > 0) {
-                overwriteMessage.value =
-                    "$collisions item(s) with the same name exist in the destination. Overwrite them?"
-                onOverwriteConfirm = { onEnqueue(true) }
-                showOverwriteDialog.value = true
-            } else {
-                onEnqueue(false)
-            }
-        }
-
-        lifecycleScope.launch {
-            // COPY
-            pendingCopy?.let { list ->
-                confirmCollisionsAndEnqueue(target, list.map { AppGraph.io.queryDisplayName(it) }) { overwrite ->
-                    confirmShellWrite(target) {
-                        tasksVM.enqueueCopy(list, target, overwrite)
-                        pendingCopy = null
-                    }
-                }
-            }
-
-            // MOVE
-            pendingMove?.let { list ->
-                confirmCollisionsAndEnqueue(target, list.map { AppGraph.io.queryDisplayName(it) }) { overwrite ->
-                    confirmShellWrite(target) {
-                        tasksVM.enqueueMove(list, target, overwrite)
-                        pendingMove = null
-                    }
-                }
-            }
-
-            // EXTRACT (from archive viewer fallback)
-            pendingExtractArchive?.let { arch ->
-                val settings = AppGraph.settings.settingsFlow.first()
-                val name = AppGraph.io.queryDisplayName(arch)
-                val subfolder = baseNameForExtraction(name)
-                val mayUseSubfolder = settings.extractIntoSubfolder
-
-                val enqueueExtract = {
-                    confirmShellWrite(target) {
-                        tasksVM.enqueueExtract(arch, target, pendingExtractPassword, pendingExtractPaths)
-                        pendingExtractArchive = null
-                        pendingExtractPassword = null
-                        pendingExtractPaths = null
-                    }
-                }
-
-                if (mayUseSubfolder) {
-                    val exists = childExists(target, subfolder)
-                    if (exists) {
-                        overwriteMessage.value =
-                            "Folder \"$subfolder\" already exists. Extract into it and overwrite files if needed?"
-                        onOverwriteConfirm = { enqueueExtract() }
-                        showOverwriteDialog.value = true
-                    } else {
-                        enqueueExtract()
-                    }
-                } else {
-                    enqueueExtract()
-                }
-            }
-        }
-    }
-
     private fun extractWithConfirm(
         archive: Uri,
         password: String?,
         includePaths: List<String>?,
         targetDir: Uri,
-        onAfterEnqueue: (() -> Unit)? = null
+        onAfterEnqueue: () -> Unit = {},
     ) {
-        lifecycleScope.launch {
-            val settings = AppGraph.settings.settingsFlow.first()
-            val proceedExtract: () -> Unit = {
-                lifecycleScope.launch {
-                    if (settings.extractIntoSubfolder) {
-                        val sub = baseNameForExtraction(AppGraph.io.queryDisplayName(archive))
-                        val exists = childExists(targetDir, sub)
-                        val enqueue = {
-                            tasksVM.enqueueExtract(archive, targetDir, password, includePaths)
-                            onAfterEnqueue?.invoke()
-                        }
-                        if (exists) {
-                            overwriteMessage.value =
-                                "Folder \"$sub\" already exists. Extract into it and overwrite files if needed?"
-                            onOverwriteConfirm = enqueue as (() -> Unit)?
-                            showOverwriteDialog.value = true
-                        } else {
-                            enqueue()
-                        }
-                    } else {
-                        tasksVM.enqueueExtract(archive, targetDir, password, includePaths)
-                        onAfterEnqueue?.invoke()
-                    }
+        confirmShellWrite(targetDir) {
+            tasksVM.enqueueExtract(archive, targetDir, password, includePaths)
+            onAfterEnqueue()
+        }
+    }
+
+    private fun launchPickRootOrFallback(alwaysInApp: Boolean) {
+        if (alwaysInApp) {
+            showInAppFolderPicker.value = true
+            inAppFolderPickerTitle.value = "Choose root folder"
+            pendingFolderPickCallback = { uri -> filesVM.openRoot(uri) }
+        } else {
+            pickRoot.launch(null)
+        }
+    }
+
+    private fun launchPickTargetDirOrFallback(alwaysInApp: Boolean) {
+        if (alwaysInApp) {
+            showInAppFolderPicker.value = true
+            inAppFolderPickerTitle.value = "Choose destination folder"
+            pendingFolderPickCallback = { uri -> handleTargetDirPicked(uri) }
+        } else {
+            pickTargetDir.launch(null)
+        }
+    }
+
+    private fun dismissInAppFolderPicker() {
+        showInAppFolderPicker.value = false
+        pendingFolderPickCallback = null
+    }
+
+    private fun handleTargetDirPicked(target: Uri) {
+        // Apply whichever pending operation exists. Clear pending after.
+        val copy = pendingCopy
+        val move = pendingMove
+        val exArch = pendingExtractArchive
+
+        when {
+            copy != null -> {
+                pendingCopy = null
+                confirmShellWrite(target) {
+                    tasksVM.enqueueCopy(copy, target, overwrite = false)
                 }
             }
-            val needsWarn =
-                settings.warnBeforeShellWrites && (targetDir.scheme == "root" || targetDir.scheme == "shizuku")
-            if (needsWarn) {
-                overwriteMessage.value =
-                    "You're about to write using ${targetDir.scheme?.uppercase()} permissions. This can modify system files. Continue?"
-                onOverwriteConfirm = proceedExtract
-                showOverwriteDialog.value = true
-            } else {
-                proceedExtract()
+
+            move != null -> {
+                pendingMove = null
+                confirmShellWrite(target) {
+                    tasksVM.enqueueMove(move, target, overwrite = false)
+                }
+            }
+
+            exArch != null -> {
+                val pwd = pendingExtractPassword
+                val paths = pendingExtractPaths
+                pendingExtractArchive = null
+                pendingExtractPassword = null
+                pendingExtractPaths = null
+
+                extractWithConfirm(
+                    archive = exArch,
+                    password = pwd,
+                    includePaths = paths,
+                    targetDir = target
+                )
+            }
+
+            else -> Unit
+        }
+    }
+
+    private fun handleViewIntent(intent: Intent?) {
+        if (intent == null) return
+
+        when (val target = intent.detectTarget()) {
+
+            is OpenTarget.Images -> {
+                // Convert root:// and shizuku:// to viewable content URIs, then open viewer
+                lifecycleScope.launch {
+                    val viewable = applicationContext.toViewableUris(target.uris)
+                    applicationContext.launchImageViewer(
+                        uris = viewable,
+                        startIndex = 0,
+                        title = target.title
+                    )
+                }
+            }
+
+            is OpenTarget.Archive -> {
+                filesVM.setPendingArchiveOpen(target.uri)
+            }
+
+            is OpenTarget.Shared -> {
+                handleSharedUris(target.uris)
+            }
+
+            OpenTarget.None -> {
+                // nein
             }
         }
     }
@@ -813,9 +731,7 @@ class MainActivity : ComponentActivity() {
         val specificIntent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
             data = "package:$packageName".toUri()
         }
-        if (specificIntent.resolveActivity(packageManager) != null) {
-            return true
-        }
+        if (specificIntent.resolveActivity(packageManager) != null) return true
 
         val generalIntent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
         return generalIntent.resolveActivity(packageManager) != null
@@ -869,14 +785,6 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun contentUriFor(file: File): Uri {
-        return try {
-            FileProvider.getUriForFile(this, "${packageName}.fileprovider", file)
-        } catch (_: Exception) {
-            Uri.fromFile(file)
-        }
-    }
-
     private fun confirmShellWrite(target: Uri, proceed: () -> Unit) {
         lifecycleScope.launch {
             val s = AppGraph.settings.settingsFlow.first()
@@ -901,7 +809,6 @@ class MainActivity : ComponentActivity() {
                 if (u.scheme == "file") return@map u
                 if (u.scheme == "root" || u.scheme == "shizuku") return@map u
 
-                // Most shared URIs are content:// and may be temporary.
                 if (u.scheme == "content") {
                     val name = sanitizeName(AppGraph.io.queryDisplayName(u))
                     val out = File(cacheDir, "incoming_${System.currentTimeMillis()}_$name")
@@ -911,7 +818,6 @@ class MainActivity : ComponentActivity() {
                         }
                         return@map Uri.fromFile(out)
                     }.getOrElse {
-                        // fall back to original URI
                         return@map u
                     }
                 }
@@ -922,16 +828,14 @@ class MainActivity : ComponentActivity() {
 
     private fun handleSharedUris(uris: List<Uri>) {
         lifecycleScope.launch {
-            // Stage first so work won’t break later
             val staged = stageSharedIfNeeded(uris)
-
             pendingCopy = staged
             val s = AppGraph.settings.settingsFlow.first()
             launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
         }
     }
 
-    fun Context.purgeOldIncoming(maxAgeMs: Long = 72L * 3600_000L) {
+    private fun Context.purgeOldIncoming(maxAgeMs: Long = 72L * 3600_000L) {
         val now = System.currentTimeMillis()
         cacheDir.listFiles()?.forEach { f ->
             if (f.name.startsWith("incoming_") && now - f.lastModified() > maxAgeMs) {
@@ -949,9 +853,7 @@ private fun MiniTaskIndicator(
     wi: WorkInfo,
     onOpenTasks: () -> Unit
 ) {
-    // Derive a friendly title from tags
     val title = remember(wi.tags) { friendlyTitle(wi) }
-    // Progress value (0f..1f) if provided by workers, else null
     val progress = wi.progress.getFloat("progress", -1f).takeIf { it in 0f..1f }
 
     Box(
@@ -1056,19 +958,16 @@ private fun TaskCenterSheet(
 @Composable
 private fun TaskRowCompact(
     wi: WorkInfo,
-    onCancel: ((UUID) -> Unit)?,
+    onCancel: ((UUID) -> Unit)?
 ) {
-    val title = friendlyTitle(wi)
+    val title = remember(wi.tags) { friendlyTitle(wi) }
     val progress = wi.progress.getFloat("progress", -1f).takeIf { it in 0f..1f }
+    val isRunning = wi.state == WorkInfo.State.RUNNING
 
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
-    ) {
+    ElevatedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp)) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -1080,23 +979,30 @@ private fun TaskRowCompact(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                if (onCancel != null && wi.state == WorkInfo.State.RUNNING) {
-                    TextButton(onClick = { onCancel(wi.id) }) { Text("Cancel") }
+
+                if (isRunning && onCancel != null) {
+                    TextButton(
+                        onClick = { onCancel(wi.id) },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text("Cancel")
+                    }
                 }
             }
+
             if (progress != null) {
                 LinearProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(6.dp)
                         .padding(top = 8.dp)
                 )
             } else {
                 LinearProgressIndicator(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(6.dp)
                         .padding(top = 8.dp)
                 )
             }
@@ -1113,12 +1019,5 @@ private fun friendlyTitle(wi: WorkInfo): String {
         t.contains(ArchiveJobManager.TAG_MOVE) -> "Moving files…"
         t.contains(ArchiveJobManager.TAG_COPY) -> "Copying files…"
         else -> "Working…"
-    }
-}
-
-class FluffyApp : Application() {
-    override fun onCreate() {
-        super.onCreate()
-        AppGraph.init(applicationContext)
     }
 }

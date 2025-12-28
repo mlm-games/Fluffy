@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -14,10 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import app.fluffy.data.repository.AppSettings
-import app.fluffy.data.repository.Setting
-import app.fluffy.data.repository.SettingCategory
-import app.fluffy.data.repository.SettingType
-import app.fluffy.data.repository.SettingsManager
+import app.fluffy.data.repository.AppSettingsSchema
 import app.fluffy.ui.components.MyScreenScaffold
 import app.fluffy.ui.components.SettingsAction
 import app.fluffy.ui.components.SettingsItem
@@ -27,111 +23,124 @@ import app.fluffy.ui.dialogs.SliderSettingDialog
 import app.fluffy.shell.RootAccess
 import app.fluffy.shell.ShizukuAccess
 import app.fluffy.viewmodel.SettingsViewModel
+import io.github.mlmgames.settings.core.SettingField
+import io.github.mlmgames.settings.core.types.Button
+import io.github.mlmgames.settings.core.types.Dropdown
+import io.github.mlmgames.settings.core.types.Slider
+import io.github.mlmgames.settings.core.types.Toggle
 import java.util.Locale
-import kotlin.reflect.KProperty1
+import kotlin.reflect.KClass
 
 @Composable
 fun SettingsScreen(vm: SettingsViewModel) {
     val settings by vm.settings.collectAsState()
-    val manager = remember { SettingsManager() }
+
+    val schema = remember { AppSettingsSchema }
 
     var showDropdown by remember { mutableStateOf(false) }
     var showSlider by remember { mutableStateOf(false) }
-    var currentProp by remember { mutableStateOf<KProperty1<AppSettings, *>?>(null) }
-    var currentAnn by remember { mutableStateOf<Setting?>(null) }
+    var currentField by remember { mutableStateOf<SettingField<AppSettings, *>?>(null) }
 
-    val grouped = remember { manager.getByCategory() }
     val cfg = LocalConfiguration.current
     val gridCells = remember(cfg.screenWidthDp) { GridCells.Adaptive(minSize = 420.dp) }
 
     val rootAvail by remember { mutableStateOf(RootAccess.isAvailable()) }
     val shizukuAvail by remember { mutableStateOf(ShizukuAccess.isAvailable()) }
 
+    fun categoryTitle(cat: KClass<*>): String =
+        cat.simpleName?.lowercase()?.replaceFirstChar { it.titlecase(Locale.getDefault()) } ?: "Settings"
+
     MyScreenScaffold(title = "Settings") { _ ->
         LazyVerticalGrid(
             columns = gridCells,
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp),
-//            horizontalArrangement = Arrangement.spacedBy(12.dp),
             modifier = Modifier.fillMaxSize()
         ) {
-            for (category in SettingCategory.entries) {
-                val itemsForCat = grouped[category] ?: emptyList()
-                if (itemsForCat.isEmpty()) continue
+            val categories = schema.orderedCategories()
+            val grouped = schema.groupedByCategory()
+
+            for (category in categories) {
+                val fields = grouped[category].orEmpty()
+                if (fields.isEmpty()) continue
 
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Text(
-                        text = category.name.lowercase().replaceFirstChar { it.uppercase() },
+                        text = categoryTitle(category),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
 
-                items(itemsForCat, key = { it.first.name }) { (prop, ann) ->
-                    val enabled = manager.isEnabled(settings, prop, ann)
+                fields.forEach { field ->
+                    item(key = field.name) {
+                        val meta = field.meta ?: return@item
+                        val enabledBySchema = schema.isEnabled(settings, field)
 
-                    val descriptionOverride = when (prop.name) {
-                        "enableRoot" -> {
-                            val suffix = if (rootAvail) "Available" else "Not available"
-                            listOf(ann.description, suffix).filter { it.isNotBlank() }.joinToString(" • ")
-                        }
-                        "enableShizuku" -> {
-                            val suffix = if (shizukuAvail) "Running" else "Not running"
-                            listOf(ann.description, suffix).filter { it.isNotBlank() }.joinToString(" • ")
-                        }
-                        else -> ann.description
-                    }.takeIf { it.isNotBlank() }
+                        val descriptionOverride = when (field.name) {
+                            "enableRoot" -> {
+                                val suffix = if (rootAvail) "Available" else "Not available"
+                                listOf(meta.description, suffix).filter { it.isNotBlank() }.joinToString(" • ")
+                            }
+                            "enableShizuku" -> {
+                                val suffix = if (shizukuAvail) "Running" else "Not running"
+                                listOf(meta.description, suffix).filter { it.isNotBlank() }.joinToString(" • ")
+                            }
+                            else -> meta.description
+                        }.takeIf { it.isNotBlank() }
 
-                    when (ann.type) {
-                        SettingType.TOGGLE -> {
-                            val value = prop.get(settings) as? Boolean ?: false
-                            SettingsToggle(
-                                title = ann.title,
-                                description = descriptionOverride,
-                                isChecked = value,
-                                enabled = enabled,
-                                onCheckedChange = { vm.updateSetting(prop.name, it) }
-                            )
-                        }
-                        SettingType.DROPDOWN -> {
-                            val idx = prop.get(settings) as? Int ?: 0
-                            val options = ann.options.toList()
-                            SettingsItem(
-                                title = ann.title,
-                                subtitle = options.getOrNull(idx) ?: "Unknown",
-                                description = ann.description.takeIf { it.isNotBlank() },
-                                enabled = enabled
-                            ) {
-                                currentProp = prop
-                                currentAnn = ann
-                                showDropdown = true
+                        when (meta.type) {
+                            Toggle::class -> {
+                                val value = (field.get(settings) as? Boolean) ?: false
+                                SettingsToggle(
+                                    title = meta.title,
+                                    description = descriptionOverride,
+                                    isChecked = value,
+                                    enabled = enabledBySchema,
+                                    onCheckedChange = { vm.updateSetting(field.name, it) }
+                                )
                             }
-                        }
-                        SettingType.SLIDER -> {
-                            val valueText = when (val v = prop.get(settings)) {
-                                is Int -> v.toString()
-                                is Float -> String.format(Locale.getDefault(),"%.1f", v)
-                                else -> ""
+
+                            Dropdown::class -> {
+                                val idx = (field.get(settings) as? Int) ?: 0
+                                val options = meta.options
+                                SettingsItem(
+                                    title = meta.title,
+                                    subtitle = options.getOrNull(idx) ?: "Unknown",
+                                    description = descriptionOverride,
+                                    enabled = enabledBySchema
+                                ) {
+                                    currentField = field
+                                    showDropdown = true
+                                }
                             }
-                            SettingsItem(
-                                title = ann.title,
-                                subtitle = valueText,
-                                description = ann.description.takeIf { it.isNotBlank() },
-                                enabled = enabled
-                            ) {
-                                currentProp = prop
-                                currentAnn = ann
-                                showSlider = true
+
+                            Slider::class -> {
+                                val subtitle = when (val v = field.get(settings)) {
+                                    is Int -> v.toString()
+                                    is Float -> String.format(Locale.getDefault(), "%.1f", v)
+                                    else -> ""
+                                }
+                                SettingsItem(
+                                    title = meta.title,
+                                    subtitle = subtitle,
+                                    description = descriptionOverride,
+                                    enabled = enabledBySchema
+                                ) {
+                                    currentField = field
+                                    showSlider = true
+                                }
                             }
-                        }
-                        SettingType.BUTTON -> {
-                            SettingsAction(
-                                title = ann.title,
-                                description = ann.description.takeIf { it.isNotBlank() },
-                                buttonText = "Run",
-                                enabled = enabled,
-                                onClick = { vm.performAction(prop.name) }
-                            )
+
+                            Button::class -> {
+                                SettingsAction(
+                                    title = meta.title,
+                                    description = descriptionOverride,
+                                    buttonText = "Run",
+                                    enabled = enabledBySchema,
+                                    onClick = { vm.performAction(field.name) }
+                                )
+                            }
                         }
                     }
                 }
@@ -139,44 +148,48 @@ fun SettingsScreen(vm: SettingsViewModel) {
         }
     }
 
-    if (showDropdown && currentProp != null && currentAnn != null) {
-        val prop = currentProp!!
-        val ann = currentAnn!!
-        val idx = prop.get(settings) as? Int ?: 0
-        DropdownSettingDialog(
-            title = ann.title,
-            options = ann.options.toList(),
-            selectedIndex = idx,
-            onDismiss = { showDropdown = false },
-            onOptionSelected = { i ->
-                vm.updateSetting(prop.name, i)
-                showDropdown = false
-            }
-        )
+    if (showDropdown) {
+        val field = currentField
+        val meta = field?.meta
+        if (field != null && meta != null) {
+            val idx = (field.get(settings) as? Int) ?: 0
+            DropdownSettingDialog(
+                title = meta.title,
+                options = meta.options,
+                selectedIndex = idx,
+                onDismiss = { showDropdown = false },
+                onOptionSelected = { i ->
+                    vm.updateSetting(field.name, i)
+                    showDropdown = false
+                }
+            )
+        }
     }
 
-    if (showSlider && currentProp != null && currentAnn != null) {
-        val prop = currentProp!!
-        val ann = currentAnn!!
-        val cur = when (val v = prop.get(settings)) {
-            is Int -> v.toFloat()
-            is Float -> v
-            else -> 0f
-        }
-        SliderSettingDialog(
-            title = ann.title,
-            currentValue = cur,
-            min = ann.min,
-            max = ann.max,
-            step = ann.step,
-            onDismiss = { showSlider = false },
-            onValueSelected = { value ->
-                when (prop.returnType.classifier) {
-                    Int::class -> vm.updateSetting(prop.name, value.toInt())
-                    Float::class -> vm.updateSetting(prop.name, value)
-                }
-                showSlider = false
+    if (showSlider) {
+        val field = currentField
+        val meta = field?.meta
+        if (field != null && meta != null) {
+            val cur = when (val v = field.get(settings)) {
+                is Int -> v.toFloat()
+                is Float -> v
+                else -> 0f
             }
-        )
+            SliderSettingDialog(
+                title = meta.title,
+                currentValue = cur,
+                min = meta.min,
+                max = meta.max,
+                step = meta.step,
+                onDismiss = { showSlider = false },
+                onValueSelected = { value ->
+                    when (field.get(settings)) {
+                        is Int -> vm.updateSetting(field.name, value.toInt())
+                        is Float -> vm.updateSetting(field.name, value)
+                    }
+                    showSlider = false
+                }
+            )
+        }
     }
 }

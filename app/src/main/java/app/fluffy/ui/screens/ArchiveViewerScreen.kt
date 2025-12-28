@@ -61,9 +61,9 @@ import androidx.core.content.FileProvider
 import app.fluffy.AppGraph
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.data.repository.AppSettings
-import app.fluffy.helper.showToast
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.ui.components.AppTopBar
+import app.fluffy.ui.components.snackbar.SnackbarManager
 import app.fluffy.ui.theme.ThemeDefaults
 import app.fluffy.util.ArchiveTypes
 import app.fluffy.util.UiFormat.formatSize
@@ -71,6 +71,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
+import org.koin.compose.koinInject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -101,6 +102,8 @@ fun ArchiveViewerScreen(
 
     val settings = AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings()).value
 
+    val snackBarManager: SnackbarManager = koinInject()
+
 
     // Visible (top-level directory within currentPath)
     val visible = remember(listing, currentPath) {
@@ -126,6 +129,36 @@ fun ArchiveViewerScreen(
         }
         dirEntries + files.sortedBy { it.path.lowercase() }
     }
+
+    fun openPreview(uri: Uri, name: String, ctx: Context, preferMime: Boolean) {
+        val finalUri = if (uri.scheme == "file") {
+            try {
+                FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", File(requireNotNull(uri.path)))
+            } catch (_: Exception) {
+                null
+            }
+        } else uri
+        if (finalUri == null) {
+            snackBarManager.show("No app available to open this file")
+            return
+        }
+        val mime = if (preferMime) {
+            ctx.contentResolver.getType(finalUri) ?: FileSystemAccess.getMimeType(name)
+        } else {
+            FileSystemAccess.getMimeType(name)
+        }
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(finalUri, mime)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val pm = ctx.packageManager
+        if (intent.resolveActivity(pm) != null) {
+            ctx.startActivity(Intent.createChooser(intent, "Open with"))
+        } else {
+            snackBarManager.show("No app available to open this file")
+        }
+    }
+
 
     suspend fun load() {
         loading = true
@@ -277,8 +310,8 @@ fun ArchiveViewerScreen(
                                             "${ctx.packageName}.fileprovider",
                                             File(requireNotNull(archiveUri.path))
                                         )
-                                    } catch (e: Exception) {
-                                        ctx.showToast("FileProvider not configured for this path")
+                                    } catch (_: Exception) {
+                                        snackBarManager.show("FileProvider not configured for this path")
                                         return@IconButton
                                     }
                                     else -> archiveUri
@@ -294,7 +327,7 @@ fun ArchiveViewerScreen(
                                 if (intent.resolveActivity(pm) != null) {
                                     ctx.startActivity(intent)
                                 } else {
-                                    ctx.showToast("No installer found")
+                                    snackBarManager.show("No installer found")
                                 }
                             }) {
                                 Icon(Icons.Default.InstallDesktop, contentDescription = "Install (Open with)")
@@ -505,35 +538,6 @@ private suspend fun extractEntryToCache(
         if (out.exists() && out.length() > 0) Uri.fromFile(out) else null
     } catch (_: Exception) {
         null
-    }
-}
-
-private fun openPreview(uri: Uri, name: String, ctx: Context, preferMime: Boolean) {
-    val finalUri = if (uri.scheme == "file") {
-        try {
-            FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", File(requireNotNull(uri.path)))
-        } catch (_: Exception) {
-            null
-        }
-    } else uri
-    if (finalUri == null) {
-        ctx.showToast("No app available to open this file")
-        return
-    }
-    val mime = if (preferMime) {
-        ctx.contentResolver.getType(finalUri) ?: FileSystemAccess.getMimeType(name)
-    } else {
-        FileSystemAccess.getMimeType(name)
-    }
-    val intent = Intent(Intent.ACTION_VIEW).apply {
-        setDataAndType(finalUri, mime)
-        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-    }
-    val pm = ctx.packageManager
-    if (intent.resolveActivity(pm) != null) {
-        ctx.startActivity(Intent.createChooser(intent, "Open with"))
-    } else {
-        ctx.showToast("No app available to open this file")
     }
 }
 
