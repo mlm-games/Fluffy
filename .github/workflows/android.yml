@@ -83,18 +83,17 @@ jobs:
           sed -i "s/versionCode = $OLD_VERSION_CODE/versionCode = $NEW_VERSION_CODE/" $BUILD_GRADLE_PATH
           sed -i "s/versionName = \"$OLD_VERSION_NAME\"/versionName = \"$NEW_VERSION_NAME\"/" $BUILD_GRADLE_PATH
 
-      - name: Generate Release Notes
-        id: release-notes
-        uses: mlm-games/release-notes-generator@main
-        with:
-          version: ${{ steps.version.outputs.version_name }}
-          changelog-path: 'CHANGELOG.md'
-          version-file-path: './fastlane/metadata/android/en-US/changelogs/${{ steps.version.outputs.version_code }}.txt'
-          version-code: '${{ steps.version.outputs.version_code }}'
-          format: '- {{subject}}'
-          exclude-patterns: 'chore:,ci:,docs:,build:,Bump version,Merge pull request,[skip ci]'
-          auto-commit: 'false'
-        continue-on-error: true
+      # - name: Generate Release Notes
+      #   id: release-notes
+      #   uses: mlm-games/release-notes-generator@main
+      #   with:
+      #     version: ${{ steps.version.outputs.version_name }}
+      #     changelog-path: 'CHANGELOG.md'
+      #     version-file-path: './fastlane/metadata/android/en-US/changelogs/${{ steps.version.outputs.version_code }}.txt'
+      #     version-code: '${{ steps.version.outputs.version_code }}'
+      #     format: '- {{subject}}'
+      #     exclude-patterns: 'chore:,ci:,docs:,build:,Bump version,Merge pull request,[skip ci]'
+      #     auto-commit: 'false'
 
       - name: Commit Changes
         id: commit-and-push
@@ -197,4 +196,4 @@ jobs:
           tag_name: ${{ needs.prepare-version.outputs.version_name }}
           target_commitish: ${{ needs.prepare-version.outputs.commit_sha }}
           prerelease: ${{ inputs.mark_prerelease }}
-          body_path: ./fastlane/metadata/android/en-US/changelogs/${{ needs.prepare-version.outputs.base_version_code }}.txt
+          # body_path: ./fastlane/metadata/android/en-US/changelogs/${{ needs.prepare-version.outputs.base_version_code }}.txt
