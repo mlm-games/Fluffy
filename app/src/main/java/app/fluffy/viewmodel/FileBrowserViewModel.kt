@@ -202,7 +202,7 @@ class FileBrowserViewModel(
 
             snackbarManager.show(
                 message = "Cannot access ${bookmark.name}: $reason",
-                actionLabel = if (!showRoot && !showShizuku) "Settings" else null,
+//                actionLabel = if (!showRoot && !showShizuku) "Settings" else null,
             )
         }
     }
