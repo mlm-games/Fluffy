@@ -6,21 +6,15 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.fluffy.archive.ArchiveEngine
-import app.fluffy.data.repository.Bookmark
-import app.fluffy.data.repository.BookmarksRepository
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.SafIo
 import app.fluffy.io.ShellEntry
-import app.fluffy.io.ShellIo
 import app.fluffy.shell.RootAccess
 import app.fluffy.shell.ShizukuAccess
-import app.fluffy.ui.components.snackbar.SnackbarManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.io.File
 import kotlinx.coroutines.flow.update
@@ -44,9 +38,9 @@ data class FileBrowserState(
     val currentDir: Uri? = null,
     val currentFile: File? = null,
     val stack: List<BrowseLocation> = emptyList(),
-    val items: List<DocumentFile> = emptyList(),
-    val shellItems: List<ShellEntry> = emptyList(),
-    val fileItems: List<File> = emptyList(),
+    val items: List<DocumentFile> = emptyList(),   // SAF/content items
+    val shellItems: List<ShellEntry> = emptyList(),// root/shizuku items
+    val fileItems: List<File> = emptyList(),       // file:// items
     val quickAccessItems: List<QuickAccessItem> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
@@ -55,17 +49,14 @@ data class FileBrowserState(
     val pendingArchiveOpen: Uri? = null,
     val selectedItems: MutableList<Uri> = mutableListOf(),
     val isPickerMode: Boolean = false,
-    val pickerMimeType: String? = null,
-    val detectedExpandedPaths: List<Bookmark> = emptyList()
+    val pickerMimeType: String? = null
 )
 
 class FileBrowserViewModel(
     private val io: SafIo,
     private val fileSystemAccess: FileSystemAccess,
     @Suppress("unused") private val archive: ArchiveEngine,
-    private val settings: SettingsRepository,
-    private val bookmarksRepository: BookmarksRepository,
-    private val snackbarManager: SnackbarManager
+    private val settings: SettingsRepository
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FileBrowserState())
@@ -74,9 +65,6 @@ class FileBrowserViewModel(
     private var showHidden: Boolean = false
     private var showRoot: Boolean = false
     private var showShizuku: Boolean = false
-
-    val customBookmarks: StateFlow<List<Bookmark>> = bookmarksRepository.bookmarks
-        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     init {
         viewModelScope.launch {
@@ -92,7 +80,6 @@ class FileBrowserViewModel(
                     if (_state.value.currentLocation is BrowseLocation.QuickAccess) {
                         showQuickAccess()
                     }
-                    detectExpandedStoragePaths()
                 }
             }
         }
@@ -109,101 +96,6 @@ class FileBrowserViewModel(
                     currentLocation = BrowseLocation.QuickAccess
                 )
             }
-            detectExpandedStoragePaths()
-        }
-    }
-
-    fun detectExpandedStoragePaths() {
-        viewModelScope.launch {
-            val detected = mutableListOf<Bookmark>()
-
-            detected.addAll(bookmarksRepository.detectExpandedStoragePaths())
-
-            if (detected.isEmpty()) {
-                when {
-                    showRoot && RootAccess.isAvailable() -> {
-                        detected.addAll(bookmarksRepository.detectExpandedStorageViaShell(useRoot = true))
-                    }
-                    showShizuku && ShizukuAccess.isAvailable() -> {
-                        detected.addAll(bookmarksRepository.detectExpandedStorageViaShell(useRoot = false))
-                    }
-                }
-            }
-
-            _state.update { it.copy(detectedExpandedPaths = detected) }
-        }
-    }
-
-    fun addBookmark(bookmark: Bookmark) {
-        viewModelScope.launch {
-            bookmarksRepository.addBookmark(bookmark)
-        }
-    }
-
-    fun removeBookmark(path: String) {
-        viewModelScope.launch {
-            bookmarksRepository.removeBookmark(path)
-        }
-    }
-
-    fun navigateToBookmark(bookmark: Bookmark) {
-        viewModelScope.launch {
-            val file = File(bookmark.path)
-
-            val canAccessNormally = withContext(Dispatchers.IO) {
-                file.exists() && file.canRead()
-            }
-
-            if (canAccessNormally) {
-                openFileSystemPath(file)
-                return@launch
-            }
-
-            if (showShizuku && ShizukuAccess.isAvailable()) {
-                val canAccessShizuku = withContext(Dispatchers.IO) {
-                    try {
-                        ShellIo.listShizuku(bookmark.path).isNotEmpty() ||
-                                ShellIo.listShizuku(file.parent ?: "/").any { it.first == file.name }
-                    } catch (_: Exception) {
-                        false
-                    }
-                }
-
-                if (canAccessShizuku) {
-                    val uri = Uri.Builder().scheme("shizuku").path(bookmark.path).build()
-                    openDir(uri)
-                    return@launch
-                }
-            }
-
-            if (showRoot && RootAccess.isAvailable()) {
-                val canAccessRoot = withContext(Dispatchers.IO) {
-                    try {
-                        ShellIo.listRoot(bookmark.path).isNotEmpty() ||
-                                ShellIo.listRoot(file.parent ?: "/").any { it.first == file.name }
-                    } catch (_: Exception) {
-                        false
-                    }
-                }
-
-                if (canAccessRoot) {
-                    val uri = Uri.Builder().scheme("root").path(bookmark.path).build()
-                    openDir(uri)
-                    return@launch
-                }
-            }
-
-            val reason = when {
-                !showRoot && !showShizuku -> "Enable Root or Shizuku in Settings"
-                showShizuku && !ShizukuAccess.isAvailable() -> "Shizuku is not running"
-                showRoot && !RootAccess.isAvailable() -> "Root access not available"
-                else -> "Path does not exist or is not accessible"
-            }
-
-            snackbarManager.show(
-                message = "Cannot access ${bookmark.name}: $reason",
-                actionLabel = if (!showRoot && !showShizuku) "Settings" else null,
-            )
         }
     }
 
@@ -227,6 +119,7 @@ class FileBrowserViewModel(
             }
         }
 
+        // Common public folders (unchanged)
         val folders = listOf(
             "Downloads" to Environment.DIRECTORY_DOWNLOADS,
             "Documents" to Environment.DIRECTORY_DOCUMENTS,
@@ -382,11 +275,7 @@ class FileBrowserViewModel(
     fun openFileSystemPath(file: File) {
         viewModelScope.launch {
             if (!file.exists()) {
-                snackbarManager.show("Path does not exist: ${file.absolutePath}")
-                return@launch
-            }
-            if (!file.canRead()) {
-                snackbarManager.show("Cannot read path: ${file.absolutePath}")
+                _state.value = _state.value.copy(error = "Path does not exist")
                 return@launch
             }
             val location = BrowseLocation.FileSystem(file)
@@ -415,14 +304,13 @@ class FileBrowserViewModel(
             .sortedWith(compareBy<File> { !it.isDirectory }.thenBy { it.name.lowercase() })
     }
 
-    fun openRoot(uri: Uri) {
+    fun openRoot(uri: Uri) { // for picked SAF trees; not used for root/shizuku
         val location = BrowseLocation.SAF(uri)
         _state.value = FileBrowserState(
             currentLocation = location,
             currentDir = uri,
             stack = listOf(BrowseLocation.QuickAccess, location),
-            items = io.listChildren(uri),
-            detectedExpandedPaths = _state.value.detectedExpandedPaths
+            items = io.listChildren(uri)
         )
     }
 
@@ -482,9 +370,11 @@ class FileBrowserViewModel(
                     if (parent != null) {
                         openDir(parent)
                     } else {
+                        // We are at "/" for this scheme — go back to Quick Access
                         showQuickAccess()
                     }
                 } else {
+                    // Non-shell (content:// picked tree or similar) — fallback to previous in stack
                     if (st.stack.size > 1) {
                         val previous = st.stack.dropLast(1).last()
                         navigateToLocation(previous)
@@ -493,7 +383,7 @@ class FileBrowserViewModel(
                     }
                 }
             }
-            is BrowseLocation.QuickAccess, null -> { }
+            is BrowseLocation.QuickAccess, null -> { /* nowhere to go */ }
         }
     }
 
@@ -599,7 +489,7 @@ class FileBrowserViewModel(
         return when (val location = st.currentLocation) {
             is BrowseLocation.FileSystem -> location.file.absolutePath
             is BrowseLocation.SAF -> st.currentDir?.path ?: ""
-            is BrowseLocation.QuickAccess -> ""
+            is BrowseLocation.QuickAccess -> "Quick Access"
             null -> ""
         }
     }
@@ -621,7 +511,6 @@ class FileBrowserViewModel(
     fun setPendingArchiveOpen(uri: Uri) {
         _state.value = _state.value.copy(pendingArchiveOpen = uri)
     }
-
     fun clearPendingArchiveOpen() {
         _state.value = _state.value.copy(pendingArchiveOpen = null)
     }

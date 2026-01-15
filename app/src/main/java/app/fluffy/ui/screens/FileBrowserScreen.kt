@@ -7,7 +7,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -23,18 +22,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DriveFileMove
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Archive
-import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.ContentCopy
@@ -52,7 +47,6 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.OpenWith
-import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SdCard
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
@@ -75,7 +69,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -86,23 +79,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
-import app.fluffy.data.repository.Bookmark
 import app.fluffy.helper.cardAsFocusGroup
 import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.ui.components.FileListRow
 import app.fluffy.ui.components.toRowModel
-import app.fluffy.ui.dialogs.AddBookmarkDialog
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
-import app.fluffy.viewmodel.FileBrowserViewModel
 import app.fluffy.viewmodel.QuickAccessItem
-import org.koin.androidx.compose.koinViewModel
 import java.io.File
-import kotlin.collections.isNotEmpty
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -135,7 +122,6 @@ fun FileBrowserScreen(
     pickFolderTitle: String = "Choose destination folder",
     onPickFolder: (Uri) -> Unit = {},
     onCancelPickFolder: () -> Unit = {},
-    viewModel: FileBrowserViewModel = koinViewModel(),
 ) {
     val currentLocation = state.currentLocation
     val canUp = state.stack.size > 1
@@ -511,36 +497,13 @@ fun FileBrowserScreen(
     ) { it ->
         when (currentLocation) {
             is BrowseLocation.QuickAccess -> {
-                val customBookmarks by viewModel.customBookmarks.collectAsState()
-                var showAddBookmarkDialog by remember { mutableStateOf(false) }
-
                 QuickAccessView(
                     items = state.quickAccessItems,
-                    customBookmarks = customBookmarks,
-                    detectedExpandedPaths = state.detectedExpandedPaths,
                     onItemClick = onQuickAccessClick,
-                    onBookmarkClick = { bookmark -> viewModel.navigateToBookmark(bookmark) },
-                    onAddBookmark = { showAddBookmarkDialog = true },
-                    onRemoveBookmark = { path -> viewModel.removeBookmark(path) },
-                    onRefreshPaths = { viewModel.detectExpandedStoragePaths() },
                     onRequestPermission = onRequestPermission,
                     hasPermission = state.canAccessFileSystem,
-                    showShellSection = state.quickAccessItems.any {
-                        it.uri?.scheme == "root" || it.uri?.scheme == "shizuku"
-                    },
                     modifier = Modifier.padding(it)
                 )
-
-                if (showAddBookmarkDialog) {
-                    AddBookmarkDialog(
-                        currentPath = viewModel.getPath(),
-                        onDismiss = { showAddBookmarkDialog = false },
-                        onConfirm = { bookmark ->
-                            viewModel.addBookmark(bookmark)
-                            showAddBookmarkDialog = false
-                        }
-                    )
-                }
             }
 
             is BrowseLocation.FileSystem -> {
@@ -900,26 +863,14 @@ fun FileBrowserScreen(
 @Composable
 private fun QuickAccessView(
     items: List<QuickAccessItem>,
-    customBookmarks: List<Bookmark>,
-    detectedExpandedPaths: List<Bookmark>,
     onItemClick: (QuickAccessItem) -> Unit,
-    onBookmarkClick: (Bookmark) -> Unit,
-    onAddBookmark: () -> Unit,
-    onRemoveBookmark: (String) -> Unit,
-    onRefreshPaths: () -> Unit,
     onRequestPermission: () -> Unit,
     hasPermission: Boolean,
-    showShellSection: Boolean,
     modifier: Modifier = Modifier
 ) {
-    var isEditMode by remember { mutableStateOf(false) }
-
     if (!hasPermission) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Icon(
                     Icons.Default.Lock,
                     contentDescription = null,
@@ -928,203 +879,35 @@ private fun QuickAccessView(
                 )
                 Text("Storage Permission Required", style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "Grant permission to browse files",
+                    "Grant permission to browse files (reopen on granting)",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Button(onClick = onRequestPermission) { Text("Grant Permission") }
             }
         }
-        return
-    }
-
-    val uniqueItems = remember(items) {
-        items.distinctBy { it.file?.absolutePath ?: it.uri?.toString() ?: it.name }
-    }
-
-    val allBookmarks = remember(customBookmarks, detectedExpandedPaths) {
-        val userPaths = customBookmarks.map { it.path }.toSet()
-        customBookmarks + detectedExpandedPaths.filter { it.path !in userPaths }
-    }
-
-    val hasBookmarks = allBookmarks.isNotEmpty()
-
-    LazyVerticalGrid(
-        columns = GridCells.Adaptive(minSize = 140.dp),
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        items(uniqueItems, key = { it.file?.absolutePath ?: it.uri?.toString() ?: it.name }) { item ->
-            QuickAccessCard(item = item, onClick = { onItemClick(item) })
+    } else {
+        val uniqueItems = remember(items) {
+            items.distinctBy { it.file?.absolutePath ?: it.uri?.toString() ?: it.name }
         }
 
-        item(span = { GridItemSpan(maxLineSpan) }) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 20.dp, bottom = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "Bookmarks",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    if (showShellSection) {
-                        IconButton(onClick = onRefreshPaths) {
-                            Icon(
-                                Icons.Default.Refresh,
-                                contentDescription = "Scan for expanded storage",
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                    if (hasBookmarks) {
-                        TextButton(onClick = { isEditMode = !isEditMode }) {
-                            Text(if (isEditMode) "Done" else "Edit")
-                        }
-                    }
-                }
-            }
-        }
-
-        items(allBookmarks, key = { "bm_${it.path}" }) { bookmark ->
-            val isUserBookmark = customBookmarks.any { it.path == bookmark.path }
-            BookmarkCard(
-                bookmark = bookmark,
-                isEditMode = isEditMode,
-                canRemove = isUserBookmark,
-                onClick = {
-                    if (isEditMode && isUserBookmark) {
-                        onRemoveBookmark(bookmark.path)
-                    } else if (!isEditMode) {
-                        onBookmarkClick(bookmark)
-                    }
-                }
-            )
-        }
-
-        item {
-            AddBookmarkCard(onClick = onAddBookmark)
-        }
-    }
-}
-
-@Composable
-private fun BookmarkCard(
-    bookmark: Bookmark,
-    isEditMode: Boolean,
-    canRemove: Boolean,
-    onClick: () -> Unit
-) {
-    val showDeleteState = isEditMode && canRemove
-
-    Card(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = when {
-                showDeleteState -> MaterialTheme.colorScheme.errorContainer
-                bookmark.isAutoDetected -> MaterialTheme.colorScheme.tertiaryContainer
-                else -> MaterialTheme.colorScheme.secondaryContainer
-            }
-        )
-    ) {
-        Box(modifier = Modifier.fillMaxSize()) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(12.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Icon(
-                    imageVector = when {
-                        showDeleteState -> Icons.Default.Delete
-                        bookmark.isAutoDetected -> Icons.Default.SdCard
-                        else -> Icons.Default.Bookmark
-                    },
-                    contentDescription = null,
-                    modifier = Modifier.size(28.dp),
-                    tint = when {
-                        showDeleteState -> MaterialTheme.colorScheme.onErrorContainer
-                        bookmark.isAutoDetected -> MaterialTheme.colorScheme.onTertiaryContainer
-                        else -> MaterialTheme.colorScheme.onSecondaryContainer
-                    }
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = if (showDeleteState) "Tap to remove" else bookmark.name,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                    textAlign = TextAlign.Center,
-                    color = when {
-                        showDeleteState -> MaterialTheme.colorScheme.onErrorContainer
-                        bookmark.isAutoDetected -> MaterialTheme.colorScheme.onTertiaryContainer
-                        else -> MaterialTheme.colorScheme.onSecondaryContainer
-                    }
-                )
-            }
-
-            // Auto badge
-            if (bookmark.isAutoDetected && !isEditMode) {
-                Surface(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(6.dp),
-                    shape = RoundedCornerShape(4.dp),
-                    color = MaterialTheme.colorScheme.tertiary
-                ) {
-                    Text(
-                        "Auto",
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onTertiary
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun AddBookmarkCard(onClick: () -> Unit) {
-    Card(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(100.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-        ),
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.3f))
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(minSize = 120.dp),
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.Add,
-                contentDescription = "Add bookmark",
-                modifier = Modifier.size(28.dp),
-                tint = MaterialTheme.colorScheme.primary
-            )
-            Spacer(Modifier.height(8.dp))
-            Text(
-                "Add Path",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            items(
+                uniqueItems,
+                key = { item ->
+                    item.file?.absolutePath
+                        ?: item.uri?.toString()
+                        ?: item.name
+                }
+            ) { item ->
+                QuickAccessCard(item = item, onClick = { onItemClick(item) })
+            }
         }
     }
 }
