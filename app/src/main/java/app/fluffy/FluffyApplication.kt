@@ -9,7 +9,7 @@ class FluffyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // TODO: Same as flicky
+        // TODO: Same as flicky, move to koin and remove appgraph
         AppGraph.init(this)
 
         startKoin {
