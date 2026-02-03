@@ -61,7 +61,6 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.work.WorkInfo
 import app.fluffy.data.repository.AppSettings
-import app.fluffy.helper.DeviceUtils
 import app.fluffy.helper.OpenTarget
 import app.fluffy.helper.detectTarget
 import app.fluffy.helper.launchImageViewer
@@ -79,7 +78,6 @@ import app.fluffy.ui.screens.ArchiveViewerScreen
 import app.fluffy.ui.screens.FileBrowserScreen
 import app.fluffy.ui.screens.SettingsScreen
 import app.fluffy.ui.screens.TasksScreen
-import app.fluffy.ui.screens.TvMainScreen
 import app.fluffy.ui.theme.FluffyTheme
 import app.fluffy.ui.util.ScreenKey
 import app.fluffy.viewmodel.BrowseLocation
@@ -200,14 +198,6 @@ class MainActivity : ComponentActivity() {
                 val backStack = rememberNavBackStack(
                     ScreenKey.Files
                 )
-
-                val currentRoute: String? = when (backStack.lastOrNull()) {
-                    is ScreenKey.Files -> "files"
-                    is ScreenKey.Tasks -> "tasks"
-                    is ScreenKey.Settings -> "settings"
-                    is ScreenKey.Archive -> "archive"
-                    else -> null
-                }
 
                 val browserState by filesVM.state.collectAsState()
                 val workInfos by tasksVM.workInfos.collectAsState()
@@ -381,6 +371,7 @@ class MainActivity : ComponentActivity() {
                                         onRequestPermission = { requestStoragePermission() },
                                         onShowQuickAccess = { filesVM.showQuickAccess() },
                                         onCreateFolder = { name -> filesVM.createNewFolder(name) },
+                                        onCreateFile = { name -> filesVM.createNewFile(name) },
 
                                         onOpenWith = { uri, name ->
                                             lifecycleScope.launch {
@@ -466,8 +457,6 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                val isTV = DeviceUtils.isTV(this@MainActivity)
-
                 val snackbarHostState = remember { SnackbarHostState() }
                 val snackbarManager: SnackbarManager = koinInject()
 
@@ -480,35 +469,7 @@ class MainActivity : ComponentActivity() {
                         )
                     }
                 ) {
-                    if (isTV) {
-                        TvMainScreen(
-                            onNavigate = { route ->
-                                when (route) {
-                                    "files" -> {
-                                        while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
-                                        if (backStack.lastOrNull() != ScreenKey.Files) {
-                                            backStack.add(ScreenKey.Files)
-                                        }
-                                    }
-
-                                    "tasks" -> {
-                                        while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
-                                        backStack.add(ScreenKey.Tasks)
-                                    }
-
-                                    "settings" -> {
-                                        while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
-                                        backStack.add(ScreenKey.Settings)
-                                    }
-
-                                    else -> Unit
-                                }
-                            },
-                            currentRoute = currentRoute
-                        ) { content() }
-                    } else {
-                        content()
-                    }
+                    content()
                 }
 
                 val active = remember(workInfos) {
@@ -855,6 +816,12 @@ private fun MiniTaskIndicator(
 ) {
     val title = remember(wi.tags) { friendlyTitle(wi) }
     val progress = wi.progress.getFloat("progress", -1f).takeIf { it in 0f..1f }
+    val showProgressBar = when (wi.state) {
+        WorkInfo.State.SUCCEEDED -> false
+        WorkInfo.State.FAILED -> false
+        WorkInfo.State.CANCELLED -> true
+        else -> true
+    }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -888,19 +855,21 @@ private fun MiniTaskIndicator(
                         Text("Details")
                     }
                 }
-                if (progress != null) {
-                    LinearProgressIndicator(
-                        progress = { progress },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                    )
-                } else {
-                    LinearProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(6.dp)
-                    )
+                if (showProgressBar) {
+                    if (progress != null) {
+                        LinearProgressIndicator(
+                            progress = { progress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                        )
+                    } else {
+                        LinearProgressIndicator(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(6.dp)
+                        )
+                    }
                 }
             }
         }
@@ -963,6 +932,12 @@ private fun TaskRowCompact(
     val title = remember(wi.tags) { friendlyTitle(wi) }
     val progress = wi.progress.getFloat("progress", -1f).takeIf { it in 0f..1f }
     val isRunning = wi.state == WorkInfo.State.RUNNING
+    val showProgressBar = when (wi.state) {
+        WorkInfo.State.SUCCEEDED -> false
+        WorkInfo.State.FAILED -> false
+        WorkInfo.State.CANCELLED -> true
+        else -> true
+    }
 
     ElevatedCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp)) {
@@ -992,19 +967,21 @@ private fun TaskRowCompact(
                 }
             }
 
-            if (progress != null) {
-                LinearProgressIndicator(
-                    progress = { progress },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                )
-            } else {
-                LinearProgressIndicator(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp)
-                )
+            if (showProgressBar) {
+                if (progress != null) {
+                    LinearProgressIndicator(
+                        progress = { progress },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    )
+                } else {
+                    LinearProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 8.dp)
+                    )
+                }
             }
         }
     }
