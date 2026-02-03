@@ -484,6 +484,28 @@ class FileBrowserViewModel(
         }
     }
 
+    fun createNewFile(name: String) {
+        viewModelScope.launch {
+            val st = _state.value
+            when (val location = st.currentLocation) {
+                is BrowseLocation.FileSystem -> {
+                    val newFile = File(location.file, name)
+                    if (!newFile.exists()) {
+                        newFile.createNewFile()
+                        refresh()
+                    }
+                }
+                is BrowseLocation.SAF -> {
+                    st.currentDir?.let { parent ->
+                        io.createFile(parent, name)
+                        refresh()
+                    }
+                }
+                else -> {}
+            }
+        }
+    }
+
     fun getPath(): String {
         val st = _state.value
         return when (val location = st.currentLocation) {

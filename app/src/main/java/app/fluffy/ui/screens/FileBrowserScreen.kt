@@ -56,6 +56,8 @@ import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -116,6 +118,7 @@ fun FileBrowserScreen(
     onRequestPermission: () -> Unit = {},
     onShowQuickAccess: () -> Unit = {},
     onCreateFolder: (String) -> Unit = {},
+    onCreateFile: (String) -> Unit = {},
     showFileCount: Boolean = true,
 
     pickFolderMode: Boolean = false,
@@ -137,6 +140,8 @@ fun FileBrowserScreen(
     var showRenameDialog by remember { mutableStateOf(false) }
     var renameNewName by remember { mutableStateOf("") }
     var showNewFolderDialog by remember { mutableStateOf(false) }
+    var showNewFileDialog by remember { mutableStateOf(false) }
+    var createMenuExpanded by remember { mutableStateOf(false) }
 
     // Overwrite confirmations (ZIP / 7z created into currentDir)
     var pendingZipName by remember { mutableStateOf<String?>(null) }
@@ -267,11 +272,35 @@ fun FileBrowserScreen(
                                     )
                                 }
                             }
-                            IconButton(
-                                onClick = { showNewFolderDialog = true },
-                                enabled = !pickFolderMode
-                            ) {
-                                Icon(Icons.Default.CreateNewFolder, contentDescription = "New Folder")
+                            // Create dropdown menu (New File / New Folder)
+                            if (!pickFolderMode) {
+                                Box {
+                                    IconButton(onClick = { createMenuExpanded = true }) {
+                                        Icon(Icons.Default.CreateNewFolder, contentDescription = "Create")
+                                    }
+                                    DropdownMenu(
+                                        expanded = createMenuExpanded,
+                                        containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                        onDismissRequest = { createMenuExpanded = false }
+                                    ) {
+                                        DropdownMenuItem(
+                                            text = { Text("New Folder") },
+                                            leadingIcon = { Icon(Icons.Default.CreateNewFolder, null) },
+                                            onClick = {
+                                                createMenuExpanded = false
+                                                showNewFolderDialog = true
+                                            }
+                                        )
+                                        DropdownMenuItem(
+                                            text = { Text("New File") },
+                                            leadingIcon = { Icon(Icons.Default.Description, null) },
+                                            onClick = {
+                                                createMenuExpanded = false
+                                                showNewFileDialog = true
+                                            }
+                                        )
+                                    }
+                                }
                             }
                             IconButton(onClick = onShowQuickAccess) {
                                 Icon(Icons.Default.Home, contentDescription = "Home")
@@ -797,6 +826,35 @@ fun FileBrowserScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showNewFolderDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showNewFileDialog) {
+        var fileName by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { showNewFileDialog = false },
+            title = { Text("Create New File") },
+            text = {
+                OutlinedTextField(
+                    value = fileName,
+                    onValueChange = { fileName = it },
+                    singleLine = true,
+                    label = { Text("File name") }
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (fileName.isNotBlank()) {
+                            onCreateFile(fileName)
+                            showNewFileDialog = false
+                        }
+                    }
+                ) { Text("Create") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNewFileDialog = false }) { Text("Cancel") }
             }
         )
     }
