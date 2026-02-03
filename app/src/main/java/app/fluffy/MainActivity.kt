@@ -65,6 +65,7 @@ import app.fluffy.helper.OpenTarget
 import app.fluffy.helper.detectTarget
 import app.fluffy.helper.launchImageViewer
 import app.fluffy.helper.openWithExport
+import app.fluffy.helper.openWithExportMultiple
 import app.fluffy.helper.purgeOldExports
 import app.fluffy.helper.purgeOldViewerCache
 import app.fluffy.helper.toViewableUris
@@ -372,6 +373,21 @@ class MainActivity : ComponentActivity() {
                                         onShowQuickAccess = { filesVM.showQuickAccess() },
                                         onCreateFolder = { name -> filesVM.createNewFolder(name) },
                                         onCreateFile = { name -> filesVM.createNewFile(name) },
+                                        onPasteClipboard = { name ->
+                                            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                            val text = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
+                                            filesVM.createFileFromClipboard(name, text)
+                                        },
+
+                                        onShareSelected = { uris ->
+                                            lifecycleScope.launch {
+                                                val sources = uris.map { uri ->
+                                                    val name = uri.lastPathSegment ?: "file"
+                                                    uri to name
+                                                }
+                                                openWithExportMultiple(sources)
+                                            }
+                                        },
 
                                         onOpenWith = { uri, name ->
                                             lifecycleScope.launch {

@@ -103,6 +103,12 @@ class SafIo(val context: Context) {
         }
     }
 
+    fun writeText(uri: Uri, text: String) {
+        openOut(uri).use { output ->
+            output.write(text.toByteArray(Charsets.UTF_8))
+        }
+    }
+
     fun createDir(parent: Uri, name: String): Uri {
         return when {
             isRoot(parent) -> {

@@ -506,6 +506,30 @@ class FileBrowserViewModel(
         }
     }
 
+    fun createFileFromClipboard(name: String, content: String) {
+        viewModelScope.launch {
+            val st = _state.value
+            when (val location = st.currentLocation) {
+                is BrowseLocation.FileSystem -> {
+                    val newFile = File(location.file, name)
+                    if (!newFile.exists()) {
+                        newFile.createNewFile()
+                        newFile.writeText(content)
+                        refresh()
+                    }
+                }
+                is BrowseLocation.SAF -> {
+                    st.currentDir?.let { parent ->
+                        val uri = io.createFile(parent, name)
+                        io.writeText(uri, content)
+                        refresh()
+                    }
+                }
+                else -> {}
+            }
+        }
+    }
+
     fun getPath(): String {
         val st = _state.value
         return when (val location = st.currentLocation) {

@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.OpenWith
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.SdCard
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
@@ -111,6 +112,8 @@ fun FileBrowserScreen(
     onCopySelected: (List<Uri>) -> Unit = {},
     onMoveSelected: (List<Uri>) -> Unit = {},
     onDeleteSelected: (List<Uri>) -> Unit = {},
+    onShareSelected: (List<Uri>) -> Unit = {},
+    onPasteClipboard: (String) -> Unit = {},
     onRenameOne: (Uri, String) -> Unit = { _, _ -> },
     onCreate7z: (List<Uri>, String, String?, Uri, Boolean) -> Unit = { _, _, _, _, _ -> },
     onOpenFile: (File) -> Unit = {},
@@ -141,6 +144,7 @@ fun FileBrowserScreen(
     var renameNewName by remember { mutableStateOf("") }
     var showNewFolderDialog by remember { mutableStateOf(false) }
     var showNewFileDialog by remember { mutableStateOf(false) }
+    var showPasteClipboardDialog by remember { mutableStateOf(false) }
     var createMenuExpanded by remember { mutableStateOf(false) }
 
     // Overwrite confirmations (ZIP / 7z created into currentDir)
@@ -299,6 +303,14 @@ fun FileBrowserScreen(
                                                 showNewFileDialog = true
                                             }
                                         )
+                                        DropdownMenuItem(
+                                            text = { Text("Paste from Clipboard") },
+                                            leadingIcon = { Icon(Icons.Default.ContentCopy, null) },
+                                            onClick = {
+                                                createMenuExpanded = false
+                                                showPasteClipboardDialog = true
+                                            }
+                                        )
                                     }
                                 }
                             }
@@ -427,6 +439,13 @@ fun FileBrowserScreen(
                                     )
 
                                     AssistChip(
+                                        onClick = { onShareSelected(allSelectedUris) },
+                                        label = { Text("Share") },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Share, null, Modifier.size(18.dp))
+                                        }
+                                    )
+                                    AssistChip(
                                         onClick = { onCopySelected(allSelectedUris) },
                                         label = { Text("Copy…") },
                                         leadingIcon = {
@@ -492,6 +511,7 @@ fun FileBrowserScreen(
                                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                     TextButton(onClick = { showZipNameDialog = true }) { Text("Zip") }
                                     TextButton(onClick = { show7zDialog = true }) { Text("7z") }
+                                    TextButton(onClick = { onShareSelected(allSelectedUris) }) { Text("Share") }
                                     TextButton(onClick = { onCopySelected(allSelectedUris) }) { Text("Copy…") }
                                     TextButton(onClick = { onMoveSelected(allSelectedUris) }) { Text("Move…") }
                                     TextButton(onClick = {
@@ -855,6 +875,35 @@ fun FileBrowserScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showNewFileDialog = false }) { Text("Cancel") }
+            }
+        )
+    }
+
+    if (showPasteClipboardDialog) {
+        var clipboardFileName by remember { mutableStateOf("clipboard.txt") }
+        AlertDialog(
+            onDismissRequest = { showPasteClipboardDialog = false },
+            title = { Text("Paste from Clipboard") },
+            text = {
+                OutlinedTextField(
+                    value = clipboardFileName,
+                    onValueChange = { clipboardFileName = it },
+                    singleLine = true,
+                    label = { Text("File name") }
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (clipboardFileName.isNotBlank()) {
+                            onPasteClipboard(clipboardFileName)
+                            showPasteClipboardDialog = false
+                        }
+                    }
+                ) { Text("Paste") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showPasteClipboardDialog = false }) { Text("Cancel") }
             }
         )
     }
