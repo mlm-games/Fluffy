@@ -182,6 +182,8 @@ dependencies {
     implementation(libs.api)
     implementation(libs.provider)
 
+    implementation(libs.richeditor.compose)
+
 
     // Testing
 //    androidTestImplementation(libs.androidx.ui.test.junit4)

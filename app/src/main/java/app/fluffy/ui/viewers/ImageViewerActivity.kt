@@ -60,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import app.fluffy.AppGraph
 import app.fluffy.data.repository.AppSettings
+import app.fluffy.io.ShellIo
 import app.fluffy.ui.theme.FluffyTheme
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -186,8 +187,8 @@ class ImageViewerActivity : ComponentActivity() {
                     val parentPath = File(path).parent ?: return listOf(uri)
 
                     val siblings = when (uri.scheme) {
-                        "root" -> app.fluffy.io.ShellIo.listRoot(parentPath)
-                        "shizuku" -> app.fluffy.io.ShellIo.listShizuku(parentPath)
+                        "root" -> ShellIo.listRoot(parentPath)
+                        "shizuku" -> ShellIo.listShizuku(parentPath)
                         else -> emptyList()
                     }
 

@@ -172,6 +172,19 @@
         </activity>
 
         <activity
+            android:name=".ui.viewers.RichTextEditorActivity"
+            android:label="Edit as Text (Try)"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:mimeType="text/*" />
+                <data android:mimeType="application/xhtml+xml" />
+            </intent-filter>
+        </activity>
+
+        <activity
             android:name=".ui.viewers.PdfViewerActivity"
             android:configChanges="orientation|screenSize"
             android:label="PDF Viewer"
