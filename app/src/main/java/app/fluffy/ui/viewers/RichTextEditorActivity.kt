@@ -125,7 +125,7 @@ private fun RichTextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
     LaunchedEffect(Unit) {
         if (!isReadOnly) {
             snapshotFlow { richTextState.annotatedString }
-                .debounce(1800) // Wait
+                .debounce(800) // Wait
                 .distinctUntilChanged()
                 .onEach {
                     if (!isLoading && originalContent != null) {
