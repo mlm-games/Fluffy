@@ -109,4 +109,28 @@ object ShellIo {
     fun renameRoot(oldPath: String, newPath: String): Boolean = suProc("mv ${q(oldPath)} ${q(newPath)}").waitFor() == 0
     fun renameShizuku(oldPath: String, newPath: String): Boolean =
         (shizukuProc("sh", "-c", "mv ${q(oldPath)} ${q(newPath)}")?.waitFor() ?: 1) == 0
+
+    // for byte (text editor) operations
+    fun readBytesRoot(path: String): ByteArray = openInRoot(path).use { it.readBytes() }
+
+    fun readBytesShizuku(path: String): ByteArray = openInShizuku(path).use { it.readBytes() }
+
+    fun writeBytesRoot(path: String, bytes: ByteArray): Boolean {
+        return try {
+            openOutRoot(path).use { it.write(bytes) }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false }
+    }
+
+    fun writeBytesShizuku(path: String, bytes: ByteArray): Boolean {
+        return try {
+            openOutShizuku(path).use { it.write(bytes) }
+            true
+        } catch (e: Exception) {
+            e.printStackTrace()
+            false
+        }
+    }
 }

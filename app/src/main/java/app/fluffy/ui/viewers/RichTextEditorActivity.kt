@@ -38,21 +38,17 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import app.fluffy.AppGraph
 import app.fluffy.data.repository.AppSettings
-import app.fluffy.ui.components.ConfirmationDialog
+import app.fluffy.io.DocumentController
 import app.fluffy.ui.theme.FluffyTheme
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.RichTextEditor
-import io.github.mlmgames.settings.ui.dialogs.ConfirmationDialog
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.File
 import java.nio.charset.Charset
 
 class RichTextEditorActivity : ComponentActivity() {
@@ -108,38 +104,22 @@ private fun RichTextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
     var showLinkDialog by remember { mutableStateOf(false) }
     var saveError by remember { mutableStateOf<String?>(null) }
 
-    // Load Content
+    val context = LocalContext.current
+
+    // Load Content using DocumentController
     LaunchedEffect(uri) {
-        val max = 2 * 1024 * 1024 // 2 MB guard
-        runCatching {
-            withContext(Dispatchers.IO) {
-                // Check Writability
-                val canWrite = try {
-                    if (uri.scheme == "file") File(uri.path!!).canWrite()
-                    else {
-                        AppGraph.io.openOut(uri).close()
-                        true
-                    }
-                } catch (e: Exception) { false }
-
-                isReadOnly = !canWrite
-
-                // Read File
-                AppGraph.io.openIn(uri).use { input ->
-                    if (input.available() > max) throw IllegalStateException("File too large to edit")
-                    val bytes = input.readBytes()
-                    val charset = sniffCharset(bytes) ?: Charsets.UTF_8
-                    String(bytes, charset)
-                }
+        DocumentController.read(context, uri, maxSize = 2 * 1024 * 1024)
+            .onSuccess { docInfo ->
+                val text = String(docInfo.content, DocumentController.sniffCharset(docInfo.content))
+                originalContent = text
+                isReadOnly = docInfo.isReadOnly
+                richTextState.setHtml(text)
+                isLoading = false
             }
-        }.onSuccess {
-            originalContent = it
-            richTextState.setHtml(it)
-            isLoading = false
-        }.onFailure {
-            error = it.message ?: "Failed to open"
-            isLoading = false
-        }
+            .onFailure { e ->
+                error = e.message ?: "Failed to open"
+                isLoading = false
+            }
     }
 
     LaunchedEffect(Unit) {
@@ -165,16 +145,19 @@ private fun RichTextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
 
     // Dialogs
     if (showUnsavedDialog) {
-        ConfirmationDialog(
-            title = "Unsaved Changes",
-            message = "You have unsaved changes. Do you want to discard them?",
-            confirmText = "Discard",
-            dismissText = "Cancel",
-            onConfirm = {
-                showUnsavedDialog = false
-                onClose()
+        AlertDialog(
+            onDismissRequest = { showUnsavedDialog = false },
+            title = { Text("Unsaved Changes") },
+            text = { Text("You have unsaved changes. Do you want to discard them?") },
+            confirmButton = { 
+                TextButton(onClick = {
+                    showUnsavedDialog = false
+                    onClose()
+                }) { Text("Discard") }
             },
-            onDismiss = { showUnsavedDialog = false }
+            dismissButton = { 
+                TextButton(onClick = { showUnsavedDialog = false }) { Text("Cancel") }
+            }
         )
     }
 
@@ -237,14 +220,15 @@ private fun RichTextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                             enabled = hasChanges,
                             onClick = {
                                 coroutineScope.launch {
-                                    try {
-                                        val html = richTextState.toHtml()
-                                        saveContent(uri, html)
-                                        originalContent = html
-                                        hasChanges = false
-                                    } catch (e: Exception) {
-                                        saveError = "Failed to save: ${e.message}"
-                                    }
+                                    val html = richTextState.toHtml()
+                                    DocumentController.save(context, uri, html.toByteArray(Charsets.UTF_8))
+                                        .onSuccess {
+                                            originalContent = html
+                                            hasChanges = false
+                                        }
+                                        .onFailure { e ->
+                                            saveError = "Failed to save: ${e.message}"
+                                        }
                                 }
                             }
                         ) {
@@ -438,17 +422,3 @@ private fun LinkDialog(
     )
 }
 
-private suspend fun saveContent(uri: Uri, htmlContent: String) {
-    withContext(Dispatchers.IO) {
-        AppGraph.io.openOut(uri).use { output ->
-            output.write(htmlContent.toByteArray(Charsets.UTF_8))
-        }
-    }
-}
-
-private fun sniffCharset(bytes: ByteArray): Charset? {
-    if (bytes.size >= 3 && bytes[0] == 0xEF.toByte() && bytes[1] == 0xBB.toByte() && bytes[2] == 0xBF.toByte()) return Charsets.UTF_8
-    if (bytes.size >= 2 && bytes[0] == 0xFF.toByte() && bytes[1] == 0xFE.toByte()) return Charsets.UTF_16LE
-    if (bytes.size >= 2 && bytes[0] == 0xFE.toByte() && bytes[1] == 0xFF.toByte()) return Charsets.UTF_16BE
-    return null
-}
