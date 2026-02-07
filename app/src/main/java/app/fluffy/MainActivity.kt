@@ -111,7 +111,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var pickTargetDir: ActivityResultLauncher<Uri?>
 
     private val showInAppFolderPicker = mutableStateOf(false)
-    private val inAppFolderPickerTitle = mutableStateOf("Choose destination folder")
+    private val inAppFolderPickerTitle = mutableStateOf("")
     private var pendingFolderPickCallback: ((Uri) -> Unit)? = null
 
     private val filesVM: FileBrowserViewModel by viewModel()
@@ -148,6 +148,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         AppGraph.init(applicationContext)
+        
+        inAppFolderPickerTitle.value = "Choose destination folder"
 
         // Picker mode (GET_CONTENT / OPEN_DOCUMENT)
         isPickerMode = intent?.action in listOf(

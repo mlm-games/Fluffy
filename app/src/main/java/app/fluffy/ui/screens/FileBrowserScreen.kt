@@ -84,10 +84,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
+import app.fluffy.R
 import app.fluffy.data.repository.Bookmark
 import app.fluffy.helper.cardAsFocusGroup
 import app.fluffy.ui.components.ConfirmationDialog
@@ -259,9 +261,9 @@ fun FileBrowserScreen(
                         Text(
                             text = when (currentLocation) {
                                 is BrowseLocation.FileSystem -> currentLocation.file.absolutePath
-                                is BrowseLocation.SAF -> state.currentDir?.toString() ?: "SAF Location"
-                                is BrowseLocation.QuickAccess -> "Quick Access"
-                                null -> "Select a location"
+                                is BrowseLocation.SAF -> state.currentDir?.toString() ?: stringResource(R.string.saf_location)
+                                is BrowseLocation.QuickAccess -> stringResource(R.string.quick_access)
+                                null -> stringResource(R.string.select_a_location)
                             },
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis
@@ -284,7 +286,7 @@ fun FileBrowserScreen(
                             if (!pickFolderMode) {
                                 Box {
                                     IconButton(onClick = { createMenuExpanded = true }) {
-                                        Icon(Icons.Default.CreateNewFolder, contentDescription = "Create")
+                                        Icon(Icons.Default.CreateNewFolder, contentDescription = stringResource(R.string.create))
                                     }
                                     DropdownMenu(
                                         expanded = createMenuExpanded,
@@ -292,7 +294,7 @@ fun FileBrowserScreen(
                                         onDismissRequest = { createMenuExpanded = false }
                                     ) {
                                         DropdownMenuItem(
-                                            text = { Text("New Folder") },
+                                            text = { Text(stringResource(R.string.new_folder)) },
                                             leadingIcon = { Icon(Icons.Default.CreateNewFolder, null) },
                                             onClick = {
                                                 createMenuExpanded = false
@@ -300,7 +302,7 @@ fun FileBrowserScreen(
                                             }
                                         )
                                         DropdownMenuItem(
-                                            text = { Text("New File") },
+                                            text = { Text(stringResource(R.string.new_file)) },
                                             leadingIcon = { Icon(Icons.Default.Description, null) },
                                             onClick = {
                                                 createMenuExpanded = false
@@ -308,7 +310,7 @@ fun FileBrowserScreen(
                                             }
                                         )
                                         DropdownMenuItem(
-                                            text = { Text("Paste from Clipboard") },
+                                            text = { Text(stringResource(R.string.paste_from_clipboard)) },
                                             leadingIcon = { Icon(Icons.Default.ContentCopy, null) },
                                             onClick = {
                                                 createMenuExpanded = false
@@ -323,7 +325,7 @@ fun FileBrowserScreen(
                             }
                         }
                         IconButton(onClick = onOpenSettings) {
-                            Icon(Icons.Default.Settings, contentDescription = "Settings")
+                                Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
                         }
                         if (!pickFolderMode) {
                             IconButton(onClick = onPickRoot) {
@@ -932,7 +934,7 @@ fun FileBrowserScreen(
         var clipboardFileName by remember { mutableStateOf("clipboard.txt") }
         AlertDialog(
             onDismissRequest = { showPasteClipboardDialog = false },
-            title = { Text("Paste from Clipboard") },
+            title = { Text(stringResource(R.string.paste_from_clipboard)) },
             text = {
                 OutlinedTextField(
                     value = clipboardFileName,
