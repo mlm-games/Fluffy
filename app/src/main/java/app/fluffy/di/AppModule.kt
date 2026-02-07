@@ -2,6 +2,7 @@ package app.fluffy.di
 
 import app.fluffy.AppGraph
 import app.fluffy.archive.ArchiveEngine
+import app.fluffy.data.repository.BookmarksRepository
 import app.fluffy.ui.components.snackbar.SnackbarManager
 import app.fluffy.viewmodel.FileBrowserViewModel
 import app.fluffy.viewmodel.SettingsViewModel
@@ -20,9 +21,10 @@ val appModule = module {
     single { AppGraph.archiveJobs }
 
     single { SnackbarManager() }
+    single { BookmarksRepository(androidContext()) }
 
 
-    viewModel { FileBrowserViewModel(get(), get(), get(), get()) }
+    viewModel { FileBrowserViewModel(get(), get(), get(), get(), get(), get()) }
     viewModel { TasksViewModel(androidContext(), get()) }
     viewModel { SettingsViewModel(get()) }
 }

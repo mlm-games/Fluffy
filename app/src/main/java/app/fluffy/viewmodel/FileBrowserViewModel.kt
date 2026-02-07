@@ -6,7 +6,10 @@ import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.fluffy.archive.ArchiveEngine
+import app.fluffy.data.repository.Bookmark
+import app.fluffy.data.repository.BookmarksRepository
 import app.fluffy.data.repository.SettingsRepository
+import app.fluffy.ui.components.snackbar.SnackbarManager
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.SafIo
 import app.fluffy.io.ShellEntry
@@ -14,11 +17,14 @@ import app.fluffy.shell.RootAccess
 import app.fluffy.shell.ShizukuAccess
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.io.File
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
+import androidx.core.net.toUri
 
 sealed class BrowseLocation {
     data class SAF(val uri: Uri) : BrowseLocation()
@@ -30,7 +36,8 @@ data class QuickAccessItem(
     val name: String,
     val icon: String,
     val file: File?,
-    val uri: Uri?
+    val uri: Uri?,
+    val enabled: Boolean = true
 )
 
 data class FileBrowserState(
@@ -56,7 +63,9 @@ class FileBrowserViewModel(
     private val io: SafIo,
     private val fileSystemAccess: FileSystemAccess,
     @Suppress("unused") private val archive: ArchiveEngine,
-    private val settings: SettingsRepository
+    private val settings: SettingsRepository,
+    private val bookmarksRepository: BookmarksRepository,
+    private val snackbarManager: SnackbarManager
 ) : ViewModel() {
 
     private val _state = MutableStateFlow(FileBrowserState())
@@ -65,6 +74,9 @@ class FileBrowserViewModel(
     private var showHidden: Boolean = false
     private var showRoot: Boolean = false
     private var showShizuku: Boolean = false
+
+    val customBookmarks: StateFlow<List<Bookmark>> = bookmarksRepository.bookmarks
+        .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
     init {
         viewModelScope.launch {
@@ -96,6 +108,134 @@ class FileBrowserViewModel(
                     currentLocation = BrowseLocation.QuickAccess
                 )
             }
+        }
+    }
+
+    fun addBookmark(bookmark: Bookmark) {
+        viewModelScope.launch {
+            bookmarksRepository.addBookmark(bookmark)
+        }
+    }
+
+    fun removeBookmark(bookmark: Bookmark) {
+        viewModelScope.launch {
+            bookmarksRepository.removeBookmark(bookmark)
+        }
+    }
+
+    fun buildBookmarkFromCurrentLocation(name: String): Bookmark? {
+        val st = _state.value
+        val location = st.currentLocation ?: return null
+        val trimmedName = name.trim()
+        if (trimmedName.isBlank()) return null
+
+        return when (location) {
+            is BrowseLocation.FileSystem -> {
+                val path = location.file.absolutePath
+                Bookmark(name = trimmedName, path = path, access = "file")
+            }
+            is BrowseLocation.SAF -> {
+                val uri = st.currentDir ?: location.uri
+                val path = uri.toString()
+                val access = when (uri.scheme) {
+                    "root" -> "root"
+                    "shizuku" -> "shizuku"
+                    "content" -> "content"
+                    "file" -> "file"
+                    else -> uri.scheme
+                }
+                Bookmark(name = trimmedName, path = path, access = access)
+            }
+            is BrowseLocation.QuickAccess -> null
+        }
+    }
+
+    fun navigateToBookmark(bookmark: Bookmark) {
+        viewModelScope.launch {
+            val access = bookmark.access
+            val rawPath = bookmark.path
+
+            when (access) {
+                "root", "shizuku" -> {
+                    val normalized = rawPath.removePrefix("root://").removePrefix("shizuku://")
+                    val path = if (normalized.startsWith("/")) normalized else "/$normalized"
+                    val scheme = if (access == "root") "root" else "shizuku"
+                    if (scheme == "shizuku" && !ShizukuAccess.isAvailable()) {
+                        snackbarManager.show("Cannot access ${bookmark.name}: Shizuku is not running")
+                        return@launch
+                    }
+                    if (scheme == "root" && !RootAccess.isAvailable()) {
+                        snackbarManager.show("Cannot access ${bookmark.name}: Root access not available")
+                        return@launch
+                    }
+                    val uri = Uri.Builder().scheme(scheme).path(path).build()
+                    openDir(uri)
+                    return@launch
+                }
+                "content", "file" -> {
+                    val uri = runCatching { rawPath.toUri() }.getOrNull()
+                    if (uri != null) {
+                        if (uri.scheme == "content") {
+                            openDir(uri)
+                            return@launch
+                        }
+                        if (uri.scheme == "file") {
+                            val file = File(uri.path ?: "")
+                            openFileSystemPath(file)
+                            return@launch
+                        }
+                    }
+                }
+            }
+
+            if (rawPath.startsWith("content://")) {
+                val uri = rawPath.toUri()
+                openDir(uri)
+                return@launch
+            }
+
+            if (rawPath.startsWith("file://")) {
+                val uri = rawPath.toUri()
+                val file = File(uri.path ?: "")
+                openFileSystemPath(file)
+                return@launch
+            }
+
+            val file = File(rawPath)
+            if (file.exists() && file.canRead()) {
+                openFileSystemPath(file)
+                return@launch
+            }
+
+            if (showShizuku && ShizukuAccess.isAvailable()) {
+                val uri = Uri.Builder().scheme("shizuku").path(file.path).build()
+                openDir(uri)
+                return@launch
+            }
+
+            if (showRoot && RootAccess.isAvailable()) {
+                val uri = Uri.Builder().scheme("root").path(file.path).build()
+                openDir(uri)
+                return@launch
+            }
+
+            if (showShizuku || showRoot) {
+                val missing = if (!file.exists()) "Path does not exist" else "Path is not readable"
+                snackbarManager.show("Cannot access ${bookmark.name}: $missing")
+                return@launch
+            }
+
+            val reason = when {
+                !showRoot && !showShizuku -> "Enable Root or Shizuku in Settings"
+                showShizuku && !ShizukuAccess.isAvailable() -> "Shizuku is not running"
+                showRoot && !RootAccess.isAvailable() -> "Root access not available"
+                else -> "Path does not exist or is not accessible"
+            }
+
+            snackbarManager.show(
+                message = "Cannot access ${bookmark.name}: $reason",
+                actionLabel = if (!showRoot && !showShizuku) "Settings" else null,
+            )
         }
     }
 
@@ -142,7 +282,8 @@ class FileBrowserViewModel(
                     if (available) "Root /" else "Root / (not available)",
                     "root",
                     null,
-                    Uri.Builder().scheme("root").path("/").build()
+                    Uri.Builder().scheme("root").path("/").build(),
+                    enabled = available
                 )
             )
 
@@ -154,7 +295,8 @@ class FileBrowserViewModel(
                     "Internal Storage (root)",
                     "root",
                     null,
-                    Uri.Builder().scheme("root").path(internalPath).build()
+                    Uri.Builder().scheme("root").path(internalPath).build(),
+                    enabled = available
                 )
             )
 
@@ -167,7 +309,8 @@ class FileBrowserViewModel(
                             name = "$name ($path)",
                             icon = if (idx == 0) "root" else "sd",
                             file = null,
-                            uri = Uri.Builder().scheme("root").path(path).build()
+                            uri = Uri.Builder().scheme("root").path(path).build(),
+                            enabled = available
                         )
                     )
                 }
@@ -180,7 +323,8 @@ class FileBrowserViewModel(
                     null,
                     Uri.Builder().scheme("root")
                         .path("/data/data/com.termux/files/home")
-                        .build()
+                        .build(),
+                    enabled = available
                 )
             )
             items.add(
@@ -190,7 +334,8 @@ class FileBrowserViewModel(
                     null,
                     Uri.Builder().scheme("root")
                         .path("/data/data/com.termux/files/home/storage")
-                        .build()
+                        .build(),
+                    enabled = available
                 )
             )
         }
@@ -202,7 +347,8 @@ class FileBrowserViewModel(
                     if (available) "Shizuku /" else "Shizuku / (not running)",
                     "shizuku",
                     null,
-                    Uri.Builder().scheme("shizuku").path("/").build()
+                    Uri.Builder().scheme("shizuku").path("/").build(),
+                    enabled = available
                 )
             )
 
@@ -214,7 +360,8 @@ class FileBrowserViewModel(
                     "Internal Storage (shizuku)",
                     "shizuku",
                     null,
-                    Uri.Builder().scheme("shizuku").path(internalPath).build()
+                    Uri.Builder().scheme("shizuku").path(internalPath).build(),
+                    enabled = available
                 )
             )
 
@@ -227,7 +374,8 @@ class FileBrowserViewModel(
                             name = "$name ($path)",
                             icon = if (idx == 0) "shizuku" else "sd",
                             file = null,
-                            uri = Uri.Builder().scheme("shizuku").path(path).build()
+                            uri = Uri.Builder().scheme("shizuku").path(path).build(),
+                            enabled = available
                         )
                     )
                 }
@@ -240,7 +388,8 @@ class FileBrowserViewModel(
                     null,
                     Uri.Builder().scheme("shizuku")
                         .path("/data/data/com.termux/files/home")
-                        .build()
+                        .build(),
+                    enabled = available
                 )
             )
             items.add(
@@ -250,7 +399,8 @@ class FileBrowserViewModel(
                     null,
                     Uri.Builder().scheme("shizuku")
                         .path("/data/data/com.termux/files/home/storage")
-                        .build()
+                        .build(),
+                    enabled = available
                 )
             )
         }
@@ -405,6 +555,7 @@ class FileBrowserViewModel(
         }
     }
 
+
     fun refresh() {
         updatePermissionFlag()
         val st = _state.value
@@ -444,6 +595,7 @@ class FileBrowserViewModel(
     }
 
     fun openQuickAccessItem(item: QuickAccessItem) {
+        if (!item.enabled) return
         item.file?.let { file ->
             if (file.exists()) {
                 openFileSystemPath(file)

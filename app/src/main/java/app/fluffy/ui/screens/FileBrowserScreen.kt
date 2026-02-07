@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
@@ -41,6 +42,8 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.FolderZip
+import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Lock
@@ -85,10 +88,12 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
+import app.fluffy.data.repository.Bookmark
 import app.fluffy.helper.cardAsFocusGroup
 import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.ui.components.FileListRow
 import app.fluffy.ui.components.toRowModel
+import app.fluffy.ui.dialogs.AddBookmarkDialog
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.QuickAccessItem
@@ -107,6 +112,7 @@ fun FileBrowserScreen(
     onCreateZip: (List<Uri>, String, Uri, Boolean) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenTasks: () -> Unit,
+    onAddBookmark: (String) -> Unit = {},
     onOpenWith: (Uri, String) -> Unit = { _, _ -> },
     onOpenArchive: (Uri) -> Unit,
     onCopySelected: (List<Uri>) -> Unit = {},
@@ -118,6 +124,9 @@ fun FileBrowserScreen(
     onCreate7z: (List<Uri>, String, String?, Uri, Boolean) -> Unit = { _, _, _, _, _ -> },
     onOpenFile: (File) -> Unit = {},
     onQuickAccessClick: (QuickAccessItem) -> Unit = {},
+    onBookmarkClick: (Bookmark) -> Unit = {},
+    onRemoveBookmark: (Bookmark) -> Unit = {},
+    customBookmarks: List<Bookmark> = emptyList(),
     onRequestPermission: () -> Unit = {},
     onShowQuickAccess: () -> Unit = {},
     onCreateFolder: (String) -> Unit = {},
@@ -146,6 +155,9 @@ fun FileBrowserScreen(
     var showNewFileDialog by remember { mutableStateOf(false) }
     var showPasteClipboardDialog by remember { mutableStateOf(false) }
     var createMenuExpanded by remember { mutableStateOf(false) }
+    var overflowMenuExpanded by remember { mutableStateOf(false) }
+    var showAddBookmarkDialog by remember { mutableStateOf(false) }
+    var pendingBookmarkName by remember { mutableStateOf("") }
 
     // Overwrite confirmations (ZIP / 7z created into currentDir)
     var pendingZipName by remember { mutableStateOf<String?>(null) }
@@ -169,6 +181,26 @@ fun FileBrowserScreen(
         else -> 0
     }
     val allSelected = (selected.size + selectedFiles.size) == totalItems && totalItems > 0
+
+    fun toggleSelectAll() {
+        if (allSelected) {
+            selected.clear()
+            selectedFiles.clear()
+        } else when (state.currentLocation) {
+            is BrowseLocation.FileSystem -> {
+                selectedFiles.clear(); selectedFiles.addAll(state.fileItems)
+            }
+            is BrowseLocation.SAF -> {
+                selected.clear()
+                selected.addAll(
+                    if (state.currentDir?.scheme in listOf("root", "shizuku"))
+                        state.shellItems.map { it.uri }
+                    else state.items.map { it.uri }
+                )
+            }
+            else -> {}
+        }
+    }
 
     fun uriChildExists(parent: Uri, name: String): Boolean {
         return when (parent.scheme) {
@@ -248,34 +280,6 @@ fun FileBrowserScreen(
                     },
                     actions = {
                         if (currentLocation !is BrowseLocation.QuickAccess) {
-                            if (totalItems > 0) {
-                                IconButton(
-                                    onClick = {
-                                        if (allSelected) {
-                                            selected.clear(); selectedFiles.clear()
-                                        } else when (state.currentLocation) {
-                                            is BrowseLocation.FileSystem -> {
-                                                selectedFiles.clear(); selectedFiles.addAll(state.fileItems)
-                                            }
-                                            is BrowseLocation.SAF -> {
-                                                selected.clear()
-                                                selected.addAll(
-                                                    if (state.currentDir?.scheme in listOf("root", "shizuku"))
-                                                        state.shellItems.map { it.uri }
-                                                    else state.items.map { it.uri }
-                                                )
-                                            }
-                                            else -> {}
-                                        }
-                                    },
-                                    enabled = !pickFolderMode
-                                ) {
-                                    Icon(
-                                        Icons.Default.Checklist,
-                                        contentDescription = if (allSelected) "Deselect All" else "Select All"
-                                    )
-                                }
-                            }
                             // Create dropdown menu (New File / New Folder)
                             if (!pickFolderMode) {
                                 Box {
@@ -318,17 +322,59 @@ fun FileBrowserScreen(
                                 Icon(Icons.Default.Home, contentDescription = "Home")
                             }
                         }
-                        IconButton(onClick = onOpenTasks) {
-                            Icon(Icons.Default.Archive, contentDescription = "Tasks")
-                        }
                         IconButton(onClick = onOpenSettings) {
                             Icon(Icons.Default.Settings, contentDescription = "Settings")
                         }
-
-                        // Avoid confusing UX while in folder-pick mode
                         if (!pickFolderMode) {
                             IconButton(onClick = onPickRoot) {
                                 Icon(Icons.Default.FolderOpen, contentDescription = "Pick SAF Folder")
+                            }
+                        }
+                        Box {
+                            IconButton(onClick = { overflowMenuExpanded = true }) {
+                                Icon(Icons.Default.MoreVert, contentDescription = "More")
+                            }
+                            DropdownMenu(
+                                expanded = overflowMenuExpanded,
+                                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                onDismissRequest = { overflowMenuExpanded = false }
+                            ) {
+                                if (currentLocation !is BrowseLocation.QuickAccess && totalItems > 0 && !pickFolderMode) {
+                                    DropdownMenuItem(
+                                        text = { Text(if (allSelected) "Deselect All" else "Select All") },
+                                        leadingIcon = { Icon(Icons.Default.Checklist, null) },
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            toggleSelectAll()
+                                        }
+                                    )
+                                }
+                                if (!pickFolderMode && currentLocation !is BrowseLocation.QuickAccess) {
+                                    DropdownMenuItem(
+                                        text = { Text("Add Bookmark") },
+                                        leadingIcon = { Icon(Icons.Default.Bookmark, null) },
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            pendingBookmarkName = when (currentLocation) {
+                                                is BrowseLocation.FileSystem -> currentLocation.file.name.ifBlank { currentLocation.file.absolutePath }
+                                                is BrowseLocation.SAF -> {
+                                                    val path = state.currentDir?.path
+                                                    path?.trimEnd('/')?.substringAfterLast('/') ?: ""
+                                                }
+                                                else -> ""
+                                            }
+                                            showAddBookmarkDialog = true
+                                        }
+                                    )
+                                }
+                                DropdownMenuItem(
+                                    text = { Text("Tasks") },
+                                    leadingIcon = { Icon(Icons.Default.Archive, null) },
+                                    onClick = {
+                                        overflowMenuExpanded = false
+                                        onOpenTasks()
+                                    }
+                                )
                             }
                         }
                     }
@@ -543,12 +589,15 @@ fun FileBrowserScreen(
                 }
             }
         }
-    ) { it ->
+    ) {
         when (currentLocation) {
             is BrowseLocation.QuickAccess -> {
                 QuickAccessView(
                     items = state.quickAccessItems,
+                    customBookmarks = customBookmarks,
                     onItemClick = onQuickAccessClick,
+                    onBookmarkClick = onBookmarkClick,
+                    onRemoveBookmark = onRemoveBookmark,
                     onRequestPermission = onRequestPermission,
                     hasPermission = state.canAccessFileSystem,
                     modifier = Modifier.padding(it)
@@ -908,6 +957,17 @@ fun FileBrowserScreen(
         )
     }
 
+    if (showAddBookmarkDialog) {
+        AddBookmarkDialog(
+            initialName = pendingBookmarkName,
+            onDismiss = { showAddBookmarkDialog = false },
+            onConfirm = { name ->
+                onAddBookmark(name)
+                showAddBookmarkDialog = false
+            }
+        )
+    }
+
     if (showRenameDialog && renameTarget != null) {
         AlertDialog(
             onDismissRequest = { showRenameDialog = false },
@@ -942,15 +1002,14 @@ fun FileBrowserScreen(
             message = overwriteMessage,
             onConfirm = {
                 showOverwriteConfirm = false
-                val dir = currentDirUri
-                if (dir != null) {
+                if (currentDirUri != null) {
                     val sources = selected + selectedFiles.map { Uri.fromFile(it) }
                     pendingZipName?.let { n ->
-                        onCreateZip(sources, n, dir, true)
+                        onCreateZip(sources, n, currentDirUri, true)
                         pendingZipName = null
                     }
                     pending7zName?.let { n ->
-                        onCreate7z(sources, n, pending7zPwd, dir, true)
+                        onCreate7z(sources, n, pending7zPwd, currentDirUri, true)
                         pending7zName = null
                         pending7zPwd = null
                     }
@@ -970,7 +1029,10 @@ fun FileBrowserScreen(
 @Composable
 private fun QuickAccessView(
     items: List<QuickAccessItem>,
+    customBookmarks: List<Bookmark>,
     onItemClick: (QuickAccessItem) -> Unit,
+    onBookmarkClick: (Bookmark) -> Unit,
+    onRemoveBookmark: (Bookmark) -> Unit,
     onRequestPermission: () -> Unit,
     hasPermission: Boolean,
     modifier: Modifier = Modifier
@@ -997,6 +1059,8 @@ private fun QuickAccessView(
         val uniqueItems = remember(items) {
             items.distinctBy { it.file?.absolutePath ?: it.uri?.toString() ?: it.name }
         }
+        var isEditMode by remember { mutableStateOf(false) }
+        val hasBookmarks = customBookmarks.isNotEmpty()
 
         LazyVerticalGrid(
             columns = GridCells.Adaptive(minSize = 120.dp),
@@ -1013,7 +1077,38 @@ private fun QuickAccessView(
                         ?: item.name
                 }
             ) { item ->
-                QuickAccessCard(item = item, onClick = { onItemClick(item) })
+                QuickAccessCard(item = item, onClick = { if (item.enabled) onItemClick(item) })
+            }
+
+            item(span = { GridItemSpan(maxLineSpan) }) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        "Bookmarks",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    if (hasBookmarks) {
+                        TextButton(onClick = { isEditMode = !isEditMode }) {
+                            Text(if (isEditMode) "Done" else "Edit")
+                        }
+                    }
+                }
+            }
+
+            items(customBookmarks, key = { "bm_${it.path}_${it.access}" }) { bookmark ->
+                BookmarkCard(
+                    bookmark = bookmark,
+                    isEditMode = isEditMode,
+                    onClick = {
+                        if (isEditMode) onRemoveBookmark(bookmark) else onBookmarkClick(bookmark)
+                    }
+                )
             }
         }
     }
@@ -1026,7 +1121,13 @@ private fun QuickAccessCard(item: QuickAccessItem, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .height(100.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(
+            containerColor = if (item.enabled) {
+                MaterialTheme.colorScheme.surfaceVariant
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+            }
+        )
     ) {
         Column(
             modifier = Modifier
@@ -1039,10 +1140,57 @@ private fun QuickAccessCard(item: QuickAccessItem, onClick: () -> Unit) {
                 imageVector = getIconForQuickAccess(item.icon),
                 contentDescription = item.name,
                 modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = if (item.enabled) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(Modifier.height(8.dp))
-            Text(item.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(
+                item.name,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = if (item.enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun BookmarkCard(
+    bookmark: Bookmark,
+    isEditMode: Boolean,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isEditMode) MaterialTheme.colorScheme.errorContainer
+            else MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = if (isEditMode) Icons.Default.Delete else Icons.Default.Bookmark,
+                contentDescription = null,
+                modifier = Modifier.size(28.dp),
+                tint = if (isEditMode) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = if (isEditMode) "Tap to remove" else bookmark.name,
+                style = MaterialTheme.typography.bodySmall,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                color = if (isEditMode) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer
+            )
         }
     }
 }

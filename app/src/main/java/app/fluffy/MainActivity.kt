@@ -2,6 +2,7 @@ package app.fluffy
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -307,6 +308,13 @@ class MainActivity : ComponentActivity() {
 
                                         onOpenSettings = { backStack.add(ScreenKey.Settings) },
                                         onOpenTasks = { showTaskCenter = true },
+                                        onAddBookmark = { name ->
+                                            if (name.isNotBlank()) {
+                                                filesVM.buildBookmarkFromCurrentLocation(name)?.let { bookmark ->
+                                                    filesVM.addBookmark(bookmark)
+                                                }
+                                            }
+                                        },
 
                                         onOpenArchive = { arch ->
                                             backStack.add(ScreenKey.Archive(uri = arch.toString()))
@@ -368,13 +376,26 @@ class MainActivity : ComponentActivity() {
                                                 filesVM.openQuickAccessItem(item)
                                             }
                                         },
+                                        onBookmarkClick = { bookmark ->
+                                            lifecycleScope.launch {
+                                                if (bookmark.access == "shizuku") {
+                                                    val ok = app.fluffy.shell.ShizukuAccess.ensurePermission()
+                                                    if (!ok) return@launch
+                                                }
+                                                filesVM.navigateToBookmark(bookmark)
+                                            }
+                                        },
+                                        onRemoveBookmark = { bookmark ->
+                                            filesVM.removeBookmark(bookmark)
+                                        },
+                                        customBookmarks = filesVM.customBookmarks.collectAsState().value,
 
                                         onRequestPermission = { requestStoragePermission() },
                                         onShowQuickAccess = { filesVM.showQuickAccess() },
                                         onCreateFolder = { name -> filesVM.createNewFolder(name) },
                                         onCreateFile = { name -> filesVM.createNewFile(name) },
                                         onPasteClipboard = { name ->
-                                            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
+                                            val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                                             val text = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
                                             filesVM.createFileFromClipboard(name, text)
                                         },
