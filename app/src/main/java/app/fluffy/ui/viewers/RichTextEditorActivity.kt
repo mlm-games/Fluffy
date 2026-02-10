@@ -253,7 +253,7 @@ private fun RichTextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                     )
                 }
                 isLoading -> {
-                    CircularProgressIndicator(Modifier.align(Alignment.Center))
+                    LoadingIndicator(Modifier.align(Alignment.Center))
                 }
                 else -> {
                     Column(Modifier.fillMaxSize()) {

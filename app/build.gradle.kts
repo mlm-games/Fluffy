@@ -13,6 +13,7 @@ kotlin {
     compilerOptions {
         optIn.set(listOf(
             "androidx.compose.material3.ExperimentalMaterial3Api",
+            "androidx.compose.material3.ExperimentalMaterial3ExpressiveApi",
             "androidx.compose.foundation.ExperimentalFoundationApi",
             "androidx.compose.foundation.layout.ExperimentalLayoutApi"
         ))
@@ -154,6 +155,7 @@ dependencies {
     implementation(libs.material3.android)
 
     // Compose dependencies
+    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.ui)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.activity.compose)
@@ -170,8 +172,6 @@ dependencies {
     implementation(libs.androidx.media3.ui)
     implementation(libs.androidx.media3.ui.compose)
     implementation(libs.androidx.media3.exoplayer.dash)
-
-
 
     implementation(libs.zip4j)
     implementation(libs.commons.compress)

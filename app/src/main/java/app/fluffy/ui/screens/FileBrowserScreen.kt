@@ -1125,9 +1125,9 @@ private fun QuickAccessCard(item: QuickAccessItem, onClick: () -> Unit) {
             .height(100.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (item.enabled) {
-                MaterialTheme.colorScheme.surfaceVariant
+                MaterialTheme.colorScheme.surfaceContainerHighest
             } else {
-                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
+                MaterialTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.6f)
             }
         )
     ) {

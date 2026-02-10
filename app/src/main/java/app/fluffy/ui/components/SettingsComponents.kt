@@ -231,7 +231,7 @@ fun SettingsAction(
             colors = ButtonDefaults.buttonColors(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
                 disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
             )
         ) {
@@ -269,7 +269,7 @@ private fun SettingRowContainer(
     val containerColor by animateColorAsState(
         targetValue = when {
             focused && enabled -> colors.primaryContainer.copy(alpha = 0.35f)
-            else -> colors.surfaceVariant.copy(alpha = 0.40f)
+            else -> colors.surfaceContainer.copy(alpha = 0.40f)
         },
         label = "setting_row_bg"
     )

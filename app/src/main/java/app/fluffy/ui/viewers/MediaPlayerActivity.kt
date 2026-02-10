@@ -178,7 +178,7 @@ internal fun MediaPlayerScreen(
                 val sliderPos = (if (seeking) seekTo else position).coerceIn(0, total)
                 val bufferedFrac = (buffered.toFloat() / total.toFloat()).coerceIn(0f, 1f)
 
-                LinearProgressIndicator(
+                LinearWavyProgressIndicator(
                     progress = { bufferedFrac },
                     modifier = Modifier
                         .fillMaxWidth()

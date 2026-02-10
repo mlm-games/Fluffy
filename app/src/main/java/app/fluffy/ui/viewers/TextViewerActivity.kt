@@ -86,7 +86,7 @@ private fun TextViewerScreen(uri: Uri, title: String, onClose: () -> Unit) {
                 Text(error ?: "Error", color = MaterialTheme.colorScheme.error)
             }
             content == null -> Box(Modifier.fillMaxSize().padding(pv), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularWavyProgressIndicator()
             }
             else -> {
                 val scroll = rememberScrollState()

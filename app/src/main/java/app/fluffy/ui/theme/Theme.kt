@@ -3,6 +3,7 @@ package app.fluffy.ui.theme
 import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
 import androidx.compose.material3.dynamicDarkColorScheme
@@ -51,7 +52,7 @@ fun FluffyTheme(
         extraLarge = RoundedCornerShape(28.dp)
     )
 
-    MaterialTheme(
+    MaterialExpressiveTheme(
         colorScheme = colorScheme,
         typography = MaterialTheme.typography,
         shapes = shapes,

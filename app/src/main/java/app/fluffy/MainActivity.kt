@@ -31,7 +31,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LinearWavyProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -896,14 +896,14 @@ private fun MiniTaskIndicator(
                 }
                 if (showProgressBar) {
                     if (progress != null) {
-                        LinearProgressIndicator(
+                        LinearWavyProgressIndicator(
                             progress = { progress },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(6.dp)
                         )
                     } else {
-                        LinearProgressIndicator(
+                        LinearWavyProgressIndicator(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(6.dp)
@@ -1008,14 +1008,14 @@ private fun TaskRowCompact(
 
             if (showProgressBar) {
                 if (progress != null) {
-                    LinearProgressIndicator(
+                    LinearWavyProgressIndicator(
                         progress = { progress },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 8.dp)
                     )
                 } else {
-                    LinearProgressIndicator(
+                    LinearWavyProgressIndicator(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(top = 8.dp)

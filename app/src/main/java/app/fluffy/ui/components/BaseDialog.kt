@@ -65,7 +65,7 @@ fun MyScreenScaffold(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            color = MaterialTheme.colorScheme.background
+            color = MaterialTheme.colorScheme.surfaceContainerLowest
         ) {
             content(paddingValues)
         }

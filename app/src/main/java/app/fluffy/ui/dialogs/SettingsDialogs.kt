@@ -114,7 +114,7 @@ fun SliderSettingDialog(
                 colors = SliderDefaults.colors(
                     thumbColor = MaterialTheme.colorScheme.primary,
                     activeTrackColor = MaterialTheme.colorScheme.primary,
-                    inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                    inactiveTrackColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             )
 

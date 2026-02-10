@@ -60,14 +60,14 @@ private fun TaskRow(wi: WorkInfo) {
                 )
             }
             if (progress >= 0f) {
-                LinearProgressIndicator(
+                LinearWavyProgressIndicator(
                     progress = { progress },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp)
                 )
             } else {
-                LinearProgressIndicator(
+                LinearWavyProgressIndicator(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 8.dp)
