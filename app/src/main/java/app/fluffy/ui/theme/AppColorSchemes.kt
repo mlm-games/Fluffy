@@ -64,7 +64,6 @@ val AurDarkTheme = darkColorScheme(
 
     surfaceTint = ThemeColors.AuroraTeal,
 
-    // New Material3 Expressive surface colors
     surfaceBright = Color(0xFF2A3040),
     surfaceDim = Color(0xFF050810),
     surfaceContainer = Color(0xFF151B2E),
@@ -73,6 +72,20 @@ val AurDarkTheme = darkColorScheme(
     surfaceContainerHigh = Color(0xFF1E2435),
     surfaceContainerHighest = Color(0xFF2A3040),
 
+    primaryFixed = ThemeColors.AuroraTeal,
+    onPrimaryFixed = Color(0xFF003830),
+    primaryFixedDim = Color(0xFF005047),
+    onPrimaryFixedVariant = Color(0xFF70F5D9),
+
+    secondaryFixed = ThemeColors.AuroraPurple,
+    onSecondaryFixed = Color(0xFF3B1F70),
+    secondaryFixedDim = Color(0xFF523895),
+    onSecondaryFixedVariant = Color(0xFFE4D4FF),
+
+    tertiaryFixed = ThemeColors.AuroraGreen,
+    onTertiaryFixed = Color(0xFF003A2B),
+    tertiaryFixedDim = Color(0xFF005141),
+    onTertiaryFixedVariant = Color(0xFF8CF5D3)
 )
 
 val AurLightTheme = lightColorScheme(
@@ -114,14 +127,28 @@ val AurLightTheme = lightColorScheme(
 
     surfaceTint = Color(0xFF00695C),
 
-    // New Material3 Expressive surface colors
     surfaceBright = Color(0xFFFFFFFF),
     surfaceDim = Color(0xFFDDE3EE),
     surfaceContainer = Color(0xFFE8ECF4),
     surfaceContainerLow = Color(0xFFF0F3F8),
     surfaceContainerLowest = Color(0xFFFFFFFF),
     surfaceContainerHigh = Color(0xFFDDE3EE),
-    surfaceContainerHighest = Color(0xFFD1D9E6)
+    surfaceContainerHighest = Color(0xFFD1D9E6),
+
+    primaryFixed = ThemeColors.AuroraTeal,
+    onPrimaryFixed = Color(0xFF003830),
+    primaryFixedDim = Color(0xFF005047),
+    onPrimaryFixedVariant = Color(0xFF70F5D9),
+
+    secondaryFixed = ThemeColors.AuroraPurple,
+    onSecondaryFixed = Color(0xFF3B1F70),
+    secondaryFixedDim = Color(0xFF523895),
+    onSecondaryFixedVariant = Color(0xFFE4D4FF),
+
+    tertiaryFixed = ThemeColors.AuroraGreen,
+    onTertiaryFixed = Color(0xFF003A2B),
+    tertiaryFixedDim = Color(0xFF005141),
+    onTertiaryFixedVariant = Color(0xFF8CF5D3)
 )
 
 
