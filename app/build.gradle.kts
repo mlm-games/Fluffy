@@ -9,7 +9,7 @@ plugins {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(21)
     compilerOptions {
         optIn.set(listOf(
             "androidx.compose.material3.ExperimentalMaterial3Api",
