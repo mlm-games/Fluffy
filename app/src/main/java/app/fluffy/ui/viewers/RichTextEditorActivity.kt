@@ -2,8 +2,6 @@ package app.fluffy.ui.viewers
 
 import android.net.Uri
 import android.os.Bundle
-import android.view.KeyEvent
-import android.view.inputmethod.InputMethodManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -70,19 +68,6 @@ class RichTextEditorActivity : ComponentActivity() {
                 RichTextEditorScreen(uri, title) { finish() }
             }
         }
-    }
-
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            val imm = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-            if (imm.isActive && currentFocus != null) {
-                imm.hideSoftInputFromWindow(currentFocus?.windowToken, 0)
-                // Don't return true here immediately, allow the Compose BackHandler to run
-                // unless you want to consume the event just for hiding the keyboard.
-                // Usually returning super.onKeyDown allows standard propagation.
-            }
-        }
-        return super.onKeyDown(keyCode, event)
     }
 
     companion object { const val EXTRA_TITLE = "title" }

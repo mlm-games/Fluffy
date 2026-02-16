@@ -1,6 +1,7 @@
 package app.fluffy.ui.screens
 
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
@@ -142,6 +143,12 @@ fun FileBrowserScreen(
 ) {
     val currentLocation = state.currentLocation
     val canUp = state.stack.size > 1
+    val canGoBack = currentLocation != null && currentLocation !is BrowseLocation.QuickAccess
+
+    BackHandler(enabled = canGoBack) {
+        onBack()
+    }
+
     val configuration = LocalConfiguration.current
     val isCompactScreen = configuration.screenWidthDp < 600
     val context = LocalContext.current

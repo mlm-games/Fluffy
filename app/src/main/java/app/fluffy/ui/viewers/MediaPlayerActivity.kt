@@ -5,6 +5,7 @@ package app.fluffy.ui.viewers
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.annotation.OptIn
 import androidx.compose.foundation.background
@@ -131,6 +132,8 @@ internal fun MediaPlayerScreen(
             else -> false
         }
     }
+
+    BackHandler { onClose() }
 
     Scaffold(
         topBar = {
