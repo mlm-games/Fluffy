@@ -11,7 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.AppSettingsSchema
 import app.fluffy.ui.components.MyScreenScaffold
@@ -34,6 +36,19 @@ import kotlin.reflect.KClass
 @Composable
 fun SettingsScreen(vm: SettingsViewModel) {
     val settings by vm.settings.collectAsState()
+    val context = LocalContext.current
+
+    LaunchedEffect(Unit) {
+        vm.events.collect { event ->
+            when (event) {
+                is SettingsViewModel.UiEvent.OpenUrl -> {
+                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, event.url.toUri())
+                    context.startActivity(intent)
+                }
+                is SettingsViewModel.UiEvent.Toast -> {}
+            }
+        }
+    }
 
     val schema = remember { AppSettingsSchema }
 

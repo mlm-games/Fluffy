@@ -175,7 +175,7 @@ fun FileBrowserScreen(
     val scope = rememberCoroutineScope()
     var showCtaBanner by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
-        showCtaBanner = AlertBannerManager.shouldShowBanner()
+        showCtaBanner = AlertBannerManager.shouldShowBanner(context)
     }
 
     // Overwrite confirmations (ZIP / 7z created into currentDir)

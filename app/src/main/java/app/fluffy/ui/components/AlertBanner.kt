@@ -1,6 +1,8 @@
 package app.fluffy.ui.components
 
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,11 +20,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,10 +36,15 @@ import java.time.LocalDate
 object AlertBannerManager {
     private val EXPIRY_DATE = LocalDate.of(2026, 9, 1)
 
-    suspend fun shouldShowBanner(): Boolean {
+    suspend fun shouldShowBanner(context: Context): Boolean {
         if (LocalDate.now().isAfter(EXPIRY_DATE)) return false
         val settings = AppGraph.settings.settingsFlow.first()
-        return !settings.ctaBannerDismissed2026
+        if (settings.ctaBannerDismissed2026) return false
+
+        val pm = context.packageManager
+        val isTv = pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+        val hasTouch = pm.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)
+        return !isTv && hasTouch
     }
 
     suspend fun dismissBanner() {

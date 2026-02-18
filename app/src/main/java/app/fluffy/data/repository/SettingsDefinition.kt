@@ -4,6 +4,7 @@ import io.github.mlmgames.settings.core.annotations.CategoryDefinition
 import io.github.mlmgames.settings.core.annotations.Persisted
 import io.github.mlmgames.settings.core.annotations.SchemaVersion
 import io.github.mlmgames.settings.core.annotations.Setting
+import io.github.mlmgames.settings.core.types.Button
 import io.github.mlmgames.settings.core.types.Dropdown
 import io.github.mlmgames.settings.core.types.Slider
 import io.github.mlmgames.settings.core.types.Toggle
@@ -118,6 +119,14 @@ data class AppSettings(
         key = "warn_shell_writes"
     )
     val warnBeforeShellWrites: Boolean = false,
+
+    @Setting(
+        title = "Support Development",
+        description = "If you find this app useful, consider supporting its continued development",
+        category = System::class,
+        type = Button::class
+    )
+    val supportDevelopment: Long = 0L,
 )
 
 

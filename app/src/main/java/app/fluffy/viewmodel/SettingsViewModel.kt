@@ -25,11 +25,13 @@ class SettingsViewModel(private val repo: SettingsRepository) : ViewModel() {
 
     fun performAction(propertyName: String) = viewModelScope.launch {
         when (propertyName) {
+            "supportDevelopment" -> _events.emit(UiEvent.OpenUrl("https://github.com/sponsors/mlm-games"))
             else -> _events.emit(UiEvent.Toast("No action attached"))
         }
     }
 
     sealed class UiEvent {
         data class Toast(val message: String) : UiEvent()
+        data class OpenUrl(val url: String) : UiEvent()
     }
 }
