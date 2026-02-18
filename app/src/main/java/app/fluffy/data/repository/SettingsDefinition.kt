@@ -61,6 +61,9 @@ data class AppSettings(
     @Persisted(key = "use_aurora_theme")
     val useAuroraTheme: Boolean = true,
 
+    @Persisted(key = "cta_banner_dismissed_2026")
+    val ctaBannerDismissed2026: Boolean = false,
+
     @Setting(
         title = "ZIP compression level",
         description = "0 = no compression, 9 = maximum compression",

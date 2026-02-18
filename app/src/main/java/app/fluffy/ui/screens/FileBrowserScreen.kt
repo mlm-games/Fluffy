@@ -80,6 +80,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -93,6 +94,8 @@ import androidx.documentfile.provider.DocumentFile
 import app.fluffy.R
 import app.fluffy.data.repository.Bookmark
 import app.fluffy.helper.cardAsFocusGroup
+import app.fluffy.ui.components.AlertBanner
+import app.fluffy.ui.components.AlertBannerManager
 import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.ui.components.FileListRow
 import app.fluffy.ui.components.toRowModel
@@ -100,6 +103,7 @@ import app.fluffy.ui.dialogs.AddBookmarkDialog
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.QuickAccessItem
+import kotlinx.coroutines.launch
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -167,6 +171,12 @@ fun FileBrowserScreen(
     var overflowMenuExpanded by remember { mutableStateOf(false) }
     var showAddBookmarkDialog by remember { mutableStateOf(false) }
     var pendingBookmarkName by remember { mutableStateOf("") }
+
+    val scope = rememberCoroutineScope()
+    var showCtaBanner by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        showCtaBanner = AlertBannerManager.shouldShowBanner()
+    }
 
     // Overwrite confirmations (ZIP / 7z created into currentDir)
     var pendingZipName by remember { mutableStateOf<String?>(null) }
@@ -263,6 +273,17 @@ fun FileBrowserScreen(
     Scaffold(
         topBar = {
             Column {
+                if (showCtaBanner) {
+                    AlertBanner(
+                        text = "F-Droid is under threat. Google is changing the way you install apps on your phone. We need your help.",
+                        linkText = "Learn more",
+                        url = "https://keepandroidopen.org",
+                        onDismiss = {
+                            showCtaBanner = false
+                            scope.launch { AlertBannerManager.dismissBanner() }
+                        }
+                    )
+                }
                 TopAppBar(
                     title = {
                         Text(
