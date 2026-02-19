@@ -32,19 +32,21 @@ import androidx.compose.ui.unit.dp
 import app.fluffy.AppGraph
 import kotlinx.coroutines.flow.first
 import java.time.LocalDate
+import androidx.core.net.toUri
 
 object AlertBannerManager {
-    private val EXPIRY_DATE = LocalDate.of(2026, 9, 1)
+//    private val EXPIRY_DATE = LocalDate.of(2026, 9, 1)
 
     suspend fun shouldShowBanner(context: Context): Boolean {
-        if (LocalDate.now().isAfter(EXPIRY_DATE)) return false
-        val settings = AppGraph.settings.settingsFlow.first()
-        if (settings.ctaBannerDismissed2026) return false
-
-        val pm = context.packageManager
-        val isTv = pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
-        val hasTouch = pm.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)
-        return !isTv && hasTouch
+        return false
+//        if (LocalDate.now().isAfter(EXPIRY_DATE)) return false
+//        val settings = AppGraph.settings.settingsFlow.first()
+//        if (settings.ctaBannerDismissed2026) return false
+//
+//        val pm = context.packageManager
+//        val isTv = pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
+//        val hasTouch = pm.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN)
+//        return !isTv && hasTouch
     }
 
     suspend fun dismissBanner() {
@@ -77,7 +79,7 @@ fun AlertBanner(
             .background(Color(0x33F44336))
             .clickable {
                 runCatching {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                    val intent = Intent(Intent.ACTION_VIEW, url.toUri())
                     context.startActivity(intent)
                 }
             }
