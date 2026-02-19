@@ -36,9 +36,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.window.DialogProperties
 import app.fluffy.ui.theme.ThemeDefaults
-import java.util.Locale
 
 /**
  * Dialog for slider-based settings
@@ -94,7 +94,7 @@ fun SliderSettingDialog(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = String.format(Locale.getDefault(), "%.1f", sliderValue),
+                        text = String.format(LocalLocale.current.platformLocale, "%.1f", sliderValue),
                         style = MaterialTheme.typography.headlineMedium,
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )

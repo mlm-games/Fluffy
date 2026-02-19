@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<lint>
+    <issue id="MissingTranslation" severity="warning" />
+    <issue id="UnusedTranslation" severity="informational" />
+    
+    <!-- these are intentional -->
+    <issue id="PrivateResource" severity="warning" />
+    
+    <issue id="UnusedResources" severity="informational" />
+    
+    <!-- intentional hardcoded paths for Termux integration -->
+    <issue id="SdCardPath" severity="informational" />
+    
+    <issue id="ConfigurationScreenWidthHeight" severity="informational" />
+    
+    <issue id="VectorRaster" severity="informational" />
+
+    <issue id="AssignedValueIsNeverRead" severity="informational" />
+
+</lint>

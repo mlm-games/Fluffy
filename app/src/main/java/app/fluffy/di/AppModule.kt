@@ -7,6 +7,7 @@ import app.fluffy.ui.components.snackbar.SnackbarManager
 import app.fluffy.viewmodel.FileBrowserViewModel
 import app.fluffy.viewmodel.SettingsViewModel
 import app.fluffy.viewmodel.TasksViewModel
+import org.koin.android.ext.koin.androidApplication
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
@@ -25,6 +26,6 @@ val appModule = module {
 
 
     viewModel { FileBrowserViewModel(get(), get(), get(), get(), get(), get()) }
-    viewModel { TasksViewModel(androidContext(), get()) }
+    viewModel { TasksViewModel(androidApplication(), get()) }
     viewModel { SettingsViewModel(get()) }
 }

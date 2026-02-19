@@ -1,6 +1,6 @@
 package app.fluffy.viewmodel
 
-import android.content.Context
+import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -14,14 +14,14 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 class TasksViewModel(
-    private val context: Context,
+    private val application: Application,
     private val jobs: ArchiveJobManager
 ) : ViewModel() {
 
     private val _workInfos = MutableStateFlow<List<WorkInfo>>(emptyList())
     val workInfos: StateFlow<List<WorkInfo>> = _workInfos
 
-    private val liveData = WorkManager.getInstance(context).getWorkInfosByTagLiveData(ArchiveJobManager.TAG_ALL)
+    private val liveData = WorkManager.getInstance(application).getWorkInfosByTagLiveData(ArchiveJobManager.TAG_ALL)
     private val observer = Observer<List<WorkInfo>?> { list ->
         _workInfos.value = list ?: emptyList()
     }
@@ -56,10 +56,10 @@ class TasksViewModel(
     }
 
     fun cancelAll() {
-        WorkManager.getInstance(context).cancelAllWorkByTag(ArchiveJobManager.TAG_ALL)
+        WorkManager.getInstance(application).cancelAllWorkByTag(ArchiveJobManager.TAG_ALL)
     }
 
     fun cancel(id: UUID) {
-        WorkManager.getInstance(context).cancelWorkById(id)
+        WorkManager.getInstance(application).cancelWorkById(id)
     }
 }

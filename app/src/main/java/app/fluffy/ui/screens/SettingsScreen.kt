@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLocale
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import app.fluffy.data.repository.AppSettings
@@ -30,7 +31,6 @@ import io.github.mlmgames.settings.core.types.Button
 import io.github.mlmgames.settings.core.types.Dropdown
 import io.github.mlmgames.settings.core.types.Slider
 import io.github.mlmgames.settings.core.types.Toggle
-import java.util.Locale
 import kotlin.reflect.KClass
 
 @Composable
@@ -61,9 +61,10 @@ fun SettingsScreen(vm: SettingsViewModel) {
 
     val rootAvail by remember { mutableStateOf(RootAccess.isAvailable()) }
     val shizukuAvail by remember { mutableStateOf(ShizukuAccess.isAvailable()) }
+    val locale = LocalLocale.current.platformLocale
 
     fun categoryTitle(cat: KClass<*>): String =
-        cat.simpleName?.lowercase()?.replaceFirstChar { it.titlecase(Locale.getDefault()) } ?: "Settings"
+        cat.simpleName?.lowercase()?.replaceFirstChar { it.titlecase(locale) } ?: "Settings"
 
     MyScreenScaffold(title = "Settings") { _ ->
         LazyVerticalGrid(
@@ -133,7 +134,7 @@ fun SettingsScreen(vm: SettingsViewModel) {
                             Slider::class -> {
                                 val subtitle = when (val v = field.get(settings)) {
                                     is Int -> v.toString()
-                                    is Float -> String.format(Locale.getDefault(), "%.1f", v)
+                                    is Float -> String.format(LocalLocale.current.platformLocale, "%.1f", v)
                                     else -> ""
                                 }
                                 SettingsItem(
