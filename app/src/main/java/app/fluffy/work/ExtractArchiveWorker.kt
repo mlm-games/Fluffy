@@ -112,7 +112,7 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                 // Fallback for strict/invalid zips (e.g., some APKs)
                 open().use { input ->
                     ZipArchiveInputStream(input).use { zin ->
-                        var entry = zin.nextZipEntry
+                        var entry = zin.nextEntry
                         while (entry != null) {
                             val entryName = entry.name ?: ""
                             if (entryName.isNotBlank()) {
@@ -123,7 +123,7 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                                 }
                                 out.close()
                             }
-                            entry = zin.nextZipEntry
+                            entry = zin.nextEntry
                         }
                     }
                 }

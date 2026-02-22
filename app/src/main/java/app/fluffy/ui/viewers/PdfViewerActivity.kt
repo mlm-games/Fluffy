@@ -419,6 +419,7 @@ private fun FullscreenPdfViewer(
                         return Offset(o.x.coerceIn(-mx, mx), o.y.coerceIn(-my, my))
                     }
 
+                    @Suppress("DEPRECATION")
                     val transformState = rememberTransformableState { zoomChange, panChange, _ ->
                         val newScale = (scaleAnim.value * zoomChange).coerceIn(minScale, maxScale)
                         scope.launch { scaleAnim.snapTo(newScale) }

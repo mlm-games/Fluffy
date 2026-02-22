@@ -23,7 +23,7 @@ object ShellIo {
     }
 
     private fun shizukuProc(vararg args: String): Process? =
-        ShizukuAccess.newProcess(args as Array<String>)
+        ShizukuAccess.newProcess(args.toList().toTypedArray())
 
     // ls by cd into directory (follows symlinks), try toybox/ls/busybox, silence stderr.
     private fun listCmd(path: String): String =

@@ -6,6 +6,8 @@ import android.content.ContentResolver
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.os.Parcelable
 import androidx.core.content.FileProvider
 import app.fluffy.AppGraph
 import app.fluffy.io.FileSystemAccess
@@ -13,6 +15,7 @@ import app.fluffy.ui.viewers.ImageViewerActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.util.ArrayList
 
 
 sealed class OpenTarget {
@@ -20,6 +23,18 @@ sealed class OpenTarget {
     data class Archive(val uri: Uri) : OpenTarget()
     data class Shared(val uris: List<Uri>, val mime: String? = null) : OpenTarget()
     data object None : OpenTarget()
+}
+
+@Suppress("DEPRECATION")
+inline fun <reified T : Parcelable> Intent.parcelable(key: String): T? = when {
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> getParcelableExtra(key, T::class.java)
+    else -> getParcelableExtra(key) as? T
+}
+
+@Suppress("DEPRECATION")
+inline fun <reified T : Parcelable> Intent.parcelableArrayList(key: String): ArrayList<T>? = when {
+    Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU -> getParcelableArrayListExtra(key, T::class.java)
+    else -> getParcelableArrayListExtra(key)
 }
 
 fun Intent.detectTarget(): OpenTarget {
@@ -33,10 +48,10 @@ fun Intent.detectTarget(): OpenTarget {
         data?.let { list += it }
 
         // SEND
-        runCatching { getParcelableExtra<Uri>(Intent.EXTRA_STREAM) }.getOrNull()?.let { list += it }
+        runCatching { parcelable<Uri>(Intent.EXTRA_STREAM) }.getOrNull()?.let { list += it }
 
         // SEND_MULTIPLE
-        runCatching { getParcelableArrayListExtra<Uri>(Intent.EXTRA_STREAM) }.getOrNull()?.let { list += it }
+        runCatching { parcelableArrayList<Uri>(Intent.EXTRA_STREAM) }.getOrNull()?.let { list += it }
 
         clipData?.let { cd ->
             for (i in 0 until cd.itemCount) {
