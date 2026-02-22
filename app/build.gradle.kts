@@ -173,6 +173,8 @@ dependencies {
     implementation(libs.androidx.media3.ui.compose)
     implementation(libs.androidx.media3.exoplayer.dash)
 
+    implementation(libs.compose.media.player)
+
     implementation(libs.zip4j)
     implementation(libs.commons.compress)
     implementation(libs.xz)

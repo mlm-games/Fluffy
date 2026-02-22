@@ -32,14 +32,15 @@ constraintlayoutComposeAndroid = "1.1.1"
 androidbrowserhelper = "2.6.2"
 datastorePreferencesCore = "1.2.0"
 xz = "1.11"
-zip4j = "2.11.5"
+zip4j = "2.11.6"
 zstdJni = "1.5.7-7"
 animation = "1.10.3"
 shizuku = "13.1.5"
 apkDist = "0.5.2"
 ksp = "2.3.0"
 composeBom = "2026.02.00"
-kmpSettingsCore = "0.5.0"
+kmpSettingsCore = "0.5.3"
+composeMediaPlayer = "0.8.7"
 
 koinBom = "4.1.1"
 navigation3Runtime = "1.0.1"
@@ -109,6 +110,8 @@ androidx-navigation3-runtime = { module = "androidx.navigation3:navigation3-runt
 androidx-navigation3-ui = { module = "androidx.navigation3:navigation3-ui", version.ref = "navigation3Runtime" }
 
 androidx-lifecycle-viewmodel-navigation3 = { module = "androidx.lifecycle:lifecycle-viewmodel-navigation3", version.ref = "lifecycle" }
+
+compose-media-player = { module = "io.github.kdroidfilter:composemediaplayer", version.ref = "composeMediaPlayer" }
 
 
 [plugins]
