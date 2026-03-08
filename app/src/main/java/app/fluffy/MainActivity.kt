@@ -83,6 +83,7 @@ import app.fluffy.ui.screens.TasksScreen
 import app.fluffy.ui.theme.FluffyTheme
 import app.fluffy.ui.util.ScreenKey
 import app.fluffy.viewmodel.BrowseLocation
+import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.FileBrowserViewModel
 import app.fluffy.viewmodel.SettingsViewModel
 import app.fluffy.viewmodel.TasksViewModel
@@ -117,6 +118,16 @@ class MainActivity : ComponentActivity() {
     private val filesVM: FileBrowserViewModel by viewModel()
     private val tasksVM: TasksViewModel by viewModel()
     private val settingsVM: SettingsViewModel by viewModel()
+
+    private fun getCurrentDirUri(browserState: FileBrowserState): Uri? {
+        return browserState.currentLocation?.let { loc ->
+            when (loc) {
+                is BrowseLocation.SAF -> loc.uri
+                is BrowseLocation.FileSystem -> Uri.fromFile(loc.file)
+                else -> null
+            }
+        }
+    }
 
     private val storagePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -216,6 +227,7 @@ class MainActivity : ComponentActivity() {
                     workInfos.forEach { wi ->
                         if (wi.state.isFinished && seenFinished.add(wi.id.toString())) {
                             refreshNeeded = true
+                            getCurrentDirUri(browserState)?.let { DirectoryCounter.invalidate(it) }
                             DirectoryCounter.invalidateAll()
                         }
                     }
@@ -342,7 +354,6 @@ class MainActivity : ComponentActivity() {
                                                             AppGraph.io.deleteTree(it)
                                                             DirectoryCounter.invalidateParent(it)
                                                         }
-                                                        DirectoryCounter.invalidateAll()
                                                         filesVM.refreshCurrentDir()
                                                     }
                                                 }
@@ -394,12 +405,19 @@ class MainActivity : ComponentActivity() {
 
                                         onRequestPermission = { requestStoragePermission() },
                                         onShowQuickAccess = { filesVM.showQuickAccess() },
-                                        onCreateFolder = { name -> filesVM.createNewFolder(name) },
-                                        onCreateFile = { name -> filesVM.createNewFile(name) },
+                                        onCreateFolder = { name ->
+                                            filesVM.createNewFolder(name)
+                                            getCurrentDirUri(browserState)?.let { DirectoryCounter.invalidate(it) }
+                                        },
+                                        onCreateFile = { name ->
+                                            filesVM.createNewFile(name)
+                                            getCurrentDirUri(browserState)?.let { DirectoryCounter.invalidate(it) }
+                                        },
                                         onPasteClipboard = { name ->
                                             val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
                                             val text = clipboard.primaryClip?.getItemAt(0)?.text?.toString() ?: ""
                                             filesVM.createFileFromClipboard(name, text)
+                                            getCurrentDirUri(browserState)?.let { DirectoryCounter.invalidate(it) }
                                         },
 
                                         onShareSelected = { uris ->
