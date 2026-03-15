@@ -93,6 +93,7 @@ import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import app.fluffy.R
 import app.fluffy.data.repository.Bookmark
+import app.fluffy.io.ShellIo
 import app.fluffy.helper.cardAsFocusGroup
 import app.fluffy.ui.components.AlertBanner
 import app.fluffy.ui.components.AlertBannerManager
@@ -104,6 +105,7 @@ import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.QuickAccessItem
 import kotlinx.coroutines.launch
+import org.koin.compose.koinInject
 import java.io.File
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -145,6 +147,8 @@ fun FileBrowserScreen(
     onPickFolder: (Uri) -> Unit = {},
     onCancelPickFolder: () -> Unit = {},
 ) {
+    val shellIo: ShellIo = koinInject()
+
     val currentLocation = state.currentLocation
     val canUp = state.stack.size > 1
     val canGoBack = currentLocation != null && currentLocation !is BrowseLocation.QuickAccess
@@ -235,8 +239,8 @@ fun FileBrowserScreen(
             "root", "shizuku" -> {
                 val base = parent.path ?: "/"
                 when (parent.scheme) {
-                    "root" -> app.fluffy.io.ShellIo.listRoot(base).any { it.first == name }
-                    else -> app.fluffy.io.ShellIo.listShizuku(base).any { it.first == name }
+                    "root" -> shellIo.listRoot(base).any { it.first == name }
+                    else -> shellIo.listShizuku(base).any { it.first == name }
                 }
             }
             else -> false

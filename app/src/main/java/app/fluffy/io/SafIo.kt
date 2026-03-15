@@ -14,10 +14,13 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 
-class SafIo(val context: Context) {
+class SafIo(
+    val context: Context,
+    private val fileSystemAccess: FileSystemAccess,
+    private val shellIo: ShellIo,
+) {
 
     private val cr: ContentResolver get() = context.contentResolver
-    private val fileSystemAccess = FileSystemAccess(context)
 
     private fun isRoot(uri: Uri) = uri.scheme == "root"
     private fun isShizuku(uri: Uri) = uri.scheme == "shizuku"
@@ -43,8 +46,8 @@ class SafIo(val context: Context) {
     fun listShell(dir: Uri): List<ShellEntry> {
         val base = path(dir).ifBlank { "/" }
         val pairs = when {
-            isRoot(dir) -> ShellIo.listRoot(base)
-            isShizuku(dir) -> ShellIo.listShizuku(base)
+            isRoot(dir) -> shellIo.listRoot(base)
+            isShizuku(dir) -> shellIo.listShizuku(base)
             else -> emptyList()
         }
 
@@ -67,8 +70,8 @@ class SafIo(val context: Context) {
 
     fun openIn(uri: Uri): InputStream {
         return when {
-            isRoot(uri) -> ShellIo.openInRoot(path(uri))
-            isShizuku(uri) -> ShellIo.openInShizuku(path(uri))
+            isRoot(uri) -> shellIo.openInRoot(path(uri))
+            isShizuku(uri) -> shellIo.openInShizuku(path(uri))
             uri.scheme == "file" -> {
                 val file = File(uri.path!!)
                 FileInputStream(file)
@@ -86,8 +89,8 @@ class SafIo(val context: Context) {
 
     fun openOut(uri: Uri): OutputStream {
         return when {
-            isRoot(uri) -> ShellIo.openOutRoot(path(uri))
-            isShizuku(uri) -> ShellIo.openOutShizuku(path(uri))
+            isRoot(uri) -> shellIo.openOutRoot(path(uri))
+            isShizuku(uri) -> shellIo.openOutShizuku(path(uri))
             uri.scheme == "file" -> {
                 val file = File(uri.path!!)
                 FileOutputStream(file)
@@ -114,13 +117,13 @@ class SafIo(val context: Context) {
             isRoot(parent) -> {
                 val base = path(parent).ifBlank { "/" }
                 val p = if (base == "/") "/$name" else if (base.endsWith("/")) base + name else "$base/$name"
-                ShellIo.mkdirsRoot(p)
+                shellIo.mkdirsRoot(p)
                 Uri.Builder().scheme("root").path(p).build()
             }
             isShizuku(parent) -> {
                 val base = path(parent).ifBlank { "/" }
                 val p = if (base == "/") "/$name" else if (base.endsWith("/")) base + name else "$base/$name"
-                ShellIo.mkdirsShizuku(p)
+                shellIo.mkdirsShizuku(p)
                 Uri.Builder().scheme("shizuku").path(p).build()
             }
             parent.scheme == "file" -> {
@@ -154,15 +157,15 @@ class SafIo(val context: Context) {
             isRoot(parent) -> {
                 val base = path(parent).ifBlank { "/" }
                 val p = if (base == "/") "/$name" else if (base.endsWith("/")) base + name else "$base/$name"
-                if (overwrite) runCatching { ShellIo.deleteRoot(p) }
-                ShellIo.openOutRoot(p).use { /* create */ }
+                if (overwrite) runCatching { shellIo.deleteRoot(p) }
+                shellIo.openOutRoot(p).use { /* create */ }
                 Uri.Builder().scheme("root").path(p).build()
             }
             isShizuku(parent) -> {
                 val base = path(parent).ifBlank { "/" }
                 val p = if (base == "/") "/$name" else if (base.endsWith("/")) base + name else "$base/$name"
-                if (overwrite) runCatching { ShellIo.deleteShizuku(p) }
-                ShellIo.openOutShizuku(p).use { /* create */ }
+                if (overwrite) runCatching { shellIo.deleteShizuku(p) }
+                shellIo.openOutShizuku(p).use { /* create */ }
                 Uri.Builder().scheme("shizuku").path(p).build()
             }
             parent.scheme == "file" -> {
@@ -204,7 +207,7 @@ class SafIo(val context: Context) {
                 else if (base == "/") "/$clean"
                 else if (base.endsWith("/")) base + clean
                 else "$base/$clean"
-                ShellIo.mkdirsRoot(p)
+                shellIo.mkdirsRoot(p)
                 Uri.Builder().scheme("root").path(p).build()
             }
             isShizuku(parent) -> {
@@ -214,7 +217,7 @@ class SafIo(val context: Context) {
                 else if (base == "/") "/$clean"
                 else if (base.endsWith("/")) base + clean
                 else "$base/$clean"
-                ShellIo.mkdirsShizuku(p)
+                shellIo.mkdirsShizuku(p)
                 Uri.Builder().scheme("shizuku").path(p).build()
             }
             parent.scheme == "file" -> {
@@ -308,8 +311,8 @@ class SafIo(val context: Context) {
 
     fun delete(uri: Uri): Boolean {
         return when {
-            isRoot(uri) -> ShellIo.deleteRoot(path(uri))
-            isShizuku(uri) -> ShellIo.deleteShizuku(path(uri))
+            isRoot(uri) -> shellIo.deleteRoot(path(uri))
+            isShizuku(uri) -> shellIo.deleteShizuku(path(uri))
             uri.scheme == "file" -> File(uri.path!!).deleteRecursively()
             uri.scheme == "content" -> docFileFromUri(uri)?.delete() == true
             else -> false
@@ -321,12 +324,12 @@ class SafIo(val context: Context) {
             isRoot(uri) -> {
                 val f = File(path(uri))
                 val newPath = (f.parent ?: "/") + "/" + newName
-                ShellIo.renameRoot(f.path, newPath)
+                shellIo.renameRoot(f.path, newPath)
             }
             isShizuku(uri) -> {
                 val f = File(path(uri))
                 val newPath = (f.parent ?: "/") + "/" + newName
-                ShellIo.renameShizuku(f.path, newPath)
+                shellIo.renameShizuku(f.path, newPath)
             }
             uri.scheme == "file" -> {
                 val file = File(uri.path!!)
@@ -420,11 +423,11 @@ class SafIo(val context: Context) {
             val name = queryDisplayName(srcUri)
             val newParent = ensureDir(targetParent, name)
             val children: List<Pair<Uri, Boolean>> = when {
-                isRoot(srcUri) -> ShellIo.listRoot(srcPath).map { (n, d) ->
+                isRoot(srcUri) -> shellIo.listRoot(srcPath).map { (n, d) ->
                     val child = Uri.Builder().scheme("root").path(join(srcPath, n)).build()
                     child to d
                 }
-                isShizuku(srcUri) -> ShellIo.listShizuku(srcPath).map { (n, d) ->
+                isShizuku(srcUri) -> shellIo.listShizuku(srcPath).map { (n, d) ->
                     val child = Uri.Builder().scheme("shizuku").path(join(srcPath, n)).build()
                     child to d
                 }
@@ -448,8 +451,8 @@ class SafIo(val context: Context) {
 
     suspend fun deleteTree(uri: Uri): Boolean = withContext(Dispatchers.IO) {
         when {
-            isRoot(uri) -> ShellIo.deleteRoot(path(uri))
-            isShizuku(uri) -> ShellIo.deleteShizuku(path(uri))
+            isRoot(uri) -> shellIo.deleteRoot(path(uri))
+            isShizuku(uri) -> shellIo.deleteShizuku(path(uri))
             uri.scheme == "file" -> File(uri.path!!).deleteRecursively()
             uri.scheme == "content" -> {
                 val doc = docFileFromUri(uri) ?: return@withContext false
@@ -471,11 +474,11 @@ class SafIo(val context: Context) {
         when {
             isRoot(parent) -> {
                 val p = (if (path(parent).endsWith("/")) path(parent) else path(parent) + "/") + name
-                runCatching { ShellIo.deleteRoot(p) }
+                runCatching { shellIo.deleteRoot(p) }
             }
             isShizuku(parent) -> {
                 val p = (if (path(parent).endsWith("/")) path(parent) else path(parent) + "/") + name
-                runCatching { ShellIo.deleteShizuku(p) }
+                runCatching { shellIo.deleteShizuku(p) }
             }
             parent.scheme == "file" -> {
                 val pf = File(parent.path!!)

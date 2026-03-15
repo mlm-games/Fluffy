@@ -44,6 +44,7 @@ import androidx.documentfile.provider.DocumentFile
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.ShellEntry
 import app.fluffy.io.ShellIo
+import org.koin.core.component.inject
 import app.fluffy.ui.screens.AnimatedListCard
 import app.fluffy.util.UiFormat.formatDate
 import app.fluffy.util.UiFormat.formatSize
@@ -52,6 +53,7 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import androidx.core.net.toUri
+import org.koin.core.component.KoinComponent
 
 data class RowModel(
     val name: String,
@@ -180,8 +182,7 @@ fun FileListRow(
                             if (!showFileCount) {
                                 "Folder"
                             } else {
-                                val c = dirCount
-                                when (c) {
+                                when (val c = dirCount) {
                                     null -> "…"
                                     1 -> "1 item"
                                     else -> "$c items"
@@ -233,8 +234,9 @@ fun FileListRow(
     }
 }
 
-object DirectoryCounter {
+object DirectoryCounter : KoinComponent {
     private val cache = ConcurrentHashMap<String, Int>()
+    private val shellIo: ShellIo by inject()
 
     suspend fun count(context: Context, uri: Uri): Int = withContext(Dispatchers.IO) {
         val key = uri.toString()
@@ -262,11 +264,11 @@ object DirectoryCounter {
             }
             "root" -> {
                 val p = uri.path ?: "/"
-                ShellIo.listRoot(p).size
+                shellIo.listRoot(p).size
             }
             "shizuku" -> {
                 val p = uri.path ?: "/"
-                ShellIo.listShizuku(p).size
+                shellIo.listShizuku(p).size
             }
             else -> 0
         }

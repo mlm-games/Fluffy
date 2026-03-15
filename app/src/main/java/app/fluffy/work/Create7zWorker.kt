@@ -13,15 +13,19 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import app.fluffy.AppGraph
+import app.fluffy.io.SafIo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry
 import org.apache.commons.compress.archivers.sevenz.SevenZOutputFile
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 import java.io.InputStream
 
-class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
+class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params), KoinComponent {
+
+    private val io: SafIo by inject()
 
     override suspend fun getForegroundInfo(): ForegroundInfo = createForeground("Creating 7z archive")
 
@@ -41,15 +45,15 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                 var done = 0
                 val total = sources.size.coerceAtLeast(1)
                 for (uri in sources) {
-                    val baseName = AppGraph.io.queryDisplayName(uri)
+                    val baseName = io.queryDisplayName(uri)
                     addTo7z(archive, uri, baseName)
                     done++
                     setProgress(workDataOf("progress" to (done.toFloat() / total)))
                 }
             }
 
-            val outUri = AppGraph.io.createFile(targetDir, outName, "application/x-7z-compressed", overwrite = overwrite)
-            AppGraph.io.openOut(outUri).use { out ->
+            val outUri = io.createFile(targetDir, outName, "application/x-7z-compressed", overwrite = overwrite)
+            io.openOut(outUri).use { out ->
                 outTmp.inputStream().use { input -> input.copyTo(out) }
             }
 
@@ -94,7 +98,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
     }
 
     private fun addTo7z(archive: SevenZOutputFile, uri: Uri, relPath: String) {
-        val df = AppGraph.io.docFileFromUri(uri)
+        val df = io.docFileFromUri(uri)
         if (uri.scheme == "content" && df != null) {
             if (df.isDirectory) {
                 val dirEntry = SevenZArchiveEntry().apply {
@@ -117,7 +121,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                     runCatching { lastModifiedDate = java.util.Date(df.lastModified()) }
                 }
                 archive.putArchiveEntry(entry)
-                AppGraph.io.openIn(uri).use { copyToSevenZ(it, archive) }
+                io.openIn(uri).use { copyToSevenZ(it, archive) }
                 archive.closeArchiveEntry()
             }
         } else {

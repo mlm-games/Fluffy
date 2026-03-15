@@ -1,6 +1,5 @@
 package app.fluffy.operations
 
-import android.content.Context
 import android.net.Uri
 import androidx.work.*
 import app.fluffy.work.Create7zWorker
@@ -10,8 +9,7 @@ import app.fluffy.work.FileOpsWorker
 import java.util.concurrent.TimeUnit
 
 class ArchiveJobManager(
-    private val context: Context,
-    @Suppress("unused") private val engine: app.fluffy.archive.ArchiveEngine
+    private val workManager: WorkManager,
 ) {
     fun enqueueExtract(
         archive: Uri,
@@ -30,7 +28,7 @@ class ArchiveJobManager(
             .setInputData(data)
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
-        WorkManager.getInstance(context).enqueue(req)
+        workManager.enqueue(req)
         return req.id.toString()
     }
 
@@ -54,7 +52,7 @@ class ArchiveJobManager(
             )
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
-        WorkManager.getInstance(context).enqueue(req)
+        workManager.enqueue(req)
         return req.id.toString()
     }
 
@@ -78,7 +76,7 @@ class ArchiveJobManager(
             )
             .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
-        WorkManager.getInstance(context).enqueue(req)
+        workManager.enqueue(req)
         return req.id.toString()
     }
 
@@ -94,7 +92,7 @@ class ArchiveJobManager(
                 )
             )
             .build()
-        WorkManager.getInstance(context).enqueue(req)
+        workManager.enqueue(req)
         return req.id.toString()
     }
 
@@ -110,7 +108,7 @@ class ArchiveJobManager(
                 )
             )
             .build()
-        WorkManager.getInstance(context).enqueue(req)
+        workManager.enqueue(req)
         return req.id.toString()
     }
 

@@ -9,9 +9,6 @@ class FluffyApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // TODO: Same as flicky
-        AppGraph.init(this)
-
         startKoin {
             androidContext(this@FluffyApplication)
             modules(appModule)

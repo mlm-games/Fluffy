@@ -13,17 +13,24 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import app.fluffy.AppGraph
-import app.fluffy.io.FileSystemAccess
+import app.fluffy.archive.ArchiveEngine
+import app.fluffy.data.repository.SettingsRepository
+import app.fluffy.io.SafIo
 import app.fluffy.util.ArchiveTypes.baseNameForExtraction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import net.lingala.zip4j.exception.ZipException
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.OutputStream
 
-class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
+class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params), KoinComponent {
+
+    private val io: SafIo by inject()
+    private val settings: SettingsRepository by inject()
+    private val archiveE: ArchiveEngine by inject()
 
     override suspend fun getForegroundInfo(): ForegroundInfo = createForeground("Extracting archive")
 
@@ -37,13 +44,13 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
             ?.map { normalize(it) }
             ?.toSet()
 
-        val name = AppGraph.io.queryDisplayName(archive)
-        val open = { AppGraph.io.openIn(archive) }
+        val name = io.queryDisplayName(archive)
+        val open = { io.openIn(archive) }
 
-        val settings = AppGraph.settings.settingsFlow.first()
-        val actualTargetDir = if (settings.extractIntoSubfolder) {
+        val s = settings.settingsFlow.first()
+        val actualTargetDir = if (s.extractIntoSubfolder) {
             val folder = baseNameForExtraction(name)
-            AppGraph.io.ensureDir(targetDir, folder)
+            io.ensureDir(targetDir, folder)
         } else {
             targetDir
         }
@@ -73,7 +80,7 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                     val parentRel = safe.substringBeforeLast('/', "")
                     val fileName = safe.substringAfterLast('/').ifEmpty { "item" }
                     if (isDir || safe.endsWith("/")) {
-                        val ensured = AppGraph.io.ensureDir(actualTargetDir, safe.removeSuffix("/"))
+                        val ensured = io.ensureDir(actualTargetDir, safe.removeSuffix("/"))
                         if (!isSafeDestination(fileRoot, ensured, isDir = true)) {
                             devNull()
                         } else {
@@ -82,18 +89,18 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                         }
                     } else {
                         val parentUri = if (parentRel.isNotEmpty()) {
-                            AppGraph.io.ensureDir(actualTargetDir, parentRel)
+                            io.ensureDir(actualTargetDir, parentRel)
                         } else actualTargetDir
                         if (!isSafeDestination(fileRoot, parentUri, isDir = true)) {
                             devNull()
                         } else {
-                            val mime = FileSystemAccess.getMimeType(fileName)
-                            val fileUri = AppGraph.io.createFile(parentUri, fileName, mime)
+                            val mime = app.fluffy.io.FileSystemAccess.getMimeType(fileName)
+                            val fileUri = io.createFile(parentUri, fileName, mime)
                             if (!isSafeDestination(fileRoot, fileUri, isDir = false)) {
                                 devNull()
                             } else {
                                 wroteAny = true
-                                AppGraph.io.openOut(fileUri)
+                                io.openOut(fileUri)
                             }
                         }
                     }
@@ -103,7 +110,7 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
             setProgress(workDataOf("progress" to 0f))
 
             try {
-                AppGraph.archive.extractAll(name, open, create, password) { done, total ->
+                archiveE.extractAll(name, open, create, password) { done, total ->
                     val frac = if (total > 0) done.toFloat() / total else 0.0f
                     setProgressAsync(workDataOf("progress" to frac))
                 }

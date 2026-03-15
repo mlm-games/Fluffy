@@ -59,10 +59,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
-import app.fluffy.AppGraph
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.data.repository.AppSettings
+import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.FileSystemAccess
+import app.fluffy.io.SafIo
 import app.fluffy.ui.components.AppTopBar
 import app.fluffy.ui.components.snackbar.SnackbarManager
 import app.fluffy.ui.theme.ThemeDefaults
@@ -89,6 +90,10 @@ fun ArchiveViewerScreen(
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    val io = koinInject<SafIo>()
+    val archive = koinInject<ArchiveEngine>()
+    val settingsRepo = koinInject<SettingsRepository>()
+
     var listing by remember { mutableStateOf<List<ArchiveEngine.Entry>>(emptyList()) }
     var title by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(true) }
@@ -101,7 +106,7 @@ fun ArchiveViewerScreen(
     val selected = remember { mutableStateMapOf<String, Boolean>() }
     var currentPath by remember { mutableStateOf("") }
 
-    val settings = AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings()).value
+    val settings = settingsRepo.settingsFlow.collectAsState(initial = AppSettings()).value
 
     val snackBarManager: SnackbarManager = koinInject()
 
@@ -165,11 +170,11 @@ fun ArchiveViewerScreen(
         loading = true
         error = null
         canOpenAsFolder = false
-        val name = AppGraph.io.queryDisplayName(archiveUri)
+        val name = io.queryDisplayName(archiveUri)
         title = name
 
         // Inspect mime and extension
-        val doc = AppGraph.io.docFileFromUri(archiveUri)
+        val doc = io.docFileFromUri(archiveUri)
         val mimeType = doc?.type ?: ""
         val fileName = name.lowercase()
 
@@ -187,7 +192,7 @@ fun ArchiveViewerScreen(
         // Fallback lister for ZIP/APK using Apache Commons Compress
         @Suppress("DEPRECATION")
         fun listWithCommonsZip(): List<ArchiveEngine.Entry> = runCatching {
-            AppGraph.io.openIn(archiveUri).use { input ->
+            io.openIn(archiveUri).use { input ->
                 ZipArchiveInputStream(input).use { zin ->
                     val out = mutableListOf<ArchiveEngine.Entry>()
                     var e = zin.nextZipEntry
@@ -212,9 +217,9 @@ fun ArchiveViewerScreen(
 
         val result = runCatching {
             withContext(Dispatchers.IO) {
-                AppGraph.archive.list(
+                archive.list(
                     name,
-                    { AppGraph.io.openIn(archiveUri) },
+                    { io.openIn(archiveUri) },
                     password = password.ifBlank { null }?.toCharArray()
                 )
             }
@@ -405,8 +410,10 @@ fun ArchiveViewerScreen(
                                                     pathInArchive = pathInArchive,
                                                     ctx = ctx,
                                                     archiveName = title,
-                                                    archive = archiveUri,
-                                                    pwd = password.ifBlank { null }
+                                                    archiveUri = archiveUri,
+                                                    pwd = password.ifBlank { null },
+                                                    archiveEngine = archive,
+                                                    safIo = io
                                                 )
                                                 if (uri != null) openPreview(uri, e.path, ctx, settings.preferContentResolverMime)
                                             }
@@ -510,8 +517,10 @@ private suspend fun extractEntryToCache(
     pathInArchive: String,
     ctx: Context,
     archiveName: String,
-    archive: Uri,
-    pwd: String?
+    archiveUri: Uri,
+    pwd: String?,
+    archiveEngine: ArchiveEngine,
+    safIo: SafIo
 ): Uri? = withContext(Dispatchers.IO) {
     try {
         fun norm(p: String) = p.trim().trimStart('/').replace('\\', '/')
@@ -519,9 +528,9 @@ private suspend fun extractEntryToCache(
         val outFileName = cleanTarget.substringAfterLast('/').ifEmpty { "item" }
         val out = File(ctx.cacheDir, "preview_${System.currentTimeMillis()}_$outFileName")
 
-        AppGraph.archive.extractAll(
+        archiveEngine.extractAll(
             archiveName.ifBlank { "archive" },
-            { AppGraph.io.openIn(archive) },
+            { safIo.openIn(archiveUri) },
             create = { p, isDir ->
                 val candidate = norm(p)
                 if (candidate != cleanTarget || isDir) {

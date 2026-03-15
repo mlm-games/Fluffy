@@ -1,16 +1,11 @@
 package app.fluffy
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.os.Environment
-import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -51,7 +46,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import androidx.lifecycle.lifecycleScope
@@ -62,6 +56,9 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.work.WorkInfo
 import app.fluffy.data.repository.AppSettings
+import app.fluffy.data.repository.SettingsRepository
+import app.fluffy.io.SafIo
+import app.fluffy.platform.StorageAccessPolicy
 import app.fluffy.helper.OpenTarget
 import app.fluffy.helper.detectTarget
 import app.fluffy.helper.launchImageViewer
@@ -89,6 +86,7 @@ import app.fluffy.viewmodel.SettingsViewModel
 import app.fluffy.viewmodel.TasksViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.compose.koinInject
 import java.io.File
@@ -114,6 +112,10 @@ class MainActivity : ComponentActivity() {
     private val showInAppFolderPicker = mutableStateOf(false)
     private val inAppFolderPickerTitle = mutableStateOf("")
     private var pendingFolderPickCallback: ((Uri) -> Unit)? = null
+
+    private val io: SafIo by inject()
+    private val settingsRepository: SettingsRepository by inject()
+    private val storageAccessPolicy: StorageAccessPolicy by inject()
 
     private val filesVM: FileBrowserViewModel by viewModel()
     private val tasksVM: TasksViewModel by viewModel()
@@ -141,12 +143,10 @@ class MainActivity : ComponentActivity() {
     private val manageStoragePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (Environment.isExternalStorageManager()) {
-                filesVM.onPermissionsChanged()
-            } else {
-                requestRegularStoragePermissions()
-            }
+        if (storageAccessPolicy.hasStoragePermission()) {
+            filesVM.onPermissionsChanged()
+        } else {
+            requestRegularStoragePermissions()
         }
     }
 
@@ -158,7 +158,6 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppGraph.init(applicationContext)
         
         inAppFolderPickerTitle.value = "Choose destination folder"
 
@@ -198,7 +197,7 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val s by AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings())
+            val s by settingsRepository.settingsFlow.collectAsState(initial = AppSettings())
 
             val dark = when (s.themeMode) {
                 0 -> isSystemInDarkTheme()
@@ -346,12 +345,12 @@ class MainActivity : ComponentActivity() {
 
                                         onDeleteSelected = { list ->
                                             lifecycleScope.launch {
-                                                val ss = AppGraph.settings.settingsFlow.first()
+                                                val ss = settingsRepository.settingsFlow.first()
                                                 val touchesShell = list.any { it.scheme == "root" || it.scheme == "shizuku" }
                                                 val proceed: () -> Unit = {
                                                     lifecycleScope.launch {
                                                         list.forEach {
-                                                            AppGraph.io.deleteTree(it)
+                                                            io.deleteTree(it)
                                                             DirectoryCounter.invalidateParent(it)
                                                         }
                                                         filesVM.refreshCurrentDir()
@@ -371,7 +370,7 @@ class MainActivity : ComponentActivity() {
                                         onRenameOne = { uri, newName ->
                                             lifecycleScope.launch {
                                                 if (newName.isNotBlank()) {
-                                                    AppGraph.io.rename(uri, newName)
+                                                    io.rename(uri, newName)
                                                     filesVM.refreshCurrentDir()
                                                 }
                                             }
@@ -720,92 +719,38 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun checkStoragePermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (!Environment.isExternalStorageManager()) {
-                if (canRequestManageStorage()) {
-                    requestManageStoragePermission()
-                } else {
-                    requestRegularStoragePermissions()
-                }
-            }
+        if (!storageAccessPolicy.hasStoragePermission()) {
+            requestStoragePermission()
         }
     }
 
     private fun requestStoragePermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (canRequestManageStorage()) {
-                requestManageStoragePermission()
-            } else {
-                requestRegularStoragePermissions()
-            }
+        if (storageAccessPolicy.shouldUseManageStorageFlow()) {
+            requestManageStoragePermission()
         } else {
             requestRegularStoragePermissions()
         }
     }
 
-    private fun canRequestManageStorage(): Boolean {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return false
-
-        val specificIntent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION).apply {
-            data = "package:$packageName".toUri()
-        }
-        if (specificIntent.resolveActivity(packageManager) != null) return true
-
-        val generalIntent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-        return generalIntent.resolveActivity(packageManager) != null
-    }
-
     private fun requestRegularStoragePermissions() {
-        val permissions = mutableListOf<String>()
-
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.READ_EXTERNAL_STORAGE
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            permissions.add(Manifest.permission.READ_EXTERNAL_STORAGE)
-        }
-
-        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
-            if (ContextCompat.checkSelfPermission(
-                    this,
-                    Manifest.permission.WRITE_EXTERNAL_STORAGE
-                ) != PackageManager.PERMISSION_GRANTED
-            ) {
-                permissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            }
-        }
-
+        val permissions = storageAccessPolicy.missingRegularPermissions()
         if (permissions.isNotEmpty()) {
             storagePermissionLauncher.launch(permissions.toTypedArray())
         }
     }
 
     private fun requestManageStoragePermission() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            try {
-                val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
-                intent.data = "package:$packageName".toUri()
-
-                if (intent.resolveActivity(packageManager) != null) {
-                    manageStoragePermissionLauncher.launch(intent)
-                } else {
-                    val generalIntent = Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION)
-                    if (generalIntent.resolveActivity(packageManager) != null) {
-                        manageStoragePermissionLauncher.launch(generalIntent)
-                    } else {
-                        requestRegularStoragePermissions()
-                    }
-                }
-            } catch (_: Exception) {
-                requestRegularStoragePermissions()
-            }
+        val intent = storageAccessPolicy.createManageStorageIntent()
+        if (intent != null) {
+            manageStoragePermissionLauncher.launch(intent)
+        } else {
+            requestRegularStoragePermissions()
         }
     }
 
     private fun confirmShellWrite(target: Uri, proceed: () -> Unit) {
         lifecycleScope.launch {
-            val s = AppGraph.settings.settingsFlow.first()
+            val s = settingsRepository.settingsFlow.first()
             val needsWarn = s.warnBeforeShellWrites && (target.scheme == "root" || target.scheme == "shizuku")
             if (needsWarn) {
                 overwriteMessage.value =
@@ -828,10 +773,10 @@ class MainActivity : ComponentActivity() {
                 if (u.scheme == "root" || u.scheme == "shizuku") return@map u
 
                 if (u.scheme == "content") {
-                    val name = sanitizeName(AppGraph.io.queryDisplayName(u))
+                    val name = sanitizeName(io.queryDisplayName(u))
                     val out = File(cacheDir, "incoming_${System.currentTimeMillis()}_$name")
                     runCatching {
-                        AppGraph.io.openIn(u).use { input ->
+                        io.openIn(u).use { input ->
                             out.outputStream().use { input.copyTo(it) }
                         }
                         return@map Uri.fromFile(out)
@@ -848,7 +793,7 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val staged = stageSharedIfNeeded(uris)
             pendingCopy = staged
-            val s = AppGraph.settings.settingsFlow.first()
+            val s = settingsRepository.settingsFlow.first()
             launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
         }
     }

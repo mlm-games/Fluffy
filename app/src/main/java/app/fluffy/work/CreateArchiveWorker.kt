@@ -13,13 +13,21 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import app.fluffy.AppGraph
+import app.fluffy.archive.ArchiveEngine
+import app.fluffy.data.repository.SettingsRepository
+import app.fluffy.io.SafIo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 
-class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
+class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params), KoinComponent {
+
+    private val io: SafIo by inject()
+    private val settings: SettingsRepository by inject()
+    private val archive: ArchiveEngine by inject()
 
     override suspend fun getForegroundInfo(): ForegroundInfo = createForeground("Creating archive")
 
@@ -31,19 +39,19 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
         val password = inputData.getString(KEY_PASSWORD)?.takeIf { it.isNotEmpty() }?.toCharArray()
         val overwrite = inputData.getBoolean(KEY_OVERWRITE, false)
 
-        val level = AppGraph.settings.settingsFlow.first().zipCompressionLevel.coerceIn(0, 9)
+        val level = settings.settingsFlow.first().zipCompressionLevel.coerceIn(0, 9)
 
         val pairs = mutableListOf<Pair<String, () -> java.io.InputStream>>()
         for (src in sourcesIn) {
-            collectFilesRec(src, AppGraph.io.queryDisplayName(src), pairs)
+            collectFilesRec(src, io.queryDisplayName(src), pairs)
         }
 
-        val outUri = AppGraph.io.createFile(targetDir, outName, "application/zip", overwrite = overwrite)
-        val writeTarget: () -> java.io.OutputStream = { AppGraph.io.openOut(outUri) }
+        val outUri = io.createFile(targetDir, outName, "application/zip", overwrite = overwrite)
+        val writeTarget: () -> java.io.OutputStream = { io.openOut(outUri) }
 
         setProgress(workDataOf("progress" to 0f))
 
-        AppGraph.archive.createZip(
+        archive.createZip(
             sources = pairs,
             writeTarget = writeTarget,
             compressionLevel = level,
@@ -62,7 +70,7 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
         relPath: String,
         out: MutableList<Pair<String, () -> java.io.InputStream>>
     ) {
-        val df = AppGraph.io.docFileFromUri(uri)
+        val df = io.docFileFromUri(uri)
         if (uri.scheme == "content" && df != null) {
             if (df.isDirectory) {
                 df.listFiles().forEach { child ->
@@ -70,7 +78,7 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
                     collectFilesRec(child.uri, childName, out)
                 }
             } else {
-                out += relPath to { AppGraph.io.openIn(uri) }
+                out += relPath to { io.openIn(uri) }
             }
         } else {
             val f = File(requireNotNull(uri.path))

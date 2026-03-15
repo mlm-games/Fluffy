@@ -42,28 +42,33 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import app.fluffy.AppGraph
 import app.fluffy.data.repository.AppSettings
+import app.fluffy.data.repository.SettingsRepository
+import app.fluffy.io.SafIo
 import app.fluffy.ui.dialogs.FluffyDialog
 import app.fluffy.ui.theme.FluffyTheme
 import io.github.kdroidfilter.composemediaplayer.VideoPlayerSurface
 import io.github.kdroidfilter.composemediaplayer.rememberVideoPlayerState
 import kotlinx.coroutines.delay
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class MediaPlayerActivity : ComponentActivity() {
+class MediaPlayerActivity : ComponentActivity(), KoinComponent {
+    private val io: SafIo by inject()
+    private val settings: SettingsRepository by inject()
+
     companion object { const val EXTRA_TITLE = "title" }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppGraph.init(applicationContext)
 
         val uri = intent?.data ?: run { finish(); return }
-        val title = intent?.getStringExtra(EXTRA_TITLE) ?: AppGraph.io.queryDisplayName(uri)
+        val title = intent?.getStringExtra(EXTRA_TITLE) ?: io.queryDisplayName(uri)
 
         setContent {
-            val settings = AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings()).value
-            val dark = when (settings.themeMode) { 0 -> isSystemInDarkTheme(); 1 -> false; else -> true }
-            FluffyTheme(darkTheme = dark, useAuroraTheme = settings.useAuroraTheme) {
+            val s = settings.settingsFlow.collectAsState(initial = AppSettings()).value
+            val dark = when (s.themeMode) { 0 -> isSystemInDarkTheme(); 1 -> false; else -> true }
+            FluffyTheme(darkTheme = dark, useAuroraTheme = s.useAuroraTheme) {
                 MediaPlayerScreen(
                     url = uri.toString(), title = title,
                     onClose = { finish() }

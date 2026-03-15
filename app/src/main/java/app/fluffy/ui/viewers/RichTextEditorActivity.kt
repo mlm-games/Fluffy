@@ -34,9 +34,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import app.fluffy.AppGraph
 import app.fluffy.data.repository.AppSettings
+import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.DocumentController
+import app.fluffy.io.SafIo
 import app.fluffy.ui.theme.FluffyTheme
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
@@ -47,24 +48,27 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import java.nio.charset.Charset
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class RichTextEditorActivity : ComponentActivity() {
+class RichTextEditorActivity : ComponentActivity(), KoinComponent {
+    private val io: SafIo by inject()
+    private val settings: SettingsRepository by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        AppGraph.init(applicationContext)
 
         val uri = intent?.data ?: run { finish(); return }
-        val title = intent?.getStringExtra(EXTRA_TITLE) ?: AppGraph.io.queryDisplayName(uri)
+        val title = intent?.getStringExtra(EXTRA_TITLE) ?: io.queryDisplayName(uri)
 
         setContent {
-            val settings = AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings()).value
-            val dark = when (settings.themeMode) {
+            val s = settings.settingsFlow.collectAsState(initial = AppSettings()).value
+            val dark = when (s.themeMode) {
                 0 -> isSystemInDarkTheme()
                 1 -> false
                 else -> true
             }
-            FluffyTheme(darkTheme = dark, useAuroraTheme = settings.useAuroraTheme) {
+            FluffyTheme(darkTheme = dark, useAuroraTheme = s.useAuroraTheme) {
                 RichTextEditorScreen(uri, title) { finish() }
             }
         }

@@ -72,18 +72,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
-import app.fluffy.AppGraph
 import app.fluffy.data.repository.AppSettings
+import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.ui.theme.FluffyTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 import java.io.FileOutputStream
 
-class PdfViewerActivity : ComponentActivity() {
+class PdfViewerActivity : ComponentActivity(), KoinComponent {
+    private val settings: SettingsRepository by inject()
     companion object {
         const val EXTRA_URI = "uri"
     }
@@ -99,15 +102,16 @@ class PdfViewerActivity : ComponentActivity() {
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
 
         setContent {
-            val settings = AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings()).value
-            val dark = when (settings.themeMode) {
+            val s = settings.settingsFlow.collectAsState(initial = AppSettings()).value
+            val dark = when (s.themeMode) {
                 0 -> isSystemInDarkTheme()
                 1 -> false
                 else -> true
             }
-            FluffyTheme(darkTheme = dark, useAuroraTheme = settings.useAuroraTheme) {
+            FluffyTheme(darkTheme = dark, useAuroraTheme = s.useAuroraTheme) {
                 FullscreenPdfViewer(
                     uri = inputUri,
+                    appSettings = s,
                     onClose = { finish() }
                 )
             }
@@ -244,6 +248,7 @@ private fun PdfPageImage(
 @Composable
 private fun FullscreenPdfViewer(
     uri: Uri,
+    appSettings: AppSettings,
     onClose: () -> Unit
 ) {
     val context = LocalContext.current
@@ -285,8 +290,7 @@ private fun FullscreenPdfViewer(
 
     val title = "${pagerState.currentPage + 1} / $pageCount"
 
-    val settings = AppGraph.settings.settingsFlow.collectAsState(initial = AppSettings()).value
-    val dark = when (settings.themeMode) {
+    val dark = when (appSettings.themeMode) {
         0 -> isSystemInDarkTheme()
         1 -> false
         else -> true

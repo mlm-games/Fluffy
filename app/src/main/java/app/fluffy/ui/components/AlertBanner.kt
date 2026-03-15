@@ -29,19 +29,23 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import app.fluffy.AppGraph
+import app.fluffy.data.repository.SettingsRepository
 import kotlinx.coroutines.flow.first
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.time.LocalDate
 import androidx.core.net.toUri
 
-object AlertBannerManager {
+object AlertBannerManager : KoinComponent {
+    private val settings: SettingsRepository by inject()
+
 //    private val EXPIRY_DATE = LocalDate.of(2026, 9, 1)
 
     suspend fun shouldShowBanner(context: Context): Boolean {
         return false
 //        if (LocalDate.now().isAfter(EXPIRY_DATE)) return false
-//        val settings = AppGraph.settings.settingsFlow.first()
-//        if (settings.ctaBannerDismissed2026) return false
+//        val s = settings.settingsFlow.first()
+//        if (s.ctaBannerDismissed2026) return false
 //
 //        val pm = context.packageManager
 //        val isTv = pm.hasSystemFeature(PackageManager.FEATURE_LEANBACK)
@@ -50,7 +54,7 @@ object AlertBannerManager {
     }
 
     suspend fun dismissBanner() {
-        AppGraph.settings.updateSetting("ctaBannerDismissed2026", true)
+        settings.updateSetting("ctaBannerDismissed2026", true)
     }
 }
 

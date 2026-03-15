@@ -5,11 +5,14 @@ import android.net.Uri
 import android.provider.OpenableColumns
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 import java.io.IOException
 import java.nio.charset.Charset
 
-object DocumentController {
+object DocumentController : KoinComponent {
+    private val shellIo: ShellIo by inject()
 
     data class DocInfo(
         val name: String,
@@ -50,12 +53,12 @@ object DocumentController {
                 }
                 "root" -> {
                     val path = uri.path ?: ""
-                    val bytes = ShellIo.readBytesRoot(path)
+                    val bytes = shellIo.readBytesRoot(path)
                     DocInfo(File(path).name, bytes, false)
                 }
                 "shizuku" -> {
                     val path = uri.path ?: ""
-                    val bytes = ShellIo.readBytesShizuku(path)
+                    val bytes = shellIo.readBytesShizuku(path)
                     DocInfo(File(path).name, bytes, false)
                 }
                 else -> throw IOException("Unknown scheme: ${uri.scheme}")
@@ -73,10 +76,10 @@ object DocumentController {
                         ?: throw IOException("OutputStream null")
                 }
                 "root" -> {
-                    if (!ShellIo.writeBytesRoot(uri.path ?: "", content)) throw IOException("Root write failed")
+                    if (!shellIo.writeBytesRoot(uri.path ?: "", content)) throw IOException("Root write failed")
                 }
                 "shizuku" -> {
-                    if (!ShellIo.writeBytesShizuku(uri.path ?: "", content)) throw IOException("Shizuku write failed")
+                    if (!shellIo.writeBytesShizuku(uri.path ?: "", content)) throw IOException("Shizuku write failed")
                 }
                 else -> throw IOException("Unknown scheme")
             }
@@ -84,7 +87,7 @@ object DocumentController {
     }
 
     // Image Sibling Scanning (Left/Right swipe support)
-    suspend fun listImageSiblings(context: Context, uri: Uri): List<Uri> = withContext(Dispatchers.IO) {
+    suspend fun listImageSiblings(uri: Uri): List<Uri> = withContext(Dispatchers.IO) {
         val imageExts = setOf("jpg", "jpeg", "png", "gif", "webp", "bmp", "heic")
 
         fun isImg(name: String) = name.substringAfterLast('.', "").lowercase() in imageExts
@@ -103,7 +106,7 @@ object DocumentController {
                     val path = uri.path ?: return@withContext listOf(uri)
                     val parent = File(path).parent ?: return@withContext listOf(uri)
 
-                    val list = if(uri.scheme == "root") ShellIo.listRoot(parent) else ShellIo.listShizuku(parent)
+                    val list = if(uri.scheme == "root") shellIo.listRoot(parent) else shellIo.listShizuku(parent)
 
                     list.filter { (name, isDir) -> !isDir && isImg(name) }
                         .sortedBy { it.first.lowercase() }

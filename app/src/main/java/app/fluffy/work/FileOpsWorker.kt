@@ -12,12 +12,16 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
-import app.fluffy.AppGraph
+import app.fluffy.io.SafIo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 class FileOpsWorker(appContext: Context, params: WorkerParameters) :
-    CoroutineWorker(appContext, params) {
+    CoroutineWorker(appContext, params), KoinComponent {
+
+    private val io: SafIo by inject()
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
         val op = inputData.getString(KEY_OP) ?: OP_COPY
@@ -45,8 +49,8 @@ class FileOpsWorker(appContext: Context, params: WorkerParameters) :
 
             val ok = try {
                 when (op) {
-                    OP_MOVE -> AppGraph.io.moveIntoDir(uri, target, overwrite)
-                    else -> AppGraph.io.copyIntoDir(uri, target, overwrite)
+                    OP_MOVE -> io.moveIntoDir(uri, target, overwrite)
+                    else -> io.copyIntoDir(uri, target, overwrite)
                 }
             } catch (e: Exception) {
                 e.printStackTrace()

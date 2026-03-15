@@ -9,11 +9,13 @@ import android.net.Uri
 import android.os.Build
 import android.os.Parcelable
 import androidx.core.content.FileProvider
-import app.fluffy.AppGraph
 import app.fluffy.io.FileSystemAccess
+import app.fluffy.io.SafIo
 import app.fluffy.ui.viewers.ImageViewerActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 import java.util.ArrayList
 
@@ -23,6 +25,10 @@ sealed class OpenTarget {
     data class Archive(val uri: Uri) : OpenTarget()
     data class Shared(val uris: List<Uri>, val mime: String? = null) : OpenTarget()
     data object None : OpenTarget()
+}
+
+object AppUtilsHelper : KoinComponent {
+    val io: SafIo by inject()
 }
 
 @Suppress("DEPRECATION")
@@ -65,9 +71,9 @@ fun Intent.detectTarget(): OpenTarget {
         Intent.ACTION_VIEW -> {
             val u = data ?: return OpenTarget.None
             if (isImage(mime)) {
-                OpenTarget.Images(listOf(u), AppGraph.io.queryDisplayName(u))
+                OpenTarget.Images(listOf(u), AppUtilsHelper.io.queryDisplayName(u))
             } else {
-                val name = AppGraph.io.queryDisplayName(u).lowercase()
+                val name = AppUtilsHelper.io.queryDisplayName(u).lowercase()
                 if (FileSystemAccess.isArchiveFile(name)) OpenTarget.Archive(u) else OpenTarget.None
             }
         }
@@ -77,11 +83,11 @@ fun Intent.detectTarget(): OpenTarget {
             if (uris.isEmpty()) return OpenTarget.None
 
             if (isImage(mime)) {
-                return OpenTarget.Images(uris, uris.firstOrNull()?.let { AppGraph.io.queryDisplayName(it) })
+                return OpenTarget.Images(uris, uris.firstOrNull()?.let { AppUtilsHelper.io.queryDisplayName(it) })
             }
 
             if (uris.size == 1) {
-                val name = AppGraph.io.queryDisplayName(uris[0])
+                val name = AppUtilsHelper.io.queryDisplayName(uris[0])
                 if (FileSystemAccess.isArchiveFile(name)) return OpenTarget.Archive(uris[0])
             }
 
@@ -99,7 +105,7 @@ suspend fun Context.toViewableUri(uri: Uri, displayName: String = "image"): Uri 
                 cacheDir,
                 "img_${System.currentTimeMillis()}_${displayName.ifBlank { "image" }}"
             )
-            AppGraph.io.openIn(uri).use { input -> out.outputStream().use { input.copyTo(it) } }
+            AppUtilsHelper.io.openIn(uri).use { input -> out.outputStream().use { input.copyTo(it) } }
             runCatching { FileProvider.getUriForFile(this@toViewableUri, "$packageName.fileprovider", out) }
                 .getOrElse { Uri.fromFile(out) }
         }
@@ -108,7 +114,7 @@ suspend fun Context.toViewableUri(uri: Uri, displayName: String = "image"): Uri 
 }
 
 suspend fun Context.toViewableUris(items: List<Uri>): List<Uri> = withContext(Dispatchers.IO) {
-    items.map { u -> toViewableUri(u, AppGraph.io.queryDisplayName(u)) }
+    items.map { u -> toViewableUri(u, AppUtilsHelper.io.queryDisplayName(u)) }
 }
 
 private fun ContentResolver.clipForAll(label: String, uris: List<Uri>): ClipData? {
@@ -160,7 +166,7 @@ suspend fun Context.exportForOpenWith(src: Uri, displayName: String): Uri = with
         "root", "shizuku" -> {
             val safeName = displayName.ifBlank { "item" }
             val out = File(cacheDir, "export_${System.currentTimeMillis()}_$safeName")
-            AppGraph.io.openIn(src).use { `in` -> out.outputStream().use { `in`.copyTo(it) } }
+            AppUtilsHelper.io.openIn(src).use { `in` -> out.outputStream().use { `in`.copyTo(it) } }
             runCatching { FileProvider.getUriForFile(this@exportForOpenWith, "$packageName.fileprovider", out) }
                 .getOrElse { Uri.fromFile(out) }
         }
