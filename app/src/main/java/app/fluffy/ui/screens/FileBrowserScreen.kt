@@ -82,8 +82,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -168,7 +172,7 @@ fun FileBrowserScreen(
     var renameTarget by remember { mutableStateOf<Uri?>(null) }
     var renameOriginalName by remember { mutableStateOf("") }
     var showRenameDialog by remember { mutableStateOf(false) }
-    var renameNewName by remember { mutableStateOf("") }
+    var renameTextFieldValue by remember { mutableStateOf(TextFieldValue("")) }
     var showNewFolderDialog by remember { mutableStateOf(false) }
     var showNewFileDialog by remember { mutableStateOf(false) }
     var showPasteClipboardDialog by remember { mutableStateOf(false) }
@@ -555,9 +559,12 @@ fun FileBrowserScreen(
                                         AssistChip(
                                             onClick = {
                                                 val target = allSelectedUris.first()
+                                                val name = getNameForUri(target, currentLocation, state) ?: ""
+                                                val ext = name.substringAfterLast('.', "")
+                                                val baseLen = if (ext.isNotEmpty()) name.length - ext.length - 1 else name.length
                                                 renameTarget = target
-                                                renameOriginalName = getNameForUri(target, currentLocation, state) ?: ""
-                                                renameNewName = renameOriginalName
+                                                renameOriginalName = name
+                                                renameTextFieldValue = TextFieldValue(text = name, selection = TextRange(0, baseLen))
                                                 showRenameDialog = true
                                             },
                                             label = { Text("Rename") },
@@ -605,9 +612,12 @@ fun FileBrowserScreen(
                                     if (count == 1) {
                                         TextButton(onClick = {
                                             val target = allSelectedUris.first()
+                                            val name = getNameForUri(target, currentLocation, state) ?: ""
+                                            val ext = name.substringAfterLast('.', "")
+                                            val baseLen = if (ext.isNotEmpty()) name.length - ext.length - 1 else name.length
                                             renameTarget = target
-                                            renameOriginalName = getNameForUri(target, currentLocation, state) ?: ""
-                                            renameNewName = renameOriginalName
+                                            renameOriginalName = name
+                                            renameTextFieldValue = TextFieldValue(text = name, selection = TextRange(0, baseLen))
                                             showRenameDialog = true
                                         }) { Text("Rename") }
                                         TextButton(onClick = {
@@ -1008,21 +1018,26 @@ fun FileBrowserScreen(
     }
 
     if (showRenameDialog && renameTarget != null) {
+        val focusRequester = remember { FocusRequester() }
         AlertDialog(
             onDismissRequest = { showRenameDialog = false },
             title = { Text("Rename") },
             text = {
                 OutlinedTextField(
-                    value = renameNewName,
-                    onValueChange = { renameNewName = it },
+                    value = renameTextFieldValue,
+                    onValueChange = { renameTextFieldValue = it },
                     singleLine = true,
-                    label = { Text("New name") }
+                    label = { Text("New name") },
+                    modifier = Modifier.focusRequester(focusRequester)
                 )
             },
             confirmButton = {
+                LaunchedEffect(Unit) {
+                    focusRequester.requestFocus()
+                }
                 TextButton(onClick = {
                     val t = renameTarget!!
-                    onRenameOne(t, renameNewName, renameOriginalName)
+                    onRenameOne(t, renameTextFieldValue.text, renameOriginalName)
                     showRenameDialog = false
                     selected.clear()
                     selectedFiles.clear()
