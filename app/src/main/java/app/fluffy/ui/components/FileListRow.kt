@@ -71,9 +71,9 @@ fun File.toRowModel(): RowModel = RowModel(
     isArchive = if (isDirectory) false else FileSystemAccess.isArchiveFile(name),
     isImage = if (isDirectory) false else FileSystemAccess.getMimeType(name).startsWith("image/"),
     subtitle = if (isDirectory) {
-        "Folder • ${formatDate(lastModified())}" // Dupli code to remove
+        "Folder - ${formatDate(lastModified())}" // Dupli code to remove
     } else {
-        "${formatSize(length())} • ${formatDate(lastModified())}"
+        "${formatSize(length())} - ${formatDate(lastModified())}"
     }
 )
 

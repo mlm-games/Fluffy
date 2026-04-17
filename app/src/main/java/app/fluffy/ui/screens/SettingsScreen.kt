@@ -96,11 +96,11 @@ fun SettingsScreen(vm: SettingsViewModel) {
                         val descriptionOverride = when (field.name) {
                             "enableRoot" -> {
                                 val suffix = if (rootAvail) "Available" else "Not available"
-                                listOf(meta.description, suffix).filter { it.isNotBlank() }.joinToString(" • ")
+                                listOf(meta.description, suffix).filter { it.isNotBlank() }.joinToString(" - ")
                             }
                             "enableShizuku" -> {
                                 val suffix = if (shizukuAvail) "Running" else "Not running"
-                                listOf(meta.description, suffix).filter { it.isNotBlank() }.joinToString(" • ")
+                                listOf(meta.description, suffix).filter { it.isNotBlank() }.joinToString(" - ")
                             }
                             else -> meta.description
                         }.takeIf { it.isNotBlank() }
