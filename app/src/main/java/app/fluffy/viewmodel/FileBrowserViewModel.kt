@@ -52,8 +52,7 @@ data class FileBrowserState(
     val isLoading: Boolean = false,
     val error: String? = null,
     val canAccessFileSystem: Boolean = false,
-    val pendingFileOpen: Uri? = null,
-    val pendingArchiveOpen: Uri? = null,
+    val pendingAction: PendingAction = PendingAction.None,
     val selectedItems: MutableList<Uri> = mutableListOf(),
     val isPickerMode: Boolean = false,
     val pickerMimeType: String? = null
@@ -607,11 +606,11 @@ class FileBrowserViewModel(
     }
 
     private suspend fun handleFileOpen(uri: Uri) {
-        _state.value = _state.value.copy(pendingFileOpen = uri)
+        _state.value = _state.value.copy(pendingAction = PendingAction.OpenFile(uri))
     }
 
-    fun clearPendingFileOpen() {
-        _state.value = _state.value.copy(pendingFileOpen = null)
+    fun clearPendingAction() {
+        _state.value = _state.value.copy(pendingAction = PendingAction.None)
     }
 
     fun createNewFolder(name: String) {
@@ -707,10 +706,7 @@ class FileBrowserViewModel(
     }
 
     fun setPendingArchiveOpen(uri: Uri) {
-        _state.value = _state.value.copy(pendingArchiveOpen = uri)
-    }
-    fun clearPendingArchiveOpen() {
-        _state.value = _state.value.copy(pendingArchiveOpen = null)
+        _state.value = _state.value.copy(pendingAction = PendingAction.OpenArchive(uri))
     }
 
     fun clearSelection() {

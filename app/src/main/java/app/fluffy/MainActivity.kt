@@ -82,6 +82,7 @@ import app.fluffy.ui.util.ScreenKey
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.FileBrowserViewModel
+import app.fluffy.viewmodel.PendingAction
 import app.fluffy.viewmodel.SettingsViewModel
 import app.fluffy.viewmodel.TasksViewModel
 import kotlinx.coroutines.flow.first
@@ -99,11 +100,7 @@ class MainActivity : ComponentActivity() {
     private var pickerMimeType: String? = null
 
     // Pending operations that need a destination folder
-    private var pendingCopy: List<Uri>? = null
-    private var pendingMove: List<Uri>? = null
-    private var pendingExtractArchive: Uri? = null
-    private var pendingExtractPassword: String? = null
-    private var pendingExtractPaths: List<String>? = null
+    private var pendingAction: PendingAction = PendingAction.None
 
     // SAF tree pickers
     private lateinit var pickRoot: ActivityResultLauncher<Uri?>
@@ -244,20 +241,22 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                LaunchedEffect(browserState.pendingFileOpen) {
-                    browserState.pendingFileOpen?.let { uri ->
-                        val name = uri.lastPathSegment?.lowercase() ?: ""
-                        if (FileSystemAccess.isArchiveFile(name)) {
-                            backStack.add(ScreenKey.Archive(uri = uri.toString()))
-                            filesVM.clearPendingFileOpen()
+                LaunchedEffect(browserState.pendingAction) {
+                    when (val action = browserState.pendingAction) {
+                        is PendingAction.OpenFile -> {
+                            val name = action.uri.lastPathSegment?.lowercase() ?: ""
+                            if (FileSystemAccess.isArchiveFile(name)) {
+                                backStack.add(ScreenKey.Archive(uri = action.uri.toString()))
+                                filesVM.clearPendingAction()
+                            }
                         }
-                    }
-                }
 
-                LaunchedEffect(browserState.pendingArchiveOpen) {
-                    browserState.pendingArchiveOpen?.let { uri ->
-                        backStack.add(ScreenKey.Archive(uri = uri.toString()))
-                        filesVM.clearPendingArchiveOpen()
+                        is PendingAction.OpenArchive -> {
+                            backStack.add(ScreenKey.Archive(uri = action.uri.toString()))
+                            filesVM.clearPendingAction()
+                        }
+
+                        else -> Unit
                     }
                 }
 
@@ -334,12 +333,12 @@ class MainActivity : ComponentActivity() {
                                         },
 
                                         onCopySelected = { list ->
-                                            pendingCopy = list
+                                            pendingAction = PendingAction.Copy(list)
                                             launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
                                         },
 
                                         onMoveSelected = { list ->
-                                            pendingMove = list
+                                            pendingAction = PendingAction.Move(list)
                                             launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
                                         },
 
@@ -464,9 +463,11 @@ class MainActivity : ComponentActivity() {
                                                     onAfterEnqueue = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) }
                                                 )
                                             } else {
-                                                pendingExtractArchive = arch
-                                                pendingExtractPassword = pwd
-                                                pendingExtractPaths = null
+                                                pendingAction = PendingAction.Extract(
+                                                    archive = arch,
+                                                    password = pwd,
+                                                    includePaths = null
+                                                )
                                                 launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
                                             }
                                         },
@@ -485,9 +486,11 @@ class MainActivity : ComponentActivity() {
                                                     onAfterEnqueue = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) }
                                                 )
                                             } else {
-                                                pendingExtractArchive = arch
-                                                pendingExtractPassword = pwd
-                                                pendingExtractPaths = paths
+                                                pendingAction = PendingAction.Extract(
+                                                    archive = arch,
+                                                    password = pwd,
+                                                    includePaths = paths
+                                                )
                                                 launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
                                             }
                                         },
@@ -623,37 +626,27 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun handleTargetDirPicked(target: Uri) {
-        // Apply whichever pending operation exists. Clear pending after.
-        val copy = pendingCopy
-        val move = pendingMove
-        val exArch = pendingExtractArchive
-
-        when {
-            copy != null -> {
-                pendingCopy = null
+        when (val action = pendingAction) {
+            is PendingAction.Copy -> {
+                pendingAction = PendingAction.None
                 confirmShellWrite(target) {
-                    tasksVM.enqueueCopy(copy, target, overwrite = false)
+                    tasksVM.enqueueCopy(action.uris, target, overwrite = false)
                 }
             }
 
-            move != null -> {
-                pendingMove = null
+            is PendingAction.Move -> {
+                pendingAction = PendingAction.None
                 confirmShellWrite(target) {
-                    tasksVM.enqueueMove(move, target, overwrite = false)
+                    tasksVM.enqueueMove(action.uris, target, overwrite = false)
                 }
             }
 
-            exArch != null -> {
-                val pwd = pendingExtractPassword
-                val paths = pendingExtractPaths
-                pendingExtractArchive = null
-                pendingExtractPassword = null
-                pendingExtractPaths = null
-
+            is PendingAction.Extract -> {
+                pendingAction = PendingAction.None
                 extractWithConfirm(
-                    archive = exArch,
-                    password = pwd,
-                    includePaths = paths,
+                    archive = action.archive,
+                    password = action.password,
+                    includePaths = action.includePaths,
                     targetDir = target
                 )
             }
@@ -792,7 +785,7 @@ class MainActivity : ComponentActivity() {
     private fun handleSharedUris(uris: List<Uri>) {
         lifecycleScope.launch {
             val staged = stageSharedIfNeeded(uris)
-            pendingCopy = staged
+            pendingAction = PendingAction.Copy(staged)
             val s = settingsRepository.settingsFlow.first()
             launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
         }
