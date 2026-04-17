@@ -129,7 +129,7 @@ fun FileBrowserScreen(
     onDeleteSelected: (List<Uri>) -> Unit = {},
     onShareSelected: (List<Uri>) -> Unit = {},
     onPasteClipboard: (String) -> Unit = {},
-    onRenameOne: (Uri, String) -> Unit = { _, _ -> },
+    onRenameOne: (Uri, String, String) -> Unit = { _, _, _ -> },
     onCreate7z: (List<Uri>, String, String?, Uri, Boolean) -> Unit = { _, _, _, _, _ -> },
     onOpenFile: (File) -> Unit = {},
     onQuickAccessClick: (QuickAccessItem) -> Unit = {},
@@ -166,6 +166,7 @@ fun FileBrowserScreen(
     var showZipNameDialog by remember { mutableStateOf(false) }
     var show7zDialog by remember { mutableStateOf(false) }
     var renameTarget by remember { mutableStateOf<Uri?>(null) }
+    var renameOriginalName by remember { mutableStateOf("") }
     var showRenameDialog by remember { mutableStateOf(false) }
     var renameNewName by remember { mutableStateOf("") }
     var showNewFolderDialog by remember { mutableStateOf(false) }
@@ -553,8 +554,10 @@ fun FileBrowserScreen(
                                     if (count == 1) {
                                         AssistChip(
                                             onClick = {
-                                                renameTarget = allSelectedUris.first()
-                                                renameNewName = ""
+                                                val target = allSelectedUris.first()
+                                                renameTarget = target
+                                                renameOriginalName = getNameForUri(target, currentLocation, state) ?: ""
+                                                renameNewName = renameOriginalName
                                                 showRenameDialog = true
                                             },
                                             label = { Text("Rename") },
@@ -601,8 +604,10 @@ fun FileBrowserScreen(
 
                                     if (count == 1) {
                                         TextButton(onClick = {
-                                            renameTarget = allSelectedUris.first()
-                                            renameNewName = ""
+                                            val target = allSelectedUris.first()
+                                            renameTarget = target
+                                            renameOriginalName = getNameForUri(target, currentLocation, state) ?: ""
+                                            renameNewName = renameOriginalName
                                             showRenameDialog = true
                                         }) { Text("Rename") }
                                         TextButton(onClick = {
@@ -1017,7 +1022,7 @@ fun FileBrowserScreen(
             confirmButton = {
                 TextButton(onClick = {
                     val t = renameTarget!!
-                    onRenameOne(t, renameNewName)
+                    onRenameOne(t, renameNewName, renameOriginalName)
                     showRenameDialog = false
                     selected.clear()
                     selectedFiles.clear()
@@ -1226,6 +1231,20 @@ private fun BookmarkCard(
                 color = if (isEditMode) MaterialTheme.colorScheme.onErrorContainer else MaterialTheme.colorScheme.onSecondaryContainer
             )
         }
+    }
+}
+
+private fun getNameForUri(uri: Uri, location: BrowseLocation?, state: FileBrowserState): String? {
+    return when (location) {
+        is BrowseLocation.FileSystem -> state.fileItems.find { Uri.fromFile(it) == uri }?.name
+        is BrowseLocation.SAF -> {
+            if (state.currentDir?.scheme in listOf("root", "shizuku")) {
+                state.shellItems.find { it.uri == uri }?.name
+            } else {
+                state.items.find { it.uri == uri }?.name
+            }
+        }
+        else -> null
     }
 }
 

@@ -366,7 +366,7 @@ class MainActivity : ComponentActivity() {
                                             }
                                         },
 
-                                        onRenameOne = { uri, newName ->
+                                        onRenameOne = { uri, newName, _ ->
                                             lifecycleScope.launch {
                                                 if (newName.isNotBlank()) {
                                                     io.rename(uri, newName)
