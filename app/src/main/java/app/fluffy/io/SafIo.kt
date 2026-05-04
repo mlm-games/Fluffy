@@ -445,6 +445,21 @@ class SafIo(
 
     suspend fun moveIntoDir(srcUri: Uri, targetParent: Uri, overwrite: Boolean = false): Boolean =
         withContext(Dispatchers.IO) {
+            val srcPath = path(srcUri)
+            val targetPath = path(targetParent)
+            val isDir = when {
+                isRoot(srcUri) -> !File(srcPath).isFile
+                isShizuku(srcUri) -> !File(srcPath).isFile
+                srcUri.scheme == "file" -> File(srcUri.path!!).isDirectory
+                srcUri.scheme == "content" -> docFileFromUri(srcUri)?.isDirectory == true
+                else -> false
+            }
+            val name = queryDisplayName(srcUri)
+            val targetDir = if (targetPath.endsWith("/")) targetPath else "$targetPath/"
+            val destPath = targetDir + name
+            if (srcPath == destPath) return@withContext true
+            if (isDir && srcPath.startsWith(targetDir)) return@withContext false
+
             val ok = copyIntoDir(srcUri, targetParent, overwrite)
             if (ok) deleteTree(srcUri) else false
         }
