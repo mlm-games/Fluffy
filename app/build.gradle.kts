@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.kotlin.ksp)
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.apk.dist)
+    alias(libs.plugins.koin.compiler)
 }
 
 kotlin {
@@ -21,12 +22,12 @@ kotlin {
 }
 
 android {
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "app.fluffy"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 750
         versionName = "4.1.9"
 
@@ -80,7 +81,6 @@ android {
             isShrinkResources = true
         }
         getByName("debug") {
-            isShrinkResources = false
             isDebuggable = true
             isMinifyEnabled = false
             applicationIdSuffix = ".debug"
@@ -143,7 +143,6 @@ dependencies {
     implementation(libs.koin.android)
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.annotations)
-    ksp(libs.koin.ksp.compiler)
 
 
     implementation(libs.androidx.navigation3.runtime)
