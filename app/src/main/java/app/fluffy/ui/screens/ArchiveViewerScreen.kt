@@ -426,7 +426,7 @@ fun ArchiveViewerScreen(
                                             val meta = buildString {
                                                 append(if (e.isDir) "Folder" else "File")
                                                 if (!e.isDir && e.size > 0) {
-                                                    append(" - ${formatSize(e.size)}")
+                                                    append(" • ${formatSize(e.size)}")
                                                 }
                                             }
                                             Text(meta)
