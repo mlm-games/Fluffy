@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -172,11 +173,13 @@ private fun TextViewerScreen(uri: Uri, title: String, io: SafIo, onClose: () -> 
                         .onPreviewKeyEvent(keyHandler)
                 ) {
                     Column(Modifier.fillMaxSize().verticalScroll(scroll).padding(12.dp)) {
-                        Text(
-                            text = content!!,
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontFamily = FontFamily.Monospace
-                        )
+                        SelectionContainer {
+                            Text(
+                                text = content!!,
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontFamily = FontFamily.Monospace
+                            )
+                        }
                         Spacer(Modifier.height(24.dp))
                     }
                 }
