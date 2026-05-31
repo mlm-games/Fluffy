@@ -195,7 +195,7 @@ private fun PdfPageImage(
     viewportW: Int,
     viewportH: Int,
     scaleForQuality: Float,
-    nightInvertEnabled: Boolean,
+    darkModeEnabled: Boolean,
     modifier: Modifier = Modifier
 ) {
     var bmp by remember(pageIndex) { mutableStateOf<Bitmap?>(null) }
@@ -226,7 +226,7 @@ private fun PdfPageImage(
         }
     }
 
-    val invert = remember {
+    val darkModeMatrix = remember {
         val warmR = 1.00f; val warmG = 0.92f; val warmB = 0.72f
         ColorMatrix(
             floatArrayOf(
@@ -244,7 +244,7 @@ private fun PdfPageImage(
             contentDescription = null,
             modifier = modifier,
             contentScale = ContentScale.Fit,
-            colorFilter = if (nightInvertEnabled) ColorFilter.colorMatrix(invert) else null
+            colorFilter = if (darkModeEnabled) ColorFilter.colorMatrix(darkModeMatrix) else null
         )
     }
 }
@@ -302,8 +302,9 @@ private fun FullscreenPdfViewer(
         else -> true
     }
 
-    var invertColorScheme by remember { mutableStateOf(dark) }
+    var pdfDarkMode by remember { mutableStateOf(dark) }
 
+    FluffyTheme(darkTheme = pdfDarkMode, useAuroraTheme = appSettings.useAuroraTheme) {
     Scaffold(
         topBar = {
             Box(modifier = Modifier.focusable(false)) {
@@ -315,10 +316,10 @@ private fun FullscreenPdfViewer(
                         }
                     },
                     actions = {
-                        IconButton(onClick = { invertColorScheme = !invertColorScheme }) {
+                        IconButton(onClick = { pdfDarkMode = !pdfDarkMode }) {
                             Icon(
-                                imageVector = if (invertColorScheme) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
-                                contentDescription = if (invertColorScheme) "Light mode" else "Dark mode"
+                                imageVector = if (pdfDarkMode) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
+                                contentDescription = if (pdfDarkMode) "Switch to light" else "Switch to dark"
                             )
                         }
                     }
@@ -500,13 +501,14 @@ private fun FullscreenPdfViewer(
                             viewportW = viewportW,
                             viewportH = viewportH,
                             scaleForQuality = scaleAnim.value,
-                            nightInvertEnabled = invertColorScheme,
+                            darkModeEnabled = pdfDarkMode,
                             modifier = Modifier.fillMaxSize()
                         )
                     }
                 }
             }
         }
+    }
     }
 
     DisposableEffect(Unit) {
