@@ -30,13 +30,18 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.outlined.LightMode
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -222,12 +227,13 @@ private fun PdfPageImage(
     }
 
     val invert = remember {
+        val warmR = 1.00f; val warmG = 0.92f; val warmB = 0.72f
         ColorMatrix(
             floatArrayOf(
-                -1f, 0f, 0f, 0f, 255f,
-                0f, -1f, 0f, 0f, 255f,
-                0f, 0f, -1f, 0f, 255f,
-                0f, 0f, 0f, 1f, 0f
+                -0.299f * warmR, -0.587f * warmR, -0.114f * warmR, 0f, 255f * warmR,
+                -0.299f * warmG, -0.587f * warmG, -0.114f * warmG, 0f, 255f * warmG,
+                -0.299f * warmB, -0.587f * warmB, -0.114f * warmB, 0f, 255f * warmB,
+                0f,              0f,              0f,              1f, 0f
             )
         )
     }
@@ -303,17 +309,17 @@ private fun FullscreenPdfViewer(
             Box(modifier = Modifier.focusable(false)) {
                 TopAppBar(
                     title = { Text(title) },
+                    navigationIcon = {
+                        IconButton(onClick = onClose) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        }
+                    },
                     actions = {
-//                        ToggleButton( checked = dark, onCheckedChange = { invertColorScheme = !invertColorScheme } ) {
-//                            Icon(
-//                                imageVector =
-//                                     Icons.Outlined.DarkMode,
-//                                contentDescription = null,
-//                                tint = colorScheme.background.copy(alpha = 0.3f),
-//                            )
-//                        }
-                        TextButton(onClick = onClose, modifier = Modifier.focusable(false)) {
-                            Text("Close")
+                        IconButton(onClick = { invertColorScheme = !invertColorScheme }) {
+                            Icon(
+                                imageVector = if (invertColorScheme) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
+                                contentDescription = if (invertColorScheme) "Light mode" else "Dark mode"
+                            )
                         }
                     }
                 )
