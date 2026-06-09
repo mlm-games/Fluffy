@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -14,7 +15,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextOverflow
@@ -84,6 +87,23 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
             }
     }
 
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(isLoading) {
+        if (!isLoading) focusRequester.requestFocus()
+    }
+
+    val keyHandler: (KeyEvent) -> Boolean = { ev ->
+        if (ev.type != KeyEventType.KeyDown) false
+        else when (ev.key) {
+            Key.Back, Key.Escape -> {
+                if (hasChanges) showUnsavedDialog = true else onClose()
+                true
+            }
+            else -> false
+        }
+    }
+
     BackHandler(enabled = true) {
         if (hasChanges) showUnsavedDialog = true
         else onClose()
@@ -142,7 +162,9 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = {
+                    IconButton(
+                     //   modifier = Modifier.focusable(false), //fixme: Doesnt work
+                        onClick = {
                         if (hasChanges) showUnsavedDialog = true else onClose()
                     }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
@@ -155,19 +177,16 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                             onClick = {
                                 coroutineScope.launch {
                                     DocumentController.save(context, uri, currentContent.toByteArray(Charsets.UTF_8))
-                                        .onSuccess {
-                                            originalContent = currentContent
-                                        }
-                                        .onFailure { e ->
-                                            saveError = "Failed to save: ${e.message}"
-                                        }
+                                        .onSuccess { originalContent = currentContent }
+                                        .onFailure { e -> saveError = "Failed to save: ${e.message}" }
                                 }
                             }
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Save,
                                 contentDescription = "Save",
-                                tint = if (hasChanges) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+                                tint = if (hasChanges) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                             )
                         }
                     }
@@ -191,7 +210,10 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                     TextField(
                         value = currentContent,
                         onValueChange = { currentContent = it },
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .focusRequester(focusRequester)
+                            .onPreviewKeyEvent(keyHandler),
                         enabled = !isReadOnly,
                         textStyle = MaterialTheme.typography.bodyLarge.copy(
                             color = MaterialTheme.colorScheme.onSurface,
