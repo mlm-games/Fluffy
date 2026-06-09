@@ -50,6 +50,15 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import kotlin.time.Duration.Companion.milliseconds
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 
 class RichTextEditorActivity : ComponentActivity(), KoinComponent {
     private val io: SafIo by inject()
@@ -102,7 +111,7 @@ private fun RichTextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                 val text = String(docInfo.content, DocumentController.sniffCharset(docInfo.content))
                 originalContent = text
                 isReadOnly = docInfo.isReadOnly
-                richTextState.setHtml(text)
+                richTextState.setText(text)
                 isLoading = false
             }
             .onFailure { e ->
@@ -114,12 +123,12 @@ private fun RichTextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
     LaunchedEffect(Unit) {
         if (!isReadOnly) {
             snapshotFlow { richTextState.annotatedString }
-                .debounce(800) // Wait
+                .debounce(500.milliseconds) // Wait
                 .distinctUntilChanged()
                 .onEach {
                     if (!isLoading && originalContent != null) {
-                        val currentHtml = richTextState.toHtml()
-                        hasChanges = currentHtml != originalContent
+                        val currentText = richTextState.annotatedString.text
+                        hasChanges = currentText != originalContent
                     }
                 }
                 .launchIn(this)
@@ -138,13 +147,13 @@ private fun RichTextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
             onDismissRequest = { showUnsavedDialog = false },
             title = { Text("Unsaved Changes") },
             text = { Text("You have unsaved changes. Do you want to discard them?") },
-            confirmButton = { 
+            confirmButton = {
                 TextButton(onClick = {
                     showUnsavedDialog = false
                     onClose()
                 }) { Text("Discard") }
             },
-            dismissButton = { 
+            dismissButton = {
                 TextButton(onClick = { showUnsavedDialog = false }) { Text("Cancel") }
             }
         )
@@ -209,10 +218,10 @@ private fun RichTextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                             enabled = hasChanges,
                             onClick = {
                                 coroutineScope.launch {
-                                    val html = richTextState.toHtml()
-                                    DocumentController.save(context, uri, html.toByteArray(Charsets.UTF_8))
+                                    val txt = richTextState.annotatedString.text
+                                    DocumentController.save(context, uri, txt.toByteArray(Charsets.UTF_8))
                                         .onSuccess {
-                                            originalContent = html
+                                            originalContent = txt
                                             hasChanges = false
                                         }
                                         .onFailure { e ->
@@ -250,7 +259,7 @@ private fun RichTextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                         if (!isReadOnly) {
                             RichTextToolbar(
                                 state = richTextState,
-                                onAddLink = { showLinkDialog = true }
+                                onAddLink = { showLinkDialog = true },
                             )
                             HorizontalDivider()
                         }
