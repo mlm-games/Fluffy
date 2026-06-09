@@ -19,7 +19,6 @@ media3Exoplayer = "1.10.1"
 navigationFragmentKtx = "2.9.8"
 okhttp = "5.4.0"
 recyclerview = "1.4.0"
-richeditorCompose = "1.0.0-rc13" # 14 is broken
 roomRuntime = "2.8.4"
 runtime = "1.11.2"
 tvFoundation = "1.0.0"
@@ -86,7 +85,6 @@ recyclerview = { module = "androidx.recyclerview:recyclerview", version.ref = "r
 androidx-ui = { group = "androidx.compose.ui", name = "ui" }
 androidx-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
-richeditor-compose = { module = "com.mohamedrejeb.richeditor:richeditor-compose", version.ref = "richeditorCompose" }
 work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "workRuntimeKtx" }
 material3-android = { group = "androidx.compose.material3", name = "material3-android", version.ref = "material3Android" }
 constraintlayout-compose-android = { group = "androidx.constraintlayout", name = "constraintlayout-compose-android", version.ref = "constraintlayoutComposeAndroid" }

@@ -173,7 +173,7 @@
         </activity>
 
         <activity
-            android:name=".ui.viewers.RichTextEditorActivity"
+            android:name=".ui.viewers.TextEditorActivity"
             android:label="Edit as Text (Try)"
             android:exported="true">
             <intent-filter>

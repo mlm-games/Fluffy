@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -46,7 +47,7 @@ class TextViewerActivity : ComponentActivity(), KoinComponent {
         setContent {
             val s = settings.settingsFlow.collectAsState(initial = AppSettings()).value
             val dark = when (s.themeMode) {
-                0 -> androidx.compose.foundation.isSystemInDarkTheme()
+                0 -> isSystemInDarkTheme()
                 1 -> false
                 else -> true
             }
