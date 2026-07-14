@@ -1,6 +1,7 @@
 package app.fluffy
 
 import android.annotation.SuppressLint
+import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -67,6 +68,7 @@ import app.fluffy.helper.openWithExportMultiple
 import app.fluffy.helper.purgeOldExports
 import app.fluffy.helper.purgeOldViewerCache
 import app.fluffy.helper.toViewableUris
+import app.fluffy.helper.exportForOpenWith
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.operations.ArchiveJobManager
 import app.fluffy.ui.components.ConfirmationDialog
@@ -687,16 +689,27 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun returnPickedFile(uri: Uri) {
-        val resultIntent = Intent().apply {
-            data = uri
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        lifecycleScope.launch {
+            val shareable = runCatching {
+                applicationContext.exportForOpenWith(uri, io.queryDisplayName(uri))
+            }.getOrElse { uri }
 
-            if (intent?.action == Intent.ACTION_OPEN_DOCUMENT) {
-                addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            val mime = contentResolver.getType(shareable)
+                ?: FileSystemAccess.getMimeType(io.queryDisplayName(shareable))
+
+            val resultIntent = Intent().apply {
+                data = shareable
+                type = mime
+                clipData = ClipData.newUri(contentResolver, "picked", shareable)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+
+                if (intent?.action == Intent.ACTION_OPEN_DOCUMENT) {
+                    addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+                }
             }
+            setResult(RESULT_OK, resultIntent)
+            finish()
         }
-        setResult(RESULT_OK, resultIntent)
-        finish()
     }
 
     private fun childExists(parent: Uri, name: String): Boolean {
