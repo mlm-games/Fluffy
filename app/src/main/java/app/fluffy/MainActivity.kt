@@ -440,7 +440,9 @@ class MainActivity : ComponentActivity() {
                                             }
                                         },
 
-                                        showFileCount = s.showFileCount
+                                        showFileCount = s.showFileCount,
+                                        showStorageInfo = s.showStorageInfo,
+                                        storageBelowBookmarks = s.storageBelowBookmarks
                                     )
                                 }
 

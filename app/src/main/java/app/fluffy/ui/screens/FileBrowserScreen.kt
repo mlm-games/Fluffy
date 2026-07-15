@@ -148,6 +148,8 @@ fun FileBrowserScreen(
     onCreateFolder: (String) -> Unit = {},
     onCreateFile: (String) -> Unit = {},
     showFileCount: Boolean = true,
+    showStorageInfo: Boolean = true,
+    storageBelowBookmarks: Boolean = false,
 
     pickFolderMode: Boolean = false,
     pickFolderTitle: String = "Choose destination folder",
@@ -652,6 +654,8 @@ fun FileBrowserScreen(
                     onRemoveBookmark = onRemoveBookmark,
                     onRequestPermission = onRequestPermission,
                     hasPermission = state.canAccessFileSystem,
+                    showStorageInfo = showStorageInfo,
+                    storageBelowBookmarks = storageBelowBookmarks,
                     modifier = Modifier.padding(it)
                 )
             }
@@ -1092,6 +1096,8 @@ private fun QuickAccessView(
     onRemoveBookmark: (Bookmark) -> Unit,
     onRequestPermission: () -> Unit,
     hasPermission: Boolean,
+    showStorageInfo: Boolean = true,
+    storageBelowBookmarks: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     if (!hasPermission) {
@@ -1137,7 +1143,7 @@ private fun QuickAccessView(
                 QuickAccessCard(item = item, onClick = { if (item.enabled) onItemClick(item) })
             }
 
-            item(span = { GridItemSpan(maxLineSpan) }) {
+            val storageSection: @Composable () -> Unit = {
                 val storage = rememberDeviceStorage()
                 Column(
                     modifier = Modifier
@@ -1165,6 +1171,10 @@ private fun QuickAccessView(
                         totalBytes = storage.totalBytes
                     )
                 }
+            }
+
+            if (showStorageInfo && !storageBelowBookmarks) {
+                item(span = { GridItemSpan(maxLineSpan) }) { storageSection() }
             }
 
             item(span = { GridItemSpan(maxLineSpan) }) {
@@ -1196,6 +1206,10 @@ private fun QuickAccessView(
                         if (isEditMode) onRemoveBookmark(bookmark) else onBookmarkClick(bookmark)
                     }
                 )
+            }
+
+            if (showStorageInfo && storageBelowBookmarks) {
+                item(span = { GridItemSpan(maxLineSpan) }) { storageSection() }
             }
         }
     }
