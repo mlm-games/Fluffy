@@ -56,7 +56,8 @@ data class FileBrowserState(
     val pendingAction: PendingAction = PendingAction.None,
     val selectedItems: MutableList<Uri> = mutableStateListOf(),
     val isPickerMode: Boolean = false,
-    val pickerMimeType: String? = null
+    val pickerMimeType: String? = null,
+    val dataEpoch: Int = 0
 )
 
 class FileBrowserViewModel(
@@ -561,18 +562,18 @@ class FileBrowserViewModel(
         val st = _state.value
         when (val location = st.currentLocation) {
             is BrowseLocation.FileSystem -> {
-                _state.value = st.copy(fileItems = loadFileSystemItems(location.file))
+                _state.value = st.copy(fileItems = loadFileSystemItems(location.file), dataEpoch = st.dataEpoch + 1)
             }
             is BrowseLocation.SAF -> {
                 val uri = location.uri
                 if (uri.scheme == "root" || uri.scheme == "shizuku") {
-                    _state.value = st.copy(shellItems = io.listShell(uri).filter { showHidden || !it.name.startsWith(".") })
+                    _state.value = st.copy(shellItems = io.listShell(uri).filter { showHidden || !it.name.startsWith(".") }, dataEpoch = st.dataEpoch + 1)
                 } else {
-                    _state.value = st.copy(items = filtered(io.listChildren(uri)))
+                    _state.value = st.copy(items = filtered(io.listChildren(uri)), dataEpoch = st.dataEpoch + 1)
                 }
             }
             is BrowseLocation.QuickAccess -> {
-                _state.value = st.copy(quickAccessItems = getQuickAccessItems())
+                _state.value = st.copy(quickAccessItems = getQuickAccessItems(), dataEpoch = st.dataEpoch + 1)
             }
             null -> {}
         }
