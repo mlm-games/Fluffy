@@ -299,7 +299,7 @@ object DirectoryCounter : KoinComponent {
             "root", "shizuku" -> {
                 val path = uri.path ?: "/"
                 val parentPath = File(path).parent ?: "/"
-                invalidate("${uri.scheme}://$parentPath".toUri())
+                invalidate(Uri.Builder().scheme(uri.scheme).path(parentPath).build())
             }
         }
     }
