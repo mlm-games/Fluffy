@@ -678,6 +678,7 @@ fun FileBrowserScreen(
                                 selected = isSelected,
                                 hasSelection = !pickFolderMode && anySelected,
                                 showFileCount = showFileCount,
+                                refreshEpoch = state.dataEpoch,
                                 onToggleSelect = { toggled ->
                                     if (pickFolderMode) return@FileListRow
                                     if (toggled) selectedFiles.add(file) else selectedFiles.remove(file)
@@ -739,6 +740,7 @@ fun FileBrowserScreen(
                                     selected = isSelected,
                                     hasSelection = !pickFolderMode && anySelected,
                                     showFileCount = showFileCount,
+                                    refreshEpoch = state.dataEpoch,
                                     onToggleSelect = { toggled ->
                                         if (pickFolderMode) return@FileListRow
                                         if (toggled) selected.add(entry.uri) else selected.remove(entry.uri)
@@ -795,6 +797,7 @@ fun FileBrowserScreen(
                                     selected = isSelected,
                                     hasSelection = !pickFolderMode && anySelected,
                                     showFileCount = showFileCount,
+                                    refreshEpoch = state.dataEpoch,
                                     onToggleSelect = { toggled ->
                                         if (pickFolderMode) return@FileListRow
                                         if (toggled) selected.add(df.uri) else selected.remove(df.uri)
