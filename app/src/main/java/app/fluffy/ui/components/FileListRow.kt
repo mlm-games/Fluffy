@@ -106,6 +106,7 @@ fun FileListRow(
     selected: Boolean,
     hasSelection: Boolean,
     showFileCount: Boolean,
+    refreshEpoch: Int = 0,
     onToggleSelect: (Boolean) -> Unit,
     onOpenDir: (Uri) -> Unit,
     onOpenArchive: (Uri) -> Unit,
@@ -115,7 +116,7 @@ fun FileListRow(
 ) {
     val ctx = LocalContext.current
 
-    val dirCount by produceState<Int?>(initialValue = null, model.uri, showFileCount) {
+    val dirCount by produceState<Int?>(initialValue = null, model.uri, showFileCount, refreshEpoch) {
         value = if (showFileCount && model.isDir) DirectoryCounter.count(ctx, model.uri) else null
     }
 
