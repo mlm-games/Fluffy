@@ -16,7 +16,7 @@ jobs:
           distribution: "corretto"
           cache: gradle
       - name: Build with Gradle
-        run: ./gradlew clean assembleDebug
+        run: ./gradlew assembleDebug
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
