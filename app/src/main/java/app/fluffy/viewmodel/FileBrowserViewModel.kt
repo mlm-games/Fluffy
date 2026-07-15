@@ -3,6 +3,7 @@ package app.fluffy.viewmodel
 import android.net.Uri
 import android.os.Environment
 import androidx.documentfile.provider.DocumentFile
+import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import app.fluffy.archive.ArchiveEngine
@@ -53,7 +54,7 @@ data class FileBrowserState(
     val error: String? = null,
     val canAccessFileSystem: Boolean = false,
     val pendingAction: PendingAction = PendingAction.None,
-    val selectedItems: MutableList<Uri> = mutableListOf(),
+    val selectedItems: MutableList<Uri> = mutableStateListOf(),
     val isPickerMode: Boolean = false,
     val pickerMimeType: String? = null
 )
@@ -710,7 +711,7 @@ class FileBrowserViewModel(
     }
 
     fun clearSelection() {
-        _state.update { it.copy(selectedItems = mutableListOf()) }
+        _state.update { it.copy(selectedItems = mutableStateListOf()) }
     }
 
     fun setPickerMode(enabled: Boolean, mimeType: String?) {
