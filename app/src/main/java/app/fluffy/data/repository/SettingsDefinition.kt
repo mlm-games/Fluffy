@@ -41,6 +41,24 @@ data class AppSettings(
     val showFileCount: Boolean = true,
 
     @Setting(
+        title = "Show storage info",
+        description = "Show total and remaining device storage in Quick Access",
+        category = General::class,
+        type = Toggle::class,
+        key = "show_storage_info"
+    )
+    val showStorageInfo: Boolean = true,
+
+    @Setting(
+        title = "Storage below bookmarks",
+        description = "Place the storage info section after the bookmarks instead of before",
+        category = General::class,
+        type = Toggle::class,
+        key = "storage_below_bookmarks"
+    )
+    val storageBelowBookmarks: Boolean = false,
+
+    @Setting(
         title = "Show In-App Folder Picker Everywhere",
         description = "Helps prevent stub issues (if not handled), and also for root ops",
         category = System::class,

@@ -1,6 +1,8 @@
 package app.fluffy.ui.screens
 
 import android.net.Uri
+import android.os.Environment
+import android.os.StatFs
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
@@ -66,6 +68,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -145,6 +148,8 @@ fun FileBrowserScreen(
     onCreateFolder: (String) -> Unit = {},
     onCreateFile: (String) -> Unit = {},
     showFileCount: Boolean = true,
+    showStorageInfo: Boolean = true,
+    storageBelowBookmarks: Boolean = false,
 
     pickFolderMode: Boolean = false,
     pickFolderTitle: String = "Choose destination folder",
@@ -649,6 +654,8 @@ fun FileBrowserScreen(
                     onRemoveBookmark = onRemoveBookmark,
                     onRequestPermission = onRequestPermission,
                     hasPermission = state.canAccessFileSystem,
+                    showStorageInfo = showStorageInfo,
+                    storageBelowBookmarks = storageBelowBookmarks,
                     modifier = Modifier.padding(it)
                 )
             }
@@ -1089,6 +1096,8 @@ private fun QuickAccessView(
     onRemoveBookmark: (Bookmark) -> Unit,
     onRequestPermission: () -> Unit,
     hasPermission: Boolean,
+    showStorageInfo: Boolean = true,
+    storageBelowBookmarks: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     if (!hasPermission) {
@@ -1134,6 +1143,40 @@ private fun QuickAccessView(
                 QuickAccessCard(item = item, onClick = { if (item.enabled) onItemClick(item) })
             }
 
+            val storageSection: @Composable () -> Unit = {
+                val storage = rememberDeviceStorage()
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, bottom = 4.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        StorageInfoCard(
+                            modifier = Modifier.weight(1f),
+                            label = "Total Storage",
+                            value = formatBytes(storage.totalBytes)
+                        )
+                        StorageInfoCard(
+                            modifier = Modifier.weight(1f),
+                            label = "Remaining Storage",
+                            value = formatBytes(storage.freeBytes)
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    StorageUsageBar(
+                        usedBytes = storage.totalBytes - storage.freeBytes,
+                        totalBytes = storage.totalBytes
+                    )
+                }
+            }
+
+            if (showStorageInfo && !storageBelowBookmarks) {
+                item(span = { GridItemSpan(maxLineSpan) }) { storageSection() }
+            }
+
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Row(
                     modifier = Modifier
@@ -1164,7 +1207,100 @@ private fun QuickAccessView(
                     }
                 )
             }
+
+            if (showStorageInfo && storageBelowBookmarks) {
+                item(span = { GridItemSpan(maxLineSpan) }) { storageSection() }
+            }
         }
+    }
+}
+
+private data class DeviceStorage(val totalBytes: Long, val freeBytes: Long)
+
+@Composable
+private fun rememberDeviceStorage(): DeviceStorage {
+    return remember {
+        val stat = StatFs(Environment.getExternalStorageDirectory().path)
+        val blockSize = stat.blockSizeLong
+        DeviceStorage(
+            totalBytes = stat.totalBytes,
+            freeBytes = stat.availableBytes
+        )
+    }
+}
+
+private fun formatBytes(bytes: Long): String {
+    val units = arrayOf("B", "KB", "MB", "GB", "TB")
+    var value = bytes.toDouble()
+    var unitIndex = 0
+    while (value >= 1024 && unitIndex < units.lastIndex) {
+        value /= 1024
+        unitIndex++
+    }
+    return "%.1f %s".format(value, units[unitIndex])
+}
+
+@Composable
+private fun StorageInfoCard(label: String, value: String, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(100.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Storage,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                value,
+                style = MaterialTheme.typography.bodyMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                label,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+        }
+    }
+}
+
+@Composable
+private fun StorageUsageBar(usedBytes: Long, totalBytes: Long) {
+    val usedRatio = if (totalBytes > 0) (usedBytes.toFloat() / totalBytes) else 0f
+    val used = formatBytes(usedBytes)
+    val total = formatBytes(totalBytes)
+    Column(modifier = Modifier.fillMaxWidth()) {
+        LinearProgressIndicator(
+            progress = { usedRatio.coerceIn(0f, 1f) },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(8.dp),
+            color = MaterialTheme.colorScheme.primary,
+            trackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            "$used used of $total",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
     }
 }
 
