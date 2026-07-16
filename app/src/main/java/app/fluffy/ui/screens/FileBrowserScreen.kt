@@ -110,6 +110,7 @@ import app.fluffy.ui.components.toRowModel
 import app.fluffy.ui.dialogs.AddBookmarkDialog
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
+import app.fluffy.util.UiFormat.formatSize
 import app.fluffy.viewmodel.QuickAccessItem
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -1157,12 +1158,12 @@ private fun QuickAccessView(
                         StorageInfoCard(
                             modifier = Modifier.weight(1f),
                             label = "Total Storage",
-                            value = formatBytes(storage.totalBytes)
+                            value = formatSize(storage.totalBytes)
                         )
                         StorageInfoCard(
                             modifier = Modifier.weight(1f),
                             label = "Remaining Storage",
-                            value = formatBytes(storage.freeBytes)
+                            value = formatSize(storage.freeBytes)
                         )
                     }
                     Spacer(Modifier.height(12.dp))
@@ -1229,17 +1230,6 @@ private fun rememberDeviceStorage(): DeviceStorage {
     }
 }
 
-private fun formatBytes(bytes: Long): String {
-    val units = arrayOf("B", "KB", "MB", "GB", "TB")
-    var value = bytes.toDouble()
-    var unitIndex = 0
-    while (value >= 1024 && unitIndex < units.lastIndex) {
-        value /= 1024
-        unitIndex++
-    }
-    return "%.1f %s".format(value, units[unitIndex])
-}
-
 @Composable
 private fun StorageInfoCard(label: String, value: String, modifier: Modifier = Modifier) {
     Card(
@@ -1284,8 +1274,8 @@ private fun StorageInfoCard(label: String, value: String, modifier: Modifier = M
 @Composable
 private fun StorageUsageBar(usedBytes: Long, totalBytes: Long) {
     val usedRatio = if (totalBytes > 0) (usedBytes.toFloat() / totalBytes) else 0f
-    val used = formatBytes(usedBytes)
-    val total = formatBytes(totalBytes)
+    val used = formatSize(usedBytes)
+    val total = formatSize(totalBytes)
     Column(modifier = Modifier.fillMaxWidth()) {
         LinearProgressIndicator(
             progress = { usedRatio.coerceIn(0f, 1f) },

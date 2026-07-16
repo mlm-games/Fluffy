@@ -10,8 +10,8 @@ object UiFormat {
     // 1024-based (KB, MB, GB)
     fun formatSize(bytes: Long): String {
         if (bytes < 1024) return "$bytes B"
-        val exp = (ln(bytes.toDouble()) / ln(1024.0)).toInt().coerceAtMost(3)
-        val pre = arrayOf("KB", "MB", "GB")[exp - 1]
+        val exp = (ln(bytes.toDouble()) / ln(1024.0)).toInt().coerceAtMost(4)
+        val pre = arrayOf("KB", "MB", "GB", "TB")[exp - 1]
         val value = bytes / 1024.0.pow(exp.toDouble())
         return String.format(Locale.getDefault(), "%.1f %s", value, pre)
     }
