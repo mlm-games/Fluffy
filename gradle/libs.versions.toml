@@ -42,7 +42,7 @@ kmpSettingsCore = "0.8.1"
 composeMediaPlayer = "0.10.0"
 
 koinBom = "4.2.1"
-navigation3Runtime = "1.1.2"
+navigation3Runtime = "1.1.4"
 koin-annotations = "4.2.1"
 koin-plugin = "1.0.0"
 
