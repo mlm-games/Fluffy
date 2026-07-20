@@ -37,7 +37,7 @@ animation = "1.11.4"
 shizuku = "13.1.5"
 apkDist = "0.5.2"
 ksp = "2.3.0"
-composeBom = "2026.05.02"
+composeBom = "2026.07.00"
 kmpSettingsCore = "0.8.1"
 composeMediaPlayer = "0.11.3"
 
