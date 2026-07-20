@@ -43,7 +43,7 @@ composeMediaPlayer = "0.11.3"
 
 koinBom = "4.2.2"
 navigation3Runtime = "1.1.4"
-koin-annotations = "4.2.1"
+koin-annotations = "4.2.2"
 koin-plugin = "1.0.0"
 
 [libraries]
