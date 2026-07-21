@@ -48,6 +48,7 @@ import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.SafIo
 import app.fluffy.ui.dialogs.FluffyDialog
 import app.fluffy.ui.theme.FluffyTheme
+import androidx.media3.common.util.UnstableApi
 import io.github.kdroidfilter.composemediaplayer.VideoPlayerSurface
 import io.github.kdroidfilter.composemediaplayer.rememberVideoPlayerState
 import kotlinx.coroutines.delay
@@ -60,6 +61,7 @@ class MediaPlayerActivity : ComponentActivity(), KoinComponent {
 
     companion object { const val EXTRA_TITLE = "title" }
 
+    @UnstableApi
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -82,6 +84,7 @@ class MediaPlayerActivity : ComponentActivity(), KoinComponent {
 private val PLAYBACK_SPEEDS = listOf(0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f, 2f)
 
 @OptIn(ExperimentalMaterial3Api::class)
+@UnstableApi
 @Composable
 internal fun MediaPlayerScreen(
     url: String,
