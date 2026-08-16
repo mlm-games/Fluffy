@@ -441,8 +441,7 @@ class MainActivity : ComponentActivity() {
                                         },
 
                                         showFileCount = s.showFileCount,
-                                        showStorageInfo = s.showStorageInfo,
-                                        storageBelowBookmarks = s.storageBelowBookmarks
+                                        showStorageInfo = s.showStorageInfo
                                     )
                                 }
 

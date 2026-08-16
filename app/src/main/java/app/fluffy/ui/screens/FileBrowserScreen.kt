@@ -1,5 +1,6 @@
 package app.fluffy.ui.screens
 
+import android.content.Context
 import android.net.Uri
 import android.os.Environment
 import android.os.StatFs
@@ -30,6 +31,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DriveFileMove
@@ -49,6 +51,7 @@ import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Movie
 import androidx.compose.material.icons.filled.MusicNote
@@ -82,10 +85,12 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -100,6 +105,7 @@ import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import app.fluffy.R
 import app.fluffy.data.repository.Bookmark
+import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.ShellIo
 import app.fluffy.helper.cardAsFocusGroup
 import app.fluffy.ui.components.AlertBanner
@@ -110,9 +116,12 @@ import app.fluffy.ui.components.toRowModel
 import app.fluffy.ui.dialogs.AddBookmarkDialog
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
+import app.fluffy.util.UiFormat.formatDate
 import app.fluffy.util.UiFormat.formatSize
 import app.fluffy.viewmodel.QuickAccessItem
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import java.io.File
 
@@ -150,7 +159,6 @@ fun FileBrowserScreen(
     onCreateFile: (String) -> Unit = {},
     showFileCount: Boolean = true,
     showStorageInfo: Boolean = true,
-    storageBelowBookmarks: Boolean = false,
 
     pickFolderMode: Boolean = false,
     pickFolderTitle: String = "Choose destination folder",
@@ -186,6 +194,9 @@ fun FileBrowserScreen(
     var overflowMenuExpanded by remember { mutableStateOf(false) }
     var showAddBookmarkDialog by remember { mutableStateOf(false) }
     var pendingBookmarkName by remember { mutableStateOf("") }
+    var showStorageInfoDialog by remember { mutableStateOf(false) }
+    var showPropertiesDialog by remember { mutableStateOf(false) }
+    var propertiesUris by remember { mutableStateOf<List<Uri>>(emptyList()) }
 
     val scope = rememberCoroutineScope()
     var showCtaBanner by remember { mutableStateOf(false) }
@@ -367,6 +378,17 @@ fun FileBrowserScreen(
                                 Icon(Icons.Default.Home, contentDescription = "Home")
                             }
                         }
+                        if (showStorageInfo &&
+                            currentLocation is BrowseLocation.QuickAccess &&
+                            state.canAccessFileSystem
+                        ) {
+                            IconButton(onClick = { showStorageInfoDialog = true }) {
+                                Icon(
+                                    Icons.Default.Info,
+                                    contentDescription = stringResource(R.string.storage_info)
+                                )
+                            }
+                        }
                         IconButton(onClick = onOpenSettings) {
                                 Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
                         }
@@ -409,6 +431,17 @@ fun FileBrowserScreen(
                                                 else -> ""
                                             }
                                             showAddBookmarkDialog = true
+                                        }
+                                    )
+                                }
+                                if (!pickFolderMode && currentLocation !is BrowseLocation.QuickAccess && currentDirUri != null) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.properties)) },
+                                        leadingIcon = { Icon(Icons.Default.Info, null) },
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            propertiesUris = listOf(currentDirUri)
+                                            showPropertiesDialog = true
                                         }
                                     )
                                 }
@@ -561,6 +594,16 @@ fun FileBrowserScreen(
                                             Icon(Icons.Default.Delete, null, Modifier.size(18.dp))
                                         }
                                     )
+                                    AssistChip(
+                                        onClick = {
+                                            propertiesUris = allSelectedUris
+                                            showPropertiesDialog = true
+                                        },
+                                        label = { Text(stringResource(R.string.info)) },
+                                        leadingIcon = {
+                                            Icon(Icons.Default.Info, null, Modifier.size(18.dp))
+                                        }
+                                    )
                                     if (count == 1) {
                                         AssistChip(
                                             onClick = {
@@ -615,6 +658,11 @@ fun FileBrowserScreen(
                                         selected.clear(); selectedFiles.clear()
                                     }) { Text("Delete") }
 
+                                    TextButton(onClick = {
+                                        propertiesUris = allSelectedUris
+                                        showPropertiesDialog = true
+                                    }) { Text(stringResource(R.string.info)) }
+
                                     if (count == 1) {
                                         TextButton(onClick = {
                                             val target = allSelectedUris.first()
@@ -655,8 +703,6 @@ fun FileBrowserScreen(
                     onRemoveBookmark = onRemoveBookmark,
                     onRequestPermission = onRequestPermission,
                     hasPermission = state.canAccessFileSystem,
-                    showStorageInfo = showStorageInfo,
-                    storageBelowBookmarks = storageBelowBookmarks,
                     modifier = Modifier.padding(it)
                 )
             }
@@ -1086,6 +1132,21 @@ fun FileBrowserScreen(
             }
         )
     }
+
+    if (showStorageInfoDialog) {
+        StorageInfoDialog(onDismiss = { showStorageInfoDialog = false })
+    }
+
+    if (showPropertiesDialog && propertiesUris.isNotEmpty()) {
+        ItemPropertiesDialog(
+            uris = propertiesUris,
+            state = state,
+            onDismiss = {
+                showPropertiesDialog = false
+                propertiesUris = emptyList()
+            }
+        )
+    }
 }
 
 @Composable
@@ -1097,8 +1158,6 @@ private fun QuickAccessView(
     onRemoveBookmark: (Bookmark) -> Unit,
     onRequestPermission: () -> Unit,
     hasPermission: Boolean,
-    showStorageInfo: Boolean = true,
-    storageBelowBookmarks: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     if (!hasPermission) {
@@ -1144,40 +1203,6 @@ private fun QuickAccessView(
                 QuickAccessCard(item = item, onClick = { if (item.enabled) onItemClick(item) })
             }
 
-            val storageSection: @Composable () -> Unit = {
-                val storage = rememberDeviceStorage()
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp, bottom = 4.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp)
-                    ) {
-                        StorageInfoCard(
-                            modifier = Modifier.weight(1f),
-                            label = "Total Storage",
-                            value = formatSize(storage.totalBytes)
-                        )
-                        StorageInfoCard(
-                            modifier = Modifier.weight(1f),
-                            label = "Remaining Storage",
-                            value = formatSize(storage.freeBytes)
-                        )
-                    }
-                    Spacer(Modifier.height(12.dp))
-                    StorageUsageBar(
-                        usedBytes = storage.totalBytes - storage.freeBytes,
-                        totalBytes = storage.totalBytes
-                    )
-                }
-            }
-
-            if (showStorageInfo && !storageBelowBookmarks) {
-                item(span = { GridItemSpan(maxLineSpan) }) { storageSection() }
-            }
-
             item(span = { GridItemSpan(maxLineSpan) }) {
                 Row(
                     modifier = Modifier
@@ -1208,26 +1233,60 @@ private fun QuickAccessView(
                     }
                 )
             }
-
-            if (showStorageInfo && storageBelowBookmarks) {
-                item(span = { GridItemSpan(maxLineSpan) }) { storageSection() }
-            }
         }
     }
 }
 
 private data class DeviceStorage(val totalBytes: Long, val freeBytes: Long)
 
+private fun loadDeviceStorage(): DeviceStorage = runCatching {
+    val path = Environment.getExternalStorageDirectory().path
+    val stat = StatFs(path)
+    DeviceStorage(
+        totalBytes = stat.totalBytes,
+        freeBytes = stat.availableBytes
+    )
+}.getOrElse { DeviceStorage(0L, 0L) }
+
 @Composable
-private fun rememberDeviceStorage(): DeviceStorage {
-    return remember {
-        val stat = StatFs(Environment.getExternalStorageDirectory().path)
-        val blockSize = stat.blockSizeLong
-        DeviceStorage(
-            totalBytes = stat.totalBytes,
-            freeBytes = stat.availableBytes
-        )
-    }
+private fun StorageInfoDialog(onDismiss: () -> Unit) {
+    val storage = remember { loadDeviceStorage() }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.storage_info)) },
+        text = {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    StorageInfoCard(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.total_storage),
+                        value = formatSize(storage.totalBytes)
+                    )
+                    StorageInfoCard(
+                        modifier = Modifier.weight(1f),
+                        label = stringResource(R.string.remaining_storage),
+                        value = formatSize(storage.freeBytes)
+                    )
+                }
+                StorageUsageBar(
+                    usedBytes = (storage.totalBytes - storage.freeBytes).coerceAtLeast(0L),
+                    totalBytes = storage.totalBytes
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) }
+        }
+    )
 }
 
 @Composable
@@ -1287,9 +1346,253 @@ private fun StorageUsageBar(usedBytes: Long, totalBytes: Long) {
         )
         Spacer(Modifier.height(4.dp))
         Text(
-            "$used used of $total",
+            stringResource(R.string.used_of_total, used, total),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
+}
+
+private data class ItemProperties(
+    val name: String,
+    val path: String,
+    val isDir: Boolean,
+    val sizeBytes: Long? = null,
+    val lastModified: Long? = null,
+    val mimeType: String? = null,
+    val childCount: Int? = null,
+    val canRead: Boolean? = null,
+    val canWrite: Boolean? = null,
+)
+
+private fun resolveItemProperties(context: Context, uri: Uri): ItemProperties {
+    return when (uri.scheme) {
+        "file" -> {
+            val path = uri.path
+            if (path.isNullOrBlank()) {
+                ItemProperties(name = uri.toString(), path = uri.toString(), isDir = false)
+            } else {
+                val f = File(path)
+                val dir = f.isDirectory
+                ItemProperties(
+                    name = f.name.ifBlank { f.absolutePath },
+                    path = f.absolutePath,
+                    isDir = dir,
+                    sizeBytes = if (dir) null else runCatching { f.length() }.getOrNull(),
+                    lastModified = f.lastModified().takeIf { it > 0L },
+                    mimeType = if (dir) null else FileSystemAccess.getMimeType(f.name),
+                    childCount = if (dir) runCatching { f.listFiles()?.size }.getOrNull() else null,
+                    canRead = runCatching { f.canRead() }.getOrNull(),
+                    canWrite = runCatching { f.canWrite() }.getOrNull(),
+                )
+            }
+        }
+        "content" -> {
+            val doc = DocumentFile.fromSingleUri(context, uri)
+                ?: DocumentFile.fromTreeUri(context, uri)
+            if (doc == null) {
+                ItemProperties(name = uri.lastPathSegment ?: "item", path = uri.toString(), isDir = false)
+            } else {
+                val dir = doc.isDirectory
+                val name = doc.name ?: (uri.lastPathSegment ?: "item")
+                val childCount = if (dir) {
+                    runCatching { doc.listFiles().size }.getOrNull()
+                } else null
+                ItemProperties(
+                    name = name,
+                    path = uri.toString(),
+                    isDir = dir,
+                    sizeBytes = if (dir) null else doc.length().takeIf { it >= 0 },
+                    lastModified = doc.lastModified().takeIf { it > 0L },
+                    mimeType = if (dir) null else (doc.type ?: FileSystemAccess.getMimeType(name)),
+                    childCount = childCount,
+                    canRead = doc.canRead(),
+                    canWrite = doc.canWrite(),
+                )
+            }
+        }
+        "root", "shizuku" -> {
+            val p = uri.path ?: "/"
+            val name = p.trimEnd('/').substringAfterLast('/').ifBlank { p }
+            ItemProperties(
+                name = name,
+                path = uri.toString(),
+                isDir = true,
+                sizeBytes = null,
+                lastModified = null,
+                mimeType = null,
+                childCount = null,
+                canRead = null,
+                canWrite = null,
+            )
+        }
+        else -> ItemProperties(
+            name = uri.lastPathSegment ?: uri.toString(),
+            path = uri.toString(),
+            isDir = false
+        )
+    }
+}
+
+private fun resolveItemProperties(
+    context: Context,
+    uri: Uri,
+    knownIsDir: Boolean?
+): ItemProperties {
+    val base = resolveItemProperties(context, uri)
+    return if (knownIsDir != null && (uri.scheme == "root" || uri.scheme == "shizuku")) {
+        base.copy(isDir = knownIsDir)
+    } else base
+}
+
+@Composable
+private fun ItemPropertiesDialog(
+    uris: List<Uri>,
+    state: FileBrowserState,
+    onDismiss: () -> Unit
+) {
+    val context = LocalContext.current
+    val propsList by produceState<List<ItemProperties>?>(initialValue = null, uris, state.currentLocation) {
+        value = withContext(Dispatchers.IO) {
+            uris.map { uri ->
+                val knownIsDir = when (val loc = state.currentLocation) {
+                    is BrowseLocation.FileSystem ->
+                        state.fileItems.find { Uri.fromFile(it) == uri }?.isDirectory
+                    is BrowseLocation.SAF -> {
+                        if (state.currentDir?.scheme in listOf("root", "shizuku")) {
+                            state.shellItems.find { it.uri == uri }?.isDir
+                        } else {
+                            state.items.find { it.uri == uri }?.isDirectory
+                        }
+                    }
+                    else -> null
+                }
+                resolveItemProperties(context, uri, knownIsDir)
+            }
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                if (uris.size == 1) stringResource(R.string.properties)
+                else stringResource(R.string.selection_summary)
+            )
+        },
+        text = {
+            when (val list = propsList) {
+                null -> {
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text("…", style = MaterialTheme.typography.bodyMedium)
+                    }
+                }
+                else -> {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (list.size == 1) {
+                            val p = list.first()
+                            PropertyRow(stringResource(R.string.name), p.name)
+                            PropertyRow(
+                                stringResource(R.string.type),
+                                if (p.isDir) stringResource(R.string.folder) else stringResource(R.string.file)
+                            )
+                            p.sizeBytes?.let {
+                                PropertyRow(stringResource(R.string.size), formatSize(it))
+                            }
+                            p.childCount?.let {
+                                PropertyRow(stringResource(R.string.items), it.toString())
+                            }
+                            p.mimeType?.let {
+                                PropertyRow(stringResource(R.string.mime_type), it)
+                            }
+                            p.lastModified?.let {
+                                PropertyRow(
+                                    stringResource(R.string.modified),
+                                    formatDate(it, "MMM dd, yyyy HH:mm")
+                                )
+                            }
+                            PropertyRow(stringResource(R.string.path), p.path)
+                            p.canRead?.let {
+                                PropertyRow(
+                                    stringResource(R.string.readable),
+                                    if (it) stringResource(R.string.yes) else stringResource(R.string.no)
+                                )
+                            }
+                            p.canWrite?.let {
+                                PropertyRow(
+                                    stringResource(R.string.writable),
+                                    if (it) stringResource(R.string.yes) else stringResource(R.string.no)
+                                )
+                            }
+                        } else {
+                            val folders = list.count { it.isDir }
+                            val files = list.size - folders
+                            val totalSize = list.mapNotNull { it.sizeBytes }.sum()
+                            Text(
+                                stringResource(R.string.folders_count, folders),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            Text(
+                                stringResource(R.string.files_count, files),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                            if (totalSize > 0L) {
+                                Text(
+                                    stringResource(R.string.total_size, formatSize(totalSize)),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                            Spacer(Modifier.height(8.dp))
+                            list.take(20).forEach { p ->
+                                Text(
+                                    "• ${p.name}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                            if (list.size > 20) {
+                                Text(
+                                    "… +${list.size - 20}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) }
+        }
+    )
+}
+
+@Composable
+private fun PropertyRow(label: String, value: String) {
+    if (value.isEmpty()) return
+    Column(Modifier.fillMaxWidth().padding(vertical = 2.dp)) {
+        Text(
+            label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.primary,
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurface
         )
     }
 }
