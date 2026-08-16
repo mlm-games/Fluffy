@@ -27,7 +27,7 @@ android {
         applicationId = "app.fluffy"
         minSdk = 24
         targetSdk = 37
-        versionCode = 800
+        versionCode = 810
         versionName = "4.2.5"
 
         androidResources {
