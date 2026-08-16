@@ -31,6 +31,8 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -96,7 +98,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
+
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -107,6 +116,7 @@ import app.fluffy.R
 import app.fluffy.data.repository.Bookmark
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.ShellIo
+import app.fluffy.helper.DeviceUtils
 import app.fluffy.helper.cardAsFocusGroup
 import app.fluffy.ui.components.AlertBanner
 import app.fluffy.ui.components.AlertBannerManager
@@ -175,8 +185,6 @@ fun FileBrowserScreen(
         onBack()
     }
 
-    val configuration = LocalConfiguration.current
-    val isCompactScreen = configuration.screenWidthDp < 600
     val context = LocalContext.current
 
     val selected = state.selectedItems
@@ -517,12 +525,11 @@ fun FileBrowserScreen(
                         modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
                     ) {
-                        if (isCompactScreen) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 8.dp)
-                            ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                        ) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -633,61 +640,6 @@ fun FileBrowserScreen(
                                     }
                                 }
                             }
-                        } else {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 12.dp, vertical = 6.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    "$count selected",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-
-                                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                                    TextButton(onClick = { showZipNameDialog = true }) { Text("Zip") }
-                                    TextButton(onClick = { show7zDialog = true }) { Text("7z") }
-                                    TextButton(onClick = { onShareSelected(allSelectedUris) }) { Text("Share") }
-                                    TextButton(onClick = { onCopySelected(allSelectedUris) }) { Text("Copy…") }
-                                    TextButton(onClick = { onMoveSelected(allSelectedUris) }) { Text("Move…") }
-                                    TextButton(onClick = {
-                                        onDeleteSelected(allSelectedUris)
-                                        selected.clear(); selectedFiles.clear()
-                                    }) { Text("Delete") }
-
-                                    TextButton(onClick = {
-                                        propertiesUris = allSelectedUris
-                                        showPropertiesDialog = true
-                                    }) { Text(stringResource(R.string.info)) }
-
-                                    if (count == 1) {
-                                        TextButton(onClick = {
-                                            val target = allSelectedUris.first()
-                                            val name = getNameForUri(target, currentLocation, state) ?: ""
-                                            val ext = name.substringAfterLast('.', "")
-                                            val baseLen = if (ext.isNotEmpty()) name.length - ext.length - 1 else name.length
-                                            renameTarget = target
-                                            renameOriginalName = name
-                                            renameTextFieldValue = TextFieldValue(text = name, selection = TextRange(0, baseLen))
-                                            showRenameDialog = true
-                                        }) { Text("Rename") }
-                                        TextButton(onClick = {
-                                            onOpenWith(allSelectedUris.first(), "")
-                                        }) { Text("Open With") }
-                                    }
-                                }
-
-                                Spacer(Modifier.weight(1f))
-
-                                TextButton(onClick = {
-                                    selected.clear()
-                                    selectedFiles.clear()
-                                }) { Text("Clear") }
-                            }
-                        }
                     }
                 }
             }
@@ -1251,15 +1203,18 @@ private fun loadDeviceStorage(): DeviceStorage = runCatching {
 @Composable
 private fun StorageInfoDialog(onDismiss: () -> Unit) {
     val storage = remember { loadDeviceStorage() }
+    val scroll = rememberScrollState()
+    val contentFocus = remember { FocusRequester() }
+    val confirmFocus = remember { FocusRequester() }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.storage_info)) },
         text = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState()),
+            TvDialogScrollBox(
+                scroll = scroll,
+                contentFocus = contentFocus,
+                confirmFocus = confirmFocus,
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Row(
@@ -1284,7 +1239,7 @@ private fun StorageInfoDialog(onDismiss: () -> Unit) {
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) }
+            DialogCloseButton(onDismiss = onDismiss, contentFocus = contentFocus, confirmFocus = confirmFocus)
         }
     )
 }
@@ -1452,6 +1407,9 @@ private fun ItemPropertiesDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
+    val scroll = rememberScrollState()
+    val contentFocus = remember { FocusRequester() }
+    val confirmFocus = remember { FocusRequester() }
     val propsList by produceState<List<ItemProperties>?>(initialValue = null, uris, state.currentLocation) {
         value = withContext(Dispatchers.IO) {
             uris.map { uri ->
@@ -1493,10 +1451,10 @@ private fun ItemPropertiesDialog(
                     }
                 }
                 else -> {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .verticalScroll(rememberScrollState()),
+                    TvDialogScrollBox(
+                        scroll = scroll,
+                        contentFocus = contentFocus,
+                        confirmFocus = confirmFocus,
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         if (list.size == 1) {
@@ -1574,7 +1532,7 @@ private fun ItemPropertiesDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.close)) }
+            DialogCloseButton(onDismiss = onDismiss, contentFocus = contentFocus, confirmFocus = confirmFocus)
         }
     )
 }
@@ -1595,6 +1553,101 @@ private fun PropertyRow(label: String, value: String) {
             color = MaterialTheme.colorScheme.onSurface
         )
     }
+}
+
+@Composable
+private fun TvDialogScrollBox(
+    scroll: ScrollState,
+    contentFocus: FocusRequester,
+    confirmFocus: FocusRequester,
+    verticalArrangement: Arrangement.Vertical = Arrangement.spacedBy(8.dp),
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val ctx = LocalContext.current
+    val isTv = remember { DeviceUtils.isTV(ctx.applicationContext) }
+    val scope = rememberCoroutineScope()
+    var focused by remember { mutableStateOf(false) }
+
+    Box(Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(scroll)
+                .then(
+                    if (isTv) Modifier
+                        .focusRequester(contentFocus)
+                        .focusable()
+                        .onFocusChanged { focused = it.isFocused }
+                        .onPreviewKeyEvent { ev ->
+                            if (ev.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+                            when (ev.key) {
+                                Key.DirectionUp -> {
+                                    if (scroll.value > 0) {
+                                        scope.launch {
+                                            scroll.animateScrollTo((scroll.value - 200).coerceAtLeast(0))
+                                        }
+                                        true
+                                    } else false
+                                }
+                                Key.DirectionDown -> {
+                                    if (scroll.value < scroll.maxValue) {
+                                        scope.launch {
+                                            scroll.animateScrollTo((scroll.value + 200).coerceAtMost(scroll.maxValue))
+                                        }
+                                        true
+                                    } else {
+                                        scope.launch { confirmFocus.requestFocus() }
+                                        true
+                                    }
+                                }
+                                else -> false
+                            }
+                        }
+                    else Modifier
+                ),
+            verticalArrangement = verticalArrangement
+        ) {
+            content()
+        }
+        if (isTv && focused) {
+            if (scroll.canScrollBackward) {
+                Text(
+                    "↑",
+                    modifier = Modifier.align(Alignment.TopCenter),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+            if (scroll.canScrollForward) {
+                Text(
+                    "↓",
+                    modifier = Modifier.align(Alignment.BottomCenter),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun DialogCloseButton(
+    onDismiss: () -> Unit,
+    contentFocus: FocusRequester,
+    confirmFocus: FocusRequester
+) {
+    val scope = rememberCoroutineScope()
+    TextButton(
+        onClick = onDismiss,
+        modifier = Modifier
+            .focusRequester(confirmFocus)
+            .onPreviewKeyEvent { ev ->
+                if (ev.type == KeyEventType.KeyDown && ev.key == Key.DirectionUp) {
+                    scope.launch { contentFocus.requestFocus() }
+                    true
+                } else false
+            }
+    ) { Text(stringResource(R.string.close)) }
 }
 
 @Composable
