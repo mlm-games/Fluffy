@@ -40,8 +40,9 @@ jobs:
       app-name: Fluffy
       app-slug: fluffy
       application-id: app.fluffy
-      play-track: ${{ inputs.play_track || 'production' }}
+      play-track: ${{ inputs.upload_releases && inputs.play_track || 'production' }}
       bump-type: ${{ inputs.bump_type }}
+      prerelease: ${{ inputs.mark_prerelease }}
     secrets:
       KEYSTORE: ${{ secrets.KEYSTORE }}
       KEYSTORE_PASSPHRASE: ${{ secrets.KEYSTORE_PASSPHRASE }}
