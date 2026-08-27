@@ -3,7 +3,11 @@
 package app.fluffy.ui.components
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.media.MediaMetadataRetriever
 import android.net.Uri
+import android.os.ParcelFileDescriptor
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -24,6 +28,8 @@ import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Icon
@@ -41,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -63,8 +70,11 @@ import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
+import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 import androidx.core.net.toUri
+import android.graphics.pdf.PdfRenderer
+import kotlin.math.min
 
 data class RowModel(
     val name: String,
@@ -72,6 +82,8 @@ data class RowModel(
     val isDir: Boolean,
     val isArchive: Boolean,
     val isImage: Boolean,
+    val isVideo: Boolean,
+    val isPdf: Boolean,
     val subtitle: String
 )
 
@@ -81,8 +93,10 @@ fun File.toRowModel(): RowModel = RowModel(
     isDir = isDirectory,
     isArchive = if (isDirectory) false else FileSystemAccess.isArchiveFile(name),
     isImage = if (isDirectory) false else FileSystemAccess.getMimeType(name).startsWith("image/"),
+    isVideo = if (isDirectory) false else FileSystemAccess.getMimeType(name).startsWith("video/"),
+    isPdf = if (isDirectory) false else FileSystemAccess.getMimeType(name).startsWith("application/pdf"),
     subtitle = if (isDirectory) {
-        "Folder • ${formatDate(lastModified())}" // Dupli code to remove
+        "Folder • ${formatDate(lastModified())}"
     } else {
         "${formatSize(length())} • ${formatDate(lastModified())}"
     }
@@ -99,6 +113,10 @@ fun DocumentFile.toRowModel(): RowModel {
         isArchive = if (dir) false else FileSystemAccess.isArchiveFile(n),
         isImage = if (dir) false else mime.startsWith("image/") ||
             FileSystemAccess.getMimeType(n).startsWith("image/"),
+        isVideo = if (dir) false else mime.startsWith("video/") ||
+            FileSystemAccess.getMimeType(n).startsWith("video/"),
+        isPdf = if (dir) false else mime.startsWith("application/pdf") ||
+            FileSystemAccess.getMimeType(n).startsWith("application/pdf"),
         subtitle = if (dir) "Folder" else (type ?: "file")
     )
 }
@@ -109,11 +127,13 @@ fun ShellEntry.toRowModel(): RowModel = RowModel(
     isDir = isDir,
     isArchive = if (isDir) false else FileSystemAccess.isArchiveFile(name),
     isImage = if (isDir) false else FileSystemAccess.getMimeType(name).startsWith("image/"),
+    isVideo = if (isDir) false else FileSystemAccess.getMimeType(name).startsWith("video/"),
+    isPdf = if (isDir) false else FileSystemAccess.getMimeType(name).startsWith("application/pdf"),
     subtitle = if (isDir) "Folder" else uri.toString()
 )
 
 fun RowModel.canShowThumbnail(): Boolean =
-    isImage && (uri.scheme == "file" || uri.scheme == "content")
+    (isImage || isVideo || isPdf) && (uri.scheme == "file" || uri.scheme == "content")
 
 @Composable
 fun FileTypeIcon(
@@ -123,36 +143,130 @@ fun FileTypeIcon(
     thumbnailSizePx: Int = 128,
 ) {
     val ctx = LocalContext.current
-    if (showThumbnail && model.canShowThumbnail()) {
-        val req = remember(model.uri, thumbnailSizePx) {
-            ImageRequest.Builder(ctx)
-                .data(model.uri)
-                .size(thumbnailSizePx)
-                .crossfade(true)
-                .build()
+    val bitmap by produceState<Bitmap?>(initialValue = null, model.uri, thumbnailSizePx) {
+        value = withContext(Dispatchers.IO) {
+            if (model.isImage) {
+                loadImageThumbnail(ctx, model.uri, thumbnailSizePx)
+            } else if (model.isVideo) {
+                loadVideoThumbnail(ctx, model.uri, thumbnailSizePx)
+            } else if (model.isPdf) {
+                loadPdfThumbnail(ctx, model.uri, thumbnailSizePx)
+            } else null
         }
+    }
+
+    if (showThumbnail && model.canShowThumbnail() && bitmap != null) {
         AsyncImage(
-            model = req,
+            model = ImageRequest.Builder(ctx)
+                .data(bitmap)
+                .crossfade(true)
+                .build(),
             contentDescription = model.name,
             modifier = modifier.clip(RoundedCornerShape(8.dp)),
             contentScale = ContentScale.Crop
         )
     } else {
-        Icon(
-            imageVector = when {
-                model.isDir -> Icons.Filled.Folder
-                model.isArchive -> Icons.Filled.FolderZip
-                model.isImage -> Icons.Filled.Image
-                else -> Icons.AutoMirrored.Filled.InsertDriveFile
-            },
-            contentDescription = null,
-            modifier = modifier,
-            tint = when {
-                model.isDir -> colorScheme.primary
-                model.isArchive -> colorScheme.secondary
-                else -> colorScheme.onSurfaceVariant
+        fallbackIcon(model, modifier)
+    }
+}
+
+@Composable
+private fun fallbackIcon(model: RowModel, modifier: Modifier) {
+    Icon(
+        imageVector = when {
+            model.isDir -> Icons.Filled.Folder
+            model.isArchive -> Icons.Filled.FolderZip
+            model.isImage -> Icons.Filled.Image
+            model.isVideo -> Icons.Filled.Movie
+            model.isPdf -> Icons.Filled.PictureAsPdf
+            else -> Icons.AutoMirrored.Filled.InsertDriveFile
+        },
+        contentDescription = null,
+        modifier = modifier,
+        tint = when {
+            model.isDir -> colorScheme.primary
+            model.isArchive -> colorScheme.secondary
+            model.isVideo -> colorScheme.tertiary
+            model.isPdf -> colorScheme.error
+            else -> colorScheme.onSurfaceVariant
+        }
+    )
+}
+
+private fun loadImageThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
+    return try {
+        val inputStream = ctx.contentResolver.openInputStream(uri)
+        inputStream?.use { stream ->
+            val options = BitmapFactory.Options()
+            options.inJustDecodeBounds = true
+            BitmapFactory.decodeStream(stream)
+            options.inJustDecodeBounds = false
+            options.inSampleSize = calculateInSampleSize(options, size, size)
+            options.inPreferredConfig = Bitmap.Config.RGB_565
+            ctx.contentResolver.openInputStream(uri)?.use { stream2 ->
+                BitmapFactory.decodeStream(stream2, null, options)
             }
-        )
+        }
+    } catch (e: Exception) {
+        null
+    }
+}
+
+private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
+    var inSampleSize = 1
+    if (options.outHeight > reqHeight || options.outWidth > reqWidth) {
+        val halfHeight = options.outHeight / 2
+        val halfWidth = options.outWidth / 2
+        while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
+            inSampleSize *= 2
+        }
+    }
+    return inSampleSize
+}
+
+private fun scaleBitmap(bitmap: Bitmap, size: Int): Bitmap {
+    val scale = min(size.toFloat() / bitmap.width, size.toFloat() / bitmap.height)
+    val width = (bitmap.width * scale).toInt()
+    val height = (bitmap.height * scale).toInt()
+    return Bitmap.createScaledBitmap(bitmap, width, height, true)
+}
+
+private fun loadVideoThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
+    return try {
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(ctx, uri)
+        val bitmap = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+        retriever.release()
+        bitmap?.let { scaleBitmap(it, size) }
+    } catch (e: Exception) {
+        null
+    }
+}
+
+private fun loadPdfThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
+    return try {
+        val parcelFileDescriptor = ctx.contentResolver.openFileDescriptor(uri, "r")
+            ?: return null
+        val renderer = PdfRenderer(parcelFileDescriptor)
+        if (renderer.pageCount > 0) {
+            val page = renderer.openPage(0)
+            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val scale = min(size.toFloat() / page.width, size.toFloat() / page.height)
+            val width = (page.width * scale).toInt()
+            val height = (page.height * scale).toInt()
+            val scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true)
+            page.render(scaledBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+            page.close()
+            renderer.close()
+            parcelFileDescriptor.close()
+            scaledBitmap
+        } else {
+            renderer.close()
+            parcelFileDescriptor.close()
+            null
+        }
+    } catch (e: Exception) {
+        null
     }
 }
 
