@@ -12,6 +12,9 @@ import androidx.core.content.FileProvider
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.SafIo
 import app.fluffy.ui.viewers.ImageViewerActivity
+import app.fluffy.ui.viewers.MediaPlayerActivity
+import app.fluffy.ui.viewers.PdfViewerActivity
+import app.fluffy.ui.viewers.TextViewerActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
@@ -224,4 +227,103 @@ suspend fun Context.openWithExportMultiple(
     }
 
     startActivity(Intent.createChooser(send, "Open with"))
+}
+
+fun Context.launchMediaPlayer(uri: Uri, title: String? = null) {
+    val intent = Intent(this, MediaPlayerActivity::class.java).apply {
+        data = uri
+        title?.let { putExtra(MediaPlayerActivity.EXTRA_TITLE, it) }
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        clipData = ClipData.newUri(contentResolver, "media", uri)
+        if (this@launchMediaPlayer !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    startActivity(intent)
+}
+
+fun Context.launchTextViewer(uri: Uri, title: String? = null) {
+    val intent = Intent(this, TextViewerActivity::class.java).apply {
+        data = uri
+        title?.let { putExtra(TextViewerActivity.EXTRA_TITLE, it) }
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        clipData = ClipData.newUri(contentResolver, "text", uri)
+        if (this@launchTextViewer !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    startActivity(intent)
+}
+
+fun Context.launchPdfViewer(uri: Uri) {
+    val intent = Intent(this, PdfViewerActivity::class.java).apply {
+        data = uri
+        putExtra(PdfViewerActivity.EXTRA_URI, uri.toString())
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        clipData = ClipData.newUri(contentResolver, "pdf", uri)
+        if (this@launchPdfViewer !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    startActivity(intent)
+}
+
+private fun isProbablyText(name: String, mime: String): Boolean {
+    if (mime.startsWith("text/")) return true
+    val lower = name.lowercase()
+    val textExt = setOf(
+        "txt", "md", "markdown", "json", "xml", "html", "htm", "css", "js", "ts",
+        "kt", "kts", "java", "py", "c", "cpp", "h", "hpp", "cs", "go", "rs",
+        "sh", "bat", "cmd", "yml", "yaml", "toml", "ini", "cfg", "conf", "log",
+        "csv", "svg", "properties", "gradle", "sql"
+    )
+    val ext = lower.substringAfterLast('.', "")
+    return ext in textExt
+}
+
+/**
+ * Opens with built-in viewer when possible; otherwise fall back to system chooser.
+ * @return true if a built-in viewer was used
+ */
+suspend fun Context.openWithBuiltInViewer(
+    src: Uri,
+    displayName: String,
+    preferMime: Boolean
+): Boolean {
+    val exported = exportForOpenWith(src, displayName)
+    val mime = if (preferMime) {
+        contentResolver.getType(exported) ?: FileSystemAccess.getMimeType(displayName)
+    } else {
+        FileSystemAccess.getMimeType(displayName)
+    }
+
+    return when {
+        mime.startsWith("image/") ||
+            FileSystemAccess.getMimeType(displayName).startsWith("image/") -> {
+            val viewable = toViewableUri(exported, displayName)
+            launchImageViewer(listOf(viewable), startIndex = 0, title = displayName)
+            true
+        }
+        mime.startsWith("video/") || mime.startsWith("audio/") -> {
+            launchMediaPlayer(exported, displayName)
+            true
+        }
+        mime == "application/pdf" || displayName.lowercase().endsWith(".pdf") -> {
+            launchPdfViewer(exported)
+            true
+        }
+        isProbablyText(displayName, mime) -> {
+            launchTextViewer(exported, displayName)
+            true
+        }
+        else -> false
+    }
+}
+
+suspend fun Context.openContent(
+    src: Uri,
+    displayName: String,
+    preferBuiltInViewers: Boolean,
+    preferMime: Boolean,
+    forceChooser: Boolean = false
+) {
+    if (!forceChooser && preferBuiltInViewers) {
+        val used = openWithBuiltInViewer(src, displayName, preferMime)
+        if (used) return
+    }
+    openWithExport(src, displayName, preferMime)
 }

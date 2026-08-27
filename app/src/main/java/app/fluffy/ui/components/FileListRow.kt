@@ -360,6 +360,7 @@ fun FileListRow(
     onToggleSelect: (Boolean) -> Unit,
     onOpenDir: (Uri) -> Unit,
     onOpenArchive: (Uri) -> Unit,
+    onOpenContent: (Uri, String) -> Unit,
     onOpenWith: (Uri, String) -> Unit,
     onClick: (() -> Unit)? = null,
     onExtractHere: (() -> Unit)? = null
@@ -398,7 +399,7 @@ fun FileListRow(
                                 model.isDir -> onOpenDir(model.uri)
                                 hasSelection -> onToggleSelect(!selected)
                                 model.isArchive -> onOpenArchive(model.uri)
-                                else -> onOpenWith(model.uri, model.name)
+                                else -> onOpenContent(model.uri, model.name)
                             }
                         }
                     }
@@ -487,6 +488,7 @@ fun FileGridItem(
     onToggleSelect: (Boolean) -> Unit,
     onOpenDir: (Uri) -> Unit,
     onOpenArchive: (Uri) -> Unit,
+    onOpenContent: (Uri, String) -> Unit,
     onOpenWith: (Uri, String) -> Unit,
     onClick: (() -> Unit)? = null,
     onExtractHere: (() -> Unit)? = null
@@ -513,7 +515,7 @@ fun FileGridItem(
                             model.isDir -> onOpenDir(model.uri)
                             hasSelection -> onToggleSelect(!selected)
                             model.isArchive -> onOpenArchive(model.uri)
-                            else -> onOpenWith(model.uri, model.name)
+                            else -> onOpenContent(model.uri, model.name)
                         }
                     }
                 }

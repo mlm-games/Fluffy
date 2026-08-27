@@ -63,6 +63,7 @@ import app.fluffy.platform.StorageAccessPolicy
 import app.fluffy.helper.OpenTarget
 import app.fluffy.helper.detectTarget
 import app.fluffy.helper.launchImageViewer
+import app.fluffy.helper.openContent
 import app.fluffy.helper.openWithExport
 import app.fluffy.helper.openWithExportMultiple
 import app.fluffy.helper.purgeOldExports
@@ -250,6 +251,17 @@ class MainActivity : ComponentActivity() {
                             if (FileSystemAccess.isArchiveFile(name)) {
                                 backStack.add(ScreenKey.Archive(uri = action.uri.toString()))
                                 filesVM.clearPendingAction()
+                            } else {
+                                lifecycleScope.launch {
+                                    val display = io.queryDisplayName(action.uri)
+                                    openContent(
+                                        src = action.uri,
+                                        displayName = display,
+                                        preferBuiltInViewers = s.preferBuiltInViewers,
+                                        preferMime = s.preferContentResolverMime
+                                    )
+                                    filesVM.clearPendingAction()
+                                }
                             }
                         }
 
@@ -430,12 +442,30 @@ class MainActivity : ComponentActivity() {
                                             }
                                         },
 
+                                        onOpenContent = { uri, name ->
+                                            lifecycleScope.launch {
+                                                openContent(
+                                                    src = uri,
+                                                    displayName = name.ifBlank {
+                                                        uri.lastPathSegment ?: "file"
+                                                    },
+                                                    preferBuiltInViewers = s.preferBuiltInViewers,
+                                                    preferMime = s.preferContentResolverMime,
+                                                    forceChooser = false
+                                                )
+                                            }
+                                        },
+
                                         onOpenWith = { uri, name ->
                                             lifecycleScope.launch {
-                                                openWithExport(
+                                                openContent(
                                                     src = uri,
-                                                    displayName = name,
-                                                    preferMime = s.preferContentResolverMime
+                                                    displayName = name.ifBlank {
+                                                        uri.lastPathSegment ?: "file"
+                                                    },
+                                                    preferBuiltInViewers = s.preferBuiltInViewers,
+                                                    preferMime = s.preferContentResolverMime,
+                                                    forceChooser = true
                                                 )
                                             }
                                         },

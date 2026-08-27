@@ -62,6 +62,7 @@ import androidx.core.content.FileProvider
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
+import app.fluffy.helper.openContent
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.SafIo
 import app.fluffy.ui.components.AppTopBar
@@ -136,7 +137,7 @@ fun ArchiveViewerScreen(
         dirEntries + files.sortedBy { it.path.lowercase() }
     }
 
-    fun openPreview(uri: Uri, name: String, ctx: Context, preferMime: Boolean) {
+    fun openPreview(uri: Uri, name: String, ctx: Context, settings: AppSettings) {
         val finalUri = if (uri.scheme == "file") {
             try {
                 FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", File(requireNotNull(uri.path)))
@@ -148,20 +149,14 @@ fun ArchiveViewerScreen(
             snackBarManager.show("No app available to open this file")
             return
         }
-        val mime = if (preferMime) {
-            ctx.contentResolver.getType(finalUri) ?: FileSystemAccess.getMimeType(name)
-        } else {
-            FileSystemAccess.getMimeType(name)
-        }
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(finalUri, mime)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        val pm = ctx.packageManager
-        if (intent.resolveActivity(pm) != null) {
-            ctx.startActivity(Intent.createChooser(intent, "Open with"))
-        } else {
-            snackBarManager.show("No app available to open this file")
+        scope.launch {
+            ctx.openContent(
+                src = finalUri,
+                displayName = name,
+                preferBuiltInViewers = settings.preferBuiltInViewers,
+                preferMime = settings.preferContentResolverMime,
+                forceChooser = false
+            )
         }
     }
 
@@ -415,7 +410,7 @@ fun ArchiveViewerScreen(
                                                     archiveEngine = archive,
                                                     safIo = io
                                                 )
-                                                if (uri != null) openPreview(uri, e.path, ctx, settings.preferContentResolverMime)
+                                                if (uri != null) openPreview(uri, e.path, ctx, settings)
                                             }
                                         }
                                     }

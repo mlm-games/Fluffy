@@ -140,6 +140,15 @@ data class AppSettings(
     val preferContentResolverMime: Boolean = true,
 
     @Setting(
+        title = "Prefer built-in viewers",
+        description = "Open images, audio/video, PDF and text in Fluffy instead of the system Open with dialog.",
+        category = General::class,
+        type = Toggle::class,
+        key = "prefer_builtin_viewers"
+    )
+    val preferBuiltInViewers: Boolean = false,
+
+    @Setting(
         title = "Warn before elevated writes",
         description = "Show a confirmation before writing/deleting via root or Shizuku",
         category = System::class,

@@ -152,6 +152,7 @@ fun FileBrowserScreen(
     onOpenSettings: () -> Unit,
     onOpenTasks: () -> Unit,
     onAddBookmark: (String) -> Unit = {},
+    onOpenContent: (Uri, String) -> Unit = { _, _ -> },
     onOpenWith: (Uri, String) -> Unit = { _, _ -> },
     onOpenArchive: (Uri) -> Unit,
     onCopySelected: (List<Uri>) -> Unit = {},
@@ -670,6 +671,7 @@ fun FileBrowserScreen(
             onToggleSelect: (Boolean) -> Unit,
             onOpenDir: (Uri) -> Unit,
             onOpenArchive: (Uri) -> Unit,
+            onOpenContent: (Uri, String) -> Unit,
             onOpenWith: (Uri, String) -> Unit,
             onClick: (() -> Unit)?,
             onExtractHere: (() -> Unit)?,
@@ -684,6 +686,7 @@ fun FileBrowserScreen(
                     onToggleSelect = onToggleSelect,
                     onOpenDir = onOpenDir,
                     onOpenArchive = onOpenArchive,
+                    onOpenContent = onOpenContent,
                     onOpenWith = onOpenWith,
                     onClick = onClick,
                     onExtractHere = onExtractHere,
@@ -698,6 +701,7 @@ fun FileBrowserScreen(
                     onToggleSelect = onToggleSelect,
                     onOpenDir = onOpenDir,
                     onOpenArchive = onOpenArchive,
+                    onOpenContent = onOpenContent,
                     onOpenWith = onOpenWith,
                     onClick = onClick,
                     onExtractHere = onExtractHere,
@@ -753,6 +757,7 @@ fun FileBrowserScreen(
                                     },
                                     onOpenDir = { onOpenFile(file) },
                                     onOpenArchive = { onOpenArchive(Uri.fromFile(file)) },
+                                    onOpenContent = { _, _ -> onOpenContent(Uri.fromFile(file), file.name) },
                                     onOpenWith = { _, _ -> onOpenWith(Uri.fromFile(file), file.name) },
                                     onClick = when {
                                         pickFolderMode -> {
@@ -796,6 +801,7 @@ fun FileBrowserScreen(
                                     },
                                     onOpenDir = { onOpenFile(file) },
                                     onOpenArchive = { onOpenArchive(Uri.fromFile(file)) },
+                                    onOpenContent = { _, _ -> onOpenContent(Uri.fromFile(file), file.name) },
                                     onOpenWith = { _, _ -> onOpenWith(Uri.fromFile(file), file.name) },
                                     onClick = when {
                                         pickFolderMode -> {
@@ -861,6 +867,7 @@ fun FileBrowserScreen(
                                         },
                                         onOpenDir = onOpenDir,
                                         onOpenArchive = onOpenArchive,
+                                        onOpenContent = onOpenContent,
                                         onOpenWith = onOpenWith,
                                         onClick = when {
                                             pickFolderMode -> {
@@ -904,6 +911,7 @@ fun FileBrowserScreen(
                                         },
                                         onOpenDir = onOpenDir,
                                         onOpenArchive = onOpenArchive,
+                                        onOpenContent = onOpenContent,
                                         onOpenWith = onOpenWith,
                                         onClick = when {
                                             pickFolderMode -> {
@@ -964,6 +972,7 @@ fun FileBrowserScreen(
                                         },
                                         onOpenDir = onOpenDir,
                                         onOpenArchive = onOpenArchive,
+                                        onOpenContent = onOpenContent,
                                         onOpenWith = onOpenWith,
                                         onClick = when {
                                             pickFolderMode -> {
@@ -1007,6 +1016,7 @@ fun FileBrowserScreen(
                                         },
                                         onOpenDir = onOpenDir,
                                         onOpenArchive = onOpenArchive,
+                                        onOpenContent = onOpenContent,
                                         onOpenWith = onOpenWith,
                                         onClick = when {
                                             pickFolderMode -> {

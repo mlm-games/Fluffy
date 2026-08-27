@@ -28,18 +28,48 @@ class FileSystemAccess(
         fun getMimeType(fileName: String): String {
             val lower = fileName.lowercase()
             return when {
+                // archives
                 lower.endsWith(".zip") || lower.endsWith(".jar") -> "application/zip"
                 lower.endsWith(".7z") -> "application/x-7z-compressed"
                 lower.endsWith(".tar") -> "application/x-tar"
                 lower.endsWith(".apk") -> "application/vnd.android.package-archive"
                 lower.endsWith(".pdf") -> "application/pdf"
+
+                // images
                 lower.endsWith(".jpg") || lower.endsWith(".jpeg") -> "image/jpeg"
                 lower.endsWith(".png") -> "image/png"
+                lower.endsWith(".gif") -> "image/gif"
+                lower.endsWith(".webp") -> "image/webp"
+                lower.endsWith(".bmp") -> "image/bmp"
+                lower.endsWith(".svg") -> "image/svg+xml"
+                lower.endsWith(".heic") || lower.endsWith(".heif") -> "image/heic"
+
+                // video
                 lower.endsWith(".mp4") -> "video/mp4"
-                lower.endsWith(".mp3") || lower.endsWith(".wav") || lower.endsWith(".flac") ||
-                    lower.endsWith(".ogg") || lower.endsWith(".m4a") || lower.endsWith(".aac") ||
-                    lower.endsWith(".opus") || lower.endsWith(".wma") -> "audio/mpeg"
-                lower.endsWith(".svg") -> "image/svg"
+                lower.endsWith(".mkv") -> "video/x-matroska"
+                lower.endsWith(".webm") -> "video/webm"
+                lower.endsWith(".avi") -> "video/x-msvideo"
+                lower.endsWith(".3gp") -> "video/3gpp"
+
+                // audio
+                lower.endsWith(".mp3") -> "audio/mpeg"
+                lower.endsWith(".wav") -> "audio/wav"
+                lower.endsWith(".flac") -> "audio/flac"
+                lower.endsWith(".ogg") || lower.endsWith(".opus") -> "audio/ogg"
+                lower.endsWith(".m4a") || lower.endsWith(".aac") -> "audio/mp4"
+                lower.endsWith(".wma") -> "audio/x-ms-wma"
+
+                // text-ish
+                lower.endsWith(".txt") || lower.endsWith(".log") -> "text/plain"
+                lower.endsWith(".md") || lower.endsWith(".markdown") -> "text/markdown"
+                lower.endsWith(".json") -> "application/json"
+                lower.endsWith(".xml") -> "text/xml"
+                lower.endsWith(".html") || lower.endsWith(".htm") -> "text/html"
+                lower.endsWith(".css") -> "text/css"
+                lower.endsWith(".js") -> "text/javascript"
+                lower.endsWith(".csv") -> "text/csv"
+                lower.endsWith(".yml") || lower.endsWith(".yaml") -> "application/x-yaml"
+
                 else -> "application/octet-stream"
             }
         }
