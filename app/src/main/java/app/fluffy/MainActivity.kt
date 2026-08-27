@@ -441,7 +441,14 @@ class MainActivity : ComponentActivity() {
                                         },
 
                                         showFileCount = s.showFileCount,
-                                        showStorageInfo = s.showStorageInfo
+                                        showStorageInfo = s.showStorageInfo,
+                                        viewMode = s.viewMode,
+                                        showThumbnails = s.showThumbnails,
+                                        onViewModeChange = { mode ->
+                                            lifecycleScope.launch {
+                                                settingsRepository.updateSettings { it.copy(viewMode = mode) }
+                                            }
+                                        },
                                     )
                                 }
 

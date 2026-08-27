@@ -5,14 +5,20 @@ package app.fluffy.ui.components
 import android.content.Context
 import android.net.Uri
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.InsertDriveFile
 import androidx.compose.material.icons.filled.Folder
@@ -31,29 +37,34 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.ShellEntry
 import app.fluffy.io.ShellIo
-import org.koin.core.component.inject
 import app.fluffy.ui.screens.AnimatedListCard
 import app.fluffy.util.UiFormat.formatDate
 import app.fluffy.util.UiFormat.formatSize
+import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
 import androidx.core.net.toUri
-import org.koin.core.component.KoinComponent
 
 data class RowModel(
     val name: String,
@@ -86,7 +97,8 @@ fun DocumentFile.toRowModel(): RowModel {
         uri = uri,
         isDir = dir,
         isArchive = if (dir) false else FileSystemAccess.isArchiveFile(n),
-        isImage = if (dir) false else mime.startsWith("image/") || FileSystemAccess.getMimeType(n).startsWith("image/"),
+        isImage = if (dir) false else mime.startsWith("image/") ||
+            FileSystemAccess.getMimeType(n).startsWith("image/"),
         subtitle = if (dir) "Folder" else (type ?: "file")
     )
 }
@@ -100,12 +112,57 @@ fun ShellEntry.toRowModel(): RowModel = RowModel(
     subtitle = if (isDir) "Folder" else uri.toString()
 )
 
+fun RowModel.canShowThumbnail(): Boolean =
+    isImage && (uri.scheme == "file" || uri.scheme == "content")
+
+@Composable
+fun FileTypeIcon(
+    model: RowModel,
+    modifier: Modifier = Modifier,
+    showThumbnail: Boolean = true,
+    thumbnailSizePx: Int = 128,
+) {
+    val ctx = LocalContext.current
+    if (showThumbnail && model.canShowThumbnail()) {
+        val req = remember(model.uri, thumbnailSizePx) {
+            ImageRequest.Builder(ctx)
+                .data(model.uri)
+                .size(thumbnailSizePx)
+                .crossfade(true)
+                .build()
+        }
+        AsyncImage(
+            model = req,
+            contentDescription = model.name,
+            modifier = modifier.clip(RoundedCornerShape(8.dp)),
+            contentScale = ContentScale.Crop
+        )
+    } else {
+        Icon(
+            imageVector = when {
+                model.isDir -> Icons.Filled.Folder
+                model.isArchive -> Icons.Filled.FolderZip
+                model.isImage -> Icons.Filled.Image
+                else -> Icons.AutoMirrored.Filled.InsertDriveFile
+            },
+            contentDescription = null,
+            modifier = modifier,
+            tint = when {
+                model.isDir -> colorScheme.primary
+                model.isArchive -> colorScheme.secondary
+                else -> colorScheme.onSurfaceVariant
+            }
+        )
+    }
+}
+
 @Composable
 fun FileListRow(
     model: RowModel,
     selected: Boolean,
     hasSelection: Boolean,
     showFileCount: Boolean,
+    showThumbnail: Boolean = true,
     onToggleSelect: (Boolean) -> Unit,
     onOpenDir: (Uri) -> Unit,
     onOpenArchive: (Uri) -> Unit,
@@ -118,7 +175,6 @@ fun FileListRow(
     val dirCount by produceState<Int?>(initialValue = null, model.uri, showFileCount) {
         value = if (showFileCount && model.isDir) DirectoryCounter.count(ctx, model.uri) else null
     }
-
 
     val mainFR = remember { FocusRequester() }
     val rightFR = remember { FocusRequester() }
@@ -152,23 +208,17 @@ fun FileListRow(
                             }
                         }
                     }
-                    .focusProperties { right = if (model.isArchive && onExtractHere != null) rightFR else cbFR },
+                    .focusProperties {
+                        right = if (model.isArchive && onExtractHere != null) rightFR else cbFR
+                    },
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(
-                    imageVector = when {
-                        model.isDir -> Icons.Filled.Folder
-                        model.isArchive -> Icons.Filled.FolderZip
-                        model.isImage -> Icons.Filled.Image
-                        else -> Icons.AutoMirrored.Filled.InsertDriveFile
-                    },
-                    contentDescription = null,
-                    tint = when {
-                        model.isDir -> colorScheme.primary
-                        model.isArchive -> colorScheme.secondary
-                        else -> colorScheme.onSurfaceVariant
-                    }
+                FileTypeIcon(
+                    model = model,
+                    showThumbnail = showThumbnail,
+                    thumbnailSizePx = 96,
+                    modifier = Modifier.size(40.dp)
                 )
                 Column(Modifier.fillMaxWidth()) {
                     Text(
@@ -210,7 +260,6 @@ fun FileListRow(
                         .focusable()
                         .focusProperties { left = mainFR; right = cbFR }
                 ) {
-                    Icons.Filled.Unarchive
                     Icon(
                         imageVector = Icons.Filled.Unarchive,
                         contentDescription = "Extract here",
@@ -229,6 +278,126 @@ fun FileListRow(
                     .focusProperties {
                         left = if (model.isArchive && onExtractHere != null) rightFR else mainFR
                     }
+            )
+        }
+    }
+}
+
+@Composable
+fun FileGridItem(
+    model: RowModel,
+    selected: Boolean,
+    hasSelection: Boolean,
+    showFileCount: Boolean,
+    showThumbnail: Boolean = true,
+    onToggleSelect: (Boolean) -> Unit,
+    onOpenDir: (Uri) -> Unit,
+    onOpenArchive: (Uri) -> Unit,
+    onOpenWith: (Uri, String) -> Unit,
+    onClick: (() -> Unit)? = null,
+    onExtractHere: (() -> Unit)? = null
+) {
+    val ctx = LocalContext.current
+    val dirCount by produceState<Int?>(initialValue = null, model.uri, showFileCount) {
+        value = if (showFileCount && model.isDir) DirectoryCounter.count(ctx, model.uri) else null
+    }
+
+    val mainFR = remember { FocusRequester() }
+
+    AnimatedListCard {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(mainFR)
+                .focusable()
+                .semantics { role = Role.Button }
+                .clickable {
+                    if (onClick != null) {
+                        onClick()
+                    } else {
+                        when {
+                            model.isDir -> onOpenDir(model.uri)
+                            hasSelection -> onToggleSelect(!selected)
+                            model.isArchive -> onOpenArchive(model.uri)
+                            else -> onOpenWith(model.uri, model.name)
+                        }
+                    }
+                }
+                .padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(1f)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(colorScheme.surfaceVariant.copy(alpha = 0.45f)),
+                contentAlignment = Alignment.Center
+            ) {
+                FileTypeIcon(
+                    model = model,
+                    showThumbnail = showThumbnail,
+                    thumbnailSizePx = 320,
+                    modifier = if (showThumbnail && model.canShowThumbnail()) {
+                        Modifier.fillMaxSize()
+                    } else {
+                        Modifier.size(48.dp)
+                    }
+                )
+
+                Checkbox(
+                    checked = selected,
+                    onCheckedChange = { onToggleSelect(it) },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(2.dp)
+                )
+
+                if (model.isArchive && onExtractHere != null) {
+                    IconButton(
+                        onClick = onExtractHere,
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(2.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Unarchive,
+                            contentDescription = "Extract here",
+                            tint = colorScheme.primary
+                        )
+                    }
+                }
+            }
+
+            Text(
+                model.name,
+                style = typography.bodyMedium,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 6.dp)
+            )
+
+            val subtitleText =
+                if (model.isDir) {
+                    if (!showFileCount) "Folder"
+                    else when (val c = dirCount) {
+                        null -> "…"
+                        1 -> "1 item"
+                        else -> "$c items"
+                    }
+                } else model.subtitle
+
+            Text(
+                subtitleText,
+                style = typography.bodySmall,
+                color = colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
             )
         }
     }
@@ -257,7 +426,6 @@ object DirectoryCounter : KoinComponent {
                     try {
                         doc.listFiles().size
                     } catch (_: UnsupportedOperationException) {
-                        // SingleDocumentFile can't list children..
                         0
                     }
                 }
@@ -293,7 +461,6 @@ object DirectoryCounter : KoinComponent {
                 parent?.let { invalidate(Uri.fromFile(it)) }
             }
             "content" -> {
-                // can't easily determine parent
                 invalidateAll()
             }
             "root", "shizuku" -> {

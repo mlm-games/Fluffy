@@ -37,6 +37,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DriveFileMove
+import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Checklist
@@ -50,6 +51,7 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderOpen
 import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.Bookmark
+import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Image
@@ -105,7 +107,6 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
-
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -121,7 +122,9 @@ import app.fluffy.helper.cardAsFocusGroup
 import app.fluffy.ui.components.AlertBanner
 import app.fluffy.ui.components.AlertBannerManager
 import app.fluffy.ui.components.ConfirmationDialog
+import app.fluffy.ui.components.FileGridItem
 import app.fluffy.ui.components.FileListRow
+import app.fluffy.ui.components.RowModel
 import app.fluffy.ui.components.toRowModel
 import app.fluffy.ui.dialogs.AddBookmarkDialog
 import app.fluffy.viewmodel.BrowseLocation
@@ -169,6 +172,9 @@ fun FileBrowserScreen(
     onCreateFile: (String) -> Unit = {},
     showFileCount: Boolean = true,
     showStorageInfo: Boolean = true,
+    viewMode: Int = 0,
+    showThumbnails: Boolean = true,
+    onViewModeChange: (Int) -> Unit = {},
 
     pickFolderMode: Boolean = false,
     pickFolderTitle: String = "Choose destination folder",
@@ -384,6 +390,15 @@ fun FileBrowserScreen(
                             }
                             IconButton(onClick = onShowQuickAccess) {
                                 Icon(Icons.Default.Home, contentDescription = "Home")
+                            }
+                            IconButton(
+                                onClick = { onViewModeChange(if (viewMode == 0) 1 else 0) }
+                            ) {
+                                Icon(
+                                    imageVector = if (viewMode == 0) Icons.Filled.GridView
+                                                  else Icons.AutoMirrored.Filled.ViewList,
+                                    contentDescription = if (viewMode == 0) "Grid view" else "List view"
+                                )
                             }
                         }
                         if (showStorageInfo &&
@@ -645,6 +660,51 @@ fun FileBrowserScreen(
             }
         }
     ) {
+        val isGrid = viewMode == 1
+
+        @Composable
+        fun FileBrowserEntry(
+            model: RowModel,
+            selected: Boolean,
+            hasSelection: Boolean,
+            onToggleSelect: (Boolean) -> Unit,
+            onOpenDir: (Uri) -> Unit,
+            onOpenArchive: (Uri) -> Unit,
+            onOpenWith: (Uri, String) -> Unit,
+            onClick: (() -> Unit)?,
+            onExtractHere: (() -> Unit)?,
+        ) {
+            if (isGrid) {
+                FileGridItem(
+                    model = model,
+                    selected = selected,
+                    hasSelection = hasSelection,
+                    showFileCount = showFileCount,
+                    showThumbnail = showThumbnails,
+                    onToggleSelect = onToggleSelect,
+                    onOpenDir = onOpenDir,
+                    onOpenArchive = onOpenArchive,
+                    onOpenWith = onOpenWith,
+                    onClick = onClick,
+                    onExtractHere = onExtractHere,
+                )
+            } else {
+                FileListRow(
+                    model = model,
+                    selected = selected,
+                    hasSelection = hasSelection,
+                    showFileCount = showFileCount,
+                    showThumbnail = showThumbnails,
+                    onToggleSelect = onToggleSelect,
+                    onOpenDir = onOpenDir,
+                    onOpenArchive = onOpenArchive,
+                    onOpenWith = onOpenWith,
+                    onClick = onClick,
+                    onExtractHere = onExtractHere,
+                )
+            }
+        }
+
         when (currentLocation) {
             is BrowseLocation.QuickAccess -> {
                 QuickAccessView(
@@ -668,50 +728,97 @@ fun FileBrowserScreen(
                         onShowQuickAccess = onShowQuickAccess
                     )
                 } else {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(it),
-                        contentPadding = PaddingValues(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        items(state.fileItems, key = { f -> f.absolutePath }) { file ->
-                            val isSelected = !pickFolderMode && selectedFiles.contains(file)
-                            val model = remember(file) { file.toRowModel() }
+                    val listMod = Modifier
+                        .fillMaxSize()
+                        .padding(it)
 
-                            FileListRow(
-                                model = model,
-                                selected = isSelected,
-                                hasSelection = !pickFolderMode && anySelected,
-                                showFileCount = showFileCount,
-                                onToggleSelect = { toggled ->
-                                    if (pickFolderMode) return@FileListRow
-                                    if (toggled) selectedFiles.add(file) else selectedFiles.remove(file)
-                                },
-                                onOpenDir = { onOpenFile(file) },
-                                onOpenArchive = { onOpenArchive(Uri.fromFile(file)) },
-                                onOpenWith = { _, _ -> onOpenWith(Uri.fromFile(file), file.name) },
-                                onExtractHere = {
-                                    currentDirUri?.let { targetDir -> onExtractArchive(Uri.fromFile(file), targetDir) }
-                                },
-                                onClick = when {
-                                    pickFolderMode -> {
-                                        if (file.isDirectory) {
-                                            { onOpenFile(file) }
-                                        } else null
-                                    }
-                                    isPickerMode -> {
-                                        {
+                    if (isGrid) {
+                        LazyVerticalGrid(
+                            columns = GridCells.Adaptive(minSize = 140.dp),
+                            modifier = listMod,
+                            contentPadding = PaddingValues(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            items(state.fileItems, key = { f -> f.absolutePath }) { file ->
+                                val isSelected = !pickFolderMode && selectedFiles.contains(file)
+                                val model = remember(file) { file.toRowModel() }
+                                FileBrowserEntry(
+                                    model = model,
+                                    selected = isSelected,
+                                    hasSelection = !pickFolderMode && anySelected,
+                                    onToggleSelect = { toggled ->
+                                        if (pickFolderMode) return@FileBrowserEntry
+                                        if (toggled) selectedFiles.add(file) else selectedFiles.remove(file)
+                                    },
+                                    onOpenDir = { onOpenFile(file) },
+                                    onOpenArchive = { onOpenArchive(Uri.fromFile(file)) },
+                                    onOpenWith = { _, _ -> onOpenWith(Uri.fromFile(file), file.name) },
+                                    onClick = when {
+                                        pickFolderMode -> {
                                             if (file.isDirectory) {
-                                                onOpenFile(file)
-                                            } else {
-                                                onPickFile(Uri.fromFile(file))
+                                                { onOpenFile(file) }
+                                            } else null
+                                        }
+                                        isPickerMode -> {
+                                            {
+                                                if (file.isDirectory) {
+                                                    onOpenFile(file)
+                                                } else {
+                                                    onPickFile(Uri.fromFile(file))
+                                                }
                                             }
                                         }
-                                    }
-                                    else -> null
-                                }
-                            )
+                                        else -> null
+                                    },
+                                    onExtractHere = {
+                                        currentDirUri?.let { targetDir -> onExtractArchive(Uri.fromFile(file), targetDir) }
+                                    },
+                                )
+                            }
+                        }
+                    } else {
+                        LazyColumn(
+                            modifier = listMod,
+                            contentPadding = PaddingValues(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            items(state.fileItems, key = { f -> f.absolutePath }) { file ->
+                                val isSelected = !pickFolderMode && selectedFiles.contains(file)
+                                val model = remember(file) { file.toRowModel() }
+                                FileBrowserEntry(
+                                    model = model,
+                                    selected = isSelected,
+                                    hasSelection = !pickFolderMode && anySelected,
+                                    onToggleSelect = { toggled ->
+                                        if (pickFolderMode) return@FileBrowserEntry
+                                        if (toggled) selectedFiles.add(file) else selectedFiles.remove(file)
+                                    },
+                                    onOpenDir = { onOpenFile(file) },
+                                    onOpenArchive = { onOpenArchive(Uri.fromFile(file)) },
+                                    onOpenWith = { _, _ -> onOpenWith(Uri.fromFile(file), file.name) },
+                                    onClick = when {
+                                        pickFolderMode -> {
+                                            if (file.isDirectory) {
+                                                { onOpenFile(file) }
+                                            } else null
+                                        }
+                                        isPickerMode -> {
+                                            {
+                                                if (file.isDirectory) {
+                                                    onOpenFile(file)
+                                                } else {
+                                                    onPickFile(Uri.fromFile(file))
+                                                }
+                                            }
+                                        }
+                                        else -> null
+                                    },
+                                    onExtractHere = {
+                                        currentDirUri?.let { targetDir -> onExtractArchive(Uri.fromFile(file), targetDir) }
+                                    },
+                                )
+                            }
                         }
                     }
                 }
@@ -729,50 +836,97 @@ fun FileBrowserScreen(
                             onShowQuickAccess = onShowQuickAccess
                         )
                     } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(it),
-                            contentPadding = PaddingValues(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            items(state.shellItems, key = { e -> e.uri.toString() }) { entry ->
-                                val isSelected = !pickFolderMode && selected.contains(entry.uri)
-                                val model = remember(entry.uri) { entry.toRowModel() }
+                        val listMod = Modifier
+                            .fillMaxSize()
+                            .padding(it)
 
-                                FileListRow(
-                                    model = model,
-                                    selected = isSelected,
-                                    hasSelection = !pickFolderMode && anySelected,
-                                    showFileCount = showFileCount,
-                                    onToggleSelect = { toggled ->
-                                        if (pickFolderMode) return@FileListRow
-                                        if (toggled) selected.add(entry.uri) else selected.remove(entry.uri)
-                                    },
-                                    onOpenDir = onOpenDir,
-                                    onOpenArchive = onOpenArchive,
-                                    onOpenWith = onOpenWith,
-                                    onExtractHere = {
-                                        currentDirUri?.let { targetDir -> onExtractArchive(entry.uri, targetDir) }
-                                    },
-                                    onClick = when {
-                                        pickFolderMode -> {
-                                            if (entry.isDir) {
-                                                { onOpenDir(entry.uri) }
-                                            } else null
-                                        }
-                                        isPickerMode -> {
-                                            {
+                        if (isGrid) {
+                            LazyVerticalGrid(
+                                columns = GridCells.Adaptive(minSize = 140.dp),
+                                modifier = listMod,
+                                contentPadding = PaddingValues(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(state.shellItems, key = { e -> e.uri.toString() }) { entry ->
+                                    val isSelected = !pickFolderMode && selected.contains(entry.uri)
+                                    val model = remember(entry.uri) { entry.toRowModel() }
+                                    FileBrowserEntry(
+                                        model = model,
+                                        selected = isSelected,
+                                        hasSelection = !pickFolderMode && anySelected,
+                                        onToggleSelect = { toggled ->
+                                            if (pickFolderMode) return@FileBrowserEntry
+                                            if (toggled) selected.add(entry.uri) else selected.remove(entry.uri)
+                                        },
+                                        onOpenDir = onOpenDir,
+                                        onOpenArchive = onOpenArchive,
+                                        onOpenWith = onOpenWith,
+                                        onClick = when {
+                                            pickFolderMode -> {
                                                 if (entry.isDir) {
-                                                    onOpenDir(entry.uri)
-                                                } else {
-                                                    onPickFile(entry.uri)
+                                                    { onOpenDir(entry.uri) }
+                                                } else null
+                                            }
+                                            isPickerMode -> {
+                                                {
+                                                    if (entry.isDir) {
+                                                        onOpenDir(entry.uri)
+                                                    } else {
+                                                        onPickFile(entry.uri)
+                                                    }
                                                 }
                                             }
-                                        }
-                                        else -> null
-                                    }
-                                )
+                                            else -> null
+                                        },
+                                        onExtractHere = {
+                                            currentDirUri?.let { targetDir -> onExtractArchive(entry.uri, targetDir) }
+                                        },
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = listMod,
+                                contentPadding = PaddingValues(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                items(state.shellItems, key = { e -> e.uri.toString() }) { entry ->
+                                    val isSelected = !pickFolderMode && selected.contains(entry.uri)
+                                    val model = remember(entry.uri) { entry.toRowModel() }
+                                    FileBrowserEntry(
+                                        model = model,
+                                        selected = isSelected,
+                                        hasSelection = !pickFolderMode && anySelected,
+                                        onToggleSelect = { toggled ->
+                                            if (pickFolderMode) return@FileBrowserEntry
+                                            if (toggled) selected.add(entry.uri) else selected.remove(entry.uri)
+                                        },
+                                        onOpenDir = onOpenDir,
+                                        onOpenArchive = onOpenArchive,
+                                        onOpenWith = onOpenWith,
+                                        onClick = when {
+                                            pickFolderMode -> {
+                                                if (entry.isDir) {
+                                                    { onOpenDir(entry.uri) }
+                                                } else null
+                                            }
+                                            isPickerMode -> {
+                                                {
+                                                    if (entry.isDir) {
+                                                        onOpenDir(entry.uri)
+                                                    } else {
+                                                        onPickFile(entry.uri)
+                                                    }
+                                                }
+                                            }
+                                            else -> null
+                                        },
+                                        onExtractHere = {
+                                            currentDirUri?.let { targetDir -> onExtractArchive(entry.uri, targetDir) }
+                                        },
+                                    )
+                                }
                             }
                         }
                     }
@@ -785,50 +939,97 @@ fun FileBrowserScreen(
                             onShowQuickAccess = onShowQuickAccess
                         )
                     } else {
-                        LazyColumn(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(it),
-                            contentPadding = PaddingValues(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            items(state.items, key = { df -> df.uri.toString() }) { df ->
-                                val isSelected = !pickFolderMode && selected.contains(df.uri)
-                                val model = remember(df.uri) { df.toRowModel() }
+                        val listMod = Modifier
+                            .fillMaxSize()
+                            .padding(it)
 
-                                FileListRow(
-                                    model = model,
-                                    selected = isSelected,
-                                    hasSelection = !pickFolderMode && anySelected,
-                                    showFileCount = showFileCount,
-                                    onToggleSelect = { toggled ->
-                                        if (pickFolderMode) return@FileListRow
-                                        if (toggled) selected.add(df.uri) else selected.remove(df.uri)
-                                    },
-                                    onOpenDir = onOpenDir,
-                                    onOpenArchive = onOpenArchive,
-                                    onOpenWith = onOpenWith,
-                                    onExtractHere = {
-                                        currentDirUri?.let { targetDir -> onExtractArchive(df.uri, targetDir) }
-                                    },
-                                    onClick = when {
-                                        pickFolderMode -> {
-                                            if (df.isDirectory) {
-                                                { onOpenDir(df.uri) }
-                                            } else null
-                                        }
-                                        isPickerMode -> {
-                                            {
+                        if (isGrid) {
+                            LazyVerticalGrid(
+                                columns = GridCells.Adaptive(minSize = 140.dp),
+                                modifier = listMod,
+                                contentPadding = PaddingValues(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                items(state.items, key = { df -> df.uri.toString() }) { df ->
+                                    val isSelected = !pickFolderMode && selected.contains(df.uri)
+                                    val model = remember(df.uri) { df.toRowModel() }
+                                    FileBrowserEntry(
+                                        model = model,
+                                        selected = isSelected,
+                                        hasSelection = !pickFolderMode && anySelected,
+                                        onToggleSelect = { toggled ->
+                                            if (pickFolderMode) return@FileBrowserEntry
+                                            if (toggled) selected.add(df.uri) else selected.remove(df.uri)
+                                        },
+                                        onOpenDir = onOpenDir,
+                                        onOpenArchive = onOpenArchive,
+                                        onOpenWith = onOpenWith,
+                                        onClick = when {
+                                            pickFolderMode -> {
                                                 if (df.isDirectory) {
-                                                    onOpenDir(df.uri)
-                                                } else {
-                                                    onPickFile(df.uri)
+                                                    { onOpenDir(df.uri) }
+                                                } else null
+                                            }
+                                            isPickerMode -> {
+                                                {
+                                                    if (df.isDirectory) {
+                                                        onOpenDir(df.uri)
+                                                    } else {
+                                                        onPickFile(df.uri)
+                                                    }
                                                 }
                                             }
-                                        }
-                                        else -> null
-                                    }
-                                )
+                                            else -> null
+                                        },
+                                        onExtractHere = {
+                                            currentDirUri?.let { targetDir -> onExtractArchive(df.uri, targetDir) }
+                                        },
+                                    )
+                                }
+                            }
+                        } else {
+                            LazyColumn(
+                                modifier = listMod,
+                                contentPadding = PaddingValues(8.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                items(state.items, key = { df -> df.uri.toString() }) { df ->
+                                    val isSelected = !pickFolderMode && selected.contains(df.uri)
+                                    val model = remember(df.uri) { df.toRowModel() }
+                                    FileBrowserEntry(
+                                        model = model,
+                                        selected = isSelected,
+                                        hasSelection = !pickFolderMode && anySelected,
+                                        onToggleSelect = { toggled ->
+                                            if (pickFolderMode) return@FileBrowserEntry
+                                            if (toggled) selected.add(df.uri) else selected.remove(df.uri)
+                                        },
+                                        onOpenDir = onOpenDir,
+                                        onOpenArchive = onOpenArchive,
+                                        onOpenWith = onOpenWith,
+                                        onClick = when {
+                                            pickFolderMode -> {
+                                                if (df.isDirectory) {
+                                                    { onOpenDir(df.uri) }
+                                                } else null
+                                            }
+                                            isPickerMode -> {
+                                                {
+                                                    if (df.isDirectory) {
+                                                        onOpenDir(df.uri)
+                                                    } else {
+                                                        onPickFile(df.uri)
+                                                    }
+                                                }
+                                            }
+                                            else -> null
+                                        },
+                                        onExtractHere = {
+                                            currentDirUri?.let { targetDir -> onExtractArchive(df.uri, targetDir) }
+                                        },
+                                    )
+                                }
                             }
                         }
                     }

@@ -67,6 +67,25 @@ data class AppSettings(
     )
     val themeMode: Int = 2,
 
+    @Setting(
+        title = "View mode",
+        description = "Default layout for file lists",
+        category = Appearance::class,
+        type = Dropdown::class,
+        options = ["List", "Grid"],
+        key = "view_mode"
+    )
+    val viewMode: Int = 0,
+
+    @Setting(
+        title = "Show image thumbnails",
+        description = "Load image previews in list and grid (laggier for old TVs)",
+        category = Appearance::class,
+        type = Toggle::class,
+        key = "show_thumbnails"
+    )
+    val showThumbnails: Boolean = true,
+
     // Not currently shown in settings UI, but used by FluffyTheme
     @Persisted(key = "use_aurora_theme")
     val useAuroraTheme: Boolean = true,
