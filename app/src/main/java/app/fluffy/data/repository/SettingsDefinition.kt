@@ -78,13 +78,13 @@ data class AppSettings(
     val viewMode: Int = 0,
 
     @Setting(
-        title = "Show image thumbnails",
-        description = "Load image previews in list and grid (laggier for old TVs)",
+        title = "Show thumbnails",
+        description = "Load image previews in list and grid (could cause lag for old TVs)",
         category = Appearance::class,
         type = Toggle::class,
         key = "show_thumbnails"
     )
-    val showThumbnails: Boolean = true,
+    val showThumbnails: Boolean = false,
 
     // Not currently shown in settings UI, but used by FluffyTheme
     @Persisted(key = "use_aurora_theme")
