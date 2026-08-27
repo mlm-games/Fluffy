@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Movie
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Unarchive
 import androidx.compose.material3.Checkbox
@@ -72,6 +73,8 @@ import org.koin.core.component.inject
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
+import android.content.pm.PackageManager
+import android.graphics.drawable.Icon as AndroidIcon
 import androidx.core.net.toUri
 import android.graphics.pdf.PdfRenderer
 import kotlin.math.min
@@ -84,6 +87,8 @@ data class RowModel(
     val isImage: Boolean,
     val isVideo: Boolean,
     val isPdf: Boolean,
+    val isAudio: Boolean,
+    val isApk: Boolean,
     val subtitle: String
 )
 
@@ -95,6 +100,8 @@ fun File.toRowModel(): RowModel = RowModel(
     isImage = if (isDirectory) false else FileSystemAccess.getMimeType(name).startsWith("image/"),
     isVideo = if (isDirectory) false else FileSystemAccess.getMimeType(name).startsWith("video/"),
     isPdf = if (isDirectory) false else FileSystemAccess.getMimeType(name).startsWith("application/pdf"),
+    isAudio = if (isDirectory) false else FileSystemAccess.getMimeType(name).startsWith("audio/"),
+    isApk = if (isDirectory) false else name.lowercase().endsWith(".apk"),
     subtitle = if (isDirectory) {
         "Folder • ${formatDate(lastModified())}"
     } else {
@@ -117,6 +124,9 @@ fun DocumentFile.toRowModel(): RowModel {
             FileSystemAccess.getMimeType(n).startsWith("video/"),
         isPdf = if (dir) false else mime.startsWith("application/pdf") ||
             FileSystemAccess.getMimeType(n).startsWith("application/pdf"),
+        isAudio = if (dir) false else mime.startsWith("audio/") ||
+            FileSystemAccess.getMimeType(n).startsWith("audio/"),
+        isApk = if (dir) false else n.lowercase().endsWith(".apk"),
         subtitle = if (dir) "Folder" else (type ?: "file")
     )
 }
@@ -129,11 +139,13 @@ fun ShellEntry.toRowModel(): RowModel = RowModel(
     isImage = if (isDir) false else FileSystemAccess.getMimeType(name).startsWith("image/"),
     isVideo = if (isDir) false else FileSystemAccess.getMimeType(name).startsWith("video/"),
     isPdf = if (isDir) false else FileSystemAccess.getMimeType(name).startsWith("application/pdf"),
+    isAudio = if (isDir) false else FileSystemAccess.getMimeType(name).startsWith("audio/"),
+    isApk = if (isDir) false else name.lowercase().endsWith(".apk"),
     subtitle = if (isDir) "Folder" else uri.toString()
 )
 
 fun RowModel.canShowThumbnail(): Boolean =
-    (isImage || isVideo || isPdf) && (uri.scheme == "file" || uri.scheme == "content")
+    (isImage || isVideo || isPdf || isAudio || isApk) && (uri.scheme == "file" || uri.scheme == "content")
 
 @Composable
 fun FileTypeIcon(
@@ -151,6 +163,10 @@ fun FileTypeIcon(
                 loadVideoThumbnail(ctx, model.uri, thumbnailSizePx)
             } else if (model.isPdf) {
                 loadPdfThumbnail(ctx, model.uri, thumbnailSizePx)
+            } else if (model.isAudio) {
+                loadAudioThumbnail(ctx, model.uri, thumbnailSizePx)
+            } else if (model.isApk) {
+                loadApkIcon(ctx, model.uri, thumbnailSizePx)
             } else null
         }
     }
@@ -179,6 +195,8 @@ private fun fallbackIcon(model: RowModel, modifier: Modifier) {
             model.isImage -> Icons.Filled.Image
             model.isVideo -> Icons.Filled.Movie
             model.isPdf -> Icons.Filled.PictureAsPdf
+            model.isAudio -> Icons.Filled.MusicNote
+            model.isApk -> Icons.Filled.FolderZip
             else -> Icons.AutoMirrored.Filled.InsertDriveFile
         },
         contentDescription = null,
@@ -188,6 +206,8 @@ private fun fallbackIcon(model: RowModel, modifier: Modifier) {
             model.isArchive -> colorScheme.secondary
             model.isVideo -> colorScheme.tertiary
             model.isPdf -> colorScheme.error
+            model.isAudio -> colorScheme.tertiary
+            model.isApk -> colorScheme.primary
             else -> colorScheme.onSurfaceVariant
         }
     )
@@ -264,6 +284,36 @@ private fun loadPdfThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
             renderer.close()
             parcelFileDescriptor.close()
             null
+        }
+    } catch (e: Exception) {
+        null
+    }
+}
+
+private fun loadAudioThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
+    return try {
+        val retriever = MediaMetadataRetriever()
+        retriever.setDataSource(ctx, uri)
+        val art = retriever.getEmbeddedPicture()
+        retriever.release()
+        art?.let {
+            BitmapFactory.decodeByteArray(it, 0, it.size)
+                ?.let { scaleBitmap(it, size) }
+        }
+    } catch (e: Exception) {
+        null
+    }
+}
+
+private fun loadApkIcon(ctx: Context, uri: Uri, size: Int): Bitmap? {
+    return try {
+        val packageManager = ctx.packageManager
+        val path = if (uri.scheme == "file") uri.path else uri.toString()
+        path?.let { path ->
+            val packageArchiveInfo = packageManager.getPackageArchiveInfo(path, PackageManager.GET_ACTIVITIES)
+            packageArchiveInfo?.applicationInfo?.loadIcon(packageManager)
+                ?.let { (it as android.graphics.drawable.BitmapDrawable).bitmap }
+                ?.let { scaleBitmap(it, size) }
         }
     } catch (e: Exception) {
         null
