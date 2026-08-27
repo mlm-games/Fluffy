@@ -36,7 +36,9 @@ class FileSystemAccess(
                 lower.endsWith(".jpg") || lower.endsWith(".jpeg") -> "image/jpeg"
                 lower.endsWith(".png") -> "image/png"
                 lower.endsWith(".mp4") -> "video/mp4"
-                lower.endsWith(".mp3") -> "audio/mpeg"
+                lower.endsWith(".mp3") || lower.endsWith(".wav") || lower.endsWith(".flac") ||
+                    lower.endsWith(".ogg") || lower.endsWith(".m4a") || lower.endsWith(".aac") ||
+                    lower.endsWith(".opus") || lower.endsWith(".wma") -> "audio/mpeg"
                 lower.endsWith(".svg") -> "image/svg"
                 else -> "application/octet-stream"
             }
