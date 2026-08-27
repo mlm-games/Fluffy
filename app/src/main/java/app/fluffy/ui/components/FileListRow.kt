@@ -3,8 +3,10 @@
 package app.fluffy.ui.components
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.ParcelFileDescriptor
@@ -13,6 +15,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,7 +51,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
@@ -73,11 +79,18 @@ import org.koin.core.component.inject
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
-import android.content.pm.PackageManager
-import android.graphics.drawable.Icon as AndroidIcon
 import androidx.core.net.toUri
 import android.graphics.pdf.PdfRenderer
 import kotlin.math.min
+
+private val pdfDarkModeMatrix = ColorMatrix(
+    floatArrayOf(
+        -0.299f, -0.587f, -0.114f, 0f, 255f,
+        -0.299f, -0.587f, -0.114f, 0f, 232f,
+        -0.299f, -0.587f, -0.114f, 0f, 184f,
+        0f, 0f, 0f, 1f, 0f
+    )
+)
 
 data class RowModel(
     val name: String,
@@ -155,6 +168,7 @@ fun FileTypeIcon(
     thumbnailSizePx: Int = 128,
 ) {
     val ctx = LocalContext.current
+    val isDark = isSystemInDarkTheme()
     val bitmap by produceState<Bitmap?>(initialValue = null, model.uri, thumbnailSizePx) {
         value = withContext(Dispatchers.IO) {
             if (model.isImage) {
@@ -172,15 +186,32 @@ fun FileTypeIcon(
     }
 
     if (showThumbnail && model.canShowThumbnail() && bitmap != null) {
-        AsyncImage(
-            model = ImageRequest.Builder(ctx)
-                .data(bitmap)
-                .crossfade(true)
-                .build(),
-            contentDescription = model.name,
-            modifier = modifier.clip(RoundedCornerShape(8.dp)),
-            contentScale = ContentScale.Crop
-        )
+        val clipModifier = modifier.clip(RoundedCornerShape(8.dp))
+        if (model.isPdf && isDark) {
+            Box(modifier = clipModifier) {
+                AsyncImage(
+                    model = ImageRequest.Builder(ctx)
+                        .data(bitmap)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = model.name,
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer { colorFilter = ColorFilter.colorMatrix(pdfDarkModeMatrix) },
+                    contentScale = ContentScale.Crop
+                )
+            }
+        } else {
+            AsyncImage(
+                model = ImageRequest.Builder(ctx)
+                    .data(bitmap)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = model.name,
+                modifier = clipModifier,
+                contentScale = ContentScale.Crop
+            )
+        }
     } else {
         fallbackIcon(model, modifier)
     }
@@ -311,9 +342,8 @@ private fun loadApkIcon(ctx: Context, uri: Uri, size: Int): Bitmap? {
         val path = if (uri.scheme == "file") uri.path else uri.toString()
         path?.let { path ->
             val packageArchiveInfo = packageManager.getPackageArchiveInfo(path, PackageManager.GET_ACTIVITIES)
-            packageArchiveInfo?.applicationInfo?.loadIcon(packageManager)
-                ?.let { (it as android.graphics.drawable.BitmapDrawable).bitmap }
-                ?.let { scaleBitmap(it, size) }
+            val drawable = packageArchiveInfo?.applicationInfo?.loadIcon(packageManager)
+            (drawable as? BitmapDrawable)?.bitmap?.let { scaleBitmap(it, size) }
         }
     } catch (e: Exception) {
         null
