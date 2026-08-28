@@ -1,3 +1,9 @@
+## v4.4.1
+
+- add type sort and reverse sorting (#61)
+- add oled (and surface dynamic in settings) color settings
+
+
 ## v3.5.1
 
 - Fixed "No app available to perform this action" Error for devices that have a stub SAF interface (fix #14)

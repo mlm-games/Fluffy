@@ -1,0 +1,2 @@
+- add type sort and reverse sorting (#61)
+- add oled (and surface dynamic in settings) color settings
