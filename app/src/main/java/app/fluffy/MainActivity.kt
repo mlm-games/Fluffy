@@ -207,7 +207,9 @@ class MainActivity : ComponentActivity() {
 
             FluffyTheme(
                 darkTheme = dark,
-                useAuroraTheme = s.useAuroraTheme
+                dynamicColor = s.dynamicColor,
+                useAuroraTheme = s.useAuroraTheme && !s.dynamicColor,
+                oledBlack = s.oledBlack
             ) {
                 val backStack = rememberNavBackStack(
                     ScreenKey.Files

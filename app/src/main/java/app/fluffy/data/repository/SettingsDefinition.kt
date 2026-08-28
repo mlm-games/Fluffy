@@ -86,6 +86,23 @@ data class AppSettings(
     )
     val showThumbnails: Boolean = false,
 
+    @Setting(
+        title = "Dynamic colors",
+        description = "Android 12+",
+        category = Appearance::class,
+        type = Toggle::class,
+        key = "dynamic_color"
+    )
+    val dynamicColor: Boolean = false,
+
+    @Setting(
+        title = "Pure black (OLED)",
+        category = Appearance::class,
+        type = Toggle::class,
+        key = "oled_black"
+    )
+    val oledBlack: Boolean = false,
+
     // Not currently shown in settings UI, but used by FluffyTheme
     @Persisted(key = "use_aurora_theme")
     val useAuroraTheme: Boolean = true,
