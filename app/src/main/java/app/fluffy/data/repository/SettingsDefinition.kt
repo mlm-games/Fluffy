@@ -17,10 +17,19 @@ data class AppSettings(
         description = "Default sorting for lists",
         category = General::class,
         type = Dropdown::class,
-        options = ["Name", "Recently Updated", "Size", "Recently Added"],
+        options = ["Name", "Recently Updated", "Size", "Recently Added", "Type"],
         key = "default_sort"
     )
     val defaultSort: Int = 0,
+
+    @Setting(
+        title = "Reverse sort",
+        description = "Reverse current sort order (e.g. largest first)",
+        category = General::class,
+        type = Toggle::class,
+        key = "sort_reverse"
+    )
+    val sortReverse: Boolean = false,
 
     @Setting(
         title = "Show hidden files",

@@ -16,6 +16,7 @@ import app.fluffy.io.SafIo
 import app.fluffy.io.ShellEntry
 import app.fluffy.shell.RootAccess
 import app.fluffy.shell.ShizukuAccess
+import app.fluffy.util.FileSort
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -74,6 +75,8 @@ class FileBrowserViewModel(
     private var showHidden: Boolean = false
     private var showRoot: Boolean = false
     private var showShizuku: Boolean = false
+    private var sortMode: Int = 0
+    private var sortReverse: Boolean = false
 
     val customBookmarks: StateFlow<List<Bookmark>> = bookmarksRepository.bookmarks
         .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
@@ -84,10 +87,14 @@ class FileBrowserViewModel(
                 val changedHidden = s.showHidden != showHidden
                 val changedRoot = s.enableRoot != showRoot
                 val changedShizuku = s.enableShizuku != showShizuku
+                val changedSort = s.defaultSort != sortMode
+                val changedReverse = s.sortReverse != sortReverse
                 showHidden = s.showHidden
                 showRoot = s.enableRoot
                 showShizuku = s.enableShizuku
-                if (changedHidden) refresh()
+                sortMode = s.defaultSort
+                sortReverse = s.sortReverse
+                if (changedHidden || changedSort || changedReverse) refresh()
                 if (changedRoot || changedShizuku) {
                     if (_state.value.currentLocation is BrowseLocation.QuickAccess) {
                         showQuickAccess()
@@ -449,9 +456,8 @@ class FileBrowserViewModel(
     private fun loadFileSystemItems(directory: File): List<File> {
         if (!fileSystemAccess.hasStoragePermission()) return emptyList()
         val files = directory.listFiles()?.toList() ?: emptyList()
-        return files
-            .filter { if (showHidden) true else !it.name.startsWith(".") }
-            .sortedWith(compareBy<File> { !it.isDirectory }.thenBy { it.name.lowercase() })
+        val filtered = files.filter { if (showHidden) true else !it.name.startsWith(".") }
+        return FileSort.sortFiles(filtered, sortMode, sortReverse)
     }
 
     fun openRoot(uri: Uri) { // for picked SAF trees; not used for root/shizuku
@@ -477,7 +483,7 @@ class FileBrowserViewModel(
                     currentLocation = BrowseLocation.SAF(uri),
                     currentDir = uri,
                     stack = anchored + BrowseLocation.SAF(uri),
-                    shellItems = shellList.filter { showHidden || !it.name.startsWith(".") },
+                    shellItems = filteredShell(shellList),
                     items = emptyList(),
                     fileItems = emptyList(),
                     quickAccessItems = emptyList(),
@@ -566,7 +572,7 @@ class FileBrowserViewModel(
             is BrowseLocation.SAF -> {
                 val uri = location.uri
                 if (uri.scheme == "root" || uri.scheme == "shizuku") {
-                    _state.value = st.copy(shellItems = io.listShell(uri).filter { showHidden || !it.name.startsWith(".") })
+                    _state.value = st.copy(shellItems = filteredShell(io.listShell(uri)))
                 } else {
                     _state.value = st.copy(items = filtered(io.listChildren(uri)))
                 }
@@ -581,7 +587,13 @@ class FileBrowserViewModel(
     fun refreshCurrentDir() = refresh()
 
     private fun filtered(list: List<DocumentFile>): List<DocumentFile> {
-        return if (showHidden) list else list.filter { f -> !(f.name ?: "").startsWith(".") }
+        val base = if (showHidden) list else list.filter { f -> !(f.name ?: "").startsWith(".") }
+        return FileSort.sortDocuments(base, sortMode, sortReverse)
+    }
+
+    private fun filteredShell(list: List<ShellEntry>): List<ShellEntry> {
+        val base = if (showHidden) list else list.filter { !it.name.startsWith(".") }
+        return FileSort.sortShell(base, sortMode, sortReverse)
     }
 
     fun openFile(file: File) {
