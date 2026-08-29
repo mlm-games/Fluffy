@@ -26,6 +26,8 @@ import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
@@ -34,6 +36,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.LightMode
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CircularWavyProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -85,6 +88,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
@@ -127,7 +131,7 @@ class PdfViewerActivity : ComponentActivity(), KoinComponent {
 private class PdfDoc(
     private val pfd: ParcelFileDescriptor
 ) : AutoCloseable {
-    private val renderer = PdfRenderer(pfd)
+    private val renderer: PdfRenderer = PdfRenderer(pfd)
     val pageCount: Int get() = renderer.pageCount
 
     // in‑memory cache (~16 MB)
@@ -170,20 +174,63 @@ private class PdfDoc(
     }
 
     companion object {
+        private fun hasPdfHeader(context: Context, uri: Uri): Boolean {
+            return try {
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    val header = ByteArray(5)
+                    var read = 0
+                    while (read < 5) {
+                        val r = input.read(header, read, 5 - read)
+                        if (r <= 0) break
+                        read += r
+                    }
+                    if (read < 5) return false
+                    header[0] == '%'.code.toByte() && header[1] == 'P'.code.toByte() &&
+                        header[2] == 'D'.code.toByte() && header[3] == 'F'.code.toByte() && header[4] == '-'.code.toByte()
+                } ?: false
+            } catch (_: Exception) {
+                false
+            }
+        }
+
         suspend fun open(context: Context, uri: Uri): PdfDoc? =
             withContext(Dispatchers.IO) {
-                val pfd = runCatching {
-                    context.contentResolver.openFileDescriptor(uri, "r")
-                }.getOrNull() ?: run {
-                    val tmp = File.createTempFile("doc_", ".pdf", context.cacheDir)
-                    runCatching {
-                        context.contentResolver.openInputStream(uri)?.use { src ->
-                            FileOutputStream(tmp).use { dst -> src.copyTo(dst) }
+                withTimeoutOrNull(3000) {
+                    val hasHeader = hasPdfHeader(context, uri)
+
+                    var pfd: ParcelFileDescriptor? = null
+                    var tmpFile: File? = null
+                    try {
+                        pfd = runCatching {
+                            context.contentResolver.openFileDescriptor(uri, "r")
+                        }.getOrNull()
+
+                        if (pfd == null) {
+                            tmpFile = File.createTempFile("doc_", ".pdf", context.cacheDir)
+                            runCatching {
+                                context.contentResolver.openInputStream(uri)?.use { src ->
+                                    FileOutputStream(tmpFile).use { dst -> src.copyTo(dst) }
+                                }
+                            }
+                            if (!hasHeader && tmpFile.length() in 1..256) return@withTimeoutOrNull null
+                            pfd = ParcelFileDescriptor.open(tmpFile, ParcelFileDescriptor.MODE_READ_ONLY)
                         }
+
+                        if (pfd != null) {
+                            if (pfd.statSize in 1..256) {
+                                try { pfd.close() } catch (_: Exception) {}
+                                return@withTimeoutOrNull null
+                            }
+                            runCatching { PdfDoc(pfd) }.getOrNull() ?: run {
+                                try { pfd.close() } catch (_: Exception) {}
+                                null
+                            }
+                        } else null
+                    } catch (_: Exception) {
+                        try { pfd?.close() } catch (_: Exception) {}
+                        null
                     }
-                    ParcelFileDescriptor.open(tmp, ParcelFileDescriptor.MODE_READ_ONLY)
                 }
-                pfd?.let { PdfDoc(it) }
             }
     }
 }
@@ -258,12 +305,35 @@ private fun FullscreenPdfViewer(
     onClose: () -> Unit
 ) {
     val context = LocalContext.current
-    val doc by produceState<PdfDoc?>(initialValue = null, uri) {
-        value = PdfDoc.open(context, uri)
+    var doc by remember(uri) { mutableStateOf<PdfDoc?>(null) }
+    var loading by remember(uri) { mutableStateOf(true) }
+    var loadError by remember(uri) { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(uri) {
+        loading = true
+        loadError = null
+        doc = PdfDoc.open(context, uri)
+        loading = false
+        if (doc == null) loadError = "Failed to open PDF – file may be corrupted or not a PDF (err=3)."
+    }
+
+    if (loading) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularWavyProgressIndicator()
+        }
+        BackHandler { onClose() }
+        return
     }
     if (doc == null) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularWavyProgressIndicator()
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.padding(24.dp)
+            ) {
+                Text(loadError ?: "Failed to open PDF", style = MaterialTheme.typography.titleMedium)
+                Spacer(Modifier.padding(8.dp))
+                Button(onClick = onClose) { Text("Close") }
+            }
         }
         BackHandler { onClose() }
         return

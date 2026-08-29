@@ -74,6 +74,7 @@ import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
@@ -91,6 +92,28 @@ private val pdfDarkModeMatrix = ColorMatrix(
         0f, 0f, 0f, 1f, 0f
     )
 )
+
+private val pdfFailedCache = ConcurrentHashMap<String, Boolean>()
+private val pdfDispatcher by lazy { Dispatchers.IO.limitedParallelism(2) }
+
+private fun hasPdfHeader(ctx: Context, uri: Uri): Boolean {
+    return try {
+        ctx.contentResolver.openInputStream(uri)?.use { input ->
+            val header = ByteArray(5)
+            var read = 0
+            while (read < 5) {
+                val r = input.read(header, read, 5 - read)
+                if (r <= 0) break
+                read += r
+            }
+            if (read < 5) return false
+            header[0] == '%'.code.toByte() && header[1] == 'P'.code.toByte() &&
+                header[2] == 'D'.code.toByte() && header[3] == 'F'.code.toByte() && header[4] == '-'.code.toByte()
+        } ?: false
+    } catch (_: Exception) {
+        false
+    }
+}
 
 data class RowModel(
     val name: String,
@@ -170,13 +193,13 @@ fun FileTypeIcon(
     val ctx = LocalContext.current
     val isDark = isSystemInDarkTheme()
     val bitmap by produceState<Bitmap?>(initialValue = null, model.uri, thumbnailSizePx) {
-        value = withContext(Dispatchers.IO) {
+        value = withContext(pdfDispatcher) {
             if (model.isImage) {
                 loadImageThumbnail(ctx, model.uri, thumbnailSizePx)
             } else if (model.isVideo) {
                 loadVideoThumbnail(ctx, model.uri, thumbnailSizePx)
             } else if (model.isPdf) {
-                loadPdfThumbnail(ctx, model.uri, thumbnailSizePx)
+                withTimeoutOrNull(1500) { loadPdfThumbnail(ctx, model.uri, thumbnailSizePx) }
             } else if (model.isAudio) {
                 loadAudioThumbnail(ctx, model.uri, thumbnailSizePx)
             } else if (model.isApk) {
@@ -295,29 +318,47 @@ private fun loadVideoThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
 }
 
 private fun loadPdfThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
+    val key = uri.toString()
+    if (pdfFailedCache[key] == true) return null
+
+    if (!hasPdfHeader(ctx, uri)) {
+        pdfFailedCache[key] = true
+        return null
+    }
+
+    var pfd: ParcelFileDescriptor? = null
+    var renderer: PdfRenderer? = null
+    var page: PdfRenderer.Page? = null
     return try {
-        val parcelFileDescriptor = ctx.contentResolver.openFileDescriptor(uri, "r")
-            ?: return null
-        val renderer = PdfRenderer(parcelFileDescriptor)
-        if (renderer.pageCount > 0) {
-            val page = renderer.openPage(0)
-            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-            val scale = min(size.toFloat() / page.width, size.toFloat() / page.height)
-            val width = (page.width * scale).toInt()
-            val height = (page.height * scale).toInt()
-            val scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true)
-            page.render(scaledBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-            page.close()
-            renderer.close()
-            parcelFileDescriptor.close()
-            scaledBitmap
-        } else {
-            renderer.close()
-            parcelFileDescriptor.close()
-            null
+        pfd = ctx.contentResolver.openFileDescriptor(uri, "r") ?: run {
+            pdfFailedCache[key] = true
+            return null
         }
-    } catch (e: Exception) {
+        if (pfd.statSize in 1..256) {
+            pdfFailedCache[key] = true
+            return null
+        }
+        renderer = PdfRenderer(pfd)
+        if (renderer.pageCount <= 0) {
+            pdfFailedCache[key] = true
+            return null
+        }
+        page = renderer.openPage(0)
+        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val scale = min(size.toFloat() / page.width, size.toFloat() / page.height)
+        val width = (page.width * scale).toInt().coerceAtLeast(1)
+        val height = (page.height * scale).toInt().coerceAtLeast(1)
+        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true)
+        if (scaledBitmap != bitmap) bitmap.recycle()
+        page.render(scaledBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+        scaledBitmap
+    } catch (_: Exception) {
+        pdfFailedCache[key] = true
         null
+    } finally {
+        try { page?.close() } catch (_: Exception) {}
+        try { renderer?.close() } catch (_: Exception) {}
+        try { pfd?.close() } catch (_: Exception) {}
     }
 }
 
