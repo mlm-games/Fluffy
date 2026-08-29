@@ -45,7 +45,15 @@ fun FluffyTheme(
             surfaceContainerLow = Color(0xFF0A0A0A),
             surfaceContainer = Color(0xFF121212),
             surfaceContainerHigh = Color(0xFF1A1A1A),
-            surfaceContainerHighest = Color(0xFF222222)
+            surfaceContainerHighest = Color(0xFF222222),
+            surfaceVariant = Color(0xFF121212),
+            outline = Color(0xFF2A2A2A),
+            outlineVariant = Color(0xFF1A1A1A),
+            scrim = Color.Black,
+            primaryContainer = Color(0xFF00251E),
+            secondaryContainer = Color(0xFF2A1A4A),
+            tertiaryContainer = Color(0xFF00211B),
+            errorContainer = Color(0xFF4A0000),
         )
     } else {
         baseScheme
