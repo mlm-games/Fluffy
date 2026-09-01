@@ -15,9 +15,9 @@ on:
       play_track:
         description: 'Google Play track'
         required: true
-        default: 'production'
+        default: 'none'
         type: choice
-        options: [internal, alpha, beta, production]
+        options: [none, internal, alpha, beta, production]
       bump_type:
         description: 'Version bump type'
         required: true
@@ -40,7 +40,7 @@ jobs:
       app-name: Fluffy
       app-slug: fluffy
       application-id: app.fluffy
-      play-track: ${{ inputs.upload_releases && inputs.play_track || 'production' }}
+      play-track: ${{ inputs.play_track }}
       bump-type: ${{ inputs.bump_type }}
       prerelease: ${{ inputs.mark_prerelease }}
     secrets:
