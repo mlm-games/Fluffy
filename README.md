@@ -1,4 +1,4 @@
-# Fluffy — Android (TV) File Manager
+# Fluffy - Android (TV) File Manager
 
 <p align="center">
   <a href="https://f-droid.org/packages/app.fluffy/">
@@ -29,9 +29,9 @@
   </a> -->
 </p>
 
-> UI is primarily TV‑oriented; features that don’t fit TV constraints (e.g., certain notifications) are omitted.
+> UI is primarily TV‑oriented, features that don’t fit TV constraints (e.g., certain notifications) are omitted.
 
-A fast, modern file manager with powerful archive support and an Android TV-friendly UI.
+A fast, modern file manager with common archive support and an Android TV-friendly UI.
 
 <p align="center">
   <img src="fastlane/metadata/android/en-US/images/phoneScreenshots/1.png" alt="Screenshot 1" width="24%">
