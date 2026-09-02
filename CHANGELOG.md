@@ -1,3 +1,8 @@
+## v4.4.4
+
+- prev release fixes
+
+
 ## v4.4.3
 
 - Add DOCUMENT_TREE URI picker support
