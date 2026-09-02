@@ -60,7 +60,7 @@ class LocalDocumentsProvider : DocumentsProvider() {
         }
     }
 
-    private fun getAllStorageRoots(): List<File>s"
+    private fun getAllStorageRoots(): List<File> {
         runCatching {
             val koin = org.koin.core.context.GlobalContext.getOrNull() ?: return@runCatching null
             val fsa = koin.get<app.fluffy.io.FileSystemAccess>()
@@ -68,11 +68,13 @@ class LocalDocumentsProvider : DocumentsProvider() {
         }
 
         val roots = linkedSetOf<File>()
-        val ctx = context ?: return emptyList()s"
+        val ctx = context ?: return emptyList()
+
         try {
             val primary = Environment.getExternalStorageDirectory()
             if (primary.exists()) roots += primary
-        } catch (_: Exception) {}s"
+        } catch (_: Exception) {}
+
         try {
             val dirs = ctx.getExternalFilesDirs(null)
             dirs?.forEach { dir ->
@@ -88,7 +90,8 @@ class LocalDocumentsProvider : DocumentsProvider() {
                     }
                 }
             }
-        } catch (_: Exception) {}s"
+        } catch (_: Exception) {}
+
         if (roots.isEmpty()) {
             try {
                 val fallback = ctx.getExternalFilesDir(null)?.let { dir ->
@@ -107,9 +110,9 @@ class LocalDocumentsProvider : DocumentsProvider() {
         val result = MatrixCursor(projection ?: defaultRootProjection)
         val ctx = context ?: return result
 
-        val roots = getAllStorageRoots(s"
+        val roots = getAllStorageRoots()
         for (root in roots) {
-            if (!root.exists()) continus"
+            if (!root.exists()) continue
             val row = result.newRow()
             val rootId = root.absolutePath
             row.add(Root.COLUMN_ROOT_ID, rootId)
@@ -122,9 +125,7 @@ class LocalDocumentsProvider : DocumentsProvider() {
                 Root.COLUMN_FLAGS,
                 Root.FLAG_SUPPORTS_CREATE or
                     Root.FLAG_SUPPORTS_IS_CHILD or
-                    Root.FLAG_LOCAL_ONLY or
-                    Root.FLAG_SUPPORTS_SEARCH or
-                    Root.FLAG_SUPPORTS_RECENTS
+                    Root.FLAG_LOCAL_ONLY
             )
             row.add(Root.COLUMN_MIME_TYPES, "*/*")
             row.add(Root.COLUMN_AVAILABLE_BYTES, root.freeSpace)
@@ -164,11 +165,12 @@ class LocalDocumentsProvider : DocumentsProvider() {
     ): ParcelFileDescriptor {
         val file = File(documentId)
         if (!file.exists()) throw FileNotFoundException(documentId)
+        if (file.isDirectory) throw FileNotFoundException("Cannot open directory: $documentId")
         val accessMode = ParcelFileDescriptor.parseMode(mode)
         return ParcelFileDescriptor.open(file, accessMode)
     }
 
-    override fun isChildDocument(parentDocumentId: String, documentId: String): Booleans"
+    override fun isChildDocument(parentDocumentId: String, documentId: String): Boolean {
         val parent = parentDocumentId.trimEnd('/')
         return documentId == parentDocumentId || documentId.startsWith(parent + "/")
     }
@@ -176,7 +178,9 @@ class LocalDocumentsProvider : DocumentsProvider() {
     override fun createDocument(parentDocumentId: String, mimeType: String, displayName: String): String? {
         val parent = File(parentDocumentId)
         if (!parent.isDirectory || !parent.canWrite()) return null
-        val target = File(parent, displayName)
+        val safeName = displayName.replace("/", "_").replace("\\", "_").ifBlank { return null }
+        val target = File(parent, safeName)
+        if (target.exists()) return null
         return try {
             if (Document.MIME_TYPE_DIR == mimeType) {
                 if (target.mkdir()) target.absolutePath else null
@@ -190,20 +194,34 @@ class LocalDocumentsProvider : DocumentsProvider() {
 
     override fun deleteDocument(documentId: String) {
         val file = File(documentId)
+        if (!file.exists()) throw FileNotFoundException(documentId)
         if (!file.deleteRecursively()) throw FileNotFoundException("Failed to delete $documentId")
     }
 
     override fun renameDocument(documentId: String, displayName: String): String? {
         val file = File(documentId)
+        if (!file.exists()) throw FileNotFoundException(documentId)
+        val safeName = displayName.replace("/", "_").replace("\\", "_").ifBlank { return null }
         val parent = file.parentFile ?: return null
-        val dest = File(parent, displayName)
+        if (!parent.canWrite()) return null
+        val dest = File(parent, safeName)
+        if (dest.exists()) return null
         return if (file.renameTo(dest)) dest.absolutePath else null
     }
 
     override fun getDocumentType(documentId: String): String {
         val file = File(documentId)
         return if (file.isDirectory) Document.MIME_TYPE_DIR else getTypeForName(file.name)
-    }s"
+    }
+
+    override fun querySearchDocuments(
+        rootId: String,
+        query: String?,
+        projection: Array<out String>?
+    ): Cursor {
+        return MatrixCursor(projection ?: defaultDocumentProjection)
+    }
+
     private fun includeFile(result: MatrixCursor, file: File) {
         if (!file.exists()) return
         val row = result.newRow()
@@ -221,7 +239,6 @@ class LocalDocumentsProvider : DocumentsProvider() {
         if (file.parentFile?.canWrite() == true) {
             flags = flags or Document.FLAG_SUPPORTS_DELETE or Document.FLAG_SUPPORTS_RENAME
         }
-        if (file.isFile) flags = flags or Document.FLAG_SUPPORTS_THUMBNAIL
         row.add(Document.COLUMN_FLAGS, flags)
     }
 

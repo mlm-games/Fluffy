@@ -849,7 +849,7 @@ class MainActivity : ComponentActivity() {
         val docId = uriToDocumentId(uri)
         val authority = getAuthorityForResult()
         val useProviderUri = docId != null && File(docId).exists() && uri.scheme == "file"
-        val providerUri = if (useProviderUri) LocalDocumentsProvider.docUri(docId!!, authority) else null
+        val providerUri = if (useProviderUri && docId != null) LocalDocumentsProvider.docUri(docId, authority) else null
 
         lifecycleScope.launch {
             val shareable = if (providerUri != null) {
