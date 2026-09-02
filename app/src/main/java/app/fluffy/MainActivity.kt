@@ -812,7 +812,7 @@ class MainActivity : ComponentActivity() {
         val docId = uriToDocumentId(folderUri) ?: run {
             setResult(RESULT_CANCELED); finish(); return
         }
-        // Ensure the path exists and is a directory
+        // If folderUri is already a content tree (e.g. from SAF/shizuku/root provider), return it as-is with grants.
         val file = File(docId)
         if (!file.exists() || !file.isDirectory) {
             if (folderUri.scheme == "content") {
@@ -824,6 +824,9 @@ class MainActivity : ComponentActivity() {
                     data = folderUri
                     addFlags(flags)
                     clipData = ClipData.newUri(contentResolver, "tree", folderUri)
+                }
+                callingPackage?.let { pkg ->
+                    try { grantUriPermission(pkg, folderUri, flags) } catch (e: Exception) { e.printStackTrace() }
                 }
                 setResult(RESULT_OK, result)
                 finish()
@@ -842,13 +845,13 @@ class MainActivity : ComponentActivity() {
             addFlags(flags)
             clipData = ClipData.newUri(contentResolver, "tree", treeUri)
         }
-        try {
-            grantUriPermission(
-                callingPackage ?: packageName,
-                treeUri,
-                flags
-            )
-        } catch (_: Exception) {}
+        // Explicit prefix grant for callers that rely on grantUriPermission (e.g. LocalSend/UniFile).
+        // Use callingPackage if available; otherwise rely on ClipData grant which system handles.
+        callingPackage?.let { pkg ->
+            try { grantUriPermission(pkg, treeUri, flags) } catch (_: Exception) {}
+        }
+        // Also grant to ourselves so takePersistable checks pass on some OEMs
+        try { grantUriPermission(packageName, treeUri, flags) } catch (_: Exception) {}
         setResult(RESULT_OK, result)
         finish()
     }

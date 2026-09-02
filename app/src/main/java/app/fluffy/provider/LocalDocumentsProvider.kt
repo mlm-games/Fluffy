@@ -371,11 +371,15 @@ class LocalDocumentsProvider : DocumentsProvider() {
         row.add(Document.COLUMN_LAST_MODIFIED, file.lastModified())
         var flags = 0
         if (file.isDirectory) {
-            if (file.canWrite()) flags = flags or Document.FLAG_DIR_SUPPORTS_CREATE
+            if (file.canWrite()) {
+                flags = flags or Document.FLAG_DIR_SUPPORTS_CREATE or Document.FLAG_SUPPORTS_WRITE
+            }
         } else if (file.canWrite()) {
             flags = flags or Document.FLAG_SUPPORTS_WRITE
         }
         if (file.parentFile?.canWrite() == true) {
+            flags = flags or Document.FLAG_SUPPORTS_DELETE or Document.FLAG_SUPPORTS_RENAME
+        } else if (file.isDirectory && file.canWrite()) {
             flags = flags or Document.FLAG_SUPPORTS_DELETE or Document.FLAG_SUPPORTS_RENAME
         }
         val mimeForThumb = getTypeForName(file.name)
