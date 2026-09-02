@@ -67,6 +67,7 @@ import app.fluffy.helper.openContent
 import app.fluffy.helper.openWithExport
 import app.fluffy.helper.openWithExportMultiple
 import app.fluffy.helper.purgeOldExports
+import app.fluffy.shell.ShizukuAccess
 import app.fluffy.helper.purgeOldViewerCache
 import app.fluffy.helper.toViewableUris
 import app.fluffy.helper.exportForOpenWith
@@ -457,7 +458,7 @@ class MainActivity : ComponentActivity() {
                                             lifecycleScope.launch {
                                                 val uri = item.uri
                                                 if (uri?.scheme == "shizuku") {
-                                                    val ok = app.fluffy.shell.ShizukuAccess.ensurePermission()
+                                                    val ok = ShizukuAccess.ensurePermission()
                                                     if (!ok) return@launch
                                                 }
                                                 filesVM.openQuickAccessItem(item)
@@ -466,7 +467,7 @@ class MainActivity : ComponentActivity() {
                                         onBookmarkClick = { bookmark ->
                                             lifecycleScope.launch {
                                                 if (bookmark.access == "shizuku") {
-                                                    val ok = app.fluffy.shell.ShizukuAccess.ensurePermission()
+                                                    val ok = ShizukuAccess.ensurePermission()
                                                     if (!ok) return@launch
                                                 }
                                                 filesVM.navigateToBookmark(bookmark)

@@ -68,6 +68,7 @@ import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.ShellEntry
 import app.fluffy.io.ShellIo
 import app.fluffy.ui.screens.AnimatedListCard
+import app.fluffy.util.ThumbnailHelper
 import app.fluffy.util.UiFormat.formatDate
 import app.fluffy.util.UiFormat.formatSize
 import coil.compose.AsyncImage
@@ -267,115 +268,32 @@ private fun fallbackIcon(model: RowModel, modifier: Modifier) {
     )
 }
 
-private fun loadImageThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
-    return try {
-        val inputStream = ctx.contentResolver.openInputStream(uri)
-        inputStream?.use { stream ->
-            val options = BitmapFactory.Options()
-            options.inJustDecodeBounds = true
-            BitmapFactory.decodeStream(stream)
-            options.inJustDecodeBounds = false
-            options.inSampleSize = calculateInSampleSize(options, size, size)
-            options.inPreferredConfig = Bitmap.Config.RGB_565
-            ctx.contentResolver.openInputStream(uri)?.use { stream2 ->
-                BitmapFactory.decodeStream(stream2, null, options)
-            }
-        }
-    } catch (e: Exception) {
-        null
-    }
-}
+private fun loadImageThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? =
+    ThumbnailHelper.decodeImageUri(ctx, uri, size)
 
-private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int {
-    var inSampleSize = 1
-    if (options.outHeight > reqHeight || options.outWidth > reqWidth) {
-        val halfHeight = options.outHeight / 2
-        val halfWidth = options.outWidth / 2
-        while ((halfHeight / inSampleSize) >= reqHeight && (halfWidth / inSampleSize) >= reqWidth) {
-            inSampleSize *= 2
-        }
-    }
-    return inSampleSize
-}
+private fun calculateInSampleSize(options: BitmapFactory.Options, reqWidth: Int, reqHeight: Int): Int =
+    ThumbnailHelper.calculateInSampleSize(options, reqWidth, reqHeight)
 
-private fun scaleBitmap(bitmap: Bitmap, size: Int): Bitmap {
-    val scale = min(size.toFloat() / bitmap.width, size.toFloat() / bitmap.height)
-    val width = (bitmap.width * scale).toInt()
-    val height = (bitmap.height * scale).toInt()
-    return Bitmap.createScaledBitmap(bitmap, width, height, true)
-}
+private fun scaleBitmap(bitmap: Bitmap, size: Int): Bitmap =
+    ThumbnailHelper.scaleBitmap(bitmap, size)
 
-private fun loadVideoThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
-    return try {
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(ctx, uri)
-        val bitmap = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-        retriever.release()
-        bitmap?.let { scaleBitmap(it, size) }
-    } catch (e: Exception) {
-        null
-    }
-}
+private fun loadVideoThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? =
+    ThumbnailHelper.loadVideoThumbnail(ctx, uri, size)
 
 private fun loadPdfThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
     val key = uri.toString()
     if (pdfFailedCache[key] == true) return null
-
     if (!hasPdfHeader(ctx, uri)) {
         pdfFailedCache[key] = true
         return null
     }
-
-    var pfd: ParcelFileDescriptor? = null
-    var renderer: PdfRenderer? = null
-    var page: PdfRenderer.Page? = null
-    return try {
-        pfd = ctx.contentResolver.openFileDescriptor(uri, "r") ?: run {
-            pdfFailedCache[key] = true
-            return null
-        }
-        if (pfd.statSize in 1..256) {
-            pdfFailedCache[key] = true
-            return null
-        }
-        renderer = PdfRenderer(pfd)
-        if (renderer.pageCount <= 0) {
-            pdfFailedCache[key] = true
-            return null
-        }
-        page = renderer.openPage(0)
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
-        val scale = min(size.toFloat() / page.width, size.toFloat() / page.height)
-        val width = (page.width * scale).toInt().coerceAtLeast(1)
-        val height = (page.height * scale).toInt().coerceAtLeast(1)
-        val scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true)
-        if (scaledBitmap != bitmap) bitmap.recycle()
-        page.render(scaledBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-        scaledBitmap
-    } catch (_: Exception) {
-        pdfFailedCache[key] = true
-        null
-    } finally {
-        try { page?.close() } catch (_: Exception) {}
-        try { renderer?.close() } catch (_: Exception) {}
-        try { pfd?.close() } catch (_: Exception) {}
-    }
+    val result = ThumbnailHelper.loadPdfThumbnail(ctx, uri, size)
+    if (result == null) pdfFailedCache[key] = true
+    return result
 }
 
-private fun loadAudioThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
-    return try {
-        val retriever = MediaMetadataRetriever()
-        retriever.setDataSource(ctx, uri)
-        val art = retriever.getEmbeddedPicture()
-        retriever.release()
-        art?.let {
-            BitmapFactory.decodeByteArray(it, 0, it.size)
-                ?.let { scaleBitmap(it, size) }
-        }
-    } catch (e: Exception) {
-        null
-    }
-}
+private fun loadAudioThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? =
+    ThumbnailHelper.loadAudioThumbnail(ctx, uri, size)
 
 private fun loadApkIcon(ctx: Context, uri: Uri, size: Int): Bitmap? {
     return try {

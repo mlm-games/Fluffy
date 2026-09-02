@@ -16,6 +16,7 @@ import androidx.work.workDataOf
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.SafIo
+import app.fluffy.io.FileSystemAccess
 import app.fluffy.util.ArchiveTypes.baseNameForExtraction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -94,7 +95,7 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                         if (!isSafeDestination(fileRoot, parentUri, isDir = true)) {
                             devNull()
                         } else {
-                            val mime = app.fluffy.io.FileSystemAccess.getMimeType(fileName)
+                            val mime = FileSystemAccess.getMimeType(fileName)
                             val fileUri = io.createFile(parentUri, fileName, mime)
                             if (!isSafeDestination(fileRoot, fileUri, isDir = false)) {
                                 devNull()

@@ -14,10 +14,12 @@ import android.provider.DocumentsContract.Root
 import android.provider.DocumentsProvider
 import android.content.res.AssetFileDescriptor
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Point
 import android.os.Bundle
 import android.webkit.MimeTypeMap
+import app.fluffy.R
+import app.fluffy.io.FileSystemAccess
+import app.fluffy.util.ThumbnailHelper
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -70,7 +72,7 @@ class LocalDocumentsProvider : DocumentsProvider() {
     private fun getAllStorageRoots(): List<File> {
         runCatching {
             val koin = org.koin.core.context.GlobalContext.getOrNull() ?: return@runCatching null
-            val fsa = koin.get<app.fluffy.io.FileSystemAccess>()
+            val fsa = koin.get<FileSystemAccess>()
             return fsa.getAllStorageRoots()
         }
 
@@ -124,10 +126,10 @@ class LocalDocumentsProvider : DocumentsProvider() {
             val rootId = root.absolutePath
             row.add(Root.COLUMN_ROOT_ID, rootId)
             row.add(Root.COLUMN_DOCUMENT_ID, rootId)
-            val title = ctx.getString(app.fluffy.R.string.app_name) + " – " + (root.name.ifBlank { "Storage" })
+            val title = ctx.getString(R.string.app_name) + " – " + (root.name.ifBlank { "Storage" })
             row.add(Root.COLUMN_TITLE, title)
             row.add(Root.COLUMN_SUMMARY, root.absolutePath)
-            row.add(Root.COLUMN_ICON, app.fluffy.R.mipmap.ic_launcher)
+            row.add(Root.COLUMN_ICON, R.mipmap.ic_launcher)
             row.add(
                 Root.COLUMN_FLAGS,
                 Root.FLAG_SUPPORTS_CREATE or
@@ -312,59 +314,42 @@ class LocalDocumentsProvider : DocumentsProvider() {
         if (!file.exists() || file.isDirectory) throw FileNotFoundException(documentId)
         if (signal?.isCanceled == true) throw FileNotFoundException("Canceled")
         val mime = getTypeForName(file.name)
-        if (!mime.startsWith("image/")) throw FileNotFoundException("Thumbnails not supported for $mime")
-
         val ctx = context ?: throw FileNotFoundException(documentId)
         val targetSize = sizeHint ?: Point(128, 128)
         val reqWidth = targetSize.x.coerceAtLeast(1)
         val reqHeight = targetSize.y.coerceAtLeast(1)
 
         return try {
-            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            BitmapFactory.decodeFile(file.absolutePath, bounds)
-            val width = bounds.outWidth
-            val height = bounds.outHeight
+            val bitmap: Bitmap = when {
+                mime.startsWith("image/") -> {
+                    val decoded = ThumbnailHelper.decodeImageFile(file, reqWidth, reqHeight)
+                    if (decoded == null) {
+                        val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+                        return AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH)
+                    }
+                    if (decoded.width > reqWidth || decoded.height > reqHeight) {
+                        val scaled = ThumbnailHelper.scaleBitmapTo(decoded, reqWidth, reqHeight)
+                        if (scaled != decoded) decoded.recycle()
+                        scaled
+                    } else decoded
+                }
+                mime.startsWith("video/") -> ThumbnailHelper.loadVideoThumbnail(file, maxOf(reqWidth, reqHeight))
+                else -> null
+            } ?: throw FileNotFoundException("Thumbnails not supported for $mime")
 
-            if (width <= 0 || height <= 0) {
-                val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-                return AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH)
-            }
-
-            if (width <= reqWidth * 2 && height <= reqHeight * 2) {
-                val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
-                return AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH)
-            }
-
-            var sampleSize = 1
-            var w = width
-            var h = height
-            while (w / 2 >= reqWidth && h / 2 >= reqHeight) {
-                w /= 2
-                h /= 2
-                sampleSize *= 2
-            }
-
-            val opts = BitmapFactory.Options().apply { inSampleSize = sampleSize }
-            val bitmap = BitmapFactory.decodeFile(file.absolutePath, opts) ?: throw FileNotFoundException(documentId)
             if (signal?.isCanceled == true) {
                 bitmap.recycle()
                 throw FileNotFoundException("Canceled")
             }
 
-            val scaled = if (bitmap.width > reqWidth || bitmap.height > reqHeight) {
-                val scaledBitmap = Bitmap.createScaledBitmap(bitmap, reqWidth, reqHeight, true)
-                if (scaledBitmap != bitmap) bitmap.recycle()
-                scaledBitmap
-            } else bitmap
-
             val thumbDir = File(ctx.cacheDir, "thumbnails").apply { mkdirs() }
             val thumbFile = File(thumbDir, file.absolutePath.hashCode().toString() + "_${reqWidth}x${reqHeight}.jpg")
             if (!thumbFile.exists() || thumbFile.lastModified() < file.lastModified()) {
                 FileOutputStream(thumbFile).use { out ->
-                    scaled.compress(Bitmap.CompressFormat.JPEG, 85, out)
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
                 }
             }
-            if (scaled != bitmap) scaled.recycle() else scaled.recycle()
+            bitmap.recycle()
 
             val pfd = ParcelFileDescriptor.open(thumbFile, ParcelFileDescriptor.MODE_READ_ONLY)
             AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH)
@@ -394,7 +379,7 @@ class LocalDocumentsProvider : DocumentsProvider() {
             flags = flags or Document.FLAG_SUPPORTS_DELETE or Document.FLAG_SUPPORTS_RENAME
         }
         val mimeForThumb = getTypeForName(file.name)
-        if (file.isFile && mimeForThumb.startsWith("image/")) {
+        if (file.isFile && (mimeForThumb.startsWith("image/") || mimeForThumb.startsWith("video/"))) {
             flags = flags or Document.FLAG_SUPPORTS_THUMBNAIL
         }
         row.add(Document.COLUMN_FLAGS, flags)
