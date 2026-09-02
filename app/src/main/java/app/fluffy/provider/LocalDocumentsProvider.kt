@@ -12,10 +12,17 @@ import android.provider.DocumentsContract
 import android.provider.DocumentsContract.Document
 import android.provider.DocumentsContract.Root
 import android.provider.DocumentsProvider
+import android.content.res.AssetFileDescriptor
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Point
+import android.os.Bundle
 import android.webkit.MimeTypeMap
 import java.io.File
 import java.io.FileNotFoundException
+import java.io.FileOutputStream
 import java.io.IOException
+import java.util.ArrayDeque
 
 class LocalDocumentsProvider : DocumentsProvider() {
 
@@ -125,7 +132,9 @@ class LocalDocumentsProvider : DocumentsProvider() {
                 Root.COLUMN_FLAGS,
                 Root.FLAG_SUPPORTS_CREATE or
                     Root.FLAG_SUPPORTS_IS_CHILD or
-                    Root.FLAG_LOCAL_ONLY
+                    Root.FLAG_LOCAL_ONLY or
+                    Root.FLAG_SUPPORTS_SEARCH or
+                    Root.FLAG_SUPPORTS_RECENTS
             )
             row.add(Root.COLUMN_MIME_TYPES, "*/*")
             row.add(Root.COLUMN_AVAILABLE_BYTES, root.freeSpace)
@@ -219,7 +228,152 @@ class LocalDocumentsProvider : DocumentsProvider() {
         query: String?,
         projection: Array<out String>?
     ): Cursor {
-        return MatrixCursor(projection ?: defaultDocumentProjection)
+        val result = MatrixCursor(projection ?: defaultDocumentProjection)
+        if (query.isNullOrBlank()) return result
+        val root = File(rootId)
+        if (!root.isDirectory || !root.canRead()) return result
+        val lowerQuery = query.lowercase()
+        val maxResults = 50
+        val queue: ArrayDeque<File> = ArrayDeque()
+        queue.add(root)
+        var matched = 0
+        while (queue.isNotEmpty() && matched < maxResults) {
+            val dir = queue.removeFirst()
+            val children = dir.listFiles() ?: continue
+            for (child in children) {
+                if (matched >= maxResults) break
+                if (child.name.lowercase().contains(lowerQuery)) {
+                    includeFile(result, child)
+                    matched++
+                    if (matched >= maxResults) break
+                }
+                if (child.isDirectory && child.canRead()) {
+                    queue.add(child)
+                }
+            }
+        }
+        return result
+    }
+
+    override fun querySearchDocuments(
+        rootId: String,
+        projection: Array<out String>?,
+        queryArgs: Bundle
+    ): Cursor? {
+        val query = queryArgs.getString(DocumentsContract.QUERY_ARG_DISPLAY_NAME)
+            ?: queryArgs.getString("query")
+        return querySearchDocuments(rootId, query, projection)
+    }
+
+    override fun queryRecentDocuments(
+        rootId: String,
+        projection: Array<out String>?
+    ): Cursor {
+        val result = MatrixCursor(projection ?: defaultDocumentProjection)
+        val root = File(rootId)
+        if (!root.isDirectory || !root.canRead()) return result
+        val allFiles = mutableListOf<File>()
+        val queue: ArrayDeque<File> = ArrayDeque()
+        queue.add(root)
+        while (queue.isNotEmpty() && allFiles.size < 1000) {
+            val dir = queue.removeFirst()
+            val children = try { dir.listFiles() } catch (_: SecurityException) { null } ?: continue
+            for (child in children) {
+                if (child.isFile) {
+                    allFiles.add(child)
+                } else if (child.isDirectory && child.canRead()) {
+                    queue.add(child)
+                }
+            }
+        }
+        allFiles.sortByDescending { it.lastModified() }
+        for (file in allFiles.take(64)) {
+            includeFile(result, file)
+        }
+        return result
+    }
+
+    override fun queryRecentDocuments(
+        rootId: String,
+        projection: Array<out String>?,
+        queryArgs: Bundle?,
+        signal: CancellationSignal?
+    ): Cursor? {
+        if (signal?.isCanceled == true) return MatrixCursor(projection ?: defaultDocumentProjection)
+        return queryRecentDocuments(rootId, projection)
+    }
+
+    override fun openDocumentThumbnail(
+        documentId: String,
+        sizeHint: Point?,
+        signal: CancellationSignal?
+    ): AssetFileDescriptor {
+        val file = File(documentId)
+        if (!file.exists() || file.isDirectory) throw FileNotFoundException(documentId)
+        if (signal?.isCanceled == true) throw FileNotFoundException("Canceled")
+        val mime = getTypeForName(file.name)
+        if (!mime.startsWith("image/")) throw FileNotFoundException("Thumbnails not supported for $mime")
+
+        val ctx = context ?: throw FileNotFoundException(documentId)
+        val targetSize = sizeHint ?: Point(128, 128)
+        val reqWidth = targetSize.x.coerceAtLeast(1)
+        val reqHeight = targetSize.y.coerceAtLeast(1)
+
+        return try {
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeFile(file.absolutePath, bounds)
+            val width = bounds.outWidth
+            val height = bounds.outHeight
+
+            if (width <= 0 || height <= 0) {
+                val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+                return AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH)
+            }
+
+            if (width <= reqWidth * 2 && height <= reqHeight * 2) {
+                val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+                return AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH)
+            }
+
+            var sampleSize = 1
+            var w = width
+            var h = height
+            while (w / 2 >= reqWidth && h / 2 >= reqHeight) {
+                w /= 2
+                h /= 2
+                sampleSize *= 2
+            }
+
+            val opts = BitmapFactory.Options().apply { inSampleSize = sampleSize }
+            val bitmap = BitmapFactory.decodeFile(file.absolutePath, opts) ?: throw FileNotFoundException(documentId)
+            if (signal?.isCanceled == true) {
+                bitmap.recycle()
+                throw FileNotFoundException("Canceled")
+            }
+
+            val scaled = if (bitmap.width > reqWidth || bitmap.height > reqHeight) {
+                val scaledBitmap = Bitmap.createScaledBitmap(bitmap, reqWidth, reqHeight, true)
+                if (scaledBitmap != bitmap) bitmap.recycle()
+                scaledBitmap
+            } else bitmap
+
+            val thumbDir = File(ctx.cacheDir, "thumbnails").apply { mkdirs() }
+            val thumbFile = File(thumbDir, file.absolutePath.hashCode().toString() + "_${reqWidth}x${reqHeight}.jpg")
+            if (!thumbFile.exists() || thumbFile.lastModified() < file.lastModified()) {
+                FileOutputStream(thumbFile).use { out ->
+                    scaled.compress(Bitmap.CompressFormat.JPEG, 85, out)
+                }
+            }
+            if (scaled != bitmap) scaled.recycle() else scaled.recycle()
+
+            val pfd = ParcelFileDescriptor.open(thumbFile, ParcelFileDescriptor.MODE_READ_ONLY)
+            AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH)
+        } catch (e: FileNotFoundException) {
+            throw e
+        } catch (e: Exception) {
+            val pfd = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+            AssetFileDescriptor(pfd, 0, AssetFileDescriptor.UNKNOWN_LENGTH)
+        }
     }
 
     private fun includeFile(result: MatrixCursor, file: File) {
@@ -238,6 +392,10 @@ class LocalDocumentsProvider : DocumentsProvider() {
         }
         if (file.parentFile?.canWrite() == true) {
             flags = flags or Document.FLAG_SUPPORTS_DELETE or Document.FLAG_SUPPORTS_RENAME
+        }
+        val mimeForThumb = getTypeForName(file.name)
+        if (file.isFile && mimeForThumb.startsWith("image/")) {
+            flags = flags or Document.FLAG_SUPPORTS_THUMBNAIL
         }
         row.add(Document.COLUMN_FLAGS, flags)
     }

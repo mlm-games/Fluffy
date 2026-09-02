@@ -180,8 +180,47 @@ class MainActivity : ComponentActivity() {
         if (isPickerMode) {
             filesVM.setPickerMode(true, pickerMimeType)
         }
-        intent?.getParcelableExtra<Uri>(android.provider.DocumentsContract.EXTRA_INITIAL_URI)?.let { initial ->
-            // Defer opening until after composition, pre-load as pending root hint
+        run {
+            val initial: Uri? = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                intent?.getParcelableExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                intent?.getParcelableExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI)
+            }
+            initial?.let { uri ->
+                lifecycleScope.launch {
+                    try {
+                        when (uri.scheme) {
+                            "file" -> {
+                                val f = File(uri.path ?: return@launch)
+                                if (f.exists()) {
+                                    val target = if (f.isFile) f.parentFile ?: f else f
+                                    filesVM.openFileSystemPath(target)
+                                }
+                            }
+                            "content" -> {
+                                val docId = runCatching { android.provider.DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
+                                    ?: runCatching { android.provider.DocumentsContract.getDocumentId(uri) }.getOrNull()
+                                if (docId != null) {
+                                    val f = File(docId)
+                                    if (f.exists() && f.isDirectory) {
+                                        filesVM.openFileSystemPath(f)
+                                        return@launch
+                                    }
+                                    if (f.exists()) {
+                                        filesVM.openFileSystemPath(f.parentFile ?: f)
+                                        return@launch
+                                    }
+                                }
+                                filesVM.openDir(uri)
+                            }
+                            else -> filesVM.openDir(uri)
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
         }
 
         handleViewIntent(intent)
