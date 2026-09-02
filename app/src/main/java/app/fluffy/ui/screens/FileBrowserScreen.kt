@@ -181,6 +181,13 @@ fun FileBrowserScreen(
     pickFolderTitle: String = "Choose destination folder",
     onPickFolder: (Uri) -> Unit = {},
     onCancelPickFolder: () -> Unit = {},
+
+    isTreePickMode: Boolean = false,
+    isCreateDocumentMode: Boolean = false,
+    createDocumentInitialName: String? = null,
+    onPickTreeFolder: (Uri) -> Unit = {},
+    onCancelTreePick: () -> Unit = {},
+    onCreateDocumentConfirmed: (Uri, String) -> Unit = { _, _ -> },
 ) {
     val shellIo: ShellIo = koinInject()
 
@@ -482,8 +489,69 @@ fun FileBrowserScreen(
                     }
                 )
 
-                // In-app picker banner
-                if (pickFolderMode) {
+                // Hoisted state for CREATE_DOCUMENT file name (outside conditional for stable remember)
+                var pendingCreateName by remember(createDocumentInitialName) {
+                    mutableStateOf(createDocumentInitialName ?: "")
+                }
+                // SAF tree/document picker banner (Android TV) - DPAD-focusable
+                if (isTreePickMode) {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.primaryContainer
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 12.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = if (isCreateDocumentMode) "Select folder to create file" else "Choose this folder for other app",
+                                    style = MaterialTheme.typography.titleSmall,
+                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    TextButton(onClick = onCancelTreePick) { Text(stringResource(R.string.cancel)) }
+                                    Button(
+                                        onClick = { currentDirUri?.let(onPickTreeFolder) },
+                                        enabled = currentDirUri != null
+                                    ) { Text(stringResource(R.string.use_this_folder)) }
+                                }
+                            }
+                            if (isCreateDocumentMode) {
+                                OutlinedTextField(
+                                    value = pendingCreateName,
+                                    onValueChange = { pendingCreateName = it },
+                                    label = { Text(stringResource(R.string.file_name)) },
+                                    singleLine = true,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.End
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            val name = pendingCreateName.trim()
+                                            if (name.isNotEmpty() && currentDirUri != null) {
+                                                onCreateDocumentConfirmed(currentDirUri, name)
+                                            }
+                                        },
+                                        enabled = pendingCreateName.trim().isNotEmpty() && currentDirUri != null
+                                    ) { Text("Create here") }
+                                }
+                            }
+                        }
+                    }
+                } else if (pickFolderMode) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         color = MaterialTheme.colorScheme.primaryContainer

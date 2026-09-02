@@ -72,6 +72,7 @@ import app.fluffy.helper.toViewableUris
 import app.fluffy.helper.exportForOpenWith
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.operations.ArchiveJobManager
+import app.fluffy.provider.LocalDocumentsProvider
 import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.ui.components.DirectoryCounter
 import app.fluffy.ui.components.snackbar.LauncherSnackbarHost
@@ -98,9 +99,13 @@ import java.util.UUID
 
 class MainActivity : ComponentActivity() {
 
-    // Picker mode (GET_CONTENT / OPEN_DOCUMENT)
+    // Picker mode (GET_CONTENT / OPEN_DOCUMENT / OPEN_DOCUMENT_TREE / CREATE_DOCUMENT)
     private var isPickerMode = false
+    private var isTreePickMode = false
+    private var isCreateDocumentMode = false
+    private var pickerAction: String? = null
     private var pickerMimeType: String? = null
+    private var createDocumentInitialName: String? = null
 
     // Pending operations that need a destination folder
     private var pendingAction: PendingAction = PendingAction.None
@@ -158,17 +163,25 @@ class MainActivity : ComponentActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         inAppFolderPickerTitle.value = "Choose destination folder"
 
-        // Picker mode (GET_CONTENT / OPEN_DOCUMENT)
-        isPickerMode = intent?.action in listOf(
+        pickerAction = intent?.action
+        isTreePickMode = pickerAction == Intent.ACTION_OPEN_DOCUMENT_TREE
+        isCreateDocumentMode = pickerAction == Intent.ACTION_CREATE_DOCUMENT
+        isPickerMode = pickerAction in listOf(
             Intent.ACTION_GET_CONTENT,
-            Intent.ACTION_OPEN_DOCUMENT
+            Intent.ACTION_OPEN_DOCUMENT,
+            Intent.ACTION_OPEN_DOCUMENT_TREE,
+            Intent.ACTION_CREATE_DOCUMENT
         )
         pickerMimeType = intent?.type
+        createDocumentInitialName = intent?.getStringExtra(Intent.EXTRA_TITLE)
         if (isPickerMode) {
             filesVM.setPickerMode(true, pickerMimeType)
+        }
+        intent?.getParcelableExtra<Uri>(android.provider.DocumentsContract.EXTRA_INITIAL_URI)?.let { initial ->
+            // Defer opening until after composition, pre-load as pending root hint
         }
 
         handleViewIntent(intent)
@@ -292,7 +305,7 @@ class MainActivity : ComponentActivity() {
                                 entry<ScreenKey.Files> {
                                     FileBrowserScreen(
                                         state = browserState,
-                                        isPickerMode = isPickerMode,
+                                        isPickerMode = isPickerMode && !isTreePickMode && !isCreateDocumentMode,
                                         onPickFile = { uri -> returnPickedFile(uri) },
 
                                         onPickRoot = { launchPickRootOrFallback(s.alwaysUseInAppFolderPicker) },
@@ -306,6 +319,14 @@ class MainActivity : ComponentActivity() {
                                             cb?.invoke(folderUri)
                                         },
                                         onCancelPickFolder = { dismissInAppFolderPicker() },
+
+                                        // TV-friendly tree/document picker (DocumentsProvider)
+                                        isTreePickMode = isTreePickMode || isCreateDocumentMode,
+                                        isCreateDocumentMode = isCreateDocumentMode,
+                                        createDocumentInitialName = createDocumentInitialName,
+                                        onPickTreeFolder = { folderUri -> returnPickedTree(folderUri) },
+                                        onCancelTreePick = { setResult(RESULT_CANCELED); finish() },
+                                        onCreateDocumentConfirmed = { parentUri, name -> returnCreatedDocument(parentUri, name) },
 
                                         onOpenDir = { filesVM.openDir(it) },
                                         onBack = { filesVM.goUp() },
@@ -728,24 +749,129 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun getAuthorityForResult(): String {
+        val debugAuth = "${packageName}.documents"
+        val info = packageManager.resolveContentProvider(debugAuth, 0)
+        return if (info != null) debugAuth else LocalDocumentsProvider.AUTHORITY
+    }
+
+    private fun uriToDocumentId(uri: Uri): String? {
+        return when (uri.scheme) {
+            "file" -> uri.path
+            "content" -> {
+                runCatching { android.provider.DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
+                    ?: runCatching { android.provider.DocumentsContract.getDocumentId(uri) }.getOrNull()
+                    ?: uri.path
+            }
+            "root", "shizuku" -> uri.path
+            else -> uri.path ?: uri.toString()
+        }
+    }
+
+    private fun returnPickedTree(folderUri: Uri) {
+        val docId = uriToDocumentId(folderUri) ?: run {
+            setResult(RESULT_CANCELED); finish(); return
+        }
+        // Ensure the path exists and is a directory
+        val file = File(docId)
+        if (!file.exists() || !file.isDirectory) {
+            if (folderUri.scheme == "content") {
+                val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+                    Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+                val result = Intent().apply {
+                    data = folderUri
+                    addFlags(flags)
+                    clipData = ClipData.newUri(contentResolver, "tree", folderUri)
+                }
+                setResult(RESULT_OK, result)
+                finish()
+                return
+            }
+            setResult(RESULT_CANCELED); finish(); return
+        }
+        val authority = getAuthorityForResult()
+        val treeUri = LocalDocumentsProvider.treeUri(docId, authority)
+        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+            Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
+            Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
+        val result = Intent().apply {
+            data = treeUri
+            addFlags(flags)
+            clipData = ClipData.newUri(contentResolver, "tree", treeUri)
+        }
+        try {
+            grantUriPermission(
+                callingPackage ?: packageName,
+                treeUri,
+                flags
+            )
+        } catch (_: Exception) {}
+        setResult(RESULT_OK, result)
+        finish()
+    }
+
+    private fun returnCreatedDocument(parentUri: Uri, displayName: String) {
+        val parentId = uriToDocumentId(parentUri) ?: run {
+            setResult(RESULT_CANCELED); finish(); return
+        }
+        val authority = getAuthorityForResult()
+        // Try to create via DocumentsProvider if parent is a file path
+        val file = File(parentId)
+        val targetDocId = if (file.isDirectory) {
+            val target = File(file, displayName)
+            try {
+                // Use provider's createDocument logic locally for file-backed tree
+                if (!target.exists()) target.createNewFile()
+                target.absolutePath
+            } catch (_: Exception) { target.absolutePath }
+        } else parentId
+
+        val docUri = LocalDocumentsProvider.docUri(targetDocId, authority)
+        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+            Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
+            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
+        val mime = FileSystemAccess.getMimeType(displayName)
+        val result = Intent().apply {
+            data = docUri
+            type = mime
+            addFlags(flags)
+            clipData = ClipData.newUri(contentResolver, "doc", docUri)
+        }
+        setResult(RESULT_OK, result)
+        finish()
+    }
+
     private fun returnPickedFile(uri: Uri) {
+        // prefer DocumentsProvider when file-backed
+        val docId = uriToDocumentId(uri)
+        val authority = getAuthorityForResult()
+        val useProviderUri = docId != null && File(docId).exists() && uri.scheme == "file"
+        val providerUri = if (useProviderUri) LocalDocumentsProvider.docUri(docId!!, authority) else null
+
         lifecycleScope.launch {
-            val shareable = runCatching {
-                applicationContext.exportForOpenWith(uri, io.queryDisplayName(uri))
-            }.getOrElse { uri }
+            val shareable = if (providerUri != null) {
+                providerUri
+            } else {
+                runCatching {
+                    applicationContext.exportForOpenWith(uri, io.queryDisplayName(uri))
+                }.getOrElse { uri }
+            }
 
             val mime = contentResolver.getType(shareable)
                 ?: FileSystemAccess.getMimeType(io.queryDisplayName(shareable))
+
+            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                (if (intent?.action == Intent.ACTION_OPEN_DOCUMENT) Intent.FLAG_GRANT_WRITE_URI_PERMISSION else 0) or
+                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
 
             val resultIntent = Intent().apply {
                 data = shareable
                 type = mime
                 clipData = ClipData.newUri(contentResolver, "picked", shareable)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-
-                if (intent?.action == Intent.ACTION_OPEN_DOCUMENT) {
-                    addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
-                }
+                addFlags(flags)
             }
             setResult(RESULT_OK, resultIntent)
             finish()

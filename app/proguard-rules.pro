@@ -33,3 +33,4 @@
 -keep class androidx.core.content.FileProvider { *; }
 -keep class app.fluffy.work.** { *; }
 -keepnames class app.fluffy.work.**
+-keep class app.fluffy.provider.LocalDocumentsProvider { *; }

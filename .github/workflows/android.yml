@@ -15,7 +15,7 @@ on:
       play_track:
         description: 'Google Play track'
         required: true
-        default: 'none'
+        default: 'production'
         type: choice
         options: [none, internal, alpha, beta, production]
       bump_type:
