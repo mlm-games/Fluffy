@@ -1,0 +1,2 @@
+- Add DOCUMENT_TREE URI picker support
+- fix hang for malformed pdfs

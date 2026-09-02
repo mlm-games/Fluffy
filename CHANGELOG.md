@@ -1,3 +1,9 @@
+## v4.4.3
+
+- Add DOCUMENT_TREE URI picker support
+- fix hang for malformed pdfs
+
+
 ## v4.4.2
 
 - Add DOCUMENT_TREE URI picker support
