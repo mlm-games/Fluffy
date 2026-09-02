@@ -42,6 +42,7 @@ import androidx.compose.material3.MaterialTheme.colorScheme
 import androidx.compose.material3.MaterialTheme.typography
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -325,8 +326,9 @@ fun FileListRow(
     onExtractHere: (() -> Unit)? = null
 ) {
     val ctx = LocalContext.current
+    val generation by DirectoryCounter.generation.collectAsState()
 
-    val dirCount by produceState<Int?>(initialValue = null, model.uri, showFileCount) {
+    val dirCount by produceState<Int?>(initialValue = null, model.uri, showFileCount, generation) {
         value = if (showFileCount && model.isDir) DirectoryCounter.count(ctx, model.uri) else null
     }
 
@@ -453,7 +455,8 @@ fun FileGridItem(
     onExtractHere: (() -> Unit)? = null
 ) {
     val ctx = LocalContext.current
-    val dirCount by produceState<Int?>(initialValue = null, model.uri, showFileCount) {
+    val generation by DirectoryCounter.generation.collectAsState()
+    val dirCount by produceState<Int?>(initialValue = null, model.uri, showFileCount, generation) {
         value = if (showFileCount && model.isDir) DirectoryCounter.count(ctx, model.uri) else null
     }
 
@@ -561,6 +564,8 @@ fun FileGridItem(
 object DirectoryCounter : KoinComponent {
     private val cache = ConcurrentHashMap<String, Int>()
     private val shellIo: ShellIo by inject()
+    private val _generation = kotlinx.coroutines.flow.MutableStateFlow(0)
+    val generation: kotlinx.coroutines.flow.StateFlow<Int> = _generation
 
     suspend fun count(context: Context, uri: Uri): Int = withContext(Dispatchers.IO) {
         val key = uri.toString()
@@ -602,10 +607,12 @@ object DirectoryCounter : KoinComponent {
 
     fun invalidate(uri: Uri) {
         cache.remove(uri.toString())
+        _generation.value++
     }
 
     fun invalidateAll() {
         cache.clear()
+        _generation.value++
     }
 
     fun invalidateParent(uri: Uri) {
