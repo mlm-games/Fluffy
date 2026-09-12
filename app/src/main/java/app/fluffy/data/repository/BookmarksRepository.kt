@@ -36,12 +36,19 @@ class BookmarksRepository(private val context: Context) {
         stored
     }
 
+    private fun decodePreserving(raw: String?): List<Bookmark>? {
+        if (raw == null) return emptyList()
+        return runCatching { json.decodeFromString<List<Bookmark>>(raw) }.getOrNull()
+    }
+
     suspend fun addBookmark(bookmark: Bookmark) {
         val normalized = normalizeBookmark(bookmark) ?: return
         context.bookmarksDataStore.edit { prefs ->
-            val current = prefs[BOOKMARKS_KEY]?.let {
-                runCatching { json.decodeFromString<List<Bookmark>>(it) }.getOrElse { emptyList() }
-            } ?: emptyList()
+            val raw = prefs[BOOKMARKS_KEY]
+            val current = decodePreserving(raw) ?: run {
+                raw?.let { prefs[stringPreferencesKey("custom_bookmarks_corrupt_backup")] = it }
+                return@edit
+            }
 
             val updated = current.filterNot {
                 val existingAccess = normalizeAccess(it.access, it.path)
@@ -56,9 +63,11 @@ class BookmarksRepository(private val context: Context) {
 
     suspend fun removeBookmark(bookmark: Bookmark) {
         context.bookmarksDataStore.edit { prefs ->
-            val current = prefs[BOOKMARKS_KEY]?.let {
-                runCatching { json.decodeFromString<List<Bookmark>>(it) }.getOrElse { emptyList() }
-            } ?: emptyList()
+            val raw = prefs[BOOKMARKS_KEY]
+            val current = decodePreserving(raw) ?: run {
+                raw?.let { prefs[stringPreferencesKey("custom_bookmarks_corrupt_backup")] = it }
+                return@edit
+            }
 
             val targetAccess = normalizeAccess(bookmark.access, bookmark.path)
             val targetPath = normalizePath(bookmark.path, targetAccess)

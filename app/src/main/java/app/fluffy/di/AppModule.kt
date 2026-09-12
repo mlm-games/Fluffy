@@ -30,9 +30,9 @@ val appModule = module {
 
     single { RootAccess() }
     single { ShizukuAccess() }
-    single { RootBackend(get()) }
-    single { ShizukuBackend(get()) }
-    single { ShellIo(get(), get()) }
+    single { RootBackend(get<RootAccess>()) }
+    single { ShizukuBackend(get<ShizukuAccess>()) }
+    single { ShellIo(get<RootBackend>(), get<ShizukuBackend>()) }
 
     single { FileSystemAccess(androidContext(), get()) }
     single { SafIo(androidContext(), get(), get()) }

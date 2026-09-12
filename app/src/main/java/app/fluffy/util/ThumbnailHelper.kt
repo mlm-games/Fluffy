@@ -70,28 +70,30 @@ object ThumbnailHelper {
     }
 
     fun loadVideoThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
+        val retriever = MediaMetadataRetriever()
         return try {
-            val retriever = MediaMetadataRetriever()
             retriever.setDataSource(ctx, uri)
             val bitmap = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-            retriever.release()
             bitmap?.let { scaleBitmap(it, size) }
         } catch (e: Exception) {
             AppLog.d("ThumbnailHelper", "loadVideoThumbnail(uri) failed: $uri", e)
             null
+        } finally {
+            runCatching { retriever.release() }
         }
     }
 
     fun loadVideoThumbnail(file: File, size: Int): Bitmap? {
+        val retriever = MediaMetadataRetriever()
         return try {
-            val retriever = MediaMetadataRetriever()
             retriever.setDataSource(file.absolutePath)
             val bitmap = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-            retriever.release()
             bitmap?.let { scaleBitmap(it, size) }
         } catch (e: Exception) {
             AppLog.d("ThumbnailHelper", "loadVideoThumbnail(file) failed: ${file.path}", e)
             null
+        } finally {
+            runCatching { retriever.release() }
         }
     }
 
@@ -101,18 +103,16 @@ object ThumbnailHelper {
         var page: PdfRenderer.Page? = null
         return try {
             pfd = ctx.contentResolver.openFileDescriptor(uri, "r") ?: return null
-            if (pfd.statSize in 1..256) return null
+            if (pfd.statSize == 0L) return null
             renderer = PdfRenderer(pfd)
             if (renderer.pageCount <= 0) return null
             page = renderer.openPage(0)
-            val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
             val scale = min(size.toFloat() / page.width, size.toFloat() / page.height)
             val width = (page.width * scale).toInt().coerceAtLeast(1)
             val height = (page.height * scale).toInt().coerceAtLeast(1)
-            val scaledBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true)
-            if (scaledBitmap != bitmap) bitmap.recycle()
-            page.render(scaledBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-            scaledBitmap
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            page.render(bitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+            bitmap
         } catch (e: Exception) {
             AppLog.d("ThumbnailHelper", "loadPdfThumbnail failed: $uri", e)
             null
@@ -126,17 +126,21 @@ object ThumbnailHelper {
     }
 
     fun loadAudioThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
+        val retriever = MediaMetadataRetriever()
         return try {
-            val retriever = MediaMetadataRetriever()
             retriever.setDataSource(ctx, uri)
-            val art = retriever.getEmbeddedPicture()
-            retriever.release()
-            art?.let {
-                BitmapFactory.decodeByteArray(it, 0, it.size)?.let { scaleBitmap(it, size) }
-            }
+            val art = retriever.getEmbeddedPicture() ?: return null
+            val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+            BitmapFactory.decodeByteArray(art, 0, art.size, bounds)
+            var sample = 1
+            while ((bounds.outWidth / sample) > size * 2 || (bounds.outHeight / sample) > size * 2) sample *= 2
+            val opts = BitmapFactory.Options().apply { inSampleSize = sample; inPreferredConfig = Bitmap.Config.RGB_565 }
+            BitmapFactory.decodeByteArray(art, 0, art.size, opts)?.let { scaleBitmap(it, size) }
         } catch (e: Exception) {
             AppLog.d("ThumbnailHelper", "loadAudioThumbnail failed: $uri", e)
             null
+        } finally {
+            runCatching { retriever.release() }
         }
     }
 }

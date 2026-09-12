@@ -92,6 +92,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
@@ -190,6 +191,7 @@ fun FileBrowserScreen(
     onCreateDocumentConfirmed: (Uri, String) -> Unit = { _, _ -> },
 ) {
     val shellIo: ShellIo = koinInject()
+    val safIo: app.fluffy.io.SafIo = koinInject()
 
     val currentLocation = state.currentLocation
     val canUp = state.stack.size > 1
@@ -202,13 +204,21 @@ fun FileBrowserScreen(
     val context = LocalContext.current
 
     val selected = state.selectedItems
-    val selectedFiles = remember { mutableStateListOf<File>() }
+    val currentDirKey = when (val loc = currentLocation) {
+        is BrowseLocation.FileSystem -> "file:${loc.file.absolutePath}"
+        is BrowseLocation.SAF -> "saf:${loc.uri}"
+        else -> "qa"
+    }
+    val selectedFiles = remember(currentDirKey) { mutableStateListOf<File>() }
+    LaunchedEffect(currentDirKey) {
+        selectedFiles.clear()
+    }
     var showZipNameDialog by remember { mutableStateOf(false) }
     var show7zDialog by remember { mutableStateOf(false) }
     var renameTarget by remember { mutableStateOf<Uri?>(null) }
     var renameOriginalName by remember { mutableStateOf("") }
     var showRenameDialog by remember { mutableStateOf(false) }
-    var renameTextFieldValue by remember { mutableStateOf(TextFieldValue("")) }
+    var renameTextFieldValue by rememberSaveable(stateSaver = TextFieldValue.Saver) { mutableStateOf(TextFieldValue("")) }
     var showNewFolderDialog by remember { mutableStateOf(false) }
     var showNewFileDialog by remember { mutableStateOf(false) }
     var showPasteClipboardDialog by remember { mutableStateOf(false) }
@@ -270,25 +280,7 @@ fun FileBrowserScreen(
     }
 
     fun uriChildExists(parent: Uri, name: String): Boolean {
-        return when (parent.scheme) {
-            "file" -> {
-                val pf = File(parent.path!!)
-                File(pf, name).exists()
-            }
-            "content" -> {
-                val p = DocumentFile.fromTreeUri(context, parent)
-                    ?: DocumentFile.fromSingleUri(context, parent)
-                p?.findFile(name) != null
-            }
-            "root", "shizuku" -> {
-                val base = parent.path ?: "/"
-                when (parent.scheme) {
-                    "root" -> shellIo.listRoot(base).any { it.first == name }
-                    else -> shellIo.listShizuku(base).any { it.first == name }
-                }
-            }
-            else -> false
-        }
+        return runCatching { safIo.childExists(parent, name) }.getOrDefault(false)
     }
 
     fun confirmOrCreateZip(name: String) {
@@ -489,11 +481,10 @@ fun FileBrowserScreen(
                     }
                 )
 
-                // Hoisted state for CREATE_DOCUMENT file name (outside conditional for stable remember)
-                var pendingCreateName by remember(createDocumentInitialName) {
+                var pendingCreateName by rememberSaveable(createDocumentInitialName) {
                     mutableStateOf(createDocumentInitialName ?: "")
                 }
-                // SAF tree/document picker banner (Android TV) - DPAD-focusable
+
                 if (isTreePickMode) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
@@ -814,7 +805,7 @@ fun FileBrowserScreen(
                         ) {
                             items(state.fileItems, key = { f -> f.absolutePath }) { file ->
                                 val isSelected = !pickFolderMode && selectedFiles.contains(file)
-                                val model = remember(file) { file.toRowModel() }
+                                val model = file.toRowModel()
                                 FileBrowserEntry(
                                     model = model,
                                     selected = isSelected,
@@ -858,7 +849,7 @@ fun FileBrowserScreen(
                         ) {
                             items(state.fileItems, key = { f -> f.absolutePath }) { file ->
                                 val isSelected = !pickFolderMode && selectedFiles.contains(file)
-                                val model = remember(file) { file.toRowModel() }
+                                val model = file.toRowModel()
                                 FileBrowserEntry(
                                     model = model,
                                     selected = isSelected,
@@ -924,7 +915,7 @@ fun FileBrowserScreen(
                             ) {
                                 items(state.shellItems, key = { e -> e.uri.toString() }) { entry ->
                                     val isSelected = !pickFolderMode && selected.contains(entry.uri)
-                                    val model = remember(entry.uri) { entry.toRowModel() }
+                                    val model = entry.toRowModel()
                                     FileBrowserEntry(
                                         model = model,
                                         selected = isSelected,
@@ -968,7 +959,7 @@ fun FileBrowserScreen(
                             ) {
                                 items(state.shellItems, key = { e -> e.uri.toString() }) { entry ->
                                     val isSelected = !pickFolderMode && selected.contains(entry.uri)
-                                    val model = remember(entry.uri) { entry.toRowModel() }
+                                    val model = entry.toRowModel()
                                     FileBrowserEntry(
                                         model = model,
                                         selected = isSelected,
@@ -1029,7 +1020,7 @@ fun FileBrowserScreen(
                             ) {
                                 items(state.items, key = { df -> df.uri.toString() }) { df ->
                                     val isSelected = !pickFolderMode && selected.contains(df.uri)
-                                    val model = remember(df.uri) { df.toRowModel() }
+                                    val model = df.toRowModel()
                                     FileBrowserEntry(
                                         model = model,
                                         selected = isSelected,
@@ -1073,7 +1064,7 @@ fun FileBrowserScreen(
                             ) {
                                 items(state.items, key = { df -> df.uri.toString() }) { df ->
                                     val isSelected = !pickFolderMode && selected.contains(df.uri)
-                                    val model = remember(df.uri) { df.toRowModel() }
+                                    val model = df.toRowModel()
                                     FileBrowserEntry(
                                         model = model,
                                         selected = isSelected,
@@ -1142,9 +1133,8 @@ fun FileBrowserScreen(
         }
     }
 
-    // Create ZIP dialog
     if (showZipNameDialog && currentDirUri != null) {
-        var name by remember { mutableStateOf("archive.zip") }
+        var name by rememberSaveable { mutableStateOf("archive.zip") }
         AlertDialog(
             onDismissRequest = { showZipNameDialog = false },
             title = { Text("Create ZIP") },
@@ -1168,10 +1158,9 @@ fun FileBrowserScreen(
         )
     }
 
-    // Create 7z dialog
     if (show7zDialog && currentDirUri != null) {
-        var name by remember { mutableStateOf("archive.7z") }
-        var pwd by remember { mutableStateOf("") }
+        var name by rememberSaveable { mutableStateOf("archive.7z") }
+        var pwd by rememberSaveable { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { show7zDialog = false },
             title = { Text("Create 7z") },
@@ -1205,7 +1194,7 @@ fun FileBrowserScreen(
     }
 
     if (showNewFolderDialog) {
-        var folderName by remember { mutableStateOf("") }
+        var folderName by rememberSaveable { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showNewFolderDialog = false },
             title = { Text("Create New Folder") },
@@ -1234,7 +1223,7 @@ fun FileBrowserScreen(
     }
 
     if (showNewFileDialog) {
-        var fileName by remember { mutableStateOf("") }
+        var fileName by rememberSaveable { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showNewFileDialog = false },
             title = { Text("Create New File") },
@@ -1263,7 +1252,7 @@ fun FileBrowserScreen(
     }
 
     if (showPasteClipboardDialog) {
-        var clipboardFileName by remember { mutableStateOf("clipboard.txt") }
+        var clipboardFileName by rememberSaveable { mutableStateOf("clipboard.txt") }
         AlertDialog(
             onDismissRequest = { showPasteClipboardDialog = false },
             title = { Text(stringResource(R.string.paste_from_clipboard)) },
@@ -1304,6 +1293,9 @@ fun FileBrowserScreen(
 
     if (showRenameDialog && renameTarget != null) {
         val focusRequester = remember { FocusRequester() }
+        LaunchedEffect(showRenameDialog) {
+            if (showRenameDialog) focusRequester.requestFocus()
+        }
         AlertDialog(
             onDismissRequest = { showRenameDialog = false },
             title = { Text("Rename") },
@@ -1317,9 +1309,6 @@ fun FileBrowserScreen(
                 )
             },
             confirmButton = {
-                LaunchedEffect(Unit) {
-                    focusRequester.requestFocus()
-                }
                 TextButton(onClick = {
                     val t = renameTarget!!
                     onRenameOne(t, renameTextFieldValue.text, renameOriginalName)

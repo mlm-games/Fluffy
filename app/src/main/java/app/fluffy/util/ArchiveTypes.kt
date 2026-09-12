@@ -20,7 +20,7 @@ object ArchiveTypes {
         return all.any { n.endsWith(it) }
     }
 
-    fun infer(name: String): Kind {
+    fun infer(name: String): Kind? {
         val n = name.lowercase(Locale.ROOT)
         return when {
             targz.any { n.endsWith(it) } -> Kind.TARGZ
@@ -29,7 +29,7 @@ object ArchiveTypes {
             tar.any { n.endsWith(it) } -> Kind.TAR
             zip.any { n.endsWith(it) } -> Kind.ZIP
             sevenZ.any { n.endsWith(it) } -> Kind.SEVENZ
-            else -> Kind.ZIP
+            else -> null
         }
     }
 
@@ -55,6 +55,9 @@ object ArchiveTypes {
             Kind.TARGZ -> "application/gzip"
             Kind.TARBZ2 -> "application/x-bzip2"
             Kind.TARXZ -> "application/x-xz"
+            null -> "application/octet-stream"
         }
     }
+
+    fun isSupported(fileName: String): Boolean = infer(fileName) != null
 }

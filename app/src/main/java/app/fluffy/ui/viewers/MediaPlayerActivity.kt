@@ -27,6 +27,7 @@ import androidx.compose.material.icons.outlined.Pause
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -98,12 +99,28 @@ internal fun MediaPlayerScreen(
     var showSpeedDialog by remember { mutableStateOf(false) }
     var showVolumeDialog by remember { mutableStateOf(false) }
     var controlsFocused by remember { mutableStateOf(false) }
+    var interactionTick by remember { mutableIntStateOf(0) }
+    var savedPos by rememberSaveable { mutableFloatStateOf(0f) }
 
     LaunchedEffect(url) {
         playerState.openUri(url)
+        if (savedPos > 1f) runCatching { playerState.seekTo(savedPos) }
     }
 
-    LaunchedEffect(controlsVisible, controlsFocused) {
+    LaunchedEffect(playerState.sliderPos) {
+        if (playerState.sliderPos > 0f) savedPos = playerState.sliderPos
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            runCatching { playerState.pause() }
+            runCatching { playerState.javaClass.getMethod("release").invoke(playerState) }
+            runCatching { playerState.javaClass.getMethod("stop").invoke(playerState) }
+            runCatching { playerState.javaClass.getMethod("close").invoke(playerState) }
+        }
+    }
+
+    LaunchedEffect(controlsVisible, controlsFocused, interactionTick) {
         if (controlsVisible && !controlsFocused) {
             delay(4000)
             controlsVisible = false
@@ -114,6 +131,7 @@ internal fun MediaPlayerScreen(
         if (!controlsVisible) {
             controlsVisible = true
         }
+        interactionTick++
     }
 
     val handleKeys: (KeyEvent) -> Boolean = { ev ->
@@ -157,7 +175,7 @@ internal fun MediaPlayerScreen(
         }
     }
 
-    BackHandler { onClose() }
+    BackHandler(enabled = !showSpeedDialog && !showVolumeDialog) { onClose() }
 
     Box(
         Modifier

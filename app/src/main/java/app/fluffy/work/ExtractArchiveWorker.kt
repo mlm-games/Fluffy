@@ -74,6 +74,7 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
             }
 
             val create: (String, Boolean) -> OutputStream = { path, isDir ->
+                if (isStopped) throw kotlinx.coroutines.CancellationException("Stopped")
                 val safe = normalizeSafe(path)
                 if (safe == null) {
                     devNull()
@@ -83,27 +84,41 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                     val parentRel = safe.substringBeforeLast('/', "")
                     val fileName = safe.substringAfterLast('/').ifEmpty { "item" }
                     if (isDir || safe.endsWith("/")) {
-                        val ensured = io.ensureDir(actualTargetDir, safe.removeSuffix("/"))
-                        if (!isSafeDestination(fileRoot, ensured, isDir = true)) {
+                        val probe = probeSafe(fileRoot, actualTargetDir, safe.removeSuffix("/"))
+                        if (probe == null) {
                             devNull()
                         } else {
-                            wroteAny = true
-                            devNull()
-                        }
-                    } else {
-                        val parentUri = if (parentRel.isNotEmpty()) {
-                            io.ensureDir(actualTargetDir, parentRel)
-                        } else actualTargetDir
-                        if (!isSafeDestination(fileRoot, parentUri, isDir = true)) {
-                            devNull()
-                        } else {
-                            val mime = FileSystemAccess.getMimeType(fileName)
-                            val fileUri = io.createFile(parentUri, fileName, mime)
-                            if (!isSafeDestination(fileRoot, fileUri, isDir = false)) {
+                            val ensured = io.ensureDir(actualTargetDir, safe.removeSuffix("/"))
+                            if (!isSafeDestination(fileRoot, ensured, isDir = true)) {
                                 devNull()
                             } else {
-                                wroteAny = true
-                                io.openOut(fileUri)
+                                devNull()
+                            }
+                        }
+                    } else {
+                        val probe = probeSafe(fileRoot, actualTargetDir, parentRel.ifEmpty { null }, fileName)
+                        if (probe == null) {
+                            devNull()
+                        } else {
+                            val parentUri = if (parentRel.isNotEmpty()) {
+                                io.ensureDir(actualTargetDir, parentRel)
+                            } else actualTargetDir
+                            if (!isSafeDestination(fileRoot, parentUri, isDir = true)) {
+                                devNull()
+                            } else {
+                                if (!overwriteSafeCheck(parentUri, fileName)) {
+                                    devNull()
+                                } else {
+                                    val mime = FileSystemAccess.getMimeType(fileName)
+                                    val fileUri = io.createFile(parentUri, fileName, mime, overwrite = false)
+                                    if (!isSafeDestination(fileRoot, fileUri, isDir = false)) {
+                                        runCatching { io.delete(fileUri) }
+                                        devNull()
+                                    } else {
+                                        wroteAny = true
+                                        io.openOut(fileUri)
+                                    }
+                                }
                             }
                         }
                     }
@@ -119,19 +134,19 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                 }
             } catch (e: ZipException) {
                 AppLog.w("ExtractArchiveWorker", "strict zip extract failed, trying fallback: $name", e)
-                // Fallback for strict/invalid zips (e.g., some APKs)
                 open().use { input ->
                     ZipArchiveInputStream(input).use { zin ->
                         var entry = zin.nextEntry
                         while (entry != null) {
+                            if (isStopped) throw kotlinx.coroutines.CancellationException("Stopped")
                             val entryName = entry.name ?: ""
                             if (entryName.isNotBlank()) {
-                                val out = create(entryName, entry.isDirectory)
-                                if (!entry.isDirectory) {
-                                    zin.copyTo(out)
-                                    out.flush()
+                                create(entryName, entry.isDirectory).use { out ->
+                                    if (!entry.isDirectory) {
+                                        zin.copyTo(out)
+                                        out.flush()
+                                    }
                                 }
-                                out.close()
                             }
                             entry = zin.nextEntry
                         }
@@ -145,6 +160,8 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                 setProgress(workDataOf("progress" to 1f))
                 Result.success()
             }
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
         } catch (e: Exception) {
             AppLog.e("ExtractArchiveWorker", "extract failed: $archive", e)
             Result.failure(workDataOf("error" to (e.message ?: e.toString())))
@@ -170,19 +187,53 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
     }
 
     private fun isSafeDestination(root: File?, dest: Uri, isDir: Boolean): Boolean {
-        if (root == null || dest.scheme != "file") return true
+        if (dest.scheme != "file") {
+            return true
+        }
+        if (root == null) return true
         return try {
             val f = File(requireNotNull(dest.path)).canonicalFile
+            val rootPath = root.canonicalPath
             if (isDir) {
-                f.path.startsWith(root.path)
+                f.path == rootPath || f.path.startsWith("$rootPath/")
             } else {
-                f.parentFile?.path?.startsWith(root.path) == true
+                val parent = f.parentFile?.canonicalPath ?: return false
+                parent == rootPath || parent.startsWith("$rootPath/")
             }
         } catch (e: Exception) {
-            // Fail-closed for zip-slip: deny on error, but log for diagnosis.
+
             AppLog.w("ExtractArchiveWorker", "isSafeDestination check failed: $dest", e)
             false
         }
+    }
+
+    /** Pre-check safety without creating anything. Returns null if unsafe. */
+    private fun probeSafe(root: File?, base: Uri, relDir: String): Boolean? {
+        if (base.scheme != "file" || root == null) return true
+        return try {
+            val basePath = File(requireNotNull(base.path)).canonicalFile
+            val target = File(basePath, relDir).canonicalPath
+            val rootPath = root.canonicalPath
+            if (target == rootPath || target.startsWith("$rootPath/")) true else null
+        } catch (_: Exception) { null }
+    }
+
+    private fun probeSafe(root: File?, base: Uri, relDir: String?, name: String): Boolean? {
+        if (base.scheme != "file" || root == null) return true
+        return try {
+            val basePath = File(requireNotNull(base.path)).canonicalFile
+            val dir = if (relDir.isNullOrEmpty()) basePath else File(basePath, relDir)
+            val target = File(dir, name).canonicalPath
+            val parent = File(target).parent ?: return null
+            val rootPath = root.canonicalPath
+            if (parent == rootPath || parent.startsWith("$rootPath/")) true else null
+        } catch (_: Exception) { null }
+    }
+
+    private fun overwriteSafeCheck(parentUri: Uri, name: String): Boolean {
+        return try {
+            !io.childExists(parentUri, name)
+        } catch (_: Exception) { false }
     }
 
     private fun createForeground(title: String): ForegroundInfo {

@@ -39,13 +39,19 @@ object DocumentController : KoinComponent {
         runCatching {
             when (uri.scheme) {
                 "file" -> {
-                    val f = File(uri.path!!)
-                    DocInfo(f.name, f.readBytes(), !f.canWrite())
+                    val f = File(requireNotNull(uri.path) { "Missing path" })
+                    if (f.length() > maxSize) throw IOException("File too large (${f.length()} > $maxSize)")
+                    DocInfo(f.name, readCapped(f.inputStream(), maxSize), !f.canWrite())
                 }
                 "content" -> {
+                    val size = runCatching {
+                        context.contentResolver.query(uri, arrayOf(OpenableColumns.SIZE), null, null, null)?.use {
+                            if (it.moveToFirst()) it.getLong(0) else -1L
+                        } ?: -1L
+                    }.getOrDefault(-1L)
+                    if (size > maxSize) throw IOException("File too large")
                     context.contentResolver.openInputStream(uri)?.use { input ->
-                        if (input.available() > maxSize) throw IOException("File too large")
-                        val bytes = input.readBytes()
+                        val bytes = readCapped(input, maxSize)
                         val name = queryName(context, uri) ?: "Untitled"
                         val readOnly = isContentReadOnly(context, uri)
                         DocInfo(name, bytes, readOnly)
@@ -54,11 +60,13 @@ object DocumentController : KoinComponent {
                 "root" -> {
                     val path = uri.path ?: ""
                     val bytes = shellIo.readBytesRoot(path)
+                    if (bytes.size > maxSize) throw IOException("File too large")
                     DocInfo(File(path).name, bytes, false)
                 }
                 "shizuku" -> {
                     val path = uri.path ?: ""
                     val bytes = shellIo.readBytesShizuku(path)
+                    if (bytes.size > maxSize) throw IOException("File too large")
                     DocInfo(File(path).name, bytes, false)
                 }
                 else -> throw IOException("Unknown scheme: ${uri.scheme}")
@@ -66,11 +74,41 @@ object DocumentController : KoinComponent {
         }
     }
 
-    // Unified Write
+    fun readCapped(input: java.io.InputStream, maxSize: Int): ByteArray {
+        val out = java.io.ByteArrayOutputStream()
+        val buf = ByteArray(32 * 1024)
+        var total = 0L
+        while (true) {
+            val n = input.read(buf)
+            if (n == -1) break
+            total += n
+            if (total > maxSize + 1L) throw IOException("File too large")
+            out.write(buf, 0, n)
+        }
+        if (total > maxSize) throw IOException("File too large")
+        return out.toByteArray()
+    }
+
     suspend fun save(context: Context, uri: Uri, content: ByteArray): Result<Unit> = withContext(Dispatchers.IO) {
         runCatching {
             when (uri.scheme) {
-                "file" -> File(uri.path!!).writeBytes(content)
+                "file" -> {
+                    val f = File(requireNotNull(uri.path) { "Missing path" })
+                    val parent = f.parentFile ?: throw IOException("No parent")
+                    val tmp = File.createTempFile(".fluffy_", ".tmp", parent)
+                    try {
+                        java.io.FileOutputStream(tmp).use { fos ->
+                            fos.write(content)
+                            fos.fd.sync()
+                        }
+                        if (f.exists() && !f.delete()) throw IOException("Cannot replace file")
+                        if (!tmp.renameTo(f)) {
+                            f.writeBytes(content)
+                        }
+                    } finally {
+                        runCatching { if (tmp.exists()) tmp.delete() }
+                    }
+                }
                 "content" -> {
                     context.contentResolver.openOutputStream(uri, "wt")?.use { it.write(content) }
                         ?: throw IOException("OutputStream null")
@@ -134,12 +172,17 @@ object DocumentController : KoinComponent {
     }
 
     private fun isContentReadOnly(context: Context, uri: Uri): Boolean {
-        // Check if we have write permission on the URI without truncating the file
-        // We check the URI mode flags or try to open in append mode (which doesn't truncate)
         return runCatching {
-            // Try to open in append mode - this won't truncate if file exists
-            context.contentResolver.openOutputStream(uri, "wa")?.use {}
-            false
+            context.contentResolver.query(
+                uri,
+                arrayOf(android.provider.DocumentsContract.Document.COLUMN_FLAGS),
+                null, null, null
+            )?.use { c ->
+                if (c.moveToFirst()) {
+                    val flags = c.getLong(0)
+                    (flags and android.provider.DocumentsContract.Document.FLAG_SUPPORTS_WRITE.toLong()) == 0L
+                } else true
+            } ?: true
         }.getOrDefault(true)
     }
 

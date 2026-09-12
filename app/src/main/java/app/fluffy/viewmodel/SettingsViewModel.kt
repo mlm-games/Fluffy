@@ -16,7 +16,7 @@ class SettingsViewModel(private val repo: SettingsRepository) : ViewModel() {
     val settings: StateFlow<AppSettings> =
         repo.settingsFlow.stateIn(viewModelScope, SharingStarted.Eagerly, AppSettings())
 
-    private val _events = MutableSharedFlow<UiEvent>()
+    private val _events = MutableSharedFlow<UiEvent>(extraBufferCapacity = 1)
     val events: SharedFlow<UiEvent> = _events
 
     fun updateSetting(propertyName: String, value: Any) = viewModelScope.launch {
@@ -25,8 +25,8 @@ class SettingsViewModel(private val repo: SettingsRepository) : ViewModel() {
 
     fun performAction(propertyName: String) = viewModelScope.launch {
         when (propertyName) {
-            "supportDevelopment" -> _events.emit(UiEvent.OpenUrl("https://github.com/sponsors/mlm-games"))
-            else -> _events.emit(UiEvent.Toast("No action attached"))
+            "supportDevelopment" -> _events.tryEmit(UiEvent.OpenUrl("https://github.com/sponsors/mlm-games"))
+            else -> _events.tryEmit(UiEvent.Toast("No action attached"))
         }
     }
 

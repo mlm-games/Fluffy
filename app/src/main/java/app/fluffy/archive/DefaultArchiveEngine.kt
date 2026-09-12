@@ -37,7 +37,9 @@ class DefaultArchiveEngine(
         open: () -> InputStream,
         password: CharArray?
     ): ArchiveEngine.ListResult = withContext(Dispatchers.IO) {
-        when (ArchiveTypes.infer(archiveName)) {
+        when (ArchiveTypes.infer(archiveName) ?: return@withContext ArchiveEngine.ListResult(
+            emptyList(), encrypted = false, error = "Unsupported archive type: $archiveName"
+        )) {
             ArchiveTypes.Kind.ZIP   -> listZip(archiveName, open)
             ArchiveTypes.Kind.SEVENZ -> listSevenZ(archiveName, open, password)
             ArchiveTypes.Kind.TAR   -> listTar(open)
@@ -54,7 +56,8 @@ class DefaultArchiveEngine(
         password: CharArray?,
         onProgress: (Long, Long) -> Unit
     ) = withContext(Dispatchers.IO) {
-        when (ArchiveTypes.infer(archiveName)) {
+        when (ArchiveTypes.infer(archiveName)
+            ?: throw IllegalArgumentException("Unsupported archive type: $archiveName")) {
             ArchiveTypes.Kind.ZIP   -> extractZip(open, create, password, onProgress)
             ArchiveTypes.Kind.SEVENZ -> extractSevenZ(archiveName, open, create, password, onProgress)
             ArchiveTypes.Kind.TAR   -> extractTar(open, create, onProgress)
@@ -89,7 +92,8 @@ class DefaultArchiveEngine(
             var totalWritten = 0L
             val buf = ByteArray(128 * 1024)
 
-            for ((name, supplier) in sources) {
+            for ((rawName, supplier) in sources) {
+                val name = sanitizeZipName(rawName)
                 val params = ZipParameters().apply {
                     compressionMethod = CompressionMethod.DEFLATE
                     setCompressionLevel(lvl)
@@ -100,10 +104,12 @@ class DefaultArchiveEngine(
                 if (!name.endsWith("/")) {
                     supplier().use { input ->
                         var read = input.read(buf)
-                        while (read > 0) {
-                            zout.write(buf, 0, read)
-                            totalWritten += read
-                            onProgress(totalWritten, -1L)
+                        while (read != -1) {
+                            if (read > 0) {
+                                zout.write(buf, 0, read)
+                                totalWritten += read
+                                onProgress(totalWritten, -1L)
+                            }
                             read = input.read(buf)
                         }
                     }
@@ -113,7 +119,15 @@ class DefaultArchiveEngine(
         }
     }
 
-    // ZIP
+    private fun sanitizeZipName(name: String): String {
+        var n = name.replace('\\', '/').trim().trimStart('/')
+        val parts = n.split('/').filter { it.isNotEmpty() && it != "." && it != ".." }
+        n = parts.joinToString("/")
+        if (n.isBlank()) return "item"
+        if (name.endsWith("/") && !n.endsWith("/")) n += "/"
+        return n
+    }
+
     private fun listZip(
         archiveName: String,
         open: () -> InputStream
@@ -134,7 +148,11 @@ class DefaultArchiveEngine(
             ArchiveEngine.ListResult(entries, encrypted = anyEncrypted)
         } catch (e: Throwable) {
             AppLog.w("ArchiveEngine", "listZip failed: $archiveName", e)
-            ArchiveEngine.ListResult(emptyList(), encrypted = false)
+            val msg = (e.message ?: e.toString())
+            val lower = msg.lowercase(Locale.ROOT)
+            val encryptedHint = lower.contains("password") || lower.contains("encrypt") ||
+                e::class.java.simpleName.lowercase(Locale.ROOT).contains("password")
+            ArchiveEngine.ListResult(emptyList(), encrypted = encryptedHint, error = msg)
         } finally {
             tmp.delete()
         }
@@ -156,10 +174,11 @@ class DefaultArchiveEngine(
         open: () -> InputStream,
         create: (String, Boolean) -> OutputStream,
         password: CharArray?,
-        @Suppress("UNUSED_PARAMETER") onProgress: (Long, Long) -> Unit
+        onProgress: (Long, Long) -> Unit
     ) {
         ZipInputStream(open(), password).use { zin ->
             val buf = ByteArray(128 * 1024)
+            var done = 0L
             var entry = zin.nextEntry
             while (entry != null) {
                 val name = entry.fileName
@@ -168,8 +187,12 @@ class DefaultArchiveEngine(
                 } else {
                     create(name, false).use { out ->
                         var r = zin.read(buf)
-                        while (r > 0) {
-                            out.write(buf, 0, r)
+                        while (r != -1) {
+                            if (r > 0) {
+                                out.write(buf, 0, r)
+                                done += r
+                                onProgress(done, -1L)
+                            }
                             r = zin.read(buf)
                         }
                     }
@@ -236,13 +259,14 @@ class DefaultArchiveEngine(
         open: () -> InputStream,
         create: (String, Boolean) -> OutputStream,
         password: CharArray?,
-        @Suppress("UNUSED_PARAMETER") onProgress: (Long, Long) -> Unit
+        onProgress: (Long, Long) -> Unit
     ) {
         val tmp = stageSevenZTemp(archiveName, open)
         try {
             val sevenZ = if (password?.isNotEmpty() == true) SevenZFile(tmp, password) else SevenZFile(tmp)
             sevenZ.use { z ->
                 val buf = ByteArray(128 * 1024)
+                var done = 0L
                 var e: SevenZArchiveEntry? = z.nextEntry
                 while (e != null) {
                     val name = e.name
@@ -251,8 +275,12 @@ class DefaultArchiveEngine(
                     } else {
                         create(name, false).use { out ->
                             var r = z.read(buf)
-                            while (r > 0) {
-                                out.write(buf, 0, r)
+                            while (r != -1) {
+                                if (r > 0) {
+                                    out.write(buf, 0, r)
+                                    done += r
+                                    onProgress(done, -1L)
+                                }
                                 r = z.read(buf)
                             }
                         }
@@ -292,19 +320,23 @@ class DefaultArchiveEngine(
             val buf = ByteArray(128 * 1024)
             var e = tin.nextEntry
             var totalWritten = 0L
+            var skippedLinks = 0
             while (e != null) {
                 val name = e.name
                 if (e.isSymbolicLink || e.isLink) {
-                    // Skip symlinks/hardlinks
+                    skippedLinks++
+                    AppLog.w("ArchiveEngine", "Skipping link entry: $name -> ${e.linkName}")
                 } else if (e.isDirectory || name.endsWith("/")) {
                     create("$name/", true).use { /* dir ensure */ }
                 } else {
                     create(name, false).use { out ->
                         var r = tin.read(buf)
-                        while (r > 0) {
-                            out.write(buf, 0, r)
-                            totalWritten += r
-                            onProgress(totalWritten, -1L)
+                        while (r != -1) {
+                            if (r > 0) {
+                                out.write(buf, 0, r)
+                                totalWritten += r
+                                onProgress(totalWritten, -1L)
+                            }
                             r = tin.read(buf)
                         }
                     }

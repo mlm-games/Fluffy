@@ -30,10 +30,10 @@ object FileSort {
 
     private fun sortFileGroup(group: List<File>, sortMode: Int, reverse: Boolean): List<File> {
         val sorted = when (sortMode) {
-            SORT_TYPE -> group.sortedWith(compareBy<File> { it.name.ext() }.thenBy { it.name.lowercase() })
-            SORT_SIZE -> group.sortedWith(compareBy<File> { it.length() }.thenBy { it.name.lowercase() })
-            SORT_UPDATED, SORT_ADDED -> group.sortedWith(compareBy<File> { it.lastModified() }.thenBy { it.name.lowercase() })
-            else -> group.sortedWith(compareBy<File> { it.name.lowercase() })
+            SORT_TYPE -> group.sortedWith(compareBy<File> { it.name.ext() }.thenBy { it.name.lowercase() }.thenBy { it.name })
+            SORT_SIZE -> group.sortedWith(compareBy<File> { it.length() }.thenBy { it.name.lowercase() }.thenBy { it.name })
+            SORT_UPDATED, SORT_ADDED -> group.sortedWith(compareBy<File> { it.lastModified() }.thenBy { it.name.lowercase() }.thenBy { it.name })
+            else -> group.sortedWith(compareBy<File> { it.name.lowercase() }.thenBy { it.name })
         }
         return applyReverse(sorted, reverse)
     }
@@ -47,10 +47,10 @@ object FileSort {
 
     private fun sortDocGroup(group: List<DocumentFile>, sortMode: Int, reverse: Boolean): List<DocumentFile> {
         val sorted = when (sortMode) {
-            SORT_TYPE -> group.sortedWith(compareBy<DocumentFile> { (it.name ?: "").ext() }.thenBy { (it.name ?: "").lowercase() })
-            SORT_SIZE -> group.sortedWith(compareBy<DocumentFile> { it.length() }.thenBy { (it.name ?: "").lowercase() })
-            SORT_UPDATED, SORT_ADDED -> group.sortedWith(compareBy<DocumentFile> { it.lastModified() }.thenBy { (it.name ?: "").lowercase() })
-            else -> group.sortedWith(compareBy<DocumentFile> { (it.name ?: "").lowercase() })
+            SORT_TYPE -> group.sortedWith(compareBy<DocumentFile> { (it.name ?: "").ext() }.thenBy { (it.name ?: "").lowercase() }.thenBy { it.name ?: "" })
+            SORT_SIZE -> group.sortedWith(compareBy<DocumentFile> { it.length() }.thenBy { (it.name ?: "").lowercase() }.thenBy { it.name ?: "" })
+            SORT_UPDATED, SORT_ADDED -> group.sortedWith(compareBy<DocumentFile> { it.lastModified() }.thenBy { (it.name ?: "").lowercase() }.thenBy { it.name ?: "" })
+            else -> group.sortedWith(compareBy<DocumentFile> { (it.name ?: "").lowercase() }.thenBy { it.name ?: "" })
         }
         return applyReverse(sorted, reverse)
     }
@@ -63,14 +63,12 @@ object FileSort {
     }
 
     private fun sortShellGroup(group: List<ShellEntry>, sortMode: Int, reverse: Boolean): List<ShellEntry> {
-        // Has no size/date metadata from list(), falls back to name/type only
         val sorted = when (sortMode) {
-            SORT_TYPE -> group.sortedWith(compareBy<ShellEntry> { it.name.ext() }.thenBy { it.name.lowercase() })
+            SORT_TYPE -> group.sortedWith(compareBy<ShellEntry> { it.name.ext() }.thenBy { it.name.lowercase() }.thenBy { it.name })
             SORT_SIZE, SORT_UPDATED, SORT_ADDED -> {
-                // No metadata: fall back to name but still respect reverse flag
-                group.sortedWith(compareBy<ShellEntry> { it.name.lowercase() })
+                group.sortedWith(compareBy<ShellEntry> { it.name.lowercase() }.thenBy { it.name })
             }
-            else -> group.sortedWith(compareBy<ShellEntry> { it.name.lowercase() })
+            else -> group.sortedWith(compareBy<ShellEntry> { it.name.lowercase() }.thenBy { it.name })
         }
         return applyReverse(sorted, reverse)
     }

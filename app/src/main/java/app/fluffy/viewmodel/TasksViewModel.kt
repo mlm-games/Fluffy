@@ -70,8 +70,6 @@ class TasksViewModel(
     ): String = jobs.enqueueMove(sources, targetDir, overwrite)
 
     fun cancel(id: UUID) {
-        viewModelScope.launch {
-            workManager.cancelWorkById(id)
-        }
+        workManager.cancelWorkById(id)
     }
 }

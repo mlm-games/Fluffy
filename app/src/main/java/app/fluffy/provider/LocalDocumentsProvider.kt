@@ -79,7 +79,6 @@ class LocalDocumentsProvider : DocumentsProvider() {
             val fsa = koin.get<FileSystemAccess>()
             return fsa.getAllStorageRoots()
         }
-
         val roots = linkedSetOf<File>()
         val ctx = context ?: return emptyList()
 
@@ -125,6 +124,30 @@ class LocalDocumentsProvider : DocumentsProvider() {
         return roots.toList()
     }
 
+    private fun canonicalRoots(): List<String> = runCatching {
+        getAllStorageRoots().mapNotNull { runCatching { it.canonicalPath }.getOrNull() }
+    }.getOrDefault(emptyList())
+
+    private fun containedFile(documentId: String): File {
+        val f = File(documentId)
+        val canon = runCatching { f.canonicalPath }.getOrNull()
+            ?: throw FileNotFoundException(documentId)
+        val roots = canonicalRoots()
+        val ok = roots.any { r -> canon == r || canon.startsWith("$r/") }
+        if (!ok) throw SecurityException("Outside storage roots: $documentId")
+        return f
+    }
+
+    private fun isSymlink(f: File): Boolean = runCatching {
+        java.nio.file.Files.isSymbolicLink(f.toPath())
+    }.getOrDefault(false)
+
+    private fun thumbKey(path: String, w: Int, h: Int): String {
+        val md = java.security.MessageDigest.getInstance("SHA-256")
+        val hex = md.digest(path.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+        return "${hex}_${w}x${h}.jpg"
+    }
+
     override fun queryRoots(projection: Array<out String>?): Cursor {
         val result = MatrixCursor(projection ?: defaultRootProjection)
         val ctx = context ?: return result
@@ -156,7 +179,8 @@ class LocalDocumentsProvider : DocumentsProvider() {
 
     override fun queryDocument(documentId: String, projection: Array<out String>?): Cursor {
         val result = MatrixCursor(projection ?: defaultDocumentProjection)
-        includeFile(result, File(documentId))
+        val f = runCatching { containedFile(documentId) }.getOrNull() ?: return result
+        includeFile(result, f)
         return result
     }
 
@@ -166,7 +190,7 @@ class LocalDocumentsProvider : DocumentsProvider() {
         sortOrder: String?
     ): Cursor {
         val result = MatrixCursor(projection ?: defaultDocumentProjection)
-        val parent = File(parentDocumentId)
+        val parent = runCatching { containedFile(parentDocumentId) }.getOrNull() ?: return result
         if (!parent.isDirectory || !parent.canRead()) return result
 
         val children = parent.listFiles()?.sortedWith(
@@ -184,7 +208,8 @@ class LocalDocumentsProvider : DocumentsProvider() {
         mode: String,
         signal: CancellationSignal?
     ): ParcelFileDescriptor {
-        val file = File(documentId)
+        val file = containedFile(documentId)
+        if (signal?.isCanceled == true) throw FileNotFoundException("Canceled")
         if (!file.exists()) throw FileNotFoundException(documentId)
         if (file.isDirectory) throw FileNotFoundException("Cannot open directory: $documentId")
         val accessMode = ParcelFileDescriptor.parseMode(mode)
@@ -192,15 +217,21 @@ class LocalDocumentsProvider : DocumentsProvider() {
     }
 
     override fun isChildDocument(parentDocumentId: String, documentId: String): Boolean {
-        val parent = parentDocumentId.trimEnd('/')
-        return documentId == parentDocumentId || documentId.startsWith(parent + "/")
+        return try {
+            val parentCanon = File(parentDocumentId).canonicalPath
+            val childCanon = File(documentId).canonicalPath
+            childCanon == parentCanon || childCanon.startsWith("$parentCanon/")
+        } catch (_: Exception) { false }
     }
 
     override fun createDocument(parentDocumentId: String, mimeType: String, displayName: String): String? {
-        val parent = File(parentDocumentId)
+        val parent = runCatching { containedFile(parentDocumentId) }.getOrNull() ?: return null
         if (!parent.isDirectory || !parent.canWrite()) return null
-        val safeName = displayName.replace("/", "_").replace("\\", "_").ifBlank { return null }
-        val target = File(parent, safeName)
+        if (!hasStoragePermission()) return null
+        if (displayName.isBlank() || displayName == "." || displayName == "..") return null
+        if ('/' in displayName || '\\' in displayName || '\u0000' in displayName) return null
+        val target = File(parent, displayName)
+        runCatching { containedFile(target.absolutePath) }.getOrNull() ?: return null
         if (target.exists()) return null
         return try {
             if (Document.MIME_TYPE_DIR == mimeType) {
@@ -214,24 +245,38 @@ class LocalDocumentsProvider : DocumentsProvider() {
     }
 
     override fun deleteDocument(documentId: String) {
-        val file = File(documentId)
+        val file = containedFile(documentId)
         if (!file.exists()) throw FileNotFoundException(documentId)
-        if (!file.deleteRecursively()) throw FileNotFoundException("Failed to delete $documentId")
+        if (!hasStoragePermission()) throw SecurityException("No storage permission")
+        if (isSymlink(file)) {
+            if (!file.delete()) throw FileNotFoundException("Failed to delete $documentId")
+            return
+        }
+        fun del(f: File): Boolean {
+            if (isSymlink(f)) return f.delete()
+            if (f.isDirectory) {
+                f.listFiles()?.forEach { if (!del(it)) return false }
+            }
+            return f.delete()
+        }
+        if (!del(file)) throw FileNotFoundException("Failed to delete $documentId")
     }
 
     override fun renameDocument(documentId: String, displayName: String): String? {
-        val file = File(documentId)
+        val file = runCatching { containedFile(documentId) }.getOrNull() ?: throw FileNotFoundException(documentId)
         if (!file.exists()) throw FileNotFoundException(documentId)
-        val safeName = displayName.replace("/", "_").replace("\\", "_").ifBlank { return null }
+        if (displayName.isBlank() || displayName == "." || displayName == "..") return null
+        if ('/' in displayName || '\\' in displayName || '\u0000' in displayName) return null
         val parent = file.parentFile ?: return null
         if (!parent.canWrite()) return null
-        val dest = File(parent, safeName)
+        val dest = File(parent, displayName)
+        runCatching { containedFile(dest.absolutePath) }.getOrNull() ?: return null
         if (dest.exists()) return null
         return if (file.renameTo(dest)) dest.absolutePath else null
     }
 
     override fun getDocumentType(documentId: String): String {
-        val file = File(documentId)
+        val file = runCatching { containedFile(documentId) }.getOrNull() ?: throw FileNotFoundException(documentId)
         return if (file.isDirectory) Document.MIME_TYPE_DIR else getTypeForName(file.name)
     }
 
@@ -242,15 +287,21 @@ class LocalDocumentsProvider : DocumentsProvider() {
     ): Cursor {
         val result = MatrixCursor(projection ?: defaultDocumentProjection)
         if (query.isNullOrBlank()) return result
-        val root = File(rootId)
+        val root = runCatching { containedFile(rootId) }.getOrNull() ?: return result
         if (!root.isDirectory || !root.canRead()) return result
         val lowerQuery = query.lowercase()
         val maxResults = 50
+        val maxVisited = 2000
+        val visited = HashSet<String>()
         val queue: ArrayDeque<File> = ArrayDeque()
         queue.add(root)
         var matched = 0
-        while (queue.isNotEmpty() && matched < maxResults) {
+        var visitedCount = 0
+        while (queue.isNotEmpty() && matched < maxResults && visitedCount < maxVisited) {
             val dir = queue.removeFirst()
+            val canon = runCatching { dir.canonicalPath }.getOrNull() ?: continue
+            if (!visited.add(canon)) continue
+            visitedCount++
             val children = dir.listFiles() ?: continue
             for (child in children) {
                 if (matched >= maxResults) break
@@ -259,7 +310,7 @@ class LocalDocumentsProvider : DocumentsProvider() {
                     matched++
                     if (matched >= maxResults) break
                 }
-                if (child.isDirectory && child.canRead()) {
+                if (child.isDirectory && child.canRead() && !isSymlink(child)) {
                     queue.add(child)
                 }
             }
@@ -282,13 +333,18 @@ class LocalDocumentsProvider : DocumentsProvider() {
         projection: Array<out String>?
     ): Cursor {
         val result = MatrixCursor(projection ?: defaultDocumentProjection)
-        val root = File(rootId)
+        val root = runCatching { containedFile(rootId) }.getOrNull() ?: return result
         if (!root.isDirectory || !root.canRead()) return result
         val allFiles = mutableListOf<File>()
+        val visited = HashSet<String>()
         val queue: ArrayDeque<File> = ArrayDeque()
         queue.add(root)
-        while (queue.isNotEmpty() && allFiles.size < 1000) {
+        var visitedDirs = 0
+        while (queue.isNotEmpty() && allFiles.size < 1000 && visitedDirs < 2000) {
             val dir = queue.removeFirst()
+            val canon = runCatching { dir.canonicalPath }.getOrNull() ?: continue
+            if (!visited.add(canon)) continue
+            visitedDirs++
             val children = try { dir.listFiles() } catch (e: SecurityException) {
                 AppLog.d("LocalDocumentsProvider", "listFiles denied: ${dir.absolutePath}", e)
                 null
@@ -296,7 +352,7 @@ class LocalDocumentsProvider : DocumentsProvider() {
             for (child in children) {
                 if (child.isFile) {
                     allFiles.add(child)
-                } else if (child.isDirectory && child.canRead()) {
+                } else if (child.isDirectory && child.canRead() && !isSymlink(child)) {
                     queue.add(child)
                 }
             }
@@ -323,7 +379,8 @@ class LocalDocumentsProvider : DocumentsProvider() {
         sizeHint: Point?,
         signal: CancellationSignal?
     ): AssetFileDescriptor {
-        val file = File(documentId)
+        val file = runCatching { containedFile(documentId) }.getOrNull()
+            ?: throw FileNotFoundException(documentId)
         if (!file.exists() || file.isDirectory) throw FileNotFoundException(documentId)
         if (signal?.isCanceled == true) throw FileNotFoundException("Canceled")
         val mime = getTypeForName(file.name)
@@ -356,7 +413,7 @@ class LocalDocumentsProvider : DocumentsProvider() {
             }
 
             val thumbDir = File(ctx.cacheDir, "thumbnails").apply { mkdirs() }
-            val thumbFile = File(thumbDir, file.absolutePath.hashCode().toString() + "_${reqWidth}x${reqHeight}.jpg")
+            val thumbFile = File(thumbDir, thumbKey(file.absolutePath, reqWidth, reqHeight))
             if (!thumbFile.exists() || thumbFile.lastModified() < file.lastModified()) {
                 FileOutputStream(thumbFile).use { out ->
                     bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)

@@ -130,7 +130,8 @@ class PdfViewerActivity : ComponentActivity(), KoinComponent {
 }
 
 private class PdfDoc(
-    private val pfd: ParcelFileDescriptor
+    private val pfd: ParcelFileDescriptor,
+    private val tmpFile: File? = null
 ) : AutoCloseable {
     private val renderer: PdfRenderer = PdfRenderer(pfd)
     val pageCount: Int get() = renderer.pageCount
@@ -146,32 +147,41 @@ private class PdfDoc(
     suspend fun render(pageIndex: Int, viewportW: Int, viewportH: Int, scaleHint: Float): Bitmap =
         withContext(Dispatchers.IO) {
             val page = renderer.openPage(pageIndex)
-            val baseW = page.width
-            val baseH = page.height
-            val bucket = bucket(scaleHint)
+            try {
+                val baseW = page.width
+                val baseH = page.height
+                val bucket = bucket(scaleHint)
 
-            val fitScale = minOf(
-                viewportW.toFloat() / baseW.toFloat(),
-                viewportH.toFloat() / baseH.toFloat()
-            ).coerceAtLeast(0.5f)
+                val fitScale = minOf(
+                    viewportW.toFloat() / baseW.toFloat(),
+                    viewportH.toFloat() / baseH.toFloat()
+                ).coerceAtLeast(0.5f)
 
-            val targetW = (baseW * fitScale * bucket).toInt().coerceAtLeast(64)
-            val targetH = (baseH * fitScale * bucket).toInt().coerceAtLeast(64)
-            val key = "$pageIndex@$bucket@${targetW}x${targetH}"
+                val targetW = (baseW * fitScale * bucket).toInt().coerceIn(64, 2048)
+                val targetH = (baseH * fitScale * bucket).toInt().coerceIn(64, 2048)
+                val key = "$pageIndex@$bucket@${targetW}x${targetH}"
 
-            cache.get(key)?.also { page.close(); return@withContext it }
+                cache.get(key)?.let { return@withContext it }
 
-            val bmp = createBitmap(targetW, targetH)
-            page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
-            page.close()
-            cache.put(key, bmp)
-            bmp
+                val bmp = createBitmap(targetW, targetH)
+                page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
+                val existing = cache.get(key)
+                if (existing != null) {
+                    bmp.recycle()
+                    return@withContext existing
+                }
+                cache.put(key, bmp)
+                bmp
+            } finally {
+                page.close()
+            }
         }
 
     override fun close() {
         // Best-effort close: intentionally silent.
         try { renderer.close() } catch (_: Exception) {}
         try { pfd.close() } catch (_: Exception) {}
+        runCatching { tmpFile?.delete() }
         cache.evictAll()
     }
 
@@ -215,17 +225,22 @@ private class PdfDoc(
                                     FileOutputStream(tmpFile).use { dst -> src.copyTo(dst) }
                                 }
                             }
-                            if (!hasHeader && tmpFile.length() in 1..256) return@withTimeoutOrNull null
+                            if (!hasHeader && tmpFile.length() == 0L) {
+                                runCatching { tmpFile.delete() }
+                                return@withTimeoutOrNull null
+                            }
                             pfd = ParcelFileDescriptor.open(tmpFile, ParcelFileDescriptor.MODE_READ_ONLY)
                         }
 
                         if (pfd != null) {
-                            if (pfd.statSize in 1..256) {
+                            if (pfd.statSize == 0L) {
                                 try { pfd.close() } catch (_: Exception) {}
+                                runCatching { tmpFile?.delete() }
                                 return@withTimeoutOrNull null
                             }
-                            runCatching { PdfDoc(pfd) }.getOrNull() ?: run {
+                            runCatching { PdfDoc(pfd, tmpFile) }.getOrNull() ?: run {
                                 try { pfd.close() } catch (_: Exception) {}
+                                runCatching { tmpFile?.delete() }
                                 null
                             }
                         } else null
@@ -251,30 +266,22 @@ private fun PdfPageImage(
 ) {
     var bmp by remember(pageIndex) { mutableStateOf<Bitmap?>(null) }
 
-    LaunchedEffect(pageIndex, viewportW, viewportH) {
+    LaunchedEffect(pageIndex, viewportW, viewportH, doc) {
+        bmp = null
         snapshotFlow { bucket(scaleForQuality) }
             .distinctUntilChanged()
             .collectLatest { b ->
-                val newBmp = runCatching {
-                    withContext(Dispatchers.IO) {
-                        doc.render(pageIndex, viewportW, viewportH, b)
-                    }
-                }.getOrNull()
-                if (newBmp != null) {
-                    bmp = newBmp // to prevent redraws during zoom
+                val buckets = if (b == 1f) listOf(1f) else listOf(1f, b)
+                for (bb in buckets) {
+                    val newBmp = runCatching {
+                        withContext(Dispatchers.IO) {
+                            doc.render(pageIndex, viewportW, viewportH, bb)
+                        }
+                    }.getOrNull() ?: break
+                    bmp = newBmp
+                    if (bb == b) break
                 }
             }
-    }
-
-    LaunchedEffect(pageIndex, viewportW, viewportH) {
-        if (bmp == null) {
-            val firstBmp = runCatching {
-                withContext(Dispatchers.IO) {
-                    doc.render(pageIndex, viewportW, viewportH, bucket(1f))
-                }
-            }.getOrNull()
-            if (firstBmp != null) bmp = firstBmp
-        }
     }
 
     val darkModeMatrix = remember {
@@ -345,14 +352,18 @@ private fun FullscreenPdfViewer(
 
     val pageCount = doc!!.pageCount
     val pagerState = rememberPagerState(initialPage = 0, pageCount = { pageCount })
+    LaunchedEffect(uri, pageCount) {
+        runCatching { pagerState.scrollToPage(0) }
+    }
     BackHandler { onClose() }
 
     val cfg = LocalConfiguration.current
     val density = LocalDensity.current
-    val viewportW = with(density) { cfg.screenWidthDp.dp.roundToPx() }
-    val viewportH = with(density) { cfg.screenHeightDp.dp.roundToPx() }
+    val fallbackW = with(density) { cfg.screenWidthDp.dp.roundToPx() }
+    val fallbackH = with(density) { cfg.screenHeightDp.dp.roundToPx() }
+    var viewportW by remember(uri) { mutableStateOf(fallbackW) }
+    var viewportH by remember(uri) { mutableStateOf(fallbackH) }
 
-    // Viewer-level input (same pattern you confirmed working)
     val viewerScope = rememberCoroutineScope()
     var currentPageScale by remember { mutableFloatStateOf(1f) }
     var isNavigating by remember { mutableStateOf(false) }
@@ -488,6 +499,14 @@ private fun FullscreenPdfViewer(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
+                    val cw = with(density) { maxWidth.roundToPx() }
+                    val ch = with(density) { maxHeight.roundToPx() }
+                    LaunchedEffect(cw, ch) {
+                        viewportW = cw.coerceAtLeast(64)
+                        viewportH = ch.coerceAtLeast(64)
+                    }
+                    val vw = cw.coerceAtLeast(64)
+                    val vh = ch.coerceAtLeast(64)
                     val scope = rememberCoroutineScope()
                     val minScale = 1f
                     val maxScale = 5f
@@ -499,8 +518,8 @@ private fun FullscreenPdfViewer(
                     }
 
                     fun clampOffset(o: Offset, s: Float): Offset {
-                        val mx = ((s * viewportW - viewportW) / 2f).coerceAtLeast(0f)
-                        val my = ((s * viewportH - viewportH) / 2f).coerceAtLeast(0f)
+                        val mx = ((s * vw - vw) / 2f).coerceAtLeast(0f)
+                        val my = ((s * vh - vh) / 2f).coerceAtLeast(0f)
                         return Offset(o.x.coerceIn(-mx, mx), o.y.coerceIn(-my, my))
                     }
 
@@ -526,8 +545,8 @@ private fun FullscreenPdfViewer(
 
                     LaunchedEffect(page) {
                         if (page == pagerState.currentPage) {
-                            val panStepX = viewportW * 0.25f
-                            val panStepY = viewportH * 0.25f
+                            val panStepX = vw * 0.25f
+                            val panStepY = vh * 0.25f
                             zoomIn = { animateZoomTo((scaleAnim.value + 0.25f).coerceIn(minScale, maxScale)) }
                             zoomOut = {
                                 val t = (scaleAnim.value - 0.25f).coerceIn(minScale, maxScale)
@@ -559,7 +578,7 @@ private fun FullscreenPdfViewer(
                             }
                             .transformable(
                                 state = transformState,
-                                enabled = scaleAnim.value > 1.01f
+                                enabled = true
                             )
                             .graphicsLayer {
                                 translationX = offsetAnim.value.x
@@ -572,8 +591,8 @@ private fun FullscreenPdfViewer(
                         PdfPageImage(
                             doc = doc!!,
                             pageIndex = page,
-                            viewportW = viewportW,
-                            viewportH = viewportH,
+                            viewportW = vw,
+                            viewportH = vh,
                             scaleForQuality = scaleAnim.value,
                             darkModeEnabled = pdfDarkMode,
                             modifier = Modifier.fillMaxSize()
@@ -585,7 +604,7 @@ private fun FullscreenPdfViewer(
     }
     }
 
-    DisposableEffect(Unit) {
+    DisposableEffect(doc) {
         onDispose { doc?.close() }
     }
 }

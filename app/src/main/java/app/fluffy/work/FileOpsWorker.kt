@@ -35,24 +35,27 @@ class FileOpsWorker(appContext: Context, params: WorkerParameters) :
 
         val sources = inputData.getStringArray(KEY_SOURCES)
             ?.map { it.toUri() }
-            ?: return@withContext Result.failure()
+            ?: return@withContext Result.failure(workDataOf("error" to "No sources"))
+        if (sources.isEmpty()) return@withContext Result.failure(workDataOf("error" to "No sources"))
 
         val target = inputData.getString(KEY_TARGET_DIR)
             ?.toUri()
-            ?: return@withContext Result.failure()
+            ?: return@withContext Result.failure(workDataOf("error" to "No target"))
 
         val op = inputData.getString(KEY_OP) ?: OP_COPY
         val overwrite = inputData.getBoolean(KEY_OVERWRITE, false)
 
         val total = sources.size.coerceAtLeast(1)
         sources.forEachIndexed { index, uri ->
-            if (isStopped) return@withContext Result.failure()
+            if (isStopped) throw kotlinx.coroutines.CancellationException("Stopped")
 
             val ok = try {
                 when (op) {
                     OP_MOVE -> io.moveIntoDir(uri, target, overwrite)
                     else -> io.copyIntoDir(uri, target, overwrite)
                 }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
             } catch (e: Exception) {
                 AppLog.e("FileOpsWorker", "failed $op: $uri", e)
                 false

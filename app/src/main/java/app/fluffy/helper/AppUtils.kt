@@ -101,16 +101,18 @@ fun Intent.detectTarget(): OpenTarget {
     }
 }
 
+fun sanitizeCacheName(name: String, fallback: String = "file"): String {
+    val base = name.substringAfterLast('/').substringAfterLast('\\').ifBlank { fallback }
+    return base.replace(Regex("[^A-Za-z0-9._-]"), "_").takeLast(64).ifBlank { fallback }
+}
+
 suspend fun Context.toViewableUri(uri: Uri, displayName: String = "image"): Uri = withContext(Dispatchers.IO) {
     when (uri.scheme) {
         "root", "shizuku" -> {
-            val out = File(
-                cacheDir,
-                "img_${System.currentTimeMillis()}_${displayName.ifBlank { "image" }}"
-            )
+            val safe = sanitizeCacheName(displayName, "image")
+            val out = File.createTempFile("img_${System.currentTimeMillis()}_", "_$safe", cacheDir)
             AppUtilsHelper.io.openIn(uri).use { input -> out.outputStream().use { input.copyTo(it) } }
-            runCatching { FileProvider.getUriForFile(this@toViewableUri, "$packageName.fileprovider", out) }
-                .getOrElse { Uri.fromFile(out) }
+            FileProvider.getUriForFile(this@toViewableUri, "$packageName.fileprovider", out)
         }
         else -> uri
     }
@@ -163,15 +165,13 @@ suspend fun Context.exportForOpenWith(src: Uri, displayName: String): Uri = with
         "content" -> src
         "file" -> {
             val f = File(requireNotNull(src.path))
-            runCatching { FileProvider.getUriForFile(this@exportForOpenWith, "$packageName.fileprovider", f) }
-                .getOrElse { Uri.fromFile(f) }
+            FileProvider.getUriForFile(this@exportForOpenWith, "$packageName.fileprovider", f)
         }
         "root", "shizuku" -> {
-            val safeName = displayName.ifBlank { "item" }
-            val out = File(cacheDir, "export_${System.currentTimeMillis()}_$safeName")
+            val safe = sanitizeCacheName(displayName)
+            val out = File.createTempFile("export_${System.currentTimeMillis()}_", "_$safe", cacheDir)
             AppUtilsHelper.io.openIn(src).use { `in` -> out.outputStream().use { `in`.copyTo(it) } }
-            runCatching { FileProvider.getUriForFile(this@exportForOpenWith, "$packageName.fileprovider", out) }
-                .getOrElse { Uri.fromFile(out) }
+            FileProvider.getUriForFile(this@exportForOpenWith, "$packageName.fileprovider", out)
         }
         else -> src
     }

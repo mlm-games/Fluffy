@@ -5,7 +5,7 @@ import java.io.OutputStream
 
 interface ArchiveEngine {
     data class Entry(val path: String, val isDir: Boolean, val size: Long, val time: Long)
-    data class ListResult(val entries: List<Entry>, val encrypted: Boolean)
+    data class ListResult(val entries: List<Entry>, val encrypted: Boolean, val error: String? = null)
 
     suspend fun list(archiveName: String, open: () -> InputStream, password: CharArray? = null): ListResult
 

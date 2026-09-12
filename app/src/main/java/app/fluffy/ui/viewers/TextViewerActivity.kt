@@ -73,8 +73,18 @@ private fun TextViewerScreen(uri: Uri, title: String, io: SafIo, onClose: () -> 
         runCatching {
             withContext(Dispatchers.IO) {
                 io.openIn(uri).use { input ->
-                    if (input.available() > max) throw IllegalStateException("File too large to preview")
-                    val bytes = input.readBytes()
+                    val out = java.io.ByteArrayOutputStream()
+                    val buf = ByteArray(32 * 1024)
+                    var total = 0L
+                    while (true) {
+                        val n = input.read(buf)
+                        if (n == -1) break
+                        total += n
+                        if (total > max + 1L) throw IllegalStateException("File too large to preview")
+                        out.write(buf, 0, n)
+                    }
+                    if (total > max) throw IllegalStateException("File too large to preview")
+                    val bytes = out.toByteArray()
                     val charset = sniffCharset(bytes) ?: Charsets.UTF_8
                     String(bytes, charset)
                 }

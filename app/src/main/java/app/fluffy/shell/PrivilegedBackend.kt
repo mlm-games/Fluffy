@@ -17,6 +17,9 @@ interface PrivilegedBackend {
     fun mkdirs(path: String): Boolean
     fun delete(path: String): Boolean
     fun rename(oldPath: String, newPath: String): Boolean
+    fun isDirectory(path: String): Boolean
+    fun isFile(path: String): Boolean
+    fun exists(path: String): Boolean
 
     fun readBytes(path: String): ByteArray = openInput(path).use { it.readBytes() }
 
@@ -35,18 +38,43 @@ abstract class BasePrivilegedBackend : PrivilegedBackend {
 
         fun listCommand(path: String): String =
             "cd ${q(path)} 2>/dev/null && " +
-                "(toybox ls -1Ap 2>/dev/null || ls -1Ap 2>/dev/null || busybox ls -1Ap 2>/dev/null) || true"
+                "(toybox ls -1Ap 2>/dev/null || ls -1Ap 2>/dev/null || busybox ls -1Ap 2>/dev/null)"
+
+        fun isDangerousTarget(path: String): Boolean {
+            if (path.isBlank()) return true
+            val canon = runCatching { File(path).canonicalPath }.getOrNull() ?: return true
+            return canon == "/" || canon == "/system" || canon == "/vendor"
+        }
     }
 
     protected abstract fun spawnShellCommand(command: String): Process?
     protected abstract fun unavailableMessage(): String
+    protected abstract fun runTest(command: String): Boolean
+
+    override fun isDirectory(path: String): Boolean = runCatching {
+        if (!isAvailable() || path.isBlank()) false
+        else runTest("test -d ${q(path)}")
+    }.getOrDefault(false)
+
+    override fun isFile(path: String): Boolean = runCatching {
+        if (!isAvailable() || path.isBlank()) false
+        else runTest("test -f ${q(path)}")
+    }.getOrDefault(false)
+
+    override fun exists(path: String): Boolean = runCatching {
+        if (!isAvailable() || path.isBlank()) false
+        else runTest("test -e ${q(path)}")
+    }.getOrDefault(false)
 
     override fun list(path: String): List<Pair<String, Boolean>> {
         if (!isAvailable()) return emptyList()
 
         val process = spawnShellCommand(listCommand(path)) ?: return emptyList()
         val lines = process.inputStream.bufferedReader().use { it.readLines() }
+        runCatching { process.errorStream.bufferedReader().use { it.readText() } }
+        val exit = runCatching { process.waitFor() }.getOrDefault(1)
         process.destroy()
+        if (exit != 0) return emptyList()
 
         return lines
             .filter { it.isNotBlank() }
@@ -58,31 +86,55 @@ abstract class BasePrivilegedBackend : PrivilegedBackend {
     }
 
     override fun openInput(path: String): InputStream {
+        if (!isFile(path)) throw IOException("Not a regular file: $path")
         val process = spawnShellCommand("cat ${q(path)}")
             ?: throw IOException(unavailableMessage())
+        val errDrain = Thread({ runCatching { process.errorStream.bufferedReader().use { it.readText() } } }, "cat-stderr")
+        errDrain.isDaemon = true
+        errDrain.start()
 
         return object : FilterInputStream(process.inputStream) {
+            private var bytesRead = 0L
+            override fun read(): Int {
+                val b = super.read()
+                if (b != -1) bytesRead++
+                return b
+            }
+            override fun read(b: ByteArray, off: Int, len: Int): Int {
+                val n = super.read(b, off, len)
+                if (n > 0) bytesRead += n
+                return n
+            }
             override fun close() {
                 try {
                     super.close()
                 } finally {
+                    val exit = runCatching { process.waitFor() }.getOrDefault(0)
+                    runCatching { errDrain.join(1000) }
                     process.destroy()
+                    if (exit != 0 && bytesRead == 0L) {
+                        throw IOException("Remote read failed (exit=$exit): $path")
+                    }
                 }
             }
         }
     }
 
     override fun openOutput(path: String): OutputStream {
+        if (path.isBlank()) throw IOException("Empty path")
+        if (isDangerousTarget(path)) throw IOException("Refusing to write to $path")
         val parent = File(path).parent ?: "/"
-        spawnShellCommand("mkdir -p ${q(parent)} && rm -f ${q(path)} && touch ${q(path)}")
-            ?.waitFor()
-
-        val process = spawnShellCommand("cat > ${q(path)}")
+        val mkExit = spawnShellCommand("mkdir -p ${q(parent)}")
+            ?.waitFor() ?: 1
+        if (mkExit != 0) throw IOException("Cannot create parent dir: $parent")
+        val tmp = "$path.tmp.${android.os.Process.myPid()}.${System.nanoTime()}"
+        val process = spawnShellCommand("cat > ${q(tmp)}")
             ?: throw IOException(unavailableMessage())
 
         val output = BufferedOutputStream(process.outputStream, BUF)
 
         return object : OutputStream() {
+            private var closed = false
             override fun write(b: Int) = output.write(b)
 
             override fun write(b: ByteArray, off: Int, len: Int) = output.write(b, off, len)
@@ -90,12 +142,23 @@ abstract class BasePrivilegedBackend : PrivilegedBackend {
             override fun flush() = output.flush()
 
             override fun close() {
+                if (closed) return
+                closed = true
                 try {
                     output.flush()
                     output.close()
                 } finally {
-                    runCatching { process.waitFor() }
+                    val exit = runCatching { process.waitFor() }.getOrDefault(1)
                     process.destroy()
+                    if (exit != 0) {
+                        runCatching { spawnShellCommand("rm -f ${q(tmp)}")?.waitFor() }
+                        throw IOException("Remote write failed (exit=$exit): $path")
+                    }
+                    val mvExit = spawnShellCommand("mv -f ${q(tmp)} ${q(path)}")?.waitFor() ?: 1
+                    if (mvExit != 0) {
+                        runCatching { spawnShellCommand("rm -f ${q(tmp)}")?.waitFor() }
+                        throw IOException("Remote commit failed: $path")
+                    }
                 }
             }
         }
@@ -104,11 +167,16 @@ abstract class BasePrivilegedBackend : PrivilegedBackend {
     override fun mkdirs(path: String): Boolean =
         (spawnShellCommand("mkdir -p ${q(path)}")?.waitFor() ?: 1) == 0
 
-    override fun delete(path: String): Boolean =
-        (spawnShellCommand("rm -rf ${q(path)}")?.waitFor() ?: 1) == 0
+    override fun delete(path: String): Boolean {
+        if (isDangerousTarget(path)) return false
+        return (spawnShellCommand("rm -rf ${q(path)}")?.waitFor() ?: 1) == 0
+    }
 
-    override fun rename(oldPath: String, newPath: String): Boolean =
-        (spawnShellCommand("mv ${q(oldPath)} ${q(newPath)}")?.waitFor() ?: 1) == 0
+    override fun rename(oldPath: String, newPath: String): Boolean {
+        if (oldPath.isBlank() || newPath.isBlank()) return false
+        if (isDangerousTarget(oldPath)) return false
+        return (spawnShellCommand("mv -n ${q(oldPath)} ${q(newPath)}")?.waitFor() ?: 1) == 0
+    }
 }
 
 class RootBackend(
@@ -121,6 +189,10 @@ class RootBackend(
     override fun spawnShellCommand(command: String): Process? {
         if (!isAvailable()) return null
         return rootAccess.newProcess(command)
+    }
+
+    override fun runTest(command: String): Boolean {
+        return (spawnShellCommand(command)?.waitFor() ?: 1) == 0
     }
 
     override fun unavailableMessage(): String = "Root not available"
@@ -136,6 +208,10 @@ class ShizukuBackend(
     override fun spawnShellCommand(command: String): Process? {
         if (!isAvailable()) return null
         return shizukuAccess.newProcess(arrayOf("sh", "-c", command))
+    }
+
+    override fun runTest(command: String): Boolean {
+        return (spawnShellCommand(command)?.waitFor() ?: 1) == 0
     }
 
     override fun unavailableMessage(): String = "Shizuku not available"

@@ -303,11 +303,28 @@ private fun loadAudioThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? =
 private fun loadApkIcon(ctx: Context, uri: Uri, size: Int): Bitmap? {
     return try {
         val packageManager = ctx.packageManager
-        val path = if (uri.scheme == "file") uri.path else uri.toString()
-        path?.let { path ->
-            val packageArchiveInfo = packageManager.getPackageArchiveInfo(path, PackageManager.GET_ACTIVITIES)
-            val drawable = packageArchiveInfo?.applicationInfo?.loadIcon(packageManager)
-            (drawable as? BitmapDrawable)?.bitmap?.let { scaleBitmap(it, size) }
+        val apkFile: File = when (uri.scheme) {
+            "file" -> uri.path?.let { File(it) }?.takeIf { it.exists() }
+            "content" -> runCatching {
+                ctx.contentResolver.openInputStream(uri)?.use { input ->
+                    val tmp = File.createTempFile("apk_", ".apk", ctx.cacheDir)
+                    tmp.outputStream().use { input.copyTo(it) }
+                    tmp
+                }
+            }.getOrNull()?.takeIf { it.exists() }
+            else -> null
+        } ?: return null
+        try {
+            val info = packageManager.getPackageArchiveInfo(apkFile.absolutePath, PackageManager.GET_ACTIVITIES)
+                ?: return null
+            val appInfo = info.applicationInfo ?: return null
+            appInfo.sourceDir = apkFile.absolutePath
+            appInfo.publicSourceDir = apkFile.absolutePath
+            val drawable = appInfo.loadIcon(packageManager) ?: return null
+            val bmp = (drawable as? BitmapDrawable)?.bitmap ?: return null
+            ThumbnailHelper.scaleBitmap(bmp, size)
+        } finally {
+            if (uri.scheme == "content") runCatching { apkFile.delete() }
         }
     } catch (e: Exception) {
         null
@@ -465,6 +482,8 @@ fun FileGridItem(
     }
 
     val mainFR = remember { FocusRequester() }
+    val cbFR = remember { FocusRequester() }
+    val extractFR = remember { FocusRequester() }
 
     AnimatedListCard {
         Column(
@@ -472,6 +491,9 @@ fun FileGridItem(
                 .fillMaxWidth()
                 .focusRequester(mainFR)
                 .focusable()
+                .focusProperties {
+                    down = if (model.isArchive && onExtractHere != null) extractFR else cbFR
+                }
                 .semantics { role = Role.Button }
                 .clickable {
                     if (onClick != null) {
@@ -513,6 +535,12 @@ fun FileGridItem(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(2.dp)
+                        .focusRequester(cbFR)
+                        .focusable()
+                        .focusProperties {
+                            up = mainFR
+                            down = if (model.isArchive && onExtractHere != null) extractFR else mainFR
+                        }
                 )
 
                 if (model.isArchive && onExtractHere != null) {
@@ -521,6 +549,9 @@ fun FileGridItem(
                         modifier = Modifier
                             .align(Alignment.BottomEnd)
                             .padding(2.dp)
+                            .focusRequester(extractFR)
+                            .focusable()
+                            .focusProperties { up = cbFR }
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Unarchive,
@@ -566,14 +597,17 @@ fun FileGridItem(
 }
 
 object DirectoryCounter : KoinComponent {
-    private val cache = ConcurrentHashMap<String, Int>()
+    private val cache = object : LinkedHashMap<String, Int>(512, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Int>): Boolean = size > 500
+    }
+    private val lock = Any()
     private val shellIo: ShellIo by inject()
     private val _generation = MutableStateFlow(0)
     val generation: StateFlow<Int> = _generation
 
     suspend fun count(context: Context, uri: Uri): Int = withContext(Dispatchers.IO) {
         val key = uri.toString()
-        cache[key]?.let { return@withContext it }
+        synchronized(lock) { cache[key] }?.let { return@withContext it }
 
         val n = when (uri.scheme) {
             "file" -> {
@@ -606,17 +640,17 @@ object DirectoryCounter : KoinComponent {
             else -> 0
         }
 
-        cache[key] = n
+        synchronized(lock) { cache[key] = n }
         n
     }
 
     fun invalidate(uri: Uri) {
-        cache.remove(uri.toString())
+        synchronized(lock) { cache.remove(uri.toString()) }
         _generation.value++
     }
 
     fun invalidateAll() {
-        cache.clear()
+        synchronized(lock) { cache.clear() }
         _generation.value++
     }
 

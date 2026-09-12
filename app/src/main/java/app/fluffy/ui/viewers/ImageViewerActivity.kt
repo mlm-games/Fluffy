@@ -27,6 +27,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -39,10 +40,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -97,28 +101,22 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
             }
         }
 
-        var allUris = (fromExtras + fromData + fromClip).distinct()
-        var startIndex = intent.getIntExtra(EXTRA_INITIAL_INDEX, 0)
+        val initialUris = (fromExtras + fromData + fromClip).distinct()
+        val initialIndex = intent.getIntExtra(EXTRA_INITIAL_INDEX, 0)
 
-        // If we only have one image, try to find siblings in the directory
-        if (allUris.size == 1) {
-            val singleUri = allUris.first()
-            val originalName = getFileName(singleUri)
-            val discovered = discoverSiblingImages(singleUri)
-            if (discovered.size > 1) {
-                allUris = discovered
-                startIndex = startIndexFor(discovered, singleUri, originalName)
-            }
-        }
-
-        if (allUris.isEmpty()) {
+        if (initialUris.isEmpty()) {
             finish()
             return
         }
 
-        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        runCatching {
+            val flags = intent.flags and Intent.FLAG_GRANT_READ_URI_PERMISSION
+            if (flags != 0) {
+                for (u in initialUris) runCatching { contentResolver.takePersistableUriPermission(u, Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            }
+        }
 
-        val title = intent.getStringExtra(EXTRA_TITLE) ?: deriveTitle(allUris, startIndex)
+        val titleExtra = intent.getStringExtra(EXTRA_TITLE)
 
         setContent {
             val s = settings.settingsFlow.collectAsState(initial = AppSettings()).value
@@ -128,11 +126,34 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
                 else -> true
             }
             FluffyTheme(darkTheme = dark, useAuroraTheme = s.useAuroraTheme) {
-                FullscreenImageViewer(
-                    images = allUris.map { it.toString() },
-                    initialPage = startIndex,
-                    onClose = { finish() }
-                )
+                var images by remember { mutableStateOf<List<Uri>?>(if (initialUris.size == 1) null else initialUris) }
+                var startIndex by remember { mutableIntStateOf(initialIndex.coerceIn(0, (images?.size ?: 1) - 1)) }
+                LaunchedEffect(initialUris) {
+                    if (images == null) {
+                        images = withContext(Dispatchers.IO) {
+                            val singleUri = initialUris.first()
+                            val originalName = getFileName(singleUri)
+                            val discovered = runCatching { discoverSiblingImages(singleUri) }.getOrDefault(listOf(singleUri))
+                            if (discovered.size > 1) discovered else initialUris
+                        }
+                        val finalList = images ?: initialUris
+                        startIndex = if (finalList.size > 1 && initialUris.size == 1) {
+                            startIndexFor(finalList, initialUris.first(), getFileName(initialUris.first()))
+                        } else initialIndex.coerceIn(0, finalList.size - 1)
+                    }
+                }
+                if (images == null) {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    val title = titleExtra ?: deriveTitle(images!!, startIndex)
+                    FullscreenImageViewer(
+                        images = images!!.map { it.toString() },
+                        initialPage = startIndex,
+                        onClose = { finish() }
+                    )
+                }
             }
         }
     }
@@ -702,7 +723,7 @@ fun FullscreenImageViewer(
                             }
                             .transformable(
                                 state = transformState,
-                                enabled = scaleAnim.value > 1.01f
+                                enabled = true
                             )
                             .graphicsLayer {
                                 translationX = offsetAnim.value.x

@@ -279,12 +279,12 @@ class MainActivity : ComponentActivity() {
                 var showTaskCenter by rememberSaveable { mutableStateOf(false) }
                 val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-                // Refresh after jobs finish
-                val seenFinished = remember { mutableSetOf<String>() }
+                var seenFinished by rememberSaveable { mutableStateOf(emptySet<String>()) }
                 LaunchedEffect(workInfos) {
                     var refreshNeeded = false
                     workInfos.forEach { wi ->
-                        if (wi.state.isFinished && seenFinished.add(wi.id.toString())) {
+                        if (wi.state.isFinished && wi.id.toString() !in seenFinished) {
+                            seenFinished = seenFinished + wi.id.toString()
                             refreshNeeded = true
                             getCurrentDirUri(browserState)?.let { DirectoryCounter.invalidate(it) }
                             DirectoryCounter.invalidateAll()
@@ -293,13 +293,12 @@ class MainActivity : ComponentActivity() {
                     if (refreshNeeded) filesVM.refreshCurrentDir()
                 }
 
-                // Auto-open task center when new RUNNING appears
-                val seenRunning = remember { mutableSetOf<String>() }
+                var seenRunning by rememberSaveable { mutableStateOf(emptySet<String>()) }
                 LaunchedEffect(workInfos) {
                     val running = workInfos.filter { it.state == WorkInfo.State.RUNNING }
                     val newId = running.map { it.id.toString() }.firstOrNull { it !in seenRunning }
                     if (newId != null) {
-                        seenRunning.addAll(running.map { it.id.toString() })
+                        seenRunning = seenRunning + running.map { it.id.toString() }.toSet()
                         showTaskCenter = true
                     }
                 }
@@ -314,12 +313,16 @@ class MainActivity : ComponentActivity() {
                             } else {
                                 lifecycleScope.launch {
                                     val display = io.queryDisplayName(action.uri)
-                                    openContent(
-                                        src = action.uri,
-                                        displayName = display,
-                                        preferBuiltInViewers = s.preferBuiltInViewers,
-                                        preferMime = s.preferContentResolverMime
-                                    )
+                                    runCatching {
+                                        openContent(
+                                            src = action.uri,
+                                            displayName = display,
+                                            preferBuiltInViewers = s.preferBuiltInViewers,
+                                            preferMime = s.preferContentResolverMime
+                                        )
+                                    }.onFailure {
+                                        AppLog.w("MainActivity", "openContent failed", it)
+                                    }
                                     filesVM.clearPendingAction()
                                 }
                             }
@@ -400,7 +403,11 @@ class MainActivity : ComponentActivity() {
                                             }
                                         },
 
-                                        onOpenSettings = { backStack.add(ScreenKey.Settings) },
+                                        onOpenSettings = {
+                                            if (backStack.lastOrNull() != ScreenKey.Settings) {
+                                                backStack.add(ScreenKey.Settings)
+                                            }
+                                        },
                                         onOpenTasks = { showTaskCenter = true },
                                         onAddBookmark = { name ->
                                             if (name.isNotBlank()) {
@@ -875,23 +882,42 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun returnCreatedDocument(parentUri: Uri, displayName: String) {
+        if (displayName.isBlank() || displayName == "." || displayName == ".." ||
+            '/' in displayName || '\\' in displayName || '\u0000' in displayName
+        ) {
+            setResult(RESULT_CANCELED); finish(); return
+        }
         val parentId = uriToDocumentId(parentUri) ?: run {
             setResult(RESULT_CANCELED); finish(); return
         }
         val authority = getAuthorityForResult()
-        // Try to create via DocumentsProvider if parent is a file path
         val file = File(parentId)
-        val targetDocId = if (file.isDirectory) {
+        if (!file.isDirectory || !file.canWrite()) {
+            setResult(RESULT_CANCELED); finish(); return
+        }
+        val targetDocId: String = run {
             val target = File(file, displayName)
+            val canonParent = runCatching { file.canonicalPath }.getOrNull()
+            if (canonParent == null) {
+                setResult(RESULT_CANCELED); finish(); return
+            }
+            val canonTarget = runCatching { target.canonicalPath }.getOrNull()
+            if (canonTarget == null) {
+                setResult(RESULT_CANCELED); finish(); return
+            }
+            if (canonTarget != canonParent && !canonTarget.startsWith("$canonParent/")) {
+                setResult(RESULT_CANCELED); finish(); return
+            }
             try {
-                // Use provider's createDocument logic locally for file-backed tree
-                if (!target.exists()) target.createNewFile()
+                if (!target.exists() && !target.createNewFile()) {
+                    setResult(RESULT_CANCELED); finish(); return
+                }
                 target.absolutePath
             } catch (e: Exception) {
-                AppLog.w("MainActivity", "createNewFile failed, returning path anyway: ${target.absolutePath}", e)
-                target.absolutePath
+                AppLog.w("MainActivity", "createNewFile failed: ${target.absolutePath}", e)
+                setResult(RESULT_CANCELED); finish(); return
             }
-        } else parentId
+        }
 
         val docUri = LocalDocumentsProvider.docUri(targetDocId, authority)
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
@@ -937,20 +963,11 @@ class MainActivity : ComponentActivity() {
                 clipData = ClipData.newUri(contentResolver, "picked", shareable)
                 addFlags(flags)
             }
+            callingPackage?.let { pkg ->
+                runCatching { grantUriPermission(pkg, shareable, flags) }
+            }
             setResult(RESULT_OK, resultIntent)
             finish()
-        }
-    }
-
-    private fun childExists(parent: Uri, name: String): Boolean {
-        return when (parent.scheme) {
-            "file" -> File(File(parent.path!!), name).exists()
-            "content" -> {
-                val p = DocumentFile.fromTreeUri(this, parent)
-                    ?: DocumentFile.fromSingleUri(this, parent)
-                p?.findFile(name) != null
-            }
-            else -> false
         }
     }
 

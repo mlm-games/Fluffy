@@ -6,7 +6,6 @@ import app.fluffy.work.Create7zWorker
 import app.fluffy.work.CreateArchiveWorker
 import app.fluffy.work.ExtractArchiveWorker
 import app.fluffy.work.FileOpsWorker
-import java.util.concurrent.TimeUnit
 
 class ArchiveJobManager(
     private val workManager: WorkManager,
@@ -21,12 +20,11 @@ class ArchiveJobManager(
             ExtractArchiveWorker.KEY_ARCHIVE to archive.toString(),
             ExtractArchiveWorker.KEY_TARGET_DIR to targetDir.toString(),
             ExtractArchiveWorker.KEY_PASSWORD to (password ?: ""),
-            ExtractArchiveWorker.KEY_INCLUDE_PATHS to (includePaths?.toTypedArray() ?: emptyArray())
+            ExtractArchiveWorker.KEY_INCLUDE_PATHS to (includePaths?.toTypedArray() ?: emptyArray<String>())
         )
         val req = OneTimeWorkRequestBuilder<ExtractArchiveWorker>()
             .addTag(TAG_ALL).addTag(TAG_EXTRACT)
             .setInputData(data)
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
         workManager.enqueue(req)
         return req.id.toString()
@@ -50,7 +48,6 @@ class ArchiveJobManager(
                     CreateArchiveWorker.KEY_OVERWRITE to overwrite
                 )
             )
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
         workManager.enqueue(req)
         return req.id.toString()
@@ -74,7 +71,6 @@ class ArchiveJobManager(
                     Create7zWorker.KEY_OVERWRITE to overwrite
                 )
             )
-            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, TimeUnit.SECONDS)
             .build()
         workManager.enqueue(req)
         return req.id.toString()
@@ -121,4 +117,3 @@ class ArchiveJobManager(
         const val TAG_MOVE = "move"
     }
 }
-

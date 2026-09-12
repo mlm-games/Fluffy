@@ -24,6 +24,7 @@ import org.koin.core.component.inject
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
+import kotlin.math.roundToInt
 
 class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params), KoinComponent {
 
@@ -35,62 +36,145 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         setForeground(getForegroundInfo())
-        val sourcesIn = inputData.getStringArray(KEY_SOURCES)?.map { it.toUri() } ?: return@withContext Result.failure()
-        val targetDir = inputData.getString(KEY_TARGET_DIR)?.toUri() ?: return@withContext Result.failure()
-        val outName = inputData.getString(KEY_OUT_NAME)?.ifBlank { "archive.zip" } ?: "archive.zip"
-        val password = inputData.getString(KEY_PASSWORD)?.takeIf { it.isNotEmpty() }?.toCharArray()
-        val overwrite = inputData.getBoolean(KEY_OVERWRITE, false)
+        try {
+            if (isStopped) throw kotlinx.coroutines.CancellationException("Stopped")
+            val sourcesIn = inputData.getStringArray(KEY_SOURCES)?.map { it.toUri() } ?: return@withContext Result.failure(workDataOf("error" to "No sources"))
+            if (sourcesIn.isEmpty()) return@withContext Result.failure(workDataOf("error" to "No sources"))
+            val targetDir = inputData.getString(KEY_TARGET_DIR)?.toUri() ?: return@withContext Result.failure(workDataOf("error" to "No target"))
+            val outName = inputData.getString(KEY_OUT_NAME)?.ifBlank { "archive.zip" } ?: "archive.zip"
+            if ('/' in outName || outName == "." || outName == "..") {
+                return@withContext Result.failure(workDataOf("error" to "Invalid name"))
+            }
+            val password = inputData.getString(KEY_PASSWORD)?.takeIf { it.isNotEmpty() }?.toCharArray()
+            val overwrite = inputData.getBoolean(KEY_OVERWRITE, false)
 
-        val level = settings.settingsFlow.first().zipCompressionLevel.coerceIn(0, 9)
+            val level = settings.settingsFlow.first().zipCompressionLevel.roundToInt().coerceIn(0, 9)
 
-        val pairs = mutableListOf<Pair<String, () -> InputStream>>()
-        for (src in sourcesIn) {
-            collectFilesRec(src, io.queryDisplayName(src), pairs)
+            if (!overwrite && io.childExists(targetDir, outName)) {
+                return@withContext Result.failure(workDataOf("error" to "Exists: $outName"))
+            }
+
+            val pairs = mutableListOf<Pair<String, () -> InputStream>>()
+            val seen = HashSet<String>()
+            for (src in sourcesIn) {
+                if (isStopped) throw kotlinx.coroutines.CancellationException("Stopped")
+                collectFilesRec(src, sanitizeEntry(io.queryDisplayName(src)), pairs, seen, isTopLevel = true)
+            }
+            if (pairs.isEmpty()) return@withContext Result.failure(workDataOf("error" to "Nothing to archive"))
+
+            val outUri = io.createFile(targetDir, outName, "application/zip", overwrite = overwrite)
+            val writeTarget: () -> OutputStream = { io.openOut(outUri) }
+
+            setProgress(workDataOf("progress" to 0f))
+
+            try {
+                archive.createZip(
+                    sources = pairs,
+                    writeTarget = writeTarget,
+                    compressionLevel = level,
+                    password = password
+                ) { done, total ->
+                    val frac = if (total > 0) done.toFloat() / total else 0f
+                    setProgressAsync(workDataOf("progress" to frac))
+                }
+            } catch (e: Exception) {
+                runCatching { io.delete(outUri) }
+                throw e
+            }
+
+            setProgressAsync(workDataOf("progress" to 1f))
+            Result.success()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            app.fluffy.util.AppLog.e("CreateArchiveWorker", "create zip failed", e)
+            Result.failure(workDataOf("error" to (e.message ?: e.toString())))
         }
+    }
 
-        val outUri = io.createFile(targetDir, outName, "application/zip", overwrite = overwrite)
-        val writeTarget: () -> OutputStream = { io.openOut(outUri) }
-
-        setProgress(workDataOf("progress" to 0f))
-
-        archive.createZip(
-            sources = pairs,
-            writeTarget = writeTarget,
-            compressionLevel = level,
-            password = password
-        ) { done, total ->
-            val frac = if (total > 0) done.toFloat() / total else 0f
-            setProgressAsync(workDataOf("progress" to frac))
-        }
-
-        setProgressAsync(workDataOf("progress" to 1f))
-        Result.success()
+    private fun sanitizeEntry(name: String): String {
+        val base = name.substringAfterLast('/').substringAfterLast('\\').ifBlank { "item" }
+        if (base == "." || base == "..") return "item"
+        return base.replace(Regex("[:\\\\]"), "_").trimStart('/').ifBlank { "item" }
     }
 
     private fun collectFilesRec(
         uri: Uri,
         relPath: String,
-        out: MutableList<Pair<String, () -> InputStream>>
+        out: MutableList<Pair<String, () -> InputStream>>,
+        seen: MutableSet<String>,
+        isTopLevel: Boolean = false,
+        depth: Int = 0
     ) {
+        if (isStopped) throw kotlinx.coroutines.CancellationException("Stopped")
+        if (isStopped) throw kotlinx.coroutines.CancellationException("Stopped")
+        if (depth > 64) throw java.io.IOException("Max depth exceeded")
+        val safeRel = relPath.trim().replace('\\', '/').trimStart('/').ifBlank { "item" }
+        if (safeRel.split('/').any { it == "." || it == ".." || it.isBlank() }) {
+            throw java.io.IOException("Invalid entry: $relPath")
+        }
+        if (uri.scheme == "root" || uri.scheme == "shizuku") {
+            val isFile = runCatching { io.openIn(uri).close() }.isSuccess
+            if (isFile) {
+                val key = if (seen.add(safeRel)) safeRel else disambiguate(safeRel, seen)
+                out += key to { io.openIn(uri) }
+            } else {
+                val kids = runCatching { io.listShell(uri) }.getOrDefault(emptyList())
+                if (kids.isEmpty()) {
+                    val dirKey = "${safeRel.trimEnd('/')}/"
+                    if (seen.add(dirKey)) out += dirKey to { java.io.ByteArrayInputStream(ByteArray(0)) }
+                } else {
+                    kids.forEach { child ->
+                        collectFilesRec(child.uri, "$safeRel/${child.name}", out, seen, depth = depth + 1)
+                    }
+                }
+            }
+            return
+        }
         val df = io.docFileFromUri(uri)
         if (uri.scheme == "content" && df != null) {
             if (df.isDirectory) {
-                df.listFiles().forEach { child ->
-                    val childName = "${relPath.trimEnd('/')}/${child.name ?: "item"}"
-                    collectFilesRec(child.uri, childName, out)
+                val kids = df.listFiles()
+                if (kids.isEmpty()) {
+                    val dirKey = "${safeRel.trimEnd('/')}/"
+                    if (seen.add(dirKey)) out += dirKey to { java.io.ByteArrayInputStream(ByteArray(0)) }
+                } else {
+                    kids.forEach { child ->
+                        val childName = "${safeRel.trimEnd('/')}/${child.name ?: "item"}"
+                        collectFilesRec(child.uri, childName, out, seen, depth = depth + 1)
+                    }
                 }
             } else {
-                out += relPath to { io.openIn(uri) }
+                val key = if (seen.add(safeRel)) safeRel else disambiguate(safeRel, seen)
+                out += key to { io.openIn(uri) }
             }
         } else {
             val f = File(requireNotNull(uri.path))
+            if (java.nio.file.Files.isSymbolicLink(f.toPath())) return
             if (f.isDirectory) {
-                f.listFiles()?.forEach { child ->
-                    collectFilesRec(Uri.fromFile(child), "${relPath.trimEnd('/')}/${child.name}", out)
+                val kids = f.listFiles()
+                if (kids.isNullOrEmpty()) {
+                    val dirKey = "${safeRel.trimEnd('/')}/"
+                    if (seen.add(dirKey)) out += dirKey to { java.io.ByteArrayInputStream(ByteArray(0)) }
+                } else {
+                    kids.forEach { child ->
+                        collectFilesRec(Uri.fromFile(child), "${safeRel.trimEnd('/')}/${child.name}", out, seen, depth = depth + 1)
+                    }
                 }
             } else {
-                out += relPath to { f.inputStream() }
+                val key = if (seen.add(safeRel)) safeRel else disambiguate(safeRel, seen)
+                out += key to { f.inputStream() }
             }
+        }
+    }
+
+    private fun disambiguate(base: String, seen: MutableSet<String>): String {
+        var i = 2
+        while (true) {
+            val dot = base.lastIndexOf('.')
+            val cand = if (dot > 0) "${base.substring(0, dot)}_$i${base.substring(dot)}" else "${base}_$i"
+            if (seen.add(cand)) return cand
+            i++
         }
     }
 
@@ -132,4 +216,3 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
         const val KEY_OVERWRITE = "overwrite"
     }
 }
-

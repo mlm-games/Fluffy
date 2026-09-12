@@ -28,6 +28,11 @@ class ShellIo(
     fun renameShizuku(oldPath: String, newPath: String): Boolean =
         shizukuBackend.rename(oldPath, newPath)
 
+    fun isDirRoot(path: String): Boolean = rootBackend.isDirectory(path)
+    fun isFileRoot(path: String): Boolean = rootBackend.isFile(path)
+    fun isDirShizuku(path: String): Boolean = shizukuBackend.isDirectory(path)
+    fun isFileShizuku(path: String): Boolean = shizukuBackend.isFile(path)
+
     fun readBytesRoot(path: String): ByteArray = rootBackend.readBytes(path)
     fun readBytesShizuku(path: String): ByteArray = shizukuBackend.readBytes(path)
 

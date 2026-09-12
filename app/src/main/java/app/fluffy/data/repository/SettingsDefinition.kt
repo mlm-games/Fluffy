@@ -127,7 +127,7 @@ data class AppSettings(
         min = 0f, max = 9f, step = 1f,
         key = "zip_level"
     )
-    val zipCompressionLevel: Int = 5,
+    val zipCompressionLevel: Float = 5f,
 
     @Setting(
         title = "Enable Root access",

@@ -52,7 +52,9 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -101,12 +103,17 @@ fun ArchiveViewerScreen(
     var loading by remember { mutableStateOf(true) }
     var encrypted by remember { mutableStateOf(false) }
     var askPassword by remember { mutableStateOf(false) }
-    var password by remember { mutableStateOf("") }
+    var password by rememberSaveable(archiveUri) { mutableStateOf("") }
     var error by remember { mutableStateOf<String?>(null) }
     var canOpenAsFolder by remember { mutableStateOf(false) }
     var selectionMode by remember { mutableStateOf(false) }
     val selected = remember { mutableStateMapOf<String, Boolean>() }
-    var currentPath by remember { mutableStateOf("") }
+    var currentPath by rememberSaveable(archiveUri) { mutableStateOf("") }
+
+    BackHandler(enabled = currentPath.isNotBlank()) {
+        val parent = currentPath.trimEnd('/').substringBeforeLast('/', "")
+        currentPath = if (parent.isNotBlank()) "$parent/" else ""
+    }
 
     val settings = settingsRepo.settingsFlow.collectAsState(initial = AppSettings()).value
 
@@ -151,6 +158,12 @@ fun ArchiveViewerScreen(
             snackBarManager.show("No app available to open this file")
             return
         }
+        runCatching {
+            ctx.grantUriPermission(
+                ctx.packageName, finalUri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
+        }
         scope.launch {
             ctx.openContent(
                 src = finalUri,
@@ -175,9 +188,8 @@ fun ArchiveViewerScreen(
         val mimeType = doc?.type ?: ""
         val fileName = name.lowercase()
 
-        val isZipLike = ArchiveTypes.infer(fileName) == ArchiveTypes.Kind.ZIP
+        val isZipLike = ArchiveTypes.infer(fileName)?.let { it == ArchiveTypes.Kind.ZIP } == true
 
-        // If DocumentFile reports it as directory but it has no archive traits, allow open-as-folder
         if (doc?.isDirectory == true && mimeType.startsWith("vnd.android.document") ) {
             loading = false
             error = "Selected item is a folder."
@@ -229,7 +241,9 @@ fun ArchiveViewerScreen(
             if (encrypted && password.isBlank()) {
                 askPassword = true
             }
-            // Handle parser edge cases
+            if (listing.isEmpty() && res.error != null) {
+                error = res.error
+            }
             if (listing.isEmpty() && isZipLike) {
                 val fb = withContext(Dispatchers.IO) { listWithCommonsZip() }
                 if (fb.isNotEmpty()) listing = fb
@@ -329,7 +343,9 @@ fun ArchiveViewerScreen(
 
                                 val pm = ctx.packageManager
                                 if (intent.resolveActivity(pm) != null) {
-                                    ctx.startActivity(intent)
+                                    runCatching { ctx.startActivity(intent) }.onFailure {
+                                        snackBarManager.show("Cannot launch installer")
+                                    }
                                 } else {
                                     snackBarManager.show("No installer found")
                                 }
@@ -431,7 +447,11 @@ fun ArchiveViewerScreen(
                                         },
                                         trailingContent = {
                                             if (selectionMode) {
-                                                val fullKey = currentPath + e.path.trimEnd('/')
+                                                val fullKey = if (e.isDir) {
+                                                    currentPath + e.path.trimEnd('/') + "/"
+                                                } else {
+                                                    currentPath + e.path
+                                                }
                                                 val checked = selected[fullKey] == true
                                                 Checkbox(
                                                     checked = checked,
@@ -464,7 +484,7 @@ fun ArchiveViewerScreen(
     }
 
     if (askPassword) {
-        var local by remember { mutableStateOf("") }
+        var local by rememberSaveable { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { askPassword = false },
             title = { Text("Password Required") },
@@ -523,8 +543,11 @@ private suspend fun extractEntryToCache(
     try {
         fun norm(p: String) = p.trim().trimStart('/').replace('\\', '/')
         val cleanTarget = norm(pathInArchive)
-        val outFileName = cleanTarget.substringAfterLast('/').ifEmpty { "item" }
-        val out = File(ctx.cacheDir, "preview_${System.currentTimeMillis()}_$outFileName")
+        if (cleanTarget.isBlank() || cleanTarget.split('/').any { it == ".." || it == "." }) return@withContext null
+        val rawName = cleanTarget.substringAfterLast('/').ifEmpty { "item" }
+        val safeName = rawName.replace(Regex("[^A-Za-z0-9._-]"), "_").takeLast(64).ifBlank { "item" }
+        val out = File.createTempFile("preview_", "_$safeName", ctx.cacheDir)
+        var found = false
 
         archiveEngine.extractAll(
             archiveName.ifBlank { "archive" },
@@ -537,13 +560,21 @@ private suspend fun extractEntryToCache(
                         override fun write(b: ByteArray, off: Int, len: Int) {}
                     }
                 } else {
+                    found = true
                     FileOutputStream(out)
                 }
             },
             password = pwd?.toCharArray(),
             onProgress = { _, _ -> }
         )
-        if (out.exists() && out.length() > 0) Uri.fromFile(out) else null
+        if (found && out.exists() && out.length() > 0) {
+            runCatching {
+                FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", out)
+            }.getOrElse { Uri.fromFile(out) }
+        } else {
+            runCatching { out.delete() }
+            null
+        }
     } catch (e: Exception) {
         AppLog.w("ArchiveViewer", "extractEntryToCache failed: $pathInArchive", e)
         null

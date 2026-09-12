@@ -33,6 +33,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -53,7 +54,7 @@ fun SliderSettingDialog(
     onDismiss: () -> Unit,
     onValueSelected: (Float) -> Unit
 ) {
-    var sliderValue by remember { mutableFloatStateOf(currentValue) }
+    var sliderValue by remember(title, currentValue) { mutableFloatStateOf(currentValue) }
 
     FluffyDialog(
         onDismissRequest = onDismiss,
@@ -106,11 +107,11 @@ fun SliderSettingDialog(
             Slider(
                 value = sliderValue,
                 onValueChange = {
-                    val steps = ((it - min) / step).toInt()
-                    sliderValue = min + (steps * step)
+                    val steps = ((it - min) / step).roundToInt()
+                    sliderValue = (min + (steps * step)).coerceIn(min, max)
                 },
                 valueRange = min..max,
-                steps = ((max - min) / step).toInt() - 1,
+                steps = (((max - min) / step).roundToInt() - 1).coerceAtLeast(0),
                 colors = SliderDefaults.colors(
                     thumbColor = MaterialTheme.colorScheme.primary,
                     activeTrackColor = MaterialTheme.colorScheme.primary,

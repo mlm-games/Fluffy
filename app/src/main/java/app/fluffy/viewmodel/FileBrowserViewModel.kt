@@ -438,12 +438,14 @@ class FileBrowserViewModel(
             val location = BrowseLocation.FileSystem(file)
             val base = listOf(BrowseLocation.QuickAccess)
             val newStack = base + location
+            val items = withContext(Dispatchers.IO) { loadFileSystemItems(file) }
+            _state.value.selectedItems.clear()
             _state.value = _state.value.copy(
                 currentLocation = location,
                 currentFile = file,
                 currentDir = null,
                 stack = newStack,
-                fileItems = loadFileSystemItems(file),
+                fileItems = items,
                 items = emptyList(),
                 shellItems = emptyList(),
                 quickAccessItems = emptyList(),
@@ -461,28 +463,52 @@ class FileBrowserViewModel(
     }
 
     fun openRoot(uri: Uri) { // for picked SAF trees; not used for root/shizuku
-        val location = BrowseLocation.SAF(uri)
-        _state.value = FileBrowserState(
-            currentLocation = location,
-            currentDir = uri,
-            stack = listOf(BrowseLocation.QuickAccess, location),
-            items = io.listChildren(uri)
-        )
-    }
-
-    fun openDir(uri: Uri) {
         viewModelScope.launch {
             val location = BrowseLocation.SAF(uri)
             val st = _state.value
+            val items = withContext(Dispatchers.IO) {
+                runCatching { io.listChildren(uri) }.getOrDefault(emptyList())
+            }
+            _state.value.selectedItems.clear()
+            _state.value = st.copy(
+                currentLocation = location,
+                currentDir = uri,
+                stack = listOf(BrowseLocation.QuickAccess, location),
+                items = filtered(items),
+                shellItems = emptyList(),
+                fileItems = emptyList(),
+                quickAccessItems = emptyList(),
+                error = null
+            )
+        }
+    }
+
+    fun openDir(uri: Uri, fromHistory: Boolean = false) {
+        viewModelScope.launch {
+            val location = BrowseLocation.SAF(uri)
+            val st = _state.value
+            if (st.currentDir == uri && st.currentLocation == location) {
+                refresh()
+                return@launch
+            }
             val anchored = if (st.stack.isNotEmpty() && st.stack.first() is BrowseLocation.QuickAccess)
                 st.stack else listOf(BrowseLocation.QuickAccess)
+            val newStack = if (fromHistory) {
+                anchored + location
+            } else {
+                val idx = anchored.indexOf(location)
+                if (idx >= 0) anchored.take(idx + 1) else anchored + location
+            }
 
             if (uri.scheme == "root" || uri.scheme == "shizuku") {
-                val shellList = withContext(Dispatchers.IO) { io.listShell(uri) }
+                val shellList = withContext(Dispatchers.IO) {
+                    runCatching { io.listShell(uri) }.getOrDefault(emptyList())
+                }
+                _state.value.selectedItems.clear()
                 _state.value = st.copy(
                     currentLocation = BrowseLocation.SAF(uri),
                     currentDir = uri,
-                    stack = anchored + BrowseLocation.SAF(uri),
+                    stack = newStack,
                     shellItems = filteredShell(shellList),
                     items = emptyList(),
                     fileItems = emptyList(),
@@ -490,11 +516,14 @@ class FileBrowserViewModel(
                     error = null
                 )
             } else {
-                val safList = withContext(Dispatchers.IO) { io.listChildren(uri) }
+                val safList = withContext(Dispatchers.IO) {
+                    runCatching { io.listChildren(uri) }.getOrDefault(emptyList())
+                }
+                _state.value.selectedItems.clear()
                 _state.value = st.copy(
                     currentLocation = BrowseLocation.SAF(uri),
                     currentDir = uri,
-                    stack = anchored + BrowseLocation.SAF(uri),
+                    stack = newStack,
                     items = filtered(safList),
                     shellItems = emptyList(),
                     fileItems = emptyList(),
@@ -511,6 +540,7 @@ class FileBrowserViewModel(
             is BrowseLocation.FileSystem -> {
                 val parent = current.file.parentFile
                 if (parent != null && parent.exists()) {
+                    _state.value = st.copy(stack = if (st.stack.size > 1) st.stack.dropLast(1) else st.stack)
                     openFileSystemPath(parent)
                 } else if (st.stack.size > 1) {
                     val previous = st.stack.dropLast(1).last()
@@ -524,9 +554,11 @@ class FileBrowserViewModel(
                 if (cur != null && (cur.scheme == "root" || cur.scheme == "shizuku")) {
                     val parent = upOfShell(cur)
                     if (parent != null) {
-                        openDir(parent)
+                        _state.value = _state.value.copy(
+                            stack = if (_state.value.stack.size > 1) _state.value.stack.dropLast(1) else _state.value.stack
+                        )
+                        openDir(parent, fromHistory = true)
                     } else {
-                        // We are at "/" for this scheme — go back to Quick Access
                         showQuickAccess()
                     }
                 } else {
@@ -554,33 +586,46 @@ class FileBrowserViewModel(
     }
 
     private fun navigateToLocation(location: BrowseLocation) {
+        val st = _state.value
+        val popped = if (st.stack.size > 1) st.stack.dropLast(1) else st.stack
+        _state.value = st.copy(stack = popped)
         when (location) {
             is BrowseLocation.FileSystem -> openFileSystemPath(location.file)
-            is BrowseLocation.SAF -> openDir(location.uri)
+            is BrowseLocation.SAF -> openDir(location.uri, fromHistory = true)
             is BrowseLocation.QuickAccess -> showQuickAccess()
         }
     }
 
 
     fun refresh() {
-        updatePermissionFlag()
-        val st = _state.value
-        when (val location = st.currentLocation) {
-            is BrowseLocation.FileSystem -> {
-                _state.value = st.copy(fileItems = loadFileSystemItems(location.file))
-            }
-            is BrowseLocation.SAF -> {
-                val uri = location.uri
-                if (uri.scheme == "root" || uri.scheme == "shizuku") {
-                    _state.value = st.copy(shellItems = filteredShell(io.listShell(uri)))
-                } else {
-                    _state.value = st.copy(items = filtered(io.listChildren(uri)))
+        viewModelScope.launch {
+            updatePermissionFlag()
+            val st = _state.value
+            when (val location = st.currentLocation) {
+                is BrowseLocation.FileSystem -> {
+                    val items = withContext(Dispatchers.IO) { loadFileSystemItems(location.file) }
+                    _state.value = _state.value.copy(fileItems = items)
                 }
+                is BrowseLocation.SAF -> {
+                    val uri = location.uri
+                    if (uri.scheme == "root" || uri.scheme == "shizuku") {
+                        val items = withContext(Dispatchers.IO) {
+                            runCatching { io.listShell(uri) }.getOrDefault(emptyList())
+                        }
+                        _state.value = _state.value.copy(shellItems = filteredShell(items))
+                    } else {
+                        val items = withContext(Dispatchers.IO) {
+                            runCatching { io.listChildren(uri) }.getOrDefault(emptyList())
+                        }
+                        _state.value = _state.value.copy(items = filtered(items))
+                    }
+                }
+                is BrowseLocation.QuickAccess -> {
+                    val items = withContext(Dispatchers.IO) { getQuickAccessItems() }
+                    _state.value = _state.value.copy(quickAccessItems = items)
+                }
+                null -> {}
             }
-            is BrowseLocation.QuickAccess -> {
-                _state.value = st.copy(quickAccessItems = getQuickAccessItems())
-            }
-            null -> {}
         }
     }
 
@@ -626,21 +671,57 @@ class FileBrowserViewModel(
         _state.value = _state.value.copy(pendingAction = PendingAction.None)
     }
 
+    fun toggleSelection(uri: Uri) {
+        val list = _state.value.selectedItems
+        if (list.contains(uri)) list.remove(uri) else list.add(uri)
+        _state.value = _state.value.copy()
+    }
+
+    fun setSelected(uris: Collection<Uri>) {
+        val list = _state.value.selectedItems
+        list.clear()
+        list.addAll(uris)
+        _state.value = _state.value.copy()
+    }
+
+    private fun validateNewName(name: String): Boolean {
+        if (name.isBlank() || name == "." || name == "..") {
+            viewModelScope.launch { snackbarManager.show("Invalid name") }
+            return false
+        }
+        if ('/' in name || '\\' in name || '\u0000' in name) {
+            viewModelScope.launch { snackbarManager.show("Name must not contain '/'") }
+            return false
+        }
+        return true
+    }
+
     fun createNewFolder(name: String) {
+        if (!validateNewName(name)) return
         viewModelScope.launch {
             val st = _state.value
             when (val location = st.currentLocation) {
                 is BrowseLocation.FileSystem -> {
-                    val newFolder = File(location.file, name)
-                    if (!newFolder.exists()) {
-                        newFolder.mkdirs()
+                    try {
+                        val newFolder = withContext(Dispatchers.IO) {
+                            val f = File(location.file, name)
+                            if (f.exists()) throw IllegalStateException("Already exists")
+                            if (!f.mkdirs()) throw java.io.IOException("mkdir failed")
+                            f
+                        }
                         refresh()
+                    } catch (e: Exception) {
+                        snackbarManager.show("Cannot create folder: ${e.message}")
                     }
                 }
                 is BrowseLocation.SAF -> {
                     st.currentDir?.let { parent ->
-                        io.createDir(parent, name)
-                        refresh()
+                        try {
+                            withContext(Dispatchers.IO) { io.createDir(parent, name) }
+                            refresh()
+                        } catch (e: Exception) {
+                            snackbarManager.show("Cannot create folder: ${e.message}")
+                        }
                     }
                 }
                 else -> {}
@@ -649,20 +730,30 @@ class FileBrowserViewModel(
     }
 
     fun createNewFile(name: String) {
+        if (!validateNewName(name)) return
         viewModelScope.launch {
             val st = _state.value
             when (val location = st.currentLocation) {
                 is BrowseLocation.FileSystem -> {
-                    val newFile = File(location.file, name)
-                    if (!newFile.exists()) {
-                        newFile.createNewFile()
+                    try {
+                        withContext(Dispatchers.IO) {
+                            val newFile = File(location.file, name)
+                            if (newFile.exists()) throw IllegalStateException("Already exists")
+                            if (!newFile.createNewFile()) throw java.io.IOException("Create failed")
+                        }
                         refresh()
+                    } catch (e: Exception) {
+                        snackbarManager.show("Cannot create file: ${e.message}")
                     }
                 }
                 is BrowseLocation.SAF -> {
                     st.currentDir?.let { parent ->
-                        io.createFile(parent, name)
-                        refresh()
+                        try {
+                            withContext(Dispatchers.IO) { io.createFile(parent, name) }
+                            refresh()
+                        } catch (e: Exception) {
+                            snackbarManager.show("Cannot create file: ${e.message}")
+                        }
                     }
                 }
                 else -> {}
@@ -671,22 +762,42 @@ class FileBrowserViewModel(
     }
 
     fun createFileFromClipboard(name: String, content: String) {
+        if (!validateNewName(name)) return
         viewModelScope.launch {
             val st = _state.value
             when (val location = st.currentLocation) {
                 is BrowseLocation.FileSystem -> {
-                    val newFile = File(location.file, name)
-                    if (!newFile.exists()) {
-                        newFile.createNewFile()
-                        newFile.writeText(content)
+                    try {
+                        withContext(Dispatchers.IO) {
+                            val newFile = File(location.file, name)
+                            if (newFile.exists()) throw IllegalStateException("Already exists")
+                            val tmp = File.createTempFile(".fluffy_", ".tmp", location.file)
+                            try {
+                                tmp.writeText(content)
+                                if (!tmp.renameTo(newFile)) {
+                                    if (!newFile.createNewFile()) throw java.io.IOException("Create failed")
+                                    newFile.writeText(content)
+                                }
+                            } finally {
+                                runCatching { if (tmp.exists()) tmp.delete() }
+                            }
+                        }
                         refresh()
+                    } catch (e: Exception) {
+                        snackbarManager.show("Cannot create file: ${e.message}")
                     }
                 }
                 is BrowseLocation.SAF -> {
                     st.currentDir?.let { parent ->
-                        val uri = io.createFile(parent, name)
-                        io.writeText(uri, content)
-                        refresh()
+                        try {
+                            withContext(Dispatchers.IO) {
+                                val uri = io.createFile(parent, name)
+                                io.writeText(uri, content)
+                            }
+                            refresh()
+                        } catch (e: Exception) {
+                            snackbarManager.show("Cannot create file: ${e.message}")
+                        }
                     }
                 }
                 else -> {}
@@ -723,7 +834,8 @@ class FileBrowserViewModel(
     }
 
     fun clearSelection() {
-        _state.update { it.copy(selectedItems = mutableStateListOf()) }
+        _state.value.selectedItems.clear()
+        _state.value = _state.value.copy()
     }
 
     fun setPickerMode(enabled: Boolean, mimeType: String?) {

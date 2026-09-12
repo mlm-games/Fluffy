@@ -43,8 +43,11 @@ fun SettingsScreen(vm: SettingsViewModel) {
         vm.events.collect { event ->
             when (event) {
                 is SettingsViewModel.UiEvent.OpenUrl -> {
-                    val intent = Intent(Intent.ACTION_VIEW, event.url.toUri())
-                    context.startActivity(intent)
+                    runCatching {
+                        val intent = Intent(Intent.ACTION_VIEW, event.url.toUri())
+                        context.startActivity(intent)
+                    }.onFailure {
+                    }
                 }
                 is SettingsViewModel.UiEvent.Toast -> {}
             }
@@ -60,8 +63,17 @@ fun SettingsScreen(vm: SettingsViewModel) {
     val cfg = LocalConfiguration.current
     val gridCells = remember(cfg.screenWidthDp) { GridCells.Adaptive(minSize = 420.dp) }
 
-    val rootAvail by remember { mutableStateOf(RootAccess.isAvailable()) }
-    val shizukuAvail by remember { mutableStateOf(ShizukuAccess.isAvailable()) }
+    var refreshTick by remember { mutableIntStateOf(0) }
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle) {
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) refreshTick++
+        }
+        lifecycle.addObserver(obs)
+        onDispose { lifecycle.removeObserver(obs) }
+    }
+    val rootAvail = remember(refreshTick) { RootAccess.isAvailable() }
+    val shizukuAvail = remember(refreshTick) { ShizukuAccess.isAvailable() }
     val locale = LocalLocale.current.platformLocale
 
     fun categoryTitle(cat: KClass<*>): String =
