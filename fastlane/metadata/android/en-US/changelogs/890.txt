@@ -1,0 +1,1 @@
+- refresh state (filecount) when files are added

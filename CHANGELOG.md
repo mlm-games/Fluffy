@@ -1,3 +1,8 @@
+## v4.4.5
+
+- refresh state (filecount) when files are added
+
+
 ## v4.4.4
 
 - prev release fixes
