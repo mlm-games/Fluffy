@@ -17,6 +17,7 @@ import app.fluffy.archive.ArchiveEngine
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.SafIo
 import app.fluffy.io.FileSystemAccess
+import app.fluffy.util.AppLog
 import app.fluffy.util.ArchiveTypes.baseNameForExtraction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -117,7 +118,7 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                     setProgressAsync(workDataOf("progress" to frac))
                 }
             } catch (e: ZipException) {
-                e.printStackTrace()
+                AppLog.w("ExtractArchiveWorker", "strict zip extract failed, trying fallback: $name", e)
                 // Fallback for strict/invalid zips (e.g., some APKs)
                 open().use { input ->
                     ZipArchiveInputStream(input).use { zin ->
@@ -145,7 +146,7 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
                 Result.success()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("ExtractArchiveWorker", "extract failed: $archive", e)
             Result.failure(workDataOf("error" to (e.message ?: e.toString())))
         }
     }
@@ -177,7 +178,11 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
             } else {
                 f.parentFile?.path?.startsWith(root.path) == true
             }
-        } catch (_: Exception) { false }
+        } catch (e: Exception) {
+            // Fail-closed for zip-slip: deny on error, but log for diagnosis.
+            AppLog.w("ExtractArchiveWorker", "isSafeDestination check failed: $dest", e)
+            false
+        }
     }
 
     private fun createForeground(title: String): ForegroundInfo {

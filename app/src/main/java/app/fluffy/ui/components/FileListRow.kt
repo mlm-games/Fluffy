@@ -69,6 +69,7 @@ import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.ShellEntry
 import app.fluffy.io.ShellIo
 import app.fluffy.ui.screens.AnimatedListCard
+import app.fluffy.util.AppLog
 import app.fluffy.util.ThumbnailHelper
 import app.fluffy.util.UiFormat.formatDate
 import app.fluffy.util.UiFormat.formatSize
@@ -114,7 +115,8 @@ private fun hasPdfHeader(ctx: Context, uri: Uri): Boolean {
             header[0] == '%'.code.toByte() && header[1] == 'P'.code.toByte() &&
                 header[2] == 'D'.code.toByte() && header[3] == 'F'.code.toByte() && header[4] == '-'.code.toByte()
         } ?: false
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+        AppLog.d("FileListRow", "hasPdfHeader failed: $uri", e)
         false
     }
 }
@@ -587,7 +589,8 @@ object DirectoryCounter : KoinComponent {
                 } else {
                     try {
                         doc.listFiles().size
-                    } catch (_: UnsupportedOperationException) {
+                    } catch (e: UnsupportedOperationException) {
+                        AppLog.d("FileListRow", "doc.listFiles unsupported: $uri", e)
                         0
                     }
                 }

@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
+import app.fluffy.util.AppLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -339,7 +340,8 @@ class SafIo(
             uri.scheme == "content" -> {
                 try {
                     DocumentsContract.renameDocument(cr, uri, newName) != null
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    AppLog.w("SafIo", "renameDocument failed: $uri", e)
                     false
                 }
             }

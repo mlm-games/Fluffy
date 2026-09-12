@@ -13,6 +13,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import app.fluffy.io.SafIo
+import app.fluffy.util.AppLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
@@ -53,7 +54,7 @@ class FileOpsWorker(appContext: Context, params: WorkerParameters) :
                     else -> io.copyIntoDir(uri, target, overwrite)
                 }
             } catch (e: Exception) {
-                e.printStackTrace()
+                AppLog.e("FileOpsWorker", "failed $op: $uri", e)
                 false
             }
 

@@ -86,6 +86,7 @@ import app.fluffy.ui.screens.SettingsScreen
 import app.fluffy.ui.screens.TasksScreen
 import app.fluffy.ui.theme.FluffyTheme
 import app.fluffy.ui.util.ScreenKey
+import app.fluffy.util.AppLog
 import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.FileBrowserViewModel
@@ -222,7 +223,7 @@ class MainActivity : ComponentActivity() {
                             else -> filesVM.openDir(uri)
                         }
                     } catch (e: Exception) {
-                        e.printStackTrace()
+                        AppLog.w("MainActivity", "openDir failed: $uri", e)
                     }
                 }
             }
@@ -836,7 +837,9 @@ class MainActivity : ComponentActivity() {
                     clipData = ClipData.newUri(contentResolver, "tree", folderUri)
                 }
                 callingPackage?.let { pkg ->
-                    try { grantUriPermission(pkg, folderUri, flags) } catch (e: Exception) { e.printStackTrace() }
+                    try { grantUriPermission(pkg, folderUri, flags) } catch (e: Exception) {
+                        AppLog.d("MainActivity", "grantUriPermission failed: $pkg $folderUri", e)
+                    }
                 }
                 setResult(RESULT_OK, result)
                 finish()
@@ -857,11 +860,16 @@ class MainActivity : ComponentActivity() {
         }
         // Explicit prefix grant for callers that rely on grantUriPermission (e.g. LocalSend/UniFile).
         // Use callingPackage if available; otherwise rely on ClipData grant which system handles.
+        // Best-effort: ClipData grant already covers most callers.
         callingPackage?.let { pkg ->
-            try { grantUriPermission(pkg, treeUri, flags) } catch (_: Exception) {}
+            try { grantUriPermission(pkg, treeUri, flags) } catch (e: Exception) {
+                AppLog.d("MainActivity", "grantUriPermission failed: $pkg $treeUri", e)
+            }
         }
         // Also grant to ourselves so takePersistable checks pass on some OEMs
-        try { grantUriPermission(packageName, treeUri, flags) } catch (_: Exception) {}
+        try { grantUriPermission(packageName, treeUri, flags) } catch (e: Exception) {
+            AppLog.d("MainActivity", "self grantUriPermission failed: $treeUri", e)
+        }
         setResult(RESULT_OK, result)
         finish()
     }
@@ -879,7 +887,10 @@ class MainActivity : ComponentActivity() {
                 // Use provider's createDocument logic locally for file-backed tree
                 if (!target.exists()) target.createNewFile()
                 target.absolutePath
-            } catch (_: Exception) { target.absolutePath }
+            } catch (e: Exception) {
+                AppLog.w("MainActivity", "createNewFile failed, returning path anyway: ${target.absolutePath}", e)
+                target.absolutePath
+            }
         } else parentId
 
         val docUri = LocalDocumentsProvider.docUri(targetDocId, authority)

@@ -66,6 +66,7 @@ import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.ShellIo
 import app.fluffy.ui.theme.FluffyTheme
+import app.fluffy.util.AppLog
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.launch
@@ -211,7 +212,8 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
                         }
                         .takeIf { it.isNotEmpty() }
                         ?: listOf(uri)
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    AppLog.d("ImageViewer", "sibling lookup failed: $uri", e)
                     listOf(uri)
                 }
             }
@@ -250,7 +252,8 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
                     }
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            AppLog.d("ImageViewer", "getFilePathFromContentUri failed: $uri", e)
             null
         }
     }
@@ -284,7 +287,8 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
             } else {
                 null
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            AppLog.d("ImageViewer", "tryGetContentUri failed: $file", e)
             null
         }
     }
@@ -334,8 +338,8 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
                     }
                 }
             }
-        } catch (_: Exception) {
-            // ignore and return what we have
+        } catch (e: Exception) {
+            AppLog.d("ImageViewer", "tryQueryMediaStore failed: $uri", e)
         }
 
         return if (images.size > 1) images else listOf(uri)
@@ -361,12 +365,13 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
             "content" -> {
                 // Try to get display name from content resolver
                 try {
-                    contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
+                    contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
                         if (cursor.moveToFirst()) {
                             cursor.getString(0)
                         } else null
                     }
-                } catch (_: Exception) {
+                } catch (e: Exception) {
+                    AppLog.d("ImageViewer", "getFileName query failed: $uri", e)
                     null
                 } ?: uri.lastPathSegment?.substringAfterLast('/') ?: "image"
             }
@@ -383,7 +388,10 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
         if (uri.scheme == "content" && uri.authority?.contains("media") == true) {
             ContentUris.parseId(uri)
         } else null
-    } catch (_: Exception) { null }
+    } catch (e: Exception) {
+        AppLog.d("ImageViewer", "mediaIdOf failed: $uri", e)
+        null
+    }
 
     private fun deriveTitle(uris: List<Uri>, currentIndex: Int): String {
         return if (uris.size > 1) {

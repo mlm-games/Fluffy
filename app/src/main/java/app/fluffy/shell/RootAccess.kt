@@ -18,6 +18,7 @@ class RootAccess {
     }
 
     fun newProcess(command: String): Process {
+        // Fallback chain across su variants: first failure is expected, keep silent.
         return try {
             Runtime.getRuntime().exec(arrayOf("su", "--mount-master", "-c", command))
         } catch (_: Exception) {
@@ -29,6 +30,7 @@ class RootAccess {
         }
     }
 
+    // Probe must never throw: false means "no root".
     private fun probeAvailability(): Boolean = try {
         val process = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
         val ok = BufferedReader(InputStreamReader(process.inputStream))

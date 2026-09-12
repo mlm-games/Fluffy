@@ -3,6 +3,7 @@ package app.fluffy.io
 import android.content.Context
 import android.os.Environment
 import app.fluffy.platform.StorageAccessPolicy
+import app.fluffy.util.AppLog
 import java.io.File
 
 class FileSystemAccess(
@@ -129,7 +130,8 @@ class FileSystemAccess(
                     }
                 }
             }
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            AppLog.w("FileSystemAccess", "getExternalFilesDirs failed", e)
         }
 
         return roots.toList()

@@ -83,6 +83,7 @@ import androidx.core.graphics.createBitmap
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.ui.theme.FluffyTheme
+import app.fluffy.util.AppLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -168,6 +169,7 @@ private class PdfDoc(
         }
 
     override fun close() {
+        // Best-effort close: intentionally silent.
         try { renderer.close() } catch (_: Exception) {}
         try { pfd.close() } catch (_: Exception) {}
         cache.evictAll()
@@ -188,7 +190,8 @@ private class PdfDoc(
                     header[0] == '%'.code.toByte() && header[1] == 'P'.code.toByte() &&
                         header[2] == 'D'.code.toByte() && header[3] == 'F'.code.toByte() && header[4] == '-'.code.toByte()
                 } ?: false
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                AppLog.d("PdfViewer", "hasPdfHeader failed: $uri", e)
                 false
             }
         }
@@ -226,7 +229,8 @@ private class PdfDoc(
                                 null
                             }
                         } else null
-                    } catch (_: Exception) {
+                    } catch (e: Exception) {
+                        AppLog.w("PdfViewer", "open failed: $uri", e)
                         try { pfd?.close() } catch (_: Exception) {}
                         null
                     }

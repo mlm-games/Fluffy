@@ -68,6 +68,7 @@ import app.fluffy.io.SafIo
 import app.fluffy.ui.components.AppTopBar
 import app.fluffy.ui.components.snackbar.SnackbarManager
 import app.fluffy.ui.theme.ThemeDefaults
+import app.fluffy.util.AppLog
 import app.fluffy.util.ArchiveTypes
 import app.fluffy.util.UiFormat.formatSize
 import kotlinx.coroutines.Dispatchers
@@ -141,7 +142,8 @@ fun ArchiveViewerScreen(
         val finalUri = if (uri.scheme == "file") {
             try {
                 FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", File(requireNotNull(uri.path)))
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                AppLog.w("ArchiveViewer", "FileProvider failed: $uri", e)
                 null
             }
         } else uri
@@ -305,13 +307,14 @@ fun ArchiveViewerScreen(
                         if (isApk) {
                             IconButton(onClick = {
                                 val installUri = when (archiveUri.scheme) {
-                                    "file" -> try {
+                                    "file" ->                                 try {
                                         FileProvider.getUriForFile(
                                             ctx,
                                             "${ctx.packageName}.fileprovider",
                                             File(requireNotNull(archiveUri.path))
                                         )
-                                    } catch (_: Exception) {
+                                    } catch (e: Exception) {
+                                        AppLog.w("ArchiveViewer", "install FileProvider failed: $archiveUri", e)
                                         snackBarManager.show("FileProvider not configured for this path")
                                         return@IconButton
                                     }
@@ -541,7 +544,8 @@ private suspend fun extractEntryToCache(
             onProgress = { _, _ -> }
         )
         if (out.exists() && out.length() > 0) Uri.fromFile(out) else null
-    } catch (_: Exception) {
+    } catch (e: Exception) {
+        AppLog.w("ArchiveViewer", "extractEntryToCache failed: $pathInArchive", e)
         null
     }
 }

@@ -21,6 +21,7 @@ import android.os.Bundle
 import android.webkit.MimeTypeMap
 import app.fluffy.R
 import app.fluffy.io.FileSystemAccess
+import app.fluffy.util.AppLog
 import app.fluffy.util.ThumbnailHelper
 import java.io.File
 import java.io.FileNotFoundException
@@ -85,7 +86,9 @@ class LocalDocumentsProvider : DocumentsProvider() {
         try {
             val primary = Environment.getExternalStorageDirectory()
             if (primary.exists()) roots += primary
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            AppLog.w("LocalDocumentsProvider", "primary storage root failed", e)
+        }
 
         try {
             val dirs = ctx.getExternalFilesDirs(null)
@@ -102,7 +105,9 @@ class LocalDocumentsProvider : DocumentsProvider() {
                     }
                 }
             }
-        } catch (_: Exception) {}
+        } catch (e: Exception) {
+            AppLog.w("LocalDocumentsProvider", "externalFilesDirs enumeration failed", e)
+        }
 
         if (roots.isEmpty()) {
             try {
@@ -112,7 +117,9 @@ class LocalDocumentsProvider : DocumentsProvider() {
                     cur?.parentFile
                 }
                 if (fallback != null && fallback.exists()) roots += fallback
-            } catch (_: Exception) {}
+            } catch (e: Exception) {
+                AppLog.w("LocalDocumentsProvider", "fallback root failed", e)
+            }
         }
 
         return roots.toList()
@@ -282,7 +289,10 @@ class LocalDocumentsProvider : DocumentsProvider() {
         queue.add(root)
         while (queue.isNotEmpty() && allFiles.size < 1000) {
             val dir = queue.removeFirst()
-            val children = try { dir.listFiles() } catch (_: SecurityException) { null } ?: continue
+            val children = try { dir.listFiles() } catch (e: SecurityException) {
+                AppLog.d("LocalDocumentsProvider", "listFiles denied: ${dir.absolutePath}", e)
+                null
+            } ?: continue
             for (child in children) {
                 if (child.isFile) {
                     allFiles.add(child)

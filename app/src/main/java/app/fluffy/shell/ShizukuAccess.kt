@@ -1,6 +1,7 @@
 package app.fluffy.shell
 
 import android.content.pm.PackageManager
+import app.fluffy.util.AppLog
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -45,7 +46,8 @@ class ShizukuAccess {
         )
         method.isAccessible = true
         method.invoke(null, cmd, env, dir) as Process
-    } catch (_: Throwable) {
+    } catch (e: Throwable) {
+        AppLog.d("ShizukuAccess", "newProcess reflection failed", e)
         null
     }
 

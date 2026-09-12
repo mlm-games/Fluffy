@@ -14,6 +14,7 @@ import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import app.fluffy.io.SafIo
+import app.fluffy.util.AppLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry
@@ -61,7 +62,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
             setProgress(workDataOf("progress" to 1f))
             Result.success()
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("Create7zWorker", "create 7z failed", e)
             Result.failure(workDataOf("error" to (e.message ?: e.toString())))
         } finally {
             outTmp.delete()

@@ -63,7 +63,10 @@ object ThumbnailHelper {
             ctx.contentResolver.openInputStream(uri)?.use { stream2 ->
                 BitmapFactory.decodeStream(stream2, null, opts)
             }
-        } catch (_: Exception) { null }
+        } catch (e: Exception) {
+            AppLog.d("ThumbnailHelper", "decodeImageUri failed: $uri", e)
+            null
+        }
     }
 
     fun loadVideoThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
@@ -73,7 +76,10 @@ object ThumbnailHelper {
             val bitmap = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
             retriever.release()
             bitmap?.let { scaleBitmap(it, size) }
-        } catch (_: Exception) { null }
+        } catch (e: Exception) {
+            AppLog.d("ThumbnailHelper", "loadVideoThumbnail(uri) failed: $uri", e)
+            null
+        }
     }
 
     fun loadVideoThumbnail(file: File, size: Int): Bitmap? {
@@ -83,7 +89,10 @@ object ThumbnailHelper {
             val bitmap = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
             retriever.release()
             bitmap?.let { scaleBitmap(it, size) }
-        } catch (_: Exception) { null }
+        } catch (e: Exception) {
+            AppLog.d("ThumbnailHelper", "loadVideoThumbnail(file) failed: ${file.path}", e)
+            null
+        }
     }
 
     fun loadPdfThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
@@ -104,8 +113,12 @@ object ThumbnailHelper {
             if (scaledBitmap != bitmap) bitmap.recycle()
             page.render(scaledBitmap, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
             scaledBitmap
-        } catch (_: Exception) { null }
+        } catch (e: Exception) {
+            AppLog.d("ThumbnailHelper", "loadPdfThumbnail failed: $uri", e)
+            null
+        }
         finally {
+            // Best-effort close: intentionally silent.
             try { page?.close() } catch (_: Exception) {}
             try { renderer?.close() } catch (_: Exception) {}
             try { pfd?.close() } catch (_: Exception) {}
@@ -121,6 +134,9 @@ object ThumbnailHelper {
             art?.let {
                 BitmapFactory.decodeByteArray(it, 0, it.size)?.let { scaleBitmap(it, size) }
             }
-        } catch (_: Exception) { null }
+        } catch (e: Exception) {
+            AppLog.d("ThumbnailHelper", "loadAudioThumbnail failed: $uri", e)
+            null
+        }
     }
 }

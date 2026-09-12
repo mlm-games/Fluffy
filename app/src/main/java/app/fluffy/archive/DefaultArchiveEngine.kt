@@ -4,6 +4,7 @@ package app.fluffy.archive
 
 import android.content.Context
 import app.fluffy.io.SafIo
+import app.fluffy.util.AppLog
 import app.fluffy.util.ArchiveTypes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -131,7 +132,8 @@ class DefaultArchiveEngine(
             }
             val anyEncrypted = headers.any { it.isEncrypted }
             ArchiveEngine.ListResult(entries, encrypted = anyEncrypted)
-        } catch (_: Throwable) {
+        } catch (e: Throwable) {
+            AppLog.w("ArchiveEngine", "listZip failed: $archiveName", e)
             ArchiveEngine.ListResult(emptyList(), encrypted = false)
         } finally {
             tmp.delete()
