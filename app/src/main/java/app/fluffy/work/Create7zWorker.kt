@@ -22,6 +22,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
 import java.io.InputStream
+import java.util.Date
 
 class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params), KoinComponent {
 
@@ -105,7 +106,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                     name = ensureDirSuffix(relPath)
                     isDirectory = true
                     // optional but nice for readers
-                    runCatching { lastModifiedDate = java.util.Date(df.lastModified()) }
+                    runCatching { lastModifiedDate = Date(df.lastModified()) }
                 }
                 archive.putArchiveEntry(dirEntry)
                 archive.closeArchiveEntry()
@@ -118,7 +119,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                     name = relPath
                     // Provide size so readers don't need to scan streams during listing
                     size = runCatching { df.length() }.getOrElse { -1L }.coerceAtLeast(0L)
-                    runCatching { lastModifiedDate = java.util.Date(df.lastModified()) }
+                    runCatching { lastModifiedDate = Date(df.lastModified()) }
                 }
                 archive.putArchiveEntry(entry)
                 io.openIn(uri).use { copyToSevenZ(it, archive) }
@@ -130,7 +131,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                 val dirEntry = SevenZArchiveEntry().apply {
                     name = ensureDirSuffix(relPath)
                     isDirectory = true
-                    runCatching { lastModifiedDate = java.util.Date(f.lastModified()) }
+                    runCatching { lastModifiedDate = Date(f.lastModified()) }
                 }
                 archive.putArchiveEntry(dirEntry)
                 archive.closeArchiveEntry()
@@ -141,7 +142,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                 val entry = SevenZArchiveEntry().apply {
                     name = relPath
                     size = f.length().coerceAtLeast(0L)
-                    runCatching { lastModifiedDate = java.util.Date(f.lastModified()) }
+                    runCatching { lastModifiedDate = Date(f.lastModified()) }
                 }
                 archive.putArchiveEntry(entry)
                 f.inputStream().use { copyToSevenZ(it, archive) }

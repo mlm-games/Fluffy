@@ -22,6 +22,8 @@ import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
 
 class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params), KoinComponent {
 
@@ -41,13 +43,13 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
 
         val level = settings.settingsFlow.first().zipCompressionLevel.coerceIn(0, 9)
 
-        val pairs = mutableListOf<Pair<String, () -> java.io.InputStream>>()
+        val pairs = mutableListOf<Pair<String, () -> InputStream>>()
         for (src in sourcesIn) {
             collectFilesRec(src, io.queryDisplayName(src), pairs)
         }
 
         val outUri = io.createFile(targetDir, outName, "application/zip", overwrite = overwrite)
-        val writeTarget: () -> java.io.OutputStream = { io.openOut(outUri) }
+        val writeTarget: () -> OutputStream = { io.openOut(outUri) }
 
         setProgress(workDataOf("progress" to 0f))
 
@@ -68,7 +70,7 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
     private fun collectFilesRec(
         uri: Uri,
         relPath: String,
-        out: MutableList<Pair<String, () -> java.io.InputStream>>
+        out: MutableList<Pair<String, () -> InputStream>>
     ) {
         val df = io.docFileFromUri(uri)
         if (uri.scheme == "content" && df != null) {

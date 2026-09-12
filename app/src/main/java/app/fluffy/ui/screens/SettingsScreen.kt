@@ -1,5 +1,6 @@
 package app.fluffy.ui.screens
 
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,7 +43,7 @@ fun SettingsScreen(vm: SettingsViewModel) {
         vm.events.collect { event ->
             when (event) {
                 is SettingsViewModel.UiEvent.OpenUrl -> {
-                    val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, event.url.toUri())
+                    val intent = Intent(Intent.ACTION_VIEW, event.url.toUri())
                     context.startActivity(intent)
                 }
                 is SettingsViewModel.UiEvent.Toast -> {}

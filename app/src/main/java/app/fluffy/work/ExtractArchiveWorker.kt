@@ -25,6 +25,7 @@ import net.lingala.zip4j.exception.ZipException
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.io.File
 import java.io.OutputStream
 
 class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params), KoinComponent {
@@ -58,7 +59,7 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
 
         // If writing to a file:// root, resolve its canonical path to enforce safety
         val fileRoot = when (actualTargetDir.scheme) {
-            "file" -> kotlin.runCatching { java.io.File(requireNotNull(actualTargetDir.path)).canonicalFile }.getOrNull()
+            "file" -> runCatching { File(requireNotNull(actualTargetDir.path)).canonicalFile }.getOrNull()
             else -> null
         }
 
@@ -167,10 +168,10 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
         return parts.joinToString("/")
     }
 
-    private fun isSafeDestination(root: java.io.File?, dest: Uri, isDir: Boolean): Boolean {
+    private fun isSafeDestination(root: File?, dest: Uri, isDir: Boolean): Boolean {
         if (root == null || dest.scheme != "file") return true
         return try {
-            val f = java.io.File(requireNotNull(dest.path)).canonicalFile
+            val f = File(requireNotNull(dest.path)).canonicalFile
             if (isDir) {
                 f.path.startsWith(root.path)
             } else {

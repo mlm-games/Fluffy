@@ -1,6 +1,8 @@
 package app.fluffy.provider
 
+import android.Manifest
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.pm.ProviderInfo
 import android.database.Cursor
 import android.database.MatrixCursor
@@ -25,6 +27,7 @@ import java.io.FileNotFoundException
 import java.io.FileOutputStream
 import java.io.IOException
 import java.util.ArrayDeque
+import org.koin.core.context.GlobalContext
 
 class LocalDocumentsProvider : DocumentsProvider() {
 
@@ -64,14 +67,14 @@ class LocalDocumentsProvider : DocumentsProvider() {
             Environment.isExternalStorageManager()
         } else {
             val ctx = context ?: return false
-            ctx.checkSelfPermission(android.Manifest.permission.READ_EXTERNAL_STORAGE) ==
-                android.content.pm.PackageManager.PERMISSION_GRANTED
+            ctx.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) ==
+                PackageManager.PERMISSION_GRANTED
         }
     }
 
     private fun getAllStorageRoots(): List<File> {
         runCatching {
-            val koin = org.koin.core.context.GlobalContext.getOrNull() ?: return@runCatching null
+            val koin = GlobalContext.getOrNull() ?: return@runCatching null
             val fsa = koin.get<FileSystemAccess>()
             return fsa.getAllStorageRoots()
         }

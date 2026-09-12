@@ -75,6 +75,8 @@ import app.fluffy.util.UiFormat.formatSize
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.core.component.KoinComponent
@@ -564,8 +566,8 @@ fun FileGridItem(
 object DirectoryCounter : KoinComponent {
     private val cache = ConcurrentHashMap<String, Int>()
     private val shellIo: ShellIo by inject()
-    private val _generation = kotlinx.coroutines.flow.MutableStateFlow(0)
-    val generation: kotlinx.coroutines.flow.StateFlow<Int> = _generation
+    private val _generation = MutableStateFlow(0)
+    val generation: StateFlow<Int> = _generation
 
     suspend fun count(context: Context, uri: Uri): Int = withContext(Dispatchers.IO) {
         val key = uri.toString()

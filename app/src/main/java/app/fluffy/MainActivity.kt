@@ -6,7 +6,9 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.DocumentsContract
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
@@ -90,8 +92,10 @@ import app.fluffy.viewmodel.FileBrowserViewModel
 import app.fluffy.viewmodel.PendingAction
 import app.fluffy.viewmodel.SettingsViewModel
 import app.fluffy.viewmodel.TasksViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.compose.koinInject
@@ -182,11 +186,11 @@ class MainActivity : ComponentActivity() {
             filesVM.setPickerMode(true, pickerMimeType)
         }
         run {
-            val initial: Uri? = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                intent?.getParcelableExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI, Uri::class.java)
+            val initial: Uri? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                intent?.getParcelableExtra(DocumentsContract.EXTRA_INITIAL_URI, Uri::class.java)
             } else {
                 @Suppress("DEPRECATION")
-                intent?.getParcelableExtra(android.provider.DocumentsContract.EXTRA_INITIAL_URI)
+                intent?.getParcelableExtra(DocumentsContract.EXTRA_INITIAL_URI)
             }
             initial?.let { uri ->
                 lifecycleScope.launch {
@@ -200,8 +204,8 @@ class MainActivity : ComponentActivity() {
                                 }
                             }
                             "content" -> {
-                                val docId = runCatching { android.provider.DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
-                                    ?: runCatching { android.provider.DocumentsContract.getDocumentId(uri) }.getOrNull()
+                                val docId = runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
+                                    ?: runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull()
                                 if (docId != null) {
                                     val f = File(docId)
                                     if (f.exists() && f.isDirectory) {
@@ -805,8 +809,8 @@ class MainActivity : ComponentActivity() {
         return when (uri.scheme) {
             "file" -> uri.path
             "content" -> {
-                runCatching { android.provider.DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
-                    ?: runCatching { android.provider.DocumentsContract.getDocumentId(uri) }.getOrNull()
+                runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
+                    ?: runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull()
                     ?: uri.path
             }
             "root", "shizuku" -> uri.path
@@ -988,7 +992,7 @@ class MainActivity : ComponentActivity() {
         name.replace('/', '_').replace('\\', '_').ifBlank { "item" }
 
     private suspend fun stageSharedIfNeeded(uris: List<Uri>): List<Uri> =
-        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             uris.map { u ->
                 if (u.scheme == "file") return@map u
                 if (u.scheme == "root" || u.scheme == "shizuku") return@map u
