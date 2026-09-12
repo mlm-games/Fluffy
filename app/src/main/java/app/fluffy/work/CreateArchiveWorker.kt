@@ -16,6 +16,7 @@ import androidx.work.workDataOf
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.SafIo
+import app.fluffy.util.isSymlink
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
@@ -150,7 +151,7 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
             }
         } else {
             val f = File(requireNotNull(uri.path))
-            if (java.nio.file.Files.isSymbolicLink(f.toPath())) return
+            if (f.isSymlink()) return
             if (f.isDirectory) {
                 val kids = f.listFiles()
                 if (kids.isNullOrEmpty()) {

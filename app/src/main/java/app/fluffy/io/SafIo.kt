@@ -6,6 +6,7 @@ import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
 import app.fluffy.util.AppLog
+import app.fluffy.util.isSymlink
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -47,9 +48,7 @@ class SafIo(
         return if (base == "/") "/$clean" else if (base.endsWith("/")) base + clean else "$base/$clean"
     }
 
-    private fun isSymlink(f: File): Boolean = try {
-        java.nio.file.Files.isSymbolicLink(f.toPath())
-    } catch (_: Exception) { false }
+    private fun isSymlink(f: File): Boolean = f.isSymlink()
 
     private fun isRemoteDir(uri: Uri, srcPath: String): Boolean = when {
         isRoot(uri) -> shellIo.isDirRoot(srcPath)

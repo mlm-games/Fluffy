@@ -15,6 +15,7 @@ import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import app.fluffy.io.SafIo
 import app.fluffy.util.AppLog
+import app.fluffy.util.isSymlink
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.apache.commons.compress.archivers.sevenz.SevenZArchiveEntry
@@ -176,7 +177,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
             }
         } else {
             val f = File(requireNotNull(uri.path))
-            if (java.nio.file.Files.isSymbolicLink(f.toPath())) return
+            if (f.isSymlink()) return
             if (f.isDirectory) {
                 val dirEntry = SevenZArchiveEntry().apply {
                     name = ensureDirSuffix(safeRel)

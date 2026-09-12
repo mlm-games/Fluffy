@@ -23,6 +23,7 @@ import app.fluffy.R
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.util.AppLog
 import app.fluffy.util.ThumbnailHelper
+import app.fluffy.util.isSymlink
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
@@ -138,9 +139,7 @@ class LocalDocumentsProvider : DocumentsProvider() {
         return f
     }
 
-    private fun isSymlink(f: File): Boolean = runCatching {
-        java.nio.file.Files.isSymbolicLink(f.toPath())
-    }.getOrDefault(false)
+    private fun isSymlink(f: File): Boolean = f.isSymlink()
 
     private fun thumbKey(path: String, w: Int, h: Int): String {
         val md = java.security.MessageDigest.getInstance("SHA-256")
