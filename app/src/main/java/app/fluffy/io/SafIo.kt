@@ -58,6 +58,8 @@ class SafIo(
         else -> false
     }
 
+    fun isDirectory(uri: Uri): Boolean = runCatching { isRemoteDir(uri, path(uri)) }.getOrDefault(false)
+
     fun listChildren(dir: Uri): List<DocumentFile> {
         return when (dir.scheme) {
             "content" -> {

@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Parcelable
 import androidx.core.content.FileProvider
+import app.fluffy.archive.ArchiveEngine
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.SafIo
 import app.fluffy.ui.viewers.ImageViewerActivity
@@ -19,7 +20,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.io.ByteArrayInputStream
 import java.io.File
+import java.io.IOException
+import java.io.InputStream
 import java.util.ArrayList
 
 
@@ -32,6 +36,7 @@ sealed class OpenTarget {
 
 object AppUtilsHelper : KoinComponent {
     val io: SafIo by inject()
+    val archive: ArchiveEngine by inject()
 }
 
 @Suppress("DEPRECATION")
@@ -275,6 +280,143 @@ suspend fun Context.shareExported(
     }
 
     startActivity(Intent.createChooser(send, "Share"))
+}
+
+suspend fun Context.shareWithFolders(
+    sources: List<Pair<Uri, String>>,
+    onStatus: suspend (String) -> Unit = {}
+): Boolean = withContext(Dispatchers.IO) {
+    if (sources.isEmpty()) return@withContext false
+    val io = AppUtilsHelper.io
+    val hasDir = sources.any { (uri, _) -> runCatching { io.isDirectory(uri) }.getOrDefault(false) }
+    if (!hasDir) {
+        shareExported(sources)
+        return@withContext true
+    }
+    onStatus("Compressing for share…")
+    val zip = runCatching { createTempZipForShare(sources) }.getOrNull()
+    if (zip == null) {
+        onStatus("Couldn't compress folders for share")
+        return@withContext false
+    }
+    val zipUri = FileProvider.getUriForFile(this@shareWithFolders, "$packageName.fileprovider", zip)
+    shareExported(listOf(zipUri to zip.name))
+    true
+}
+
+suspend fun Context.createTempZipForShare(sources: List<Pair<Uri, String>>): File =
+    withContext(Dispatchers.IO) {
+        val io = AppUtilsHelper.io
+        val archive = AppUtilsHelper.archive
+        val pairs = mutableListOf<Pair<String, () -> InputStream>>()
+        val seen = HashSet<String>()
+        for ((uri, name) in sources) {
+            collectShareEntries(uri, sanitizeCacheName(name, "item"), pairs, seen, depth = 0)
+        }
+        if (pairs.isEmpty()) throw IOException("Nothing to share")
+        val base = if (sources.size == 1) {
+            sources.first().second.substringBeforeLast('.').ifBlank { "shared" }
+        } else "shared_files"
+        val safeBase = sanitizeCacheName(base, "shared").take(32)
+        val out = File.createTempFile("share_${System.currentTimeMillis()}_${safeBase}_", ".zip", cacheDir)
+        try {
+            archive.createZip(pairs, { out.outputStream() }, compressionLevel = 5)
+        } catch (e: Exception) {
+            runCatching { out.delete() }
+            throw e
+        }
+        out
+    }
+
+private fun collectShareEntries(
+    uri: Uri,
+    relPath: String,
+    out: MutableList<Pair<String, () -> InputStream>>,
+    seen: MutableSet<String>,
+    depth: Int
+) {
+    if (depth > 64) throw IOException("Max depth exceeded")
+    val io = AppUtilsHelper.io
+    val safeRel = relPath.replace('\\', '/').trim().trimStart('/').ifBlank { "item" }
+    if (safeRel.split('/').any { it == "." || it == ".." || it.isBlank() }) {
+        throw IOException("Invalid entry: $relPath")
+    }
+    if (uri.scheme == "root" || uri.scheme == "shizuku") {
+        val isFile = runCatching { io.openIn(uri).close() }.isSuccess
+        if (isFile) {
+            val key = if (seen.add(safeRel)) safeRel else disambiguateShareName(safeRel, seen)
+            out += key to { io.openIn(uri) }
+        } else {
+            val kids = runCatching { io.listShell(uri) }.getOrDefault(emptyList())
+            if (kids.isEmpty()) {
+                val dirKey = "${safeRel.trimEnd('/')}/"
+                if (seen.add(dirKey)) out += dirKey to { ByteArrayInputStream(ByteArray(0)) }
+            } else {
+                kids.forEach { child ->
+                    collectShareEntries(child.uri, "$safeRel/${child.name}", out, seen, depth + 1)
+                }
+            }
+        }
+        return
+    }
+    val df = runCatching { io.docFileFromUri(uri) }.getOrNull()
+    if (uri.scheme == "content" && df != null) {
+        if (df.isDirectory) {
+            val kids = df.listFiles()
+            if (kids.isEmpty()) {
+                val dirKey = "${safeRel.trimEnd('/')}/"
+                if (seen.add(dirKey)) out += dirKey to { ByteArrayInputStream(ByteArray(0)) }
+            } else {
+                kids.forEach { child ->
+                    collectShareEntries(child.uri, "${safeRel.trimEnd('/')}/${child.name ?: "item"}", out, seen, depth + 1)
+                }
+            }
+        } else {
+            val key = if (seen.add(safeRel)) safeRel else disambiguateShareName(safeRel, seen)
+            out += key to { io.openIn(uri) }
+        }
+    } else {
+        val f = File(requireNotNull(uri.path))
+        if (f.isDirectory) {
+            val kids = f.listFiles()
+            if (kids.isNullOrEmpty()) {
+                val dirKey = "${safeRel.trimEnd('/')}/"
+                if (seen.add(dirKey)) out += dirKey to { ByteArrayInputStream(ByteArray(0)) }
+            } else {
+                kids.forEach { child ->
+                    collectShareEntries(
+                        Uri.fromFile(child),
+                        "${safeRel.trimEnd('/')}/${child.name}",
+                        out,
+                        seen,
+                        depth + 1
+                    )
+                }
+            }
+        } else {
+            val key = if (seen.add(safeRel)) safeRel else disambiguateShareName(safeRel, seen)
+            out += key to { f.inputStream() }
+        }
+    }
+}
+
+private fun disambiguateShareName(base: String, seen: MutableSet<String>): String {
+    var i = 2
+    while (true) {
+        val dot = base.lastIndexOf('.')
+        val cand = if (dot > 0) "${base.substring(0, dot)}_$i${base.substring(dot)}" else "${base}_$i"
+        if (seen.add(cand)) return cand
+        i++
+    }
+}
+
+fun Context.purgeOldShareZips(maxAgeMs: Long = 72L * 3600_000L) {
+    val now = System.currentTimeMillis()
+    cacheDir.listFiles()?.forEach { f ->
+        if (f.name.startsWith("share_") && f.name.endsWith(".zip") && now - f.lastModified() > maxAgeMs) {
+            runCatching { f.delete() }
+        }
+    }
 }
 
 fun Context.launchMediaPlayer(uri: Uri, title: String? = null) {

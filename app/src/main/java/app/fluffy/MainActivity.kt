@@ -68,7 +68,9 @@ import app.fluffy.helper.launchImageViewer
 import app.fluffy.helper.openContent
 import app.fluffy.helper.openWithExport
 import app.fluffy.helper.openWithExportMultiple
+import app.fluffy.helper.purgeOldShareZips
 import app.fluffy.helper.shareExported
+import app.fluffy.helper.shareWithFolders
 import app.fluffy.helper.purgeOldExports
 import app.fluffy.shell.ShizukuAccess
 import app.fluffy.helper.purgeOldViewerCache
@@ -128,6 +130,7 @@ class MainActivity : ComponentActivity() {
     private val io: SafIo by inject()
     private val settingsRepository: SettingsRepository by inject()
     private val storageAccessPolicy: StorageAccessPolicy by inject()
+    private val snackbar: SnackbarManager by inject()
 
     private val filesVM: FileBrowserViewModel by viewModel()
     private val tasksVM: TasksViewModel by viewModel()
@@ -518,7 +521,10 @@ class MainActivity : ComponentActivity() {
                                                         ?: "file"
                                                     uri to name
                                                 }
-                                                shareExported(sources)
+                                                purgeOldShareZips()
+                                                shareWithFolders(sources) { msg ->
+                                                    snackbar.show(msg)
+                                                }
                                             }
                                         },
 
