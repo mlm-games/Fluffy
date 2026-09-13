@@ -229,6 +229,54 @@ suspend fun Context.openWithExportMultiple(
     startActivity(Intent.createChooser(send, "Open with"))
 }
 
+suspend fun Context.shareExported(
+    sources: List<Pair<Uri, String>>
+) {
+    val exported = exportAllForOpenWith(sources)
+    if (exported.isEmpty()) return
+
+    val mime = if (exported.size == 1) {
+        val displayName = sources.firstOrNull()?.second.orEmpty()
+        contentResolver.getType(exported.first())
+            ?: FileSystemAccess.getMimeType(displayName)
+    } else {
+        val resolved = exported.mapIndexed { i, uri ->
+            runCatching { contentResolver.getType(uri) }.getOrNull()
+                ?: FileSystemAccess.getMimeType(sources.getOrNull(i)?.second.orEmpty())
+        }
+        val distinct = resolved.distinct()
+        if (distinct.size == 1) distinct.first()
+        else {
+            val top = resolved.map { it.substringBefore('/') }.distinct()
+            if (top.size == 1) "${top.first()}/*" else "*/*"
+        }
+    }
+
+    val send = if (exported.size == 1) {
+        Intent(Intent.ACTION_SEND).apply {
+            putExtra(Intent.EXTRA_STREAM, exported.first())
+            type = mime
+            sources.firstOrNull()?.second?.takeIf { it.isNotBlank() }?.let {
+                putExtra(Intent.EXTRA_SUBJECT, it)
+            }
+        }
+    } else {
+        Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, ArrayList(exported))
+            type = mime
+        }
+    }.apply {
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        val first = exported.first()
+        val clip = ClipData.newUri(contentResolver, "files", first)
+        exported.drop(1).forEach { clip.addItem(ClipData.Item(it)) }
+        clipData = clip
+        if (this@shareExported !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+
+    startActivity(Intent.createChooser(send, "Share"))
+}
+
 fun Context.launchMediaPlayer(uri: Uri, title: String? = null) {
     val intent = Intent(this, MediaPlayerActivity::class.java).apply {
         data = uri

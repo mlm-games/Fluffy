@@ -68,6 +68,7 @@ import app.fluffy.helper.launchImageViewer
 import app.fluffy.helper.openContent
 import app.fluffy.helper.openWithExport
 import app.fluffy.helper.openWithExportMultiple
+import app.fluffy.helper.shareExported
 import app.fluffy.helper.purgeOldExports
 import app.fluffy.shell.ShizukuAccess
 import app.fluffy.helper.purgeOldViewerCache
@@ -510,10 +511,14 @@ class MainActivity : ComponentActivity() {
                                         onShareSelected = { uris ->
                                             lifecycleScope.launch {
                                                 val sources = uris.map { uri ->
-                                                    val name = uri.lastPathSegment ?: "file"
+                                                    val name = runCatching { io.queryDisplayName(uri) }
+                                                        .getOrNull()?.takeIf { it.isNotBlank() }
+                                                        ?: uri.lastPathSegment?.substringAfterLast('/')
+                                                            ?.takeIf { it.isNotBlank() }
+                                                        ?: "file"
                                                     uri to name
                                                 }
-                                                openWithExportMultiple(sources)
+                                                shareExported(sources)
                                             }
                                         },
 
