@@ -2,6 +2,7 @@ package app.fluffy
 
 import android.content.ClipData
 import android.content.Intent
+import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -54,6 +55,7 @@ class PickerActivity : ComponentActivity() {
         get() = pickerAction == Intent.ACTION_GET_CONTENT ||
             pickerAction == Intent.ACTION_OPEN_DOCUMENT
 
+    @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
