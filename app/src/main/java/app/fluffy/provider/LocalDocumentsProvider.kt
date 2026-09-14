@@ -65,6 +65,12 @@ class LocalDocumentsProvider : DocumentsProvider() {
     override fun onCreate(): Boolean = true
 
     private fun hasStoragePermission(): Boolean {
+        runCatching {
+            val koin = GlobalContext.getOrNull()
+            if (koin != null) {
+                return koin.get<app.fluffy.platform.StorageAccessPolicy>().hasStoragePermission()
+            }
+        }
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Environment.isExternalStorageManager()
         } else {
@@ -126,11 +132,15 @@ class LocalDocumentsProvider : DocumentsProvider() {
     }
 
     private fun canonicalRoots(): List<String> = runCatching {
-        getAllStorageRoots().mapNotNull { runCatching { it.canonicalPath }.getOrNull() }
+        val ctx = context
+        val viaPolicy = getAllStorageRoots().mapNotNull { runCatching { it.canonicalPath }.getOrNull() }
+        val sandbox = runCatching { ctx?.getExternalFilesDir(null)?.canonicalPath }.getOrNull()
+        val primary = runCatching { Environment.getExternalStorageDirectory()?.canonicalPath }.getOrNull()
+        (viaPolicy + listOfNotNull(sandbox, primary)).distinct()
     }.getOrDefault(emptyList())
 
     private fun containedFile(documentId: String): File {
-        val f = File(documentId)
+        val f = File(documentId).let { if (it.isAbsolute) it else File("/$documentId") }
         val canon = runCatching { f.canonicalPath }.getOrNull()
             ?: throw FileNotFoundException(documentId)
         val roots = canonicalRoots()
@@ -211,14 +221,16 @@ class LocalDocumentsProvider : DocumentsProvider() {
         if (signal?.isCanceled == true) throw FileNotFoundException("Canceled")
         if (!file.exists()) throw FileNotFoundException(documentId)
         if (file.isDirectory) throw FileNotFoundException("Cannot open directory: $documentId")
-        val accessMode = ParcelFileDescriptor.parseMode(mode)
+        val wantsWrite = mode.contains('w')
+        if (wantsWrite && !file.canWrite()) throw FileNotFoundException("Not writable: $documentId")
+        val accessMode = ParcelFileDescriptor.parseMode(if (wantsWrite) mode else "r")
         return ParcelFileDescriptor.open(file, accessMode)
     }
 
     override fun isChildDocument(parentDocumentId: String, documentId: String): Boolean {
         return try {
-            val parentCanon = File(parentDocumentId).canonicalPath
-            val childCanon = File(documentId).canonicalPath
+            val parentCanon = File(if (File(parentDocumentId).isAbsolute) parentDocumentId else "/$parentDocumentId").canonicalPath
+            val childCanon = File(if (File(documentId).isAbsolute) documentId else "/$documentId").canonicalPath
             childCanon == parentCanon || childCanon.startsWith("$parentCanon/")
         } catch (_: Exception) { false }
     }
@@ -230,16 +242,21 @@ class LocalDocumentsProvider : DocumentsProvider() {
         if (displayName.isBlank() || displayName == "." || displayName == "..") return null
         if ('/' in displayName || '\\' in displayName || '\u0000' in displayName) return null
         val target = File(parent, displayName)
+        val targetCanon = runCatching { target.canonicalPath }.getOrNull() ?: return null
+        val parentCanon = runCatching { parent.canonicalPath }.getOrNull() ?: return null
+        if (targetCanon != parentCanon && !targetCanon.startsWith("$parentCanon/")) return null
         runCatching { containedFile(target.absolutePath) }.getOrNull() ?: return null
-        if (target.exists()) return null
-        return try {
-            if (Document.MIME_TYPE_DIR == mimeType) {
-                if (target.mkdir()) target.absolutePath else null
-            } else {
-                if (target.createNewFile()) target.absolutePath else null
+        synchronized(this) {
+            if (target.exists()) return null
+            return try {
+                if (Document.MIME_TYPE_DIR == mimeType) {
+                    if (target.mkdir()) target.absolutePath else null
+                } else {
+                    if (target.createNewFile()) target.absolutePath else null
+                }
+            } catch (e: IOException) {
+                null
             }
-        } catch (e: IOException) {
-            null
         }
     }
 
@@ -269,6 +286,9 @@ class LocalDocumentsProvider : DocumentsProvider() {
         val parent = file.parentFile ?: return null
         if (!parent.canWrite()) return null
         val dest = File(parent, displayName)
+        val destCanon = runCatching { dest.canonicalPath }.getOrNull() ?: return null
+        val parentCanon = runCatching { parent.canonicalPath }.getOrNull() ?: return null
+        if (destCanon != parentCanon && !destCanon.startsWith("$parentCanon/")) return null
         runCatching { containedFile(dest.absolutePath) }.getOrNull() ?: return null
         if (dest.exists()) return null
         return if (file.renameTo(dest)) dest.absolutePath else null
@@ -476,5 +496,22 @@ class LocalDocumentsProvider : DocumentsProvider() {
             DocumentsContract.buildTreeDocumentUri(authority, documentId)
         fun rootUri(rootId: String, authority: String = AUTHORITY) =
             DocumentsContract.buildRootUri(authority, rootId)
+
+        fun rootsForCheck(context: Context): List<String> = runCatching {
+            val koin = GlobalContext.getOrNull()
+            val viaPolicy = if (koin != null) {
+                koin.get<FileSystemAccess>().getAllStorageRoots()
+                    .mapNotNull { runCatching { it.canonicalPath }.getOrNull() }
+            } else {
+                emptyList()
+            }
+            val sandbox = runCatching {
+                context.getExternalFilesDir(null)?.canonicalPath
+            }.getOrNull()
+            val primary = runCatching {
+                Environment.getExternalStorageDirectory().canonicalPath
+            }.getOrNull()
+            (viaPolicy + listOfNotNull(sandbox, primary)).distinct()
+        }.getOrDefault(emptyList())
     }
 }

@@ -502,7 +502,7 @@ fun FileBrowserScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = if (isCreateDocumentMode) "Select folder to create file" else "Choose this folder for other app",
+                                    text = if (isCreateDocumentMode) "Select folder to create file in" else "Choose this folder",
                                     style = MaterialTheme.typography.titleSmall,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                                     maxLines = 1,

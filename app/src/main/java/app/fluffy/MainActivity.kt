@@ -1,7 +1,6 @@
 package app.fluffy
 
 import android.annotation.SuppressLint
-import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
@@ -66,8 +65,6 @@ import app.fluffy.helper.OpenTarget
 import app.fluffy.helper.detectTarget
 import app.fluffy.helper.launchImageViewer
 import app.fluffy.helper.openContent
-import app.fluffy.helper.openWithExport
-import app.fluffy.helper.openWithExportMultiple
 import app.fluffy.helper.purgeOldShareZips
 import app.fluffy.helper.shareExported
 import app.fluffy.helper.shareWithFolders
@@ -75,10 +72,8 @@ import app.fluffy.helper.purgeOldExports
 import app.fluffy.shell.ShizukuAccess
 import app.fluffy.helper.purgeOldViewerCache
 import app.fluffy.helper.toViewableUris
-import app.fluffy.helper.exportForOpenWith
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.operations.ArchiveJobManager
-import app.fluffy.provider.LocalDocumentsProvider
 import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.ui.components.DirectoryCounter
 import app.fluffy.ui.components.snackbar.LauncherSnackbarHost
@@ -177,6 +172,10 @@ class MainActivity : ComponentActivity() {
         inAppFolderPickerTitle.value = "Choose destination folder"
 
         pickerAction = intent?.action
+        if (pickerAction != null && !isExternalPickerAction(pickerAction)) {
+            AppLog.w("MainActivity", "ignoring non-picker action on MainActivity: $pickerAction")
+            pickerAction = null
+        }
         isTreePickMode = pickerAction == Intent.ACTION_OPEN_DOCUMENT_TREE
         isCreateDocumentMode = pickerAction == Intent.ACTION_CREATE_DOCUMENT
         isPickerMode = pickerAction in listOf(
@@ -716,8 +715,24 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        setIntent(intent)
         handleViewIntent(intent)
+        if (isExternalPickerAction(intent.action)) {
+            AppLog.w("MainActivity", "forwarding picker intent to PickerActivity: ${intent.action}")
+            runCatching {
+                startActivity(Intent(intent).setClass(this, PickerActivity::class.java))
+            }.onFailure {
+                AppLog.w("MainActivity", "picker forward failed", it)
+            }
+        }
     }
+
+    private fun isExternalPickerAction(action: String?): Boolean = action in listOf(
+        Intent.ACTION_GET_CONTENT,
+        Intent.ACTION_OPEN_DOCUMENT,
+        Intent.ACTION_OPEN_DOCUMENT_TREE,
+        Intent.ACTION_CREATE_DOCUMENT
+    )
 
     private fun extractWithConfirm(
         archive: Uri,
@@ -818,168 +833,20 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun getAuthorityForResult(): String {
-        val debugAuth = "${packageName}.documents"
-        val info = packageManager.resolveContentProvider(debugAuth, 0)
-        return if (info != null) debugAuth else LocalDocumentsProvider.AUTHORITY
-    }
-
-    private fun uriToDocumentId(uri: Uri): String? {
-        return when (uri.scheme) {
-            "file" -> uri.path
-            "content" -> {
-                runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
-                    ?: runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull()
-                    ?: uri.path
-            }
-            "root", "shizuku" -> uri.path
-            else -> uri.path ?: uri.toString()
-        }
-    }
 
     private fun returnPickedTree(folderUri: Uri) {
-        val docId = uriToDocumentId(folderUri) ?: run {
-            setResult(RESULT_CANCELED); finish(); return
-        }
-        // If folderUri is already a content tree (e.g. from SAF/shizuku/root provider), return it as-is with grants.
-        val file = File(docId)
-        if (!file.exists() || !file.isDirectory) {
-            if (folderUri.scheme == "content") {
-                val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
-                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
-                    Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
-                val result = Intent().apply {
-                    data = folderUri
-                    addFlags(flags)
-                    clipData = ClipData.newUri(contentResolver, "tree", folderUri)
-                }
-                callingPackage?.let { pkg ->
-                    try { grantUriPermission(pkg, folderUri, flags) } catch (e: Exception) {
-                        AppLog.d("MainActivity", "grantUriPermission failed: $pkg $folderUri", e)
-                    }
-                }
-                setResult(RESULT_OK, result)
-                finish()
-                return
-            }
-            setResult(RESULT_CANCELED); finish(); return
-        }
-        val authority = getAuthorityForResult()
-        val treeUri = LocalDocumentsProvider.treeUri(docId, authority)
-        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-            Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
-            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION or
-            Intent.FLAG_GRANT_PREFIX_URI_PERMISSION
-        val result = Intent().apply {
-            data = treeUri
-            addFlags(flags)
-            clipData = ClipData.newUri(contentResolver, "tree", treeUri)
-        }
-        // Explicit prefix grant for callers that rely on grantUriPermission (e.g. LocalSend/UniFile).
-        // Use callingPackage if available; otherwise rely on ClipData grant which system handles.
-        // Best-effort: ClipData grant already covers most callers.
-        callingPackage?.let { pkg ->
-            try { grantUriPermission(pkg, treeUri, flags) } catch (e: Exception) {
-                AppLog.d("MainActivity", "grantUriPermission failed: $pkg $treeUri", e)
-            }
-        }
-        // Also grant to ourselves so takePersistable checks pass on some OEMs
-        try { grantUriPermission(packageName, treeUri, flags) } catch (e: Exception) {
-            AppLog.d("MainActivity", "self grantUriPermission failed: $treeUri", e)
-        }
-        setResult(RESULT_OK, result)
-        finish()
+        AppLog.w("MainActivity", "returnPickedTree called on MainActivity; ignoring: $folderUri")
+        setResult(RESULT_CANCELED); finish()
     }
 
     private fun returnCreatedDocument(parentUri: Uri, displayName: String) {
-        if (displayName.isBlank() || displayName == "." || displayName == ".." ||
-            '/' in displayName || '\\' in displayName || '\u0000' in displayName
-        ) {
-            setResult(RESULT_CANCELED); finish(); return
-        }
-        val parentId = uriToDocumentId(parentUri) ?: run {
-            setResult(RESULT_CANCELED); finish(); return
-        }
-        val authority = getAuthorityForResult()
-        val file = File(parentId)
-        if (!file.isDirectory || !file.canWrite()) {
-            setResult(RESULT_CANCELED); finish(); return
-        }
-        val targetDocId: String = run {
-            val target = File(file, displayName)
-            val canonParent = runCatching { file.canonicalPath }.getOrNull()
-            if (canonParent == null) {
-                setResult(RESULT_CANCELED); finish(); return
-            }
-            val canonTarget = runCatching { target.canonicalPath }.getOrNull()
-            if (canonTarget == null) {
-                setResult(RESULT_CANCELED); finish(); return
-            }
-            if (canonTarget != canonParent && !canonTarget.startsWith("$canonParent/")) {
-                setResult(RESULT_CANCELED); finish(); return
-            }
-            try {
-                if (!target.exists() && !target.createNewFile()) {
-                    setResult(RESULT_CANCELED); finish(); return
-                }
-                target.absolutePath
-            } catch (e: Exception) {
-                AppLog.w("MainActivity", "createNewFile failed: ${target.absolutePath}", e)
-                setResult(RESULT_CANCELED); finish(); return
-            }
-        }
-
-        val docUri = LocalDocumentsProvider.docUri(targetDocId, authority)
-        val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-            Intent.FLAG_GRANT_WRITE_URI_PERMISSION or
-            Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-        val mime = FileSystemAccess.getMimeType(displayName)
-        val result = Intent().apply {
-            data = docUri
-            type = mime
-            addFlags(flags)
-            clipData = ClipData.newUri(contentResolver, "doc", docUri)
-        }
-        setResult(RESULT_OK, result)
-        finish()
+        AppLog.w("MainActivity", "returnCreatedDocument called on MainActivity; ignoring")
+        setResult(RESULT_CANCELED); finish()
     }
 
     private fun returnPickedFile(uri: Uri) {
-        // prefer DocumentsProvider when file-backed
-        val docId = uriToDocumentId(uri)
-        val authority = getAuthorityForResult()
-        val useProviderUri = docId != null && File(docId).exists() && uri.scheme == "file"
-        val providerUri = if (useProviderUri && docId != null) LocalDocumentsProvider.docUri(docId, authority) else null
-
-        lifecycleScope.launch {
-            val shareable = if (providerUri != null) {
-                providerUri
-            } else {
-                runCatching {
-                    applicationContext.exportForOpenWith(uri, io.queryDisplayName(uri))
-                }.getOrElse { uri }
-            }
-
-            val mime = contentResolver.getType(shareable)
-                ?: FileSystemAccess.getMimeType(io.queryDisplayName(shareable))
-
-            val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
-                (if (intent?.action == Intent.ACTION_OPEN_DOCUMENT) Intent.FLAG_GRANT_WRITE_URI_PERMISSION else 0) or
-                Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
-
-            val resultIntent = Intent().apply {
-                data = shareable
-                type = mime
-                clipData = ClipData.newUri(contentResolver, "picked", shareable)
-                addFlags(flags)
-            }
-            callingPackage?.let { pkg ->
-                runCatching { grantUriPermission(pkg, shareable, flags) }
-            }
-            setResult(RESULT_OK, resultIntent)
-            finish()
-        }
+        AppLog.w("MainActivity", "returnPickedFile called on MainActivity; ignoring: $uri")
+        setResult(RESULT_CANCELED); finish()
     }
 
     private fun checkStoragePermissions() {

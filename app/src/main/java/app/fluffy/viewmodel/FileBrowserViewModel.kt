@@ -534,7 +534,7 @@ class FileBrowserViewModel(
         }
     }
 
-    fun goUp() {
+    fun goUp(): Boolean {
         val st = _state.value
         when (val current = st.currentLocation) {
             is BrowseLocation.FileSystem -> {
@@ -542,11 +542,14 @@ class FileBrowserViewModel(
                 if (parent != null && parent.exists()) {
                     _state.value = st.copy(stack = if (st.stack.size > 1) st.stack.dropLast(1) else st.stack)
                     openFileSystemPath(parent)
+                    return true
                 } else if (st.stack.size > 1) {
                     val previous = st.stack.dropLast(1).last()
                     navigateToLocation(previous)
+                    return true
                 } else {
                     showQuickAccess()
+                    return false
                 }
             }
             is BrowseLocation.SAF -> {
@@ -558,22 +561,27 @@ class FileBrowserViewModel(
                             stack = if (_state.value.stack.size > 1) _state.value.stack.dropLast(1) else _state.value.stack
                         )
                         openDir(parent, fromHistory = true)
+                        return true
                     } else {
                         showQuickAccess()
+                        return false
                     }
                 } else {
-                    // Non-shell (content:// picked tree or similar) — fallback to previous in stack
+
                     if (st.stack.size > 1) {
                         val previous = st.stack.dropLast(1).last()
                         navigateToLocation(previous)
+                        return true
                     } else {
                         showQuickAccess()
+                        return false
                     }
                 }
             }
-            is BrowseLocation.QuickAccess, null -> { /* nowhere to go */ }
+            is BrowseLocation.QuickAccess, null -> { return false }
         }
     }
+
 
     private fun upOfShell(uri: Uri): Uri? {
         val scheme = uri.scheme ?: return null
