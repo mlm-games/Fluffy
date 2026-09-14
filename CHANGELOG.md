@@ -1,3 +1,8 @@
+## v4.4.7
+
+- No user-facing changes were mentioned since previous release
+
+
 ## v4.4.6
 
 - move the picker to a seperate activity like other pickers (#64)
