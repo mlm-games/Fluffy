@@ -41,6 +41,8 @@ import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Archive
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.CreateNewFolder
 import androidx.compose.material.icons.filled.Delete
@@ -100,6 +102,7 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.focusable
 import androidx.compose.ui.focus.onFocusChanged
@@ -486,61 +489,20 @@ fun FileBrowserScreen(
                 }
 
                 if (isTreePickMode) {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colorScheme.primaryContainer
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 12.dp, vertical = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = if (isCreateDocumentMode) "Select folder to create file in" else "Choose this folder",
-                                    style = MaterialTheme.typography.titleSmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    TextButton(onClick = onCancelTreePick) { Text(stringResource(R.string.cancel)) }
-                                    Button(
-                                        onClick = { currentDirUri?.let(onPickTreeFolder) },
-                                        enabled = currentDirUri != null
-                                    ) { Text(stringResource(R.string.use_this_folder)) }
-                                }
-                            }
-                            if (isCreateDocumentMode) {
-                                OutlinedTextField(
-                                    value = pendingCreateName,
-                                    onValueChange = { pendingCreateName = it },
-                                    label = { Text(stringResource(R.string.file_name)) },
-                                    singleLine = true,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.End
-                                ) {
-                                    Button(
-                                        onClick = {
-                                            val name = pendingCreateName.trim()
-                                            if (name.isNotEmpty() && currentDirUri != null) {
-                                                onCreateDocumentConfirmed(currentDirUri, name)
-                                            }
-                                        },
-                                        enabled = pendingCreateName.trim().isNotEmpty() && currentDirUri != null
-                                    ) { Text("Create here") }
-                                }
-                            }
-                        }
+                    if (isCreateDocumentMode) {
+                        CreateDocumentBar(
+                            pendingCreateName = pendingCreateName,
+                            onNameChange = { pendingCreateName = it },
+                            currentDirUri = currentDirUri,
+                            onCancel = onCancelTreePick,
+                            onConfirm = { name, dir -> onCreateDocumentConfirmed(dir, name) },
+                        )
+                    } else {
+                        PickFolderBar(
+                            currentDirUri = currentDirUri,
+                            onCancel = onCancelTreePick,
+                            onConfirm = { dir -> onPickTreeFolder(dir) },
+                        )
                     }
                 } else if (pickFolderMode) {
                     Surface(
@@ -2026,6 +1988,117 @@ private fun getIconForQuickAccess(icon: String) = when (icon.lowercase()) {
     "sd" -> Icons.Filled.SdCard
     "terminal" -> Icons.Default.Settings
     else -> Icons.Default.Folder
+}
+
+@Composable
+private fun PickFolderBar(
+    currentDirUri: Uri?,
+    onCancel: () -> Unit,
+    onConfirm: (Uri) -> Unit,
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Save into this folder",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f)
+            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = onCancel) { Text(stringResource(R.string.cancel)) }
+                Button(
+                    onClick = { currentDirUri?.let(onConfirm) },
+                    enabled = currentDirUri != null
+                ) { Text(stringResource(R.string.use_this_folder)) }
+            }
+        }
+    }
+}
+
+@Composable
+private fun CreateDocumentBar(
+    pendingCreateName: String,
+    onNameChange: (String) -> Unit,
+    currentDirUri: Uri?,
+    onCancel: () -> Unit,
+    onConfirm: (String, Uri) -> Unit,
+) {
+    val saveFocus = remember { FocusRequester() }
+    val cancelFocus = remember { FocusRequester() }
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.primaryContainer
+    ) {
+        // Single-line layout: text field + icon actions on the same row.
+        // TV remote: Down from the field jumps straight to Save/Cancel.
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            OutlinedTextField(
+                value = pendingCreateName,
+                onValueChange = onNameChange,
+                label = { Text(stringResource(R.string.file_name)) },
+                singleLine = true,
+                modifier = Modifier
+                    .weight(1f)
+                    .onPreviewKeyEvent { ev ->
+                        if (ev.type == KeyEventType.KeyDown && ev.key == Key.DirectionDown) {
+                            if (pendingCreateName.trim().isNotEmpty() && currentDirUri != null) {
+                                saveFocus.requestFocus()
+                            } else {
+                                cancelFocus.requestFocus()
+                            }
+                            true
+                        } else false
+                    }
+            )
+            IconButton(
+                onClick = onCancel,
+                modifier = Modifier
+                    .focusRequester(cancelFocus)
+                    .focusProperties { right = saveFocus }
+            ) {
+                Icon(
+                    Icons.Default.Close,
+                    contentDescription = stringResource(R.string.cancel),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+            IconButton(
+                onClick = {
+                    val name = pendingCreateName.trim()
+                    if (name.isNotEmpty() && currentDirUri != null) {
+                        onConfirm(name, currentDirUri)
+                    }
+                },
+                enabled = pendingCreateName.trim().isNotEmpty() && currentDirUri != null,
+                modifier = Modifier
+                    .focusRequester(saveFocus)
+                    .focusProperties { left = cancelFocus }
+            ) {
+                Icon(
+                    Icons.Default.Check,
+                    contentDescription = "Save here",
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+            }
+        }
+    }
 }
 
 @Composable

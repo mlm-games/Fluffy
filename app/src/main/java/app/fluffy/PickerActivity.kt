@@ -186,38 +186,44 @@ class PickerActivity : ComponentActivity() {
             @Suppress("DEPRECATION")
             intent?.getParcelableExtra(DocumentsContract.EXTRA_INITIAL_URI)
         }
-        initial?.let { uri ->
-            lifecycleScope.launch {
-                try {
-                    when (uri.scheme) {
-                        "file" -> {
-                            val f = File(uri.path ?: return@launch)
-                            if (f.exists()) {
-                                val target = if (f.isFile) f.parentFile ?: f else f
-                                filesVM.openFileSystemPath(target)
-                            }
+        if (initial == null) {
+            filesVM.openDefaultPickerDir()
+            return
+        }
+        val uri = initial
+        lifecycleScope.launch {
+            try {
+                when (uri.scheme) {
+                    "file" -> {
+                        val f = File(uri.path ?: return@launch)
+                        if (f.exists()) {
+                            val target = if (f.isFile) f.parentFile ?: f else f
+                            filesVM.openFileSystemPath(target)
+                        } else {
+                            filesVM.openDefaultPickerDir()
                         }
-                        "content" -> {
-                            val docId = runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
-                                ?: runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull()
-                            if (docId != null) {
-                                val f = File(docId)
-                                if (f.exists() && f.isDirectory) {
-                                    filesVM.openFileSystemPath(f)
-                                    return@launch
-                                }
-                                if (f.exists()) {
-                                    filesVM.openFileSystemPath(f.parentFile ?: f)
-                                    return@launch
-                                }
-                            }
-                            filesVM.openDir(uri)
-                        }
-                        else -> filesVM.openDir(uri)
                     }
-                } catch (e: Exception) {
-                    AppLog.w("PickerActivity", "openDir failed: $uri", e)
+                    "content" -> {
+                        val docId = runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
+                            ?: runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull()
+                        if (docId != null) {
+                            val f = File(docId)
+                            if (f.exists() && f.isDirectory) {
+                                filesVM.openFileSystemPath(f)
+                                return@launch
+                            }
+                            if (f.exists()) {
+                                filesVM.openFileSystemPath(f.parentFile ?: f)
+                                return@launch
+                            }
+                        }
+                        filesVM.openDir(uri)
+                    }
+                    else -> filesVM.openDir(uri)
                 }
+            } catch (e: Exception) {
+                AppLog.w("PickerActivity", "openDir failed: $uri", e)
+                filesVM.openDefaultPickerDir()
             }
         }
     }
@@ -333,47 +339,31 @@ class PickerActivity : ComponentActivity() {
             snackbar.show("That location can't be shared with other apps")
             return
         }
-        val parentId = uriToDocumentId(parentUri) ?: run {
+        val createdUri = runCatching {
+            io.createFile(parentUri, displayName, pickerMimeType ?: "application/octet-stream")
+        }.getOrNull()
+        if (createdUri == null) {
+            AppLog.w("PickerActivity", "SafIo.createFile failed: $parentUri / $displayName")
             setResult(RESULT_CANCELED); finish(); return
         }
-        val parent = File("/$parentId")
-        if (!parent.isDirectory || !parent.canWrite()) {
-            setResult(RESULT_CANCELED); finish(); return
-        }
-        val canonParent = runCatching { parent.canonicalPath }.getOrNull() ?: run {
-            setResult(RESULT_CANCELED); finish(); return
-        }
-        val target = File(parent, displayName)
-        val canonTarget = runCatching { target.canonicalPath }.getOrNull() ?: run {
-            setResult(RESULT_CANCELED); finish(); return
-        }
-        if (canonTarget != canonParent && !canonTarget.startsWith("$canonParent/")) {
-            setResult(RESULT_CANCELED); finish(); return
-        }
-        val created = try {
-            synchronized(this) {
-                if (!target.exists() && !target.createNewFile()) return@synchronized false
-                target.isFile
+        val docUri = when (createdUri.scheme) {
+            "file" -> {
+                val docId = qualifyDocId(createdUri.path) ?: run {
+                    setResult(RESULT_CANCELED); finish(); return
+                }
+                LocalDocumentsProvider.docUri(docId, authorityForResult())
             }
-        } catch (e: Exception) {
-            AppLog.w("PickerActivity", "createNewFile failed: ${target.absolutePath}", e)
-            false
+            else -> createdUri
         }
-        if (!created) {
-            setResult(RESULT_CANCELED); finish(); return
-        }
-        val createdDocId = qualifyDocId(target.absolutePath) ?: run {
-            setResult(RESULT_CANCELED); finish(); return
-        }
-        val docUri = LocalDocumentsProvider.docUri(createdDocId, authorityForResult())
-        val mime = FileSystemAccess.getMimeType(displayName)
+        val mime = pickerMimeType ?: FileSystemAccess.getMimeType(displayName)
         val result = Intent().apply {
-            data = docUri
-            type = mime
+            // NOTE: setData() and setType() clear each other
+            setDataAndType(docUri, mime)
             addFlags(resultGrantFlags())
             clipData = clipForUri("doc", docUri)
         }
         bestEffortDirectGrant(callingPackage, docUri)
+        AppLog.d("PickerActivity", "CREATE_DOCUMENT returning uri=$docUri mime=$mime")
         setResult(RESULT_OK, result)
         finish()
     }
@@ -415,8 +405,7 @@ class PickerActivity : ComponentActivity() {
             if (wantWrite) flags = flags or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
 
             val resultIntent = Intent().apply {
-                data = shareable
-                type = mime
+                setDataAndType(shareable, mime)
                 clipData = clipForUri("picked", shareable)
                 addFlags(flags)
             }

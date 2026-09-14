@@ -671,6 +671,20 @@ class FileBrowserViewModel(
         }
     }
 
+    fun openDefaultPickerDir(): Boolean {
+        val dirs = fileSystemAccess.getAllStorageRoots()
+        val downloads = runCatching {
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS)
+        }.getOrNull()
+        val candidates = listOfNotNull(
+            downloads?.takeIf { it.exists() && it.isDirectory },
+            dirs.firstOrNull { it.exists() && it.isDirectory }
+        ).distinctBy { it.absolutePath }
+        val target = candidates.firstOrNull() ?: return false
+        openFileSystemPath(target)
+        return true
+    }
+
     private suspend fun handleFileOpen(uri: Uri) {
         _state.value = _state.value.copy(pendingAction = PendingAction.OpenFile(uri))
     }
