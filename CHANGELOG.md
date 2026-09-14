@@ -1,3 +1,10 @@
+## v4.4.6
+
+- move the picker to a seperate activity like other pickers (#64)
+- folders share as zip
+- share now uses the correct intent (for multiple uses */*)
+
+
 ## v4.4.5
 
 - refresh state (filecount) when files are added
