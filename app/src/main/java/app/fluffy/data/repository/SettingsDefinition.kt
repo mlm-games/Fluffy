@@ -1,10 +1,12 @@
 package app.fluffy.data.repository
 
 import app.fluffy.R
+import io.github.mlmgames.settings.core.annotations.ActionHandler
 import io.github.mlmgames.settings.core.annotations.CategoryDefinition
 import io.github.mlmgames.settings.core.annotations.Persisted
 import io.github.mlmgames.settings.core.annotations.SchemaVersion
 import io.github.mlmgames.settings.core.annotations.Setting
+import io.github.mlmgames.settings.core.annotations.SettingAction
 import io.github.mlmgames.settings.core.types.Button
 import io.github.mlmgames.settings.core.types.Dropdown
 import io.github.mlmgames.settings.core.types.Slider
@@ -210,8 +212,13 @@ data class AppSettings(
         category = System::class,
         type = Button::class
     )
-    val supportDevelopment: Long = 0L,
+    @ActionHandler(SupportDevelopmentAction::class)
+    val supportDevelopment: Unit = Unit,
 )
+
+object SupportDevelopmentAction : SettingAction {
+    override val id: String = "supportDevelopment"
+}
 
 
 
