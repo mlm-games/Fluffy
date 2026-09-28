@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Ekle</string>
+    <string name="apply">Uygula</string>
+    <string name="back">Geri</string>
+    <string name="bookmark_name">Yer imi adı</string>
+    <string name="bookmark_current_location">Geçerli konumu yer imlerine ekle</string>
+    <string name="browse_files">Dosyalara göz at</string>
+    <string name="confirm">Onayla</string>
+    <string name="details">Ayrıntılar</string>
+    <string name="discard">Yoksay</string>
+    <string name="dismiss">Kapat</string>
+    <string name="extract_selected">Seçilenleri çıkar</string>
+    <string name="grant_permission_action">İzin ver</string>
+    <string name="in_progress">Devam ediyor</string>
+    <string name="install_open_with">Kur (Şununla aç)</string>
+    <string name="loaded_charset_notice">%1$s olarak yüklendi; kaydetmek UTF-8\'e dönüştürür.</string>
+    <string name="new_name">Yeni ad</string>
+    <string name="no_entries_in_archive">Bu arşivde hiçbir giriş bulunamadı.</string>
+    <string name="no_location_selected">Konum seçilmedi</string>
+    <string name="no_tasks">Şu anda hiç görev yok.</string>
+    <string name="ok">Tamam</string>
+    <string name="open_as_folder">Klasör olarak aç</string>
+    <string name="password_plain">Parola</string>
+    <string name="password_required">Parola gerekli</string>
+    <string name="pick_folder">Klasör seç</string>
+    <string name="read_only">Salt okunur</string>
+    <string name="recent">Son</string>
+    <string name="save">Kaydet</string>
+    <string name="save_error">Kaydetme hatası</string>
+    <string name="save_here">Buraya kaydet</string>
+    <string name="save_into_folder">Bu klasöre kaydet</string>
+    <string name="select">Seç</string>
+    <string name="select_entries">Girişleri seç</string>
+    <string name="task_center">Görev Merkezi</string>
+    <string name="archive_encrypted">Bu arşif şifrelenmiş. Kilidini açmak için parolayı gir.</string>
+    <string name="unlock">Kilidi aç</string>
+    <string name="unsaved_changes">Kaydedilmemiş değişiklikler</string>
+    <string name="unsaved_changes_confirm">Kaydedilmemiş değişikliklerin var. Bunları yoksayılsın mı?</string>
+    <string name="selected_count">%1$d seçildi</string>
 </resources>

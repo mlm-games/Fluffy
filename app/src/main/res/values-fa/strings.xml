@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">افزودن</string>
+    <string name="apply">اعمال</string>
+    <string name="back">بازگشت</string>
+    <string name="bookmark_name">نام نشانک</string>
+    <string name="bookmark_current_location">افزودن موقعیت فعلی به نشانک‌ها</string>
+    <string name="browse_files">مرور فایل‌ها</string>
+    <string name="confirm">تأیید</string>
+    <string name="details">جزئیات</string>
+    <string name="discard">رد کردن</string>
+    <string name="dismiss">بستن</string>
+    <string name="extract_selected">استخراج موارد انتخابی</string>
+    <string name="grant_permission_action">اعطای مجوز</string>
+    <string name="in_progress">در حال انجام</string>
+    <string name="install_open_with">نصب (باز کردن با)</string>
+    <string name="loaded_charset_notice">بارگذاری‌شده به‌صورت %1$s؛ ذخیره آن را به UTF-8 تبدیل می‌کند.</string>
+    <string name="new_name">نام جدید</string>
+    <string name="no_entries_in_archive">هیچ ورودی در این بایگانی یافت نشد.</string>
+    <string name="no_location_selected">هیچ مکانی انتخاب نشده است</string>
+    <string name="no_tasks">در حال حاضر هیچ کاری وجود ندارد.</string>
+    <string name="ok">باشه</string>
+    <string name="open_as_folder">باز کردن به‌عنوان پوشه</string>
+    <string name="password_plain">گذرواژه</string>
+    <string name="password_required">گذرواژه لازم است</string>
+    <string name="pick_folder">انتخاب پوشه</string>
+    <string name="read_only">فقط خواندنی</string>
+    <string name="recent">اخیر</string>
+    <string name="save">ذخیره</string>
+    <string name="save_error">خطای ذخیره</string>
+    <string name="save_here">ذخیره در اینجا</string>
+    <string name="save_into_folder">ذخیره در این پوشه</string>
+    <string name="select">انتخاب</string>
+    <string name="select_entries">انتخاب ورودی‌ها</string>
+    <string name="task_center">مرکز وظایف</string>
+    <string name="archive_encrypted">این بایگانی رمزگذاری شده است. برای باز کردن قفل، گذرواژه را وارد کنید.</string>
+    <string name="unlock">باز کردن قفل</string>
+    <string name="unsaved_changes">تغییرات ذخیره‌نشده</string>
+    <string name="unsaved_changes_confirm">تغییرات ذخیره‌نشده دارید. می‌خواهید آن‌ها را رد کنید؟</string>
+    <string name="selected_count">%1$d انتخاب‌شده</string>
 </resources>

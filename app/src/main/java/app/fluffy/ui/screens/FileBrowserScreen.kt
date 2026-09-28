@@ -347,7 +347,7 @@ fun FileBrowserScreen(
                             }
                         } else {
                             IconButton(onClick = onShowQuickAccess) {
-                                Icon(Icons.Default.Home, contentDescription = "Home")
+                                Icon(Icons.Default.Home, contentDescription = stringResource(R.string.home))
                             }
                         }
                     },
@@ -392,7 +392,7 @@ fun FileBrowserScreen(
                                 }
                             }
                             IconButton(onClick = onShowQuickAccess) {
-                                Icon(Icons.Default.Home, contentDescription = "Home")
+                                Icon(Icons.Default.Home, contentDescription = stringResource(R.string.home))
                             }
                             IconButton(
                                 onClick = { onViewModeChange(if (viewMode == 0) 1 else 0) }
@@ -420,12 +420,12 @@ fun FileBrowserScreen(
                         }
                         if (!pickFolderMode) {
                             IconButton(onClick = onPickRoot) {
-                                Icon(Icons.Default.FolderOpen, contentDescription = "Pick SAF Folder")
+                                Icon(Icons.Default.FolderOpen, contentDescription = stringResource(R.string.pick_saf_folder))
                             }
                         }
                         Box {
                             IconButton(onClick = { overflowMenuExpanded = true }) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "More")
+                                Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.more))
                             }
                             DropdownMenu(
                                 expanded = overflowMenuExpanded,
@@ -444,7 +444,7 @@ fun FileBrowserScreen(
                                 }
                                 if (!pickFolderMode && currentLocation !is BrowseLocation.QuickAccess) {
                                     DropdownMenuItem(
-                                        text = { Text("Add Bookmark") },
+                                        text = { Text(stringResource(R.string.add_bookmark)) },
                                         leadingIcon = { Icon(Icons.Default.Bookmark, null) },
                                         onClick = {
                                             overflowMenuExpanded = false
@@ -472,7 +472,7 @@ fun FileBrowserScreen(
                                     )
                                 }
                                 DropdownMenuItem(
-                                    text = { Text("Tasks") },
+                                    text = { Text(stringResource(R.string.tasks)) },
                                     leadingIcon = { Icon(Icons.Default.Archive, null) },
                                     onClick = {
                                         overflowMenuExpanded = false
@@ -524,11 +524,11 @@ fun FileBrowserScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                TextButton(onClick = onCancelPickFolder) { Text("Cancel") }
+                                TextButton(onClick = onCancelPickFolder) { Text(stringResource(R.string.cancel)) }
                                 Button(
                                     onClick = { currentDirUri?.let(onPickFolder) },
                                     enabled = currentDirUri != null
-                                ) { Text("Use this folder") }
+                                ) { Text(stringResource(R.string.use_this_folder)) }
                             }
                         }
                     }
@@ -538,7 +538,7 @@ fun FileBrowserScreen(
                         color = MaterialTheme.colorScheme.primaryContainer
                     ) {
                         Text(
-                            text = "Select a file",
+                            text = stringResource(R.string.select_a_file),
                             modifier = Modifier.padding(12.dp),
                             style = MaterialTheme.typography.titleSmall,
                             color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -573,7 +573,7 @@ fun FileBrowserScreen(
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     Text(
-                                        "$count selected",
+                                        stringResource(R.string.selected_count),
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
@@ -582,7 +582,7 @@ fun FileBrowserScreen(
                                             selected.clear()
                                             selectedFiles.clear()
                                         }
-                                    ) { Text("Clear") }
+                                    ) { Text(stringResource(R.string.clear)) }
                                 }
 
                                 Row(
@@ -593,7 +593,7 @@ fun FileBrowserScreen(
                                 ) {
                                     AssistChip(
                                         onClick = { showZipNameDialog = true },
-                                        label = { Text("Zip") },
+                                        label = { Text(stringResource(R.string.zip)) },
                                         leadingIcon = {
                                             Icon(Icons.Default.FolderZip, null, Modifier.size(18.dp))
                                         }
@@ -608,21 +608,21 @@ fun FileBrowserScreen(
 
                                     AssistChip(
                                         onClick = { onShareSelected(allSelectedUris) },
-                                        label = { Text("Share") },
+                                        label = { Text(stringResource(R.string.share)) },
                                         leadingIcon = {
                                             Icon(Icons.Default.Share, null, Modifier.size(18.dp))
                                         }
                                     )
                                     AssistChip(
                                         onClick = { onCopySelected(allSelectedUris) },
-                                        label = { Text("Copy…") },
+                                        label = { Text(stringResource(R.string.copy)) },
                                         leadingIcon = {
                                             Icon(Icons.Default.ContentCopy, null, Modifier.size(18.dp))
                                         }
                                     )
                                     AssistChip(
                                         onClick = { onMoveSelected(allSelectedUris); selected.clear(); selectedFiles.clear() },
-                                        label = { Text("Move…") },
+                                        label = { Text(stringResource(R.string.move)) },
                                         leadingIcon = {
                                             Icon(Icons.AutoMirrored.Filled.DriveFileMove, null, Modifier.size(18.dp))
                                         }
@@ -633,7 +633,7 @@ fun FileBrowserScreen(
                                             selected.clear()
                                             selectedFiles.clear()
                                         },
-                                        label = { Text("Delete") },
+                                        label = { Text(stringResource(R.string.delete)) },
                                         leadingIcon = {
                                             Icon(Icons.Default.Delete, null, Modifier.size(18.dp))
                                         }
@@ -660,7 +660,7 @@ fun FileBrowserScreen(
                                                 renameTextFieldValue = TextFieldValue(text = name, selection = TextRange(0, baseLen))
                                                 showRenameDialog = true
                                             },
-                                            label = { Text("Rename") },
+                                            label = { Text(stringResource(R.string.rename)) },
                                             leadingIcon = {
                                                 Icon(Icons.Default.Edit, null, Modifier.size(18.dp))
                                             }
@@ -669,7 +669,7 @@ fun FileBrowserScreen(
                                             onClick = {
                                                 onOpenWith(allSelectedUris.first(), "")
                                             },
-                                            label = { Text("Open With") },
+                                            label = { Text(stringResource(R.string.open_with)) },
                                             leadingIcon = {
                                                 Icon(Icons.Default.OpenWith, null, Modifier.size(18.dp))
                                             }
@@ -1084,10 +1084,10 @@ fun FileBrowserScreen(
                             modifier = Modifier.size(64.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                        Text("No location selected", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.no_location_selected), style = MaterialTheme.typography.titleMedium)
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            Button(onClick = onShowQuickAccess) { Text("Browse Files") }
-                            OutlinedButton(onClick = onPickRoot) { Text("Pick Folder") }
+                            Button(onClick = onShowQuickAccess) { Text(stringResource(R.string.browse_files)) }
+                            OutlinedButton(onClick = onPickRoot) { Text(stringResource(R.string.pick_folder)) }
                         }
                     }
                 }
@@ -1099,23 +1099,23 @@ fun FileBrowserScreen(
         var name by rememberSaveable { mutableStateOf("archive.zip") }
         AlertDialog(
             onDismissRequest = { showZipNameDialog = false },
-            title = { Text("Create ZIP") },
+            title = { Text(stringResource(R.string.create_zip)) },
             text = {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
                     singleLine = true,
-                    label = { Text("Filename") }
+                    label = { Text(stringResource(R.string.filename)) }
                 )
             },
             confirmButton = {
                 TextButton(onClick = {
                     showZipNameDialog = false
                     confirmOrCreateZip(name)
-                }) { Text("Create") }
+                }) { Text(stringResource(R.string.create)) }
             },
             dismissButton = {
-                TextButton(onClick = { showZipNameDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showZipNameDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -1125,21 +1125,21 @@ fun FileBrowserScreen(
         var pwd by rememberSaveable { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { show7zDialog = false },
-            title = { Text("Create 7z") },
+            title = { Text(stringResource(R.string.create_7z)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
                         singleLine = true,
-                        label = { Text("Filename") }
+                        label = { Text(stringResource(R.string.filename)) }
                     )
                     OutlinedTextField(
                         value = pwd,
                         onValueChange = { pwd = it },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
-                        label = { Text("Password (optional)") }
+                        label = { Text(stringResource(R.string.password)) }
                     )
                 }
             },
@@ -1147,10 +1147,10 @@ fun FileBrowserScreen(
                 TextButton(onClick = {
                     show7zDialog = false
                     confirmOrCreate7z(name, pwd.ifBlank { null })
-                }) { Text("Create") }
+                }) { Text(stringResource(R.string.create)) }
             },
             dismissButton = {
-                TextButton(onClick = { show7zDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { show7zDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -1159,13 +1159,13 @@ fun FileBrowserScreen(
         var folderName by rememberSaveable { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showNewFolderDialog = false },
-            title = { Text("Create New Folder") },
+            title = { Text(stringResource(R.string.create_new_folder)) },
             text = {
                 OutlinedTextField(
                     value = folderName,
                     onValueChange = { folderName = it },
                     singleLine = true,
-                    label = { Text("Folder name") }
+                    label = { Text(stringResource(R.string.folder_name)) }
                 )
             },
             confirmButton = {
@@ -1176,10 +1176,10 @@ fun FileBrowserScreen(
                             showNewFolderDialog = false
                         }
                     }
-                ) { Text("Create") }
+                ) { Text(stringResource(R.string.create)) }
             },
             dismissButton = {
-                TextButton(onClick = { showNewFolderDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showNewFolderDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -1188,13 +1188,13 @@ fun FileBrowserScreen(
         var fileName by rememberSaveable { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showNewFileDialog = false },
-            title = { Text("Create New File") },
+            title = { Text(stringResource(R.string.create_new_file)) },
             text = {
                 OutlinedTextField(
                     value = fileName,
                     onValueChange = { fileName = it },
                     singleLine = true,
-                    label = { Text("File name") }
+                    label = { Text(stringResource(R.string.file_name)) }
                 )
             },
             confirmButton = {
@@ -1205,10 +1205,10 @@ fun FileBrowserScreen(
                             showNewFileDialog = false
                         }
                     }
-                ) { Text("Create") }
+                ) { Text(stringResource(R.string.create)) }
             },
             dismissButton = {
-                TextButton(onClick = { showNewFileDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showNewFileDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -1223,7 +1223,7 @@ fun FileBrowserScreen(
                     value = clipboardFileName,
                     onValueChange = { clipboardFileName = it },
                     singleLine = true,
-                    label = { Text("File name") }
+                    label = { Text(stringResource(R.string.file_name)) }
                 )
             },
             confirmButton = {
@@ -1234,10 +1234,10 @@ fun FileBrowserScreen(
                             showPasteClipboardDialog = false
                         }
                     }
-                ) { Text("Paste") }
+                ) { Text(stringResource(R.string.paste)) }
             },
             dismissButton = {
-                TextButton(onClick = { showPasteClipboardDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showPasteClipboardDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -1260,13 +1260,13 @@ fun FileBrowserScreen(
         }
         AlertDialog(
             onDismissRequest = { showRenameDialog = false },
-            title = { Text("Rename") },
+            title = { Text(stringResource(R.string.rename)) },
             text = {
                 OutlinedTextField(
                     value = renameTextFieldValue,
                     onValueChange = { renameTextFieldValue = it },
                     singleLine = true,
-                    label = { Text("New name") },
+                    label = { Text(stringResource(R.string.new_name)) },
                     modifier = Modifier.focusRequester(focusRequester)
                 )
             },
@@ -1277,10 +1277,10 @@ fun FileBrowserScreen(
                     showRenameDialog = false
                     selected.clear()
                     selectedFiles.clear()
-                }) { Text("Apply") }
+                }) { Text(stringResource(R.string.apply)) }
             },
             dismissButton = {
-                TextButton(onClick = { showRenameDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showRenameDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -1351,13 +1351,13 @@ private fun QuickAccessView(
                     modifier = Modifier.size(64.dp),
                     tint = MaterialTheme.colorScheme.error
                 )
-                Text("Storage Permission Required", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.storage_permission_required), style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "Grant permission to browse files (reopen on granting)",
+                    stringResource(R.string.grant_permission),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Button(onClick = onRequestPermission) { Text("Grant Permission") }
+                Button(onClick = onRequestPermission) { Text(stringResource(R.string.grant_permission_action)) }
             }
         }
     } else {
@@ -1394,7 +1394,7 @@ private fun QuickAccessView(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        "Bookmarks",
+                        stringResource(R.string.bookmarks),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -2008,7 +2008,7 @@ private fun PickFolderBar(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Text(
-                text = "Save into this folder",
+                text = stringResource(R.string.save_into_folder),
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                 maxLines = 1,
@@ -2093,7 +2093,7 @@ private fun CreateDocumentBar(
             ) {
                 Icon(
                     Icons.Default.Check,
-                    contentDescription = "Save here",
+                    contentDescription = stringResource(R.string.save_here),
                     tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
@@ -2111,13 +2111,13 @@ private fun EmptyFolderView(
     Box(modifier = Modifier.fillMaxSize().padding(pv).padding(16.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(
-                "This folder is empty or inaccessible.",
+                stringResource(R.string.this_folder_is_empty_or_inaccessible),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = onBack, enabled = canUp) { Text("Go up") }
-                Button(onClick = onShowQuickAccess) { Text("Open Quick Access") }
+                OutlinedButton(onClick = onBack, enabled = canUp) { Text(stringResource(R.string.go_up)) }
+                Button(onClick = onShowQuickAccess) { Text(stringResource(R.string.open_quick_access)) }
             }
         }
     }

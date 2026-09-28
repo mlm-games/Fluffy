@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Ajouter</string>
+    <string name="apply">Appliquer</string>
+    <string name="back">Retour</string>
+    <string name="bookmark_name">Nom du signet</string>
+    <string name="bookmark_current_location">Ajouter l’emplacement actuel aux signets</string>
+    <string name="browse_files">Parcourir les fichiers</string>
+    <string name="confirm">Confirmer</string>
+    <string name="details">Détails</string>
+    <string name="discard">Abandonner</string>
+    <string name="dismiss">Fermer</string>
+    <string name="extract_selected">Extraire la sélection</string>
+    <string name="grant_permission_action">Accorder l’autorisation</string>
+    <string name="in_progress">En cours</string>
+    <string name="install_open_with">Installer (Ouvrir avec)</string>
+    <string name="loaded_charset_notice">Chargé en %1$s ; l’enregistrement convertit en UTF-8.</string>
+    <string name="new_name">Nouveau nom</string>
+    <string name="no_entries_in_archive">Aucune entrée trouvée dans cette archive.</string>
+    <string name="no_location_selected">Aucun emplacement sélectionné</string>
+    <string name="no_tasks">Aucune tâche pour le moment.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Ouvrir comme dossier</string>
+    <string name="password_plain">Mot de passe</string>
+    <string name="password_required">Mot de passe requis</string>
+    <string name="pick_folder">Choisir un dossier</string>
+    <string name="read_only">Lecture seule</string>
+    <string name="recent">Récents</string>
+    <string name="save">Enregistrer</string>
+    <string name="save_error">Erreur d’enregistrement</string>
+    <string name="save_here">Enregistrer ici</string>
+    <string name="save_into_folder">Enregistrer dans ce dossier</string>
+    <string name="select">Sélectionner</string>
+    <string name="select_entries">Sélectionner des entrées</string>
+    <string name="task_center">Centre des tâches</string>
+    <string name="archive_encrypted">Cette archive est chiffrée. Saisissez le mot de passe pour la déverrouiller.</string>
+    <string name="unlock">Déverrouiller</string>
+    <string name="unsaved_changes">Modifications non enregistrées</string>
+    <string name="unsaved_changes_confirm">Vous avez des modifications non enregistrées. Voulez-vous les abandonner ?</string>
+    <string name="selected_count">%1$d sélectionné(s)</string>
 </resources>

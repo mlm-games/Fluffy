@@ -33,6 +33,8 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import app.fluffy.R
 import kotlin.math.roundToInt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -66,7 +68,7 @@ fun SliderSettingDialog(
                     contentColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text("Apply")
+                Text(stringResource(R.string.apply))
             }
         },
         dismissButton = {
@@ -76,7 +78,7 @@ fun SliderSettingDialog(
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     ) {
@@ -214,8 +216,8 @@ fun InputDialog(
     label: String,
     value: String,
     placeholder: String = "",
-    confirmText: String = "OK",
-    dismissText: String = "Cancel",
+    confirmText: String = stringResource(R.string.ok),
+    dismissText: String = stringResource(R.string.cancel),
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
     validator: (String) -> Boolean = { true }
@@ -289,7 +291,7 @@ fun <T> SelectionDialog(
                     contentColor = MaterialTheme.colorScheme.primary
                 )
             ) {
-                Text("Select")
+                Text(stringResource(R.string.select))
             }
         },
         dismissButton = {
@@ -299,7 +301,7 @@ fun <T> SelectionDialog(
                     contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             ) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     ) {

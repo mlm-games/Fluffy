@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Toevoegen</string>
+    <string name="apply">Toepassen</string>
+    <string name="back">Terug</string>
+    <string name="bookmark_name">Bladwijzernaam</string>
+    <string name="bookmark_current_location">Huidige locatie aan bladwijzers toevoegen</string>
+    <string name="browse_files">Bestanden doorzoeken</string>
+    <string name="confirm">Bevestigen</string>
+    <string name="details">Details</string>
+    <string name="discard">Negeren</string>
+    <string name="dismiss">Sluiten</string>
+    <string name="extract_selected">Selectie uitpakken</string>
+    <string name="grant_permission_action">Toestemming verlenen</string>
+    <string name="in_progress">Bezig</string>
+    <string name="install_open_with">Installeren (Openen met)</string>
+    <string name="loaded_charset_notice">Geladen als %1$s; bij opslaan wordt dit omgezet naar UTF-8.</string>
+    <string name="new_name">Nieuwe naam</string>
+    <string name="no_entries_in_archive">Geen items gevonden in dit archief.</string>
+    <string name="no_location_selected">Geen locatie geselecteerd</string>
+    <string name="no_tasks">Op dit moment geen taken.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Openen als map</string>
+    <string name="password_plain">Wachtwoord</string>
+    <string name="password_required">Wachtwoord vereist</string>
+    <string name="pick_folder">Map kiezen</string>
+    <string name="read_only">Alleen-lezen</string>
+    <string name="recent">Recent</string>
+    <string name="save">Opslaan</string>
+    <string name="save_error">Fout bij opslaan</string>
+    <string name="save_here">Hier opslaan</string>
+    <string name="save_into_folder">In deze map opslaan</string>
+    <string name="select">Selecteren</string>
+    <string name="select_entries">Items selecteren</string>
+    <string name="task_center">Taakcentrum</string>
+    <string name="archive_encrypted">Dit archief is versleuteld. Voer het wachtwoord in om het te ontgrendelen.</string>
+    <string name="unlock">Ontgrendelen</string>
+    <string name="unsaved_changes">Niet-opgeslagen wijzigingen</string>
+    <string name="unsaved_changes_confirm">U hebt niet-opgeslagen wijzigingen. Wilt u deze verwerpen?</string>
+    <string name="selected_count">%1$d geselecteerd</string>
 </resources>

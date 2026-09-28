@@ -1,6 +1,5 @@
 package app.fluffy.data.repository
 
-import app.fluffy.R
 import io.github.mlmgames.settings.core.annotations.ActionHandler
 import io.github.mlmgames.settings.core.annotations.CategoryDefinition
 import io.github.mlmgames.settings.core.annotations.Persisted
@@ -16,21 +15,21 @@ import io.github.mlmgames.settings.core.types.Toggle
 data class AppSettings(
 
     @Setting(
-        titleRes = R.string.setting_default_sort,
+        titleKey = FluffySettingsKeys.SETTING_DEFAULT_SORT,
         description = "Default sorting for lists",
-        descriptionRes = R.string.setting_default_sort_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_DEFAULT_SORT_DESCRIPTION,
         category = General::class,
         type = Dropdown::class,
         options = ["Name", "Recently Updated", "Size", "Recently Added", "Type"],
-        optionsRes = R.array.setting_default_sort_options,
+        optionsKey = FluffySettingsKeys.SETTING_DEFAULT_SORT_OPTIONS,
         key = "default_sort"
     )
     val defaultSort: Int = 0,
 
     @Setting(
-        titleRes = R.string.setting_sort_reverse,
+        titleKey = FluffySettingsKeys.SETTING_SORT_REVERSE,
         description = "Reverse current sort order (e.g. largest first)",
-        descriptionRes = R.string.setting_sort_reverse_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_SORT_REVERSE_DESCRIPTION,
         category = General::class,
         type = Toggle::class,
         key = "sort_reverse"
@@ -38,9 +37,9 @@ data class AppSettings(
     val sortReverse: Boolean = false,
 
     @Setting(
-        titleRes = R.string.setting_show_hidden,
+        titleKey = FluffySettingsKeys.SETTING_SHOW_HIDDEN,
         description = "Show files and folders starting with a dot (.)",
-        descriptionRes = R.string.setting_show_hidden_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_SHOW_HIDDEN_DESCRIPTION,
         category = General::class,
         type = Toggle::class,
         key = "show_hidden"
@@ -48,9 +47,9 @@ data class AppSettings(
     val showHidden: Boolean = false,
 
     @Setting(
-        titleRes = R.string.setting_show_file_count,
+        titleKey = FluffySettingsKeys.SETTING_SHOW_FILE_COUNT,
         description = "Show count of files in directories",
-        descriptionRes = R.string.setting_show_file_count_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_SHOW_FILE_COUNT_DESCRIPTION,
         category = General::class,
         type = Toggle::class,
         key = "show_file_count"
@@ -58,9 +57,9 @@ data class AppSettings(
     val showFileCount: Boolean = true,
 
     @Setting(
-        titleRes = R.string.setting_show_storage_info,
+        titleKey = FluffySettingsKeys.SETTING_SHOW_STORAGE_INFO,
         description = "Show an info button on Quick Access that opens device storage details",
-        descriptionRes = R.string.setting_show_storage_info_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_SHOW_STORAGE_INFO_DESCRIPTION,
         category = General::class,
         type = Toggle::class,
         key = "show_storage_info"
@@ -68,9 +67,9 @@ data class AppSettings(
     val showStorageInfo: Boolean = true,
 
     @Setting(
-        titleRes = R.string.setting_always_inapp_picker,
+        titleKey = FluffySettingsKeys.SETTING_ALWAYS_INAPP_PICKER,
         description = "Helps prevent stub issues (if not handled), and also for root ops",
-        descriptionRes = R.string.setting_always_inapp_picker_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_ALWAYS_INAPP_PICKER_DESCRIPTION,
         category = System::class,
         type = Toggle::class,
         key = "always_inapp_folder_picker"
@@ -78,31 +77,31 @@ data class AppSettings(
     val alwaysUseInAppFolderPicker: Boolean = true,
 
     @Setting(
-        titleRes = R.string.setting_theme,
+        titleKey = FluffySettingsKeys.SETTING_THEME,
         category = Appearance::class,
         type = Dropdown::class,
         options = ["System", "Light", "Dark"],
-        optionsRes = R.array.setting_theme_options,
+        optionsKey = FluffySettingsKeys.SETTING_THEME_OPTIONS,
         key = "theme_mode"
     )
     val themeMode: Int = 2,
 
     @Setting(
-        titleRes = R.string.setting_view_mode,
+        titleKey = FluffySettingsKeys.SETTING_VIEW_MODE,
         description = "Default layout for file lists",
-        descriptionRes = R.string.setting_view_mode_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_VIEW_MODE_DESCRIPTION,
         category = Appearance::class,
         type = Dropdown::class,
         options = ["List", "Grid"],
-        optionsRes = R.array.setting_view_mode_options,
+        optionsKey = FluffySettingsKeys.SETTING_VIEW_MODE_OPTIONS,
         key = "view_mode"
     )
     val viewMode: Int = 0,
 
     @Setting(
-        titleRes = R.string.setting_show_thumbnails,
+        titleKey = FluffySettingsKeys.SETTING_SHOW_THUMBNAILS,
         description = "Load image previews in list and grid (could cause lag for old TVs)",
-        descriptionRes = R.string.setting_show_thumbnails_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_SHOW_THUMBNAILS_DESCRIPTION,
         category = Appearance::class,
         type = Toggle::class,
         key = "show_thumbnails"
@@ -110,9 +109,9 @@ data class AppSettings(
     val showThumbnails: Boolean = false,
 
     @Setting(
-        titleRes = R.string.setting_dynamic_color,
+        titleKey = FluffySettingsKeys.SETTING_DYNAMIC_COLOR,
         description = "Android 12+",
-        descriptionRes = R.string.setting_dynamic_color_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_DYNAMIC_COLOR_DESCRIPTION,
         category = Appearance::class,
         type = Toggle::class,
         key = "dynamic_color"
@@ -120,7 +119,7 @@ data class AppSettings(
     val dynamicColor: Boolean = false,
 
     @Setting(
-        titleRes = R.string.setting_oled_black,
+        titleKey = FluffySettingsKeys.SETTING_OLED_BLACK,
         category = Appearance::class,
         type = Toggle::class,
         key = "oled_black"
@@ -135,9 +134,9 @@ data class AppSettings(
     val ctaBannerDismissed2026: Boolean = false,
 
     @Setting(
-        titleRes = R.string.setting_zip_level,
+        titleKey = FluffySettingsKeys.SETTING_ZIP_LEVEL,
         description = "0 = no compression, 9 = maximum compression",
-        descriptionRes = R.string.setting_zip_level_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_ZIP_LEVEL_DESCRIPTION,
         category = Archives::class,
         type = Slider::class,
         min = 0f, max = 9f, step = 1f,
@@ -146,9 +145,9 @@ data class AppSettings(
     val zipCompressionLevel: Float = 5f,
 
     @Setting(
-        titleRes = R.string.setting_enable_root,
+        titleKey = FluffySettingsKeys.SETTING_ENABLE_ROOT,
         description = "Browse and write to system folders using root shell",
-        descriptionRes = R.string.setting_enable_root_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_ENABLE_ROOT_DESCRIPTION,
         category = System::class,
         type = Toggle::class,
         key = "enable_root"
@@ -156,9 +155,9 @@ data class AppSettings(
     val enableRoot: Boolean = false,
 
     @Setting(
-        titleRes = R.string.setting_enable_shizuku,
+        titleKey = FluffySettingsKeys.SETTING_ENABLE_SHIZUKU,
         description = "Use Shizuku for shell commands and APK install",
-        descriptionRes = R.string.setting_enable_shizuku_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_ENABLE_SHIZUKU_DESCRIPTION,
         category = System::class,
         type = Toggle::class,
         key = "enable_shizuku"
@@ -166,9 +165,9 @@ data class AppSettings(
     val enableShizuku: Boolean = false,
 
     @Setting(
-        titleRes = R.string.setting_extract_into_subfolder,
+        titleKey = FluffySettingsKeys.SETTING_EXTRACT_INTO_SUBFOLDER,
         description = "Create a folder named after the archive when extracting",
-        descriptionRes = R.string.setting_extract_into_subfolder_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_EXTRACT_INTO_SUBFOLDER_DESCRIPTION,
         category = Archives::class,
         type = Toggle::class,
         key = "extract_into_subfolder"
@@ -176,9 +175,9 @@ data class AppSettings(
     val extractIntoSubfolder: Boolean = true,
 
     @Setting(
-        titleRes = R.string.setting_prefer_cr_mime,
+        titleKey = FluffySettingsKeys.SETTING_PREFER_CR_MIME,
         description = "Get type based on file and not from extension for 'Open with' and previews when available",
-        descriptionRes = R.string.setting_prefer_cr_mime_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_PREFER_CR_MIME_DESCRIPTION,
         category = General::class,
         type = Toggle::class,
         key = "prefer_cr_mime"
@@ -186,9 +185,9 @@ data class AppSettings(
     val preferContentResolverMime: Boolean = true,
 
     @Setting(
-        titleRes = R.string.setting_prefer_builtin_viewers,
+        titleKey = FluffySettingsKeys.SETTING_PREFER_BUILTIN_VIEWERS,
         description = "Open images, audio/video, PDF and text in Fluffy instead of the system Open with dialog.",
-        descriptionRes = R.string.setting_prefer_builtin_viewers_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_PREFER_BUILTIN_VIEWERS_DESCRIPTION,
         category = General::class,
         type = Toggle::class,
         key = "prefer_builtin_viewers"
@@ -196,9 +195,9 @@ data class AppSettings(
     val preferBuiltInViewers: Boolean = false,
 
     @Setting(
-        titleRes = R.string.setting_warn_shell_writes,
+        titleKey = FluffySettingsKeys.SETTING_WARN_SHELL_WRITES,
         description = "Show a confirmation before writing/deleting via root or Shizuku",
-        descriptionRes = R.string.setting_warn_shell_writes_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_WARN_SHELL_WRITES_DESCRIPTION,
         category = System::class,
         type = Toggle::class,
         key = "warn_shell_writes"
@@ -206,9 +205,9 @@ data class AppSettings(
     val warnBeforeShellWrites: Boolean = false,
 
     @Setting(
-        titleRes = R.string.setting_support_development,
+        titleKey = FluffySettingsKeys.SETTING_SUPPORT_DEVELOPMENT,
         description = "If you find this app useful, consider supporting its continued development",
-        descriptionRes = R.string.setting_support_development_desc,
+        descriptionKey = FluffySettingsKeys.SETTING_SUPPORT_DEVELOPMENT_DESCRIPTION,
         category = System::class,
         type = Button::class
     )
@@ -222,7 +221,7 @@ object SupportDevelopmentAction : SettingAction {
 
 
 
-@CategoryDefinition(order = 0, titleRes = R.string.category_general_settings) object General
-@CategoryDefinition(order = 1, titleRes = R.string.category_appearance_settings) object Appearance
-@CategoryDefinition(order = 2, titleRes = R.string.category_archives) object Archives
-@CategoryDefinition(order = 3, titleRes = R.string.category_system_settings) object System
+@CategoryDefinition(order = 0, titleKey = FluffySettingsKeys.CATEGORY_GENERAL_SETTINGS) object General
+@CategoryDefinition(order = 1, titleKey = FluffySettingsKeys.CATEGORY_APPEARANCE_SETTINGS) object Appearance
+@CategoryDefinition(order = 2, titleKey = FluffySettingsKeys.CATEGORY_ARCHIVES) object Archives
+@CategoryDefinition(order = 3, titleKey = FluffySettingsKeys.CATEGORY_SYSTEM_SETTINGS) object System

@@ -45,6 +45,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
+import app.fluffy.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
@@ -474,7 +476,7 @@ fun FullscreenImageViewer(
                     title = { Text("$displayIndex / ${images.size}") },
                     navigationIcon = {
                         IconButton(onClick = onClose) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                         }
                     }
                 )

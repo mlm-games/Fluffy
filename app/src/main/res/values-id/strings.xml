@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Tambah</string>
+    <string name="apply">Terapkan</string>
+    <string name="back">Kembali</string>
+    <string name="bookmark_name">Nama penanda</string>
+    <string name="bookmark_current_location">Tambahkan lokasi saat ini ke penanda</string>
+    <string name="browse_files">Jelajahi file</string>
+    <string name="confirm">Konfirmasi</string>
+    <string name="details">Detail</string>
+    <string name="discard">Buang</string>
+    <string name="dismiss">Tutup</string>
+    <string name="extract_selected">Ekstrak yang dipilih</string>
+    <string name="grant_permission_action">Berikan izin</string>
+    <string name="in_progress">Sedang berjalan</string>
+    <string name="install_open_with">Pasang (Buka dengan)</string>
+    <string name="loaded_charset_notice">Dimuat sebagai %1$s; menyimpan mengonversi ke UTF-8.</string>
+    <string name="new_name">Nama baru</string>
+    <string name="no_entries_in_archive">Tidak ada entri ditemukan di arsip ini.</string>
+    <string name="no_location_selected">Tidak ada lokasi yang dipilih</string>
+    <string name="no_tasks">Tidak ada tugas saat ini.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Buka sebagai folder</string>
+    <string name="password_plain">Kata sandi</string>
+    <string name="password_required">Kata sandi diperlukan</string>
+    <string name="pick_folder">Pilih folder</string>
+    <string name="read_only">Hanya baca</string>
+    <string name="recent">Terbaru</string>
+    <string name="save">Simpan</string>
+    <string name="save_error">Kesalahan menyimpan</string>
+    <string name="save_here">Simpan di sini</string>
+    <string name="save_into_folder">Simpan ke folder ini</string>
+    <string name="select">Pilih</string>
+    <string name="select_entries">Pilih entri</string>
+    <string name="task_center">Pusat tugas</string>
+    <string name="archive_encrypted">Arsip ini terenkripsi. Masukkan kata sandi untuk membukanya.</string>
+    <string name="unlock">Buka kunci</string>
+    <string name="unsaved_changes">Perubahan belum disimpan</string>
+    <string name="unsaved_changes_confirm">Anda memiliki perubahan yang belum disimpan. Buang?</string>
+    <string name="selected_count">%1$d dipilih</string>
 </resources>

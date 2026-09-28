@@ -1,9 +1,11 @@
 package app.fluffy.ui.components
 
+import app.fluffy.R
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 
@@ -116,7 +118,7 @@ fun ConfirmationDialog(title: String, message: String, onConfirm: () -> Unit, on
         onDismissRequest = onDismiss,
         title = { Text(title) },
         text = { Text(message) },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("Confirm") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
+        confirmButton = { TextButton(onClick = onConfirm) { Text(stringResource(R.string.confirm)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } }
     )
 }

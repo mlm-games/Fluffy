@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Додати</string>
+    <string name="apply">Застосувати</string>
+    <string name="back">Назад</string>
+    <string name="bookmark_name">Назва закладки</string>
+    <string name="bookmark_current_location">Додати поточне місце до закладок</string>
+    <string name="browse_files">Огляд файлів</string>
+    <string name="confirm">Підтвердити</string>
+    <string name="details">Подробиці</string>
+    <string name="discard">Скасувати</string>
+    <string name="dismiss">Закрити</string>
+    <string name="extract_selected">Розпакувати вибрані</string>
+    <string name="grant_permission_action">Надати дозвіл</string>
+    <string name="in_progress">Виконується</string>
+    <string name="install_open_with">Встановити (Відкрити за допомогою)</string>
+    <string name="loaded_charset_notice">Завантажено як %1$s; збереження перетворює на UTF-8.</string>
+    <string name="new_name">Нова назва</string>
+    <string name="no_entries_in_archive">У цьому архіві немає записів.</string>
+    <string name="no_location_selected">Місце не вибрано</string>
+    <string name="no_tasks">Нараз немає завдань.</string>
+    <string name="ok">Гаразд</string>
+    <string name="open_as_folder">Відкрити як теку</string>
+    <string name="password_plain">Пароль</string>
+    <string name="password_required">Потрібен пароль</string>
+    <string name="pick_folder">Вибрати теку</string>
+    <string name="read_only">Лише читання</string>
+    <string name="recent">Останні</string>
+    <string name="save">Зберегти</string>
+    <string name="save_error">Помилка збереження</string>
+    <string name="save_here">Зберегти тут</string>
+    <string name="save_into_folder">Зберегти в цю теку</string>
+    <string name="select">Вибрати</string>
+    <string name="select_entries">Вибрати записи</string>
+    <string name="task_center">Центр завдань</string>
+    <string name="archive_encrypted">Цей архів зашифровано. Введіть пароль, щоб розблокувати його.</string>
+    <string name="unlock">Розблокувати</string>
+    <string name="unsaved_changes">Незбережені зміни</string>
+    <string name="unsaved_changes_confirm">Є незбережені зміни. Відмінити їх?</string>
+    <string name="selected_count">Вибрано: %1$d</string>
 </resources>

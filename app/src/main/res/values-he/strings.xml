@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">הוספה</string>
+    <string name="apply">החלה</string>
+    <string name="back">חזרה</string>
+    <string name="bookmark_name">שם הסימנייה</string>
+    <string name="bookmark_current_location">הוספת המיקום הנוכחי לסימניות</string>
+    <string name="browse_files">עיון בקבצים</string>
+    <string name="confirm">אישור</string>
+    <string name="details">פרטים</string>
+    <string name="discard">התעלם</string>
+    <string name="dismiss">סגירה</string>
+    <string name="extract_selected">חילוץ הפריטים שנבחרו</string>
+    <string name="grant_permission_action">מתן הרשאה</string>
+    <string name="in_progress">בתהליך</string>
+    <string name="install_open_with">התקנה (פתח באמצעות)</string>
+    <string name="loaded_charset_notice">נטען כ־%1$s; השמירה ממירה ל־UTF-8.</string>
+    <string name="new_name">שם חדש</string>
+    <string name="no_entries_in_archive">לא נמצאו פריטים בארכיון זה.</string>
+    <string name="no_location_selected">לא נבחר מיקום</string>
+    <string name="no_tasks">אין כרגע משימות.</string>
+    <string name="ok">אישור</string>
+    <string name="open_as_folder">פתיחה כתיקייה</string>
+    <string name="password_plain">סיסמה</string>
+    <string name="password_required">נדרשת סיסמה</string>
+    <string name="pick_folder">בחירת תיקייה</string>
+    <string name="read_only">קריאה בלבד</string>
+    <string name="recent">אחרונים</string>
+    <string name="save">שמירה</string>
+    <string name="save_error">שגיאת שמירה</string>
+    <string name="save_here">שמירה כאן</string>
+    <string name="save_into_folder">שמירה בתיקייה זו</string>
+    <string name="select">בחירה</string>
+    <string name="select_entries">בחירת פריטים</string>
+    <string name="task_center">מרכז משימות</string>
+    <string name="archive_encrypted">הארכיון הזה מוצפן. הזן את הסיסמה כדי לשחרר אותו.</string>
+    <string name="unlock">שחרור נעילה</string>
+    <string name="unsaved_changes">שינויים שלא נשמרו</string>
+    <string name="unsaved_changes_confirm">יש לך שינויים שלא נשמרו. האם לבטל אותם?</string>
+    <string name="selected_count">%1$d נבחרו</string>
 </resources>

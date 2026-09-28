@@ -5,6 +5,7 @@ import app.fluffy.archive.ArchiveEngine
 import app.fluffy.archive.DefaultArchiveEngine
 import app.fluffy.data.repository.BookmarksRepository
 import app.fluffy.data.repository.SettingsRepository
+import app.fluffy.data.repository.fluffyStringResourceProvider
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.SafIo
 import app.fluffy.io.ShellIo
@@ -18,14 +19,13 @@ import app.fluffy.ui.components.snackbar.SnackbarManager
 import app.fluffy.viewmodel.FileBrowserViewModel
 import app.fluffy.viewmodel.SettingsViewModel
 import app.fluffy.viewmodel.TasksViewModel
-import io.github.mlmgames.settings.core.resources.AndroidStringResourceProvider
 import io.github.mlmgames.settings.core.resources.StringResourceProvider
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
-    single<StringResourceProvider> { AndroidStringResourceProvider(androidContext()) }
+    single<StringResourceProvider> { fluffyStringResourceProvider(androidContext()) }
 
     single { StorageAccessPolicy(androidContext()) }
 

@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Añadir</string>
+    <string name="apply">Aplicar</string>
+    <string name="back">Atrás</string>
+    <string name="bookmark_name">Nombre del marcador</string>
+    <string name="bookmark_current_location">Añadir la ubicación actual a los marcadores</string>
+    <string name="browse_files">Explorar archivos</string>
+    <string name="confirm">Confirmar</string>
+    <string name="details">Detalles</string>
+    <string name="discard">Descartar</string>
+    <string name="dismiss">Cerrar</string>
+    <string name="extract_selected">Extraer seleccionados</string>
+    <string name="grant_permission_action">Conceder permiso</string>
+    <string name="in_progress">En curso</string>
+    <string name="install_open_with">Instalar (Abrir con)</string>
+    <string name="loaded_charset_notice">Cargado como %1$s; al guardar se convierte a UTF-8.</string>
+    <string name="new_name">Nombre nuevo</string>
+    <string name="no_entries_in_archive">No se encontraron entradas en este archivo.</string>
+    <string name="no_location_selected">No se ha seleccionado ninguna ubicación</string>
+    <string name="no_tasks">No hay tareas en este momento.</string>
+    <string name="ok">Aceptar</string>
+    <string name="open_as_folder">Abrir como carpeta</string>
+    <string name="password_plain">Contraseña</string>
+    <string name="password_required">Contraseña requerida</string>
+    <string name="pick_folder">Elegir carpeta</string>
+    <string name="read_only">Solo lectura</string>
+    <string name="recent">Recientes</string>
+    <string name="save">Guardar</string>
+    <string name="save_error">Error al guardar</string>
+    <string name="save_here">Guardar aquí</string>
+    <string name="save_into_folder">Guardar en esta carpeta</string>
+    <string name="select">Seleccionar</string>
+    <string name="select_entries">Seleccionar entradas</string>
+    <string name="task_center">Centro de tareas</string>
+    <string name="archive_encrypted">Este archivo está cifrado. Introduce la contraseña para desbloquearlo.</string>
+    <string name="unlock">Desbloquear</string>
+    <string name="unsaved_changes">Cambios sin guardar</string>
+    <string name="unsaved_changes_confirm">Tienes cambios sin guardar. ¿Quieres descartarlos?</string>
+    <string name="selected_count">%1$d seleccionados</string>
 </resources>

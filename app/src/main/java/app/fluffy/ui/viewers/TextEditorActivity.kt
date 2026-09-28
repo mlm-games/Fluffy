@@ -23,12 +23,14 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import app.fluffy.R
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.DocumentController
@@ -160,16 +162,16 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
     if (showUnsavedDialog) {
         AlertDialog(
             onDismissRequest = { showUnsavedDialog = false },
-            title = { Text("Unsaved Changes") },
-            text = { Text("You have unsaved changes. Do you want to discard them?") },
+            title = { Text(stringResource(R.string.unsaved_changes)) },
+            text = { Text(stringResource(R.string.unsaved_changes_confirm)) },
             confirmButton = {
                 TextButton(onClick = {
                     showUnsavedDialog = false
                     onClose()
-                }) { Text("Discard") }
+                }) { Text(stringResource(R.string.discard)) }
             },
             dismissButton = {
-                TextButton(onClick = { showUnsavedDialog = false }) { Text("Cancel") }
+                TextButton(onClick = { showUnsavedDialog = false }) { Text(stringResource(R.string.cancel)) }
             }
         )
     }
@@ -177,9 +179,9 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
     saveError?.let { msg ->
         AlertDialog(
             onDismissRequest = { saveError = null },
-            title = { Text("Save Error") },
+            title = { Text(stringResource(R.string.save_error)) },
             text = { Text(msg) },
-            confirmButton = { TextButton(onClick = { saveError = null }) { Text("OK") } }
+            confirmButton = { TextButton(onClick = { saveError = null }) { Text(stringResource(R.string.ok)) } }
         )
     }
 
@@ -196,13 +198,13 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                         )
                         if (isReadOnly) {
                             Text(
-                                "Read Only",
+                                stringResource(R.string.read_only),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.error
                             )
                         } else if (hasChanges) {
                             Text(
-                                "Unsaved changes",
+                                stringResource(R.string.unsaved_changes),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -215,7 +217,7 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                         onClick = {
                         if (hasChanges) showUnsavedDialog = true else onClose()
                     }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                     }
                 },
                 actions = {
@@ -235,7 +237,7 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Save,
-                                contentDescription = "Save",
+                                contentDescription = stringResource(R.string.save),
                                 tint = if (hasChanges) MaterialTheme.colorScheme.primary
                                 else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                             )
@@ -265,7 +267,7 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 Text(
-                                    "Loaded as ${loadedCharset.name()}; saving converts to UTF-8.",
+                                    stringResource(R.string.loaded_charset_notice),
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.padding(8.dp)
                                 )

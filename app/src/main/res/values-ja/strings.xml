@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">追加</string>
+    <string name="apply">適用</string>
+    <string name="back">戻る</string>
+    <string name="bookmark_name">ブックマーク名</string>
+    <string name="bookmark_current_location">現在の場所をブックマークに追加</string>
+    <string name="browse_files">ファイルを参照</string>
+    <string name="confirm">確認</string>
+    <string name="details">詳細</string>
+    <string name="discard">破棄</string>
+    <string name="dismiss">閉じる</string>
+    <string name="extract_selected">選択項目を展開</string>
+    <string name="grant_permission_action">権限を付与</string>
+    <string name="in_progress">進行中</string>
+    <string name="install_open_with">インストール（このアプリで開く）</string>
+    <string name="loaded_charset_notice">%1$s として読み込まれました。保存すると UTF-8 に変換されます。</string>
+    <string name="new_name">新しい名前</string>
+    <string name="no_entries_in_archive">このアーカイブ内に項目が見つかりません。</string>
+    <string name="no_location_selected">場所が選択されていません</string>
+    <string name="no_tasks">現在タスクはありません。</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">フォルダとして開く</string>
+    <string name="password_plain">パスワード</string>
+    <string name="password_required">パスワードが必要です</string>
+    <string name="pick_folder">フォルダを選択</string>
+    <string name="read_only">読み取り専用</string>
+    <string name="recent">最近</string>
+    <string name="save">保存</string>
+    <string name="save_error">保存エラー</string>
+    <string name="save_here">ここに保存</string>
+    <string name="save_into_folder">このフォルダに保存</string>
+    <string name="select">選択</string>
+    <string name="select_entries">項目を選択</string>
+    <string name="task_center">タスクセンター</string>
+    <string name="archive_encrypted">このアーカイブは暗号化されています。解除するにはパスワードを入力してください。</string>
+    <string name="unlock">ロック解除</string>
+    <string name="unsaved_changes">未保存の変更</string>
+    <string name="unsaved_changes_confirm">未保存の変更があります。破棄しますか？</string>
+    <string name="selected_count">%1$d 件選択</string>
 </resources>

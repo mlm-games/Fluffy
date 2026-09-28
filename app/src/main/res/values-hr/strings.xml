@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Dodaj</string>
+    <string name="apply">Primijeni</string>
+    <string name="back">Natrag</string>
+    <string name="bookmark_name">Naziv oznake</string>
+    <string name="bookmark_current_location">Dodaj trenutnu lokaciju u oznake</string>
+    <string name="browse_files">Pretraži datoteke</string>
+    <string name="confirm">Potvrdi</string>
+    <string name="details">Detalji</string>
+    <string name="discard">Odbaci</string>
+    <string name="dismiss">Zatvori</string>
+    <string name="extract_selected">Izdvoji odabrane</string>
+    <string name="grant_permission_action">Dodijeli dopuštenje</string>
+    <string name="in_progress">U tijeku</string>
+    <string name="install_open_with">Instaliraj (Otvori s)</string>
+    <string name="loaded_charset_notice">Učitano kao %1$s; spremanje pretvara u UTF-8.</string>
+    <string name="new_name">Novi naziv</string>
+    <string name="no_entries_in_archive">Nije pronađena nijedna stavka u ovoj arhivi.</string>
+    <string name="no_location_selected">Nije odabrana lokacija</string>
+    <string name="no_tasks">Trenutačno nema zadataka.</string>
+    <string name="ok">U redu</string>
+    <string name="open_as_folder">Otvori kao mapu</string>
+    <string name="password_plain">Lozinka</string>
+    <string name="password_required">Potrebna je lozinka</string>
+    <string name="pick_folder">Odaberi mapu</string>
+    <string name="read_only">Samo čitanje</string>
+    <string name="recent">Nedavno</string>
+    <string name="save">Spremi</string>
+    <string name="save_error">Greška pri spremanju</string>
+    <string name="save_here">Spremi ovdje</string>
+    <string name="save_into_folder">Spremi u ovu mapu</string>
+    <string name="select">Odaberi</string>
+    <string name="select_entries">Odaberi stavke</string>
+    <string name="task_center">Centar zadataka</string>
+    <string name="archive_encrypted">Ova je arhiva šifrirana. Unesite lozinku da biste je otključali.</string>
+    <string name="unlock">Otključaj</string>
+    <string name="unsaved_changes">Nespremljene promjene</string>
+    <string name="unsaved_changes_confirm">Imate nespremljene promjene. Želite li ih odbaciti?</string>
+    <string name="selected_count">Odabrano: %1$d</string>
 </resources>

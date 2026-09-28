@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Hinzufügen</string>
+    <string name="apply">Anwenden</string>
+    <string name="back">Zurück</string>
+    <string name="bookmark_name">Lesezeichenname</string>
+    <string name="bookmark_current_location">Aktuellen Ort als Lesezeichen speichern</string>
+    <string name="browse_files">Dateien durchsuchen</string>
+    <string name="confirm">Bestätigen</string>
+    <string name="details">Details</string>
+    <string name="discard">Verwerfen</string>
+    <string name="dismiss">Schließen</string>
+    <string name="extract_selected">Auswahl extrahieren</string>
+    <string name="grant_permission_action">Berechtigung erteilen</string>
+    <string name="in_progress">Läuft</string>
+    <string name="install_open_with">Installieren (Mit öffnen)</string>
+    <string name="loaded_charset_notice">Als %1$s geladen; beim Speichern wird nach UTF-8 konvertiert.</string>
+    <string name="new_name">Neuer Name</string>
+    <string name="no_entries_in_archive">Keine Einträge in diesem Archiv gefunden.</string>
+    <string name="no_location_selected">Kein Ort ausgewählt</string>
+    <string name="no_tasks">Derzeit keine Aufgaben.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Als Ordner öffnen</string>
+    <string name="password_plain">Passwort</string>
+    <string name="password_required">Passwort erforderlich</string>
+    <string name="pick_folder">Ordner auswählen</string>
+    <string name="read_only">Nur lesen</string>
+    <string name="recent">Zuletzt verwendet</string>
+    <string name="save">Speichern</string>
+    <string name="save_error">Speicherfehler</string>
+    <string name="save_here">Hier speichern</string>
+    <string name="save_into_folder">In diesen Ordner speichern</string>
+    <string name="select">Auswählen</string>
+    <string name="select_entries">Einträge auswählen</string>
+    <string name="task_center">Aufgabencenter</string>
+    <string name="archive_encrypted">Dieses Archiv ist verschlüsselt. Gib zum Entsperren das Passwort ein.</string>
+    <string name="unlock">Entsperren</string>
+    <string name="unsaved_changes">Nicht gespeicherte Änderungen</string>
+    <string name="unsaved_changes_confirm">Du hast nicht gespeicherte Änderungen. Verwerfen?</string>
+    <string name="selected_count">%1$d ausgewählt</string>
 </resources>

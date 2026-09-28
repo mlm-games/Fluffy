@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Adicionar</string>
+    <string name="apply">Aplicar</string>
+    <string name="back">Voltar</string>
+    <string name="bookmark_name">Nome do marcador</string>
+    <string name="bookmark_current_location">Adicionar a localização atual aos marcadores</string>
+    <string name="browse_files">Procurar arquivos</string>
+    <string name="confirm">Confirmar</string>
+    <string name="details">Detalhes</string>
+    <string name="discard">Descartar</string>
+    <string name="dismiss">Fechar</string>
+    <string name="extract_selected">Extrair selecionados</string>
+    <string name="grant_permission_action">Conceder permissão</string>
+    <string name="in_progress">Em andamento</string>
+    <string name="install_open_with">Instalar (Abrir com)</string>
+    <string name="loaded_charset_notice">Carregado como %1$s; salvar converte para UTF-8.</string>
+    <string name="new_name">Novo nome</string>
+    <string name="no_entries_in_archive">Nenhuma entrada encontrada neste arquivo.</string>
+    <string name="no_location_selected">Nenhum local selecionado</string>
+    <string name="no_tasks">Nenhuma tarefa no momento.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Abrir como pasta</string>
+    <string name="password_plain">Senha</string>
+    <string name="password_required">Senha obrigatória</string>
+    <string name="pick_folder">Escolher pasta</string>
+    <string name="read_only">Somente leitura</string>
+    <string name="recent">Recentes</string>
+    <string name="save">Salvar</string>
+    <string name="save_error">Erro ao salvar</string>
+    <string name="save_here">Salvar aqui</string>
+    <string name="save_into_folder">Salvar nesta pasta</string>
+    <string name="select">Selecionar</string>
+    <string name="select_entries">Selecionar entradas</string>
+    <string name="task_center">Central de tarefas</string>
+    <string name="archive_encrypted">Este arquivo está criptografado. Digite a senha para desbloqueá-lo.</string>
+    <string name="unlock">Desbloquear</string>
+    <string name="unsaved_changes">Alterações não salvas</string>
+    <string name="unsaved_changes_confirm">Você tem alterações não salvas. Deseja descartá-las?</string>
+    <string name="selected_count">%1$d selecionado(s)</string>
 </resources>

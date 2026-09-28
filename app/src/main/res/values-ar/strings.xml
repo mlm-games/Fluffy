@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">إضافة</string>
+    <string name="apply">تطبيق</string>
+    <string name="back">رجوع</string>
+    <string name="bookmark_name">اسم علامة الكتاب</string>
+    <string name="bookmark_current_location">أضف الموقع الحالي إلى علامات الكتاب</string>
+    <string name="browse_files">استعراض الملفات</string>
+    <string name="confirm">تأكيد</string>
+    <string name="details">التفاصيل</string>
+    <string name="discard">تجاهل</string>
+    <string name="dismiss">إغلاق</string>
+    <string name="extract_selected">استخراج المحدد</string>
+    <string name="grant_permission_action">منح الإذن</string>
+    <string name="in_progress">قيد التنفيذ</string>
+    <string name="install_open_with">تثبيت (فتح بواسطة)</string>
+    <string name="loaded_charset_notice">تم التحميل كـ %1$s؛ الحفظ يحوّل إلى UTF-8.</string>
+    <string name="new_name">اسم جديد</string>
+    <string name="no_entries_in_archive">لا توجد إدخالات في هذا الأرشيف.</string>
+    <string name="no_location_selected">لم يتم تحديد موقع</string>
+    <string name="no_tasks">لا توجد مهام حاليًا.</string>
+    <string name="ok">حسنًا</string>
+    <string name="open_as_folder">فتح كمجلد</string>
+    <string name="password_plain">كلمة المرور</string>
+    <string name="password_required">كلمة المرور مطلوبة</string>
+    <string name="pick_folder">اختيار مجلد</string>
+    <string name="read_only">للقراءة فقط</string>
+    <string name="recent">الأخيرة</string>
+    <string name="save">حفظ</string>
+    <string name="save_error">خطأ في الحفظ</string>
+    <string name="save_here">حفظ هنا</string>
+    <string name="save_into_folder">حفظ في هذا المجلد</string>
+    <string name="select">تحديد</string>
+    <string name="select_entries">تحديد الإدخالات</string>
+    <string name="task_center">مركز المهام</string>
+    <string name="archive_encrypted">هذا الأرشيف مشفّر. أدخل كلمة المرور لفتحه.</string>
+    <string name="unlock">فتح القفل</string>
+    <string name="unsaved_changes">تغييرات غير محفوظة</string>
+    <string name="unsaved_changes_confirm">لديك تغييرات غير محفوظة. هل تريد تجاهلها؟</string>
+    <string name="selected_count">%1$d محدد</string>
 </resources>

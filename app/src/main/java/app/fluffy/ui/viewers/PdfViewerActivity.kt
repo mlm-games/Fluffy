@@ -78,8 +78,10 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
+import app.fluffy.R
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.ui.theme.FluffyTheme
@@ -343,7 +345,7 @@ private fun FullscreenPdfViewer(
             ) {
                 Text(loadError ?: "Failed to open PDF", style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.padding(8.dp))
-                Button(onClick = onClose) { Text("Close") }
+                Button(onClick = onClose) { Text(stringResource(R.string.close)) }
             }
         }
         BackHandler { onClose() }
@@ -397,7 +399,7 @@ private fun FullscreenPdfViewer(
                     title = { Text(title) },
                     navigationIcon = {
                         IconButton(onClick = onClose) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                         }
                     },
                     actions = {

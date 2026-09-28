@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Добавить</string>
+    <string name="apply">Применить</string>
+    <string name="back">Назад</string>
+    <string name="bookmark_name">Имя закладки</string>
+    <string name="bookmark_current_location">Добавить текущее место в закладки</string>
+    <string name="browse_files">Обзор файлов</string>
+    <string name="confirm">Подтвердить</string>
+    <string name="details">Подробности</string>
+    <string name="discard">Отменить</string>
+    <string name="dismiss">Закрыть</string>
+    <string name="extract_selected">Извлечь выбранное</string>
+    <string name="grant_permission_action">Предоставить разрешение</string>
+    <string name="in_progress">Выполняется</string>
+    <string name="install_open_with">Установить (Открыть с помощью)</string>
+    <string name="loaded_charset_notice">Загружено как %1$s; при сохранении преобразуется в UTF-8.</string>
+    <string name="new_name">Новое имя</string>
+    <string name="no_entries_in_archive">В этом архиве нет записей.</string>
+    <string name="no_location_selected">Место не выбрано</string>
+    <string name="no_tasks">На данный момент задач нет.</string>
+    <string name="ok">ОК</string>
+    <string name="open_as_folder">Открыть как папку</string>
+    <string name="password_plain">Пароль</string>
+    <string name="password_required">Требуется пароль</string>
+    <string name="pick_folder">Выбрать папку</string>
+    <string name="read_only">Только чтение</string>
+    <string name="recent">Недавние</string>
+    <string name="save">Сохранить</string>
+    <string name="save_error">Ошибка сохранения</string>
+    <string name="save_here">Сохранить здесь</string>
+    <string name="save_into_folder">Сохранить в эту папку</string>
+    <string name="select">Выбрать</string>
+    <string name="select_entries">Выбрать записи</string>
+    <string name="task_center">Центр задач</string>
+    <string name="archive_encrypted">Этот архив зашифрован. Введите пароль, чтобы разблокировать его.</string>
+    <string name="unlock">Разблокировать</string>
+    <string name="unsaved_changes">Несохранённые изменения</string>
+    <string name="unsaved_changes_confirm">Есть несохранённые изменения. Отменить их?</string>
+    <string name="selected_count">Выбрано: %1$d</string>
 </resources>

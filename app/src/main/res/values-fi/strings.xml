@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Lisää</string>
+    <string name="apply">Käytä</string>
+    <string name="back">Takaisin</string>
+    <string name="bookmark_name">Kirjanmerkin nimi</string>
+    <string name="bookmark_current_location">Lisää nykyinen sijainti kirjanmerkkeihin</string>
+    <string name="browse_files">Selaa tiedostoja</string>
+    <string name="confirm">Vahvista</string>
+    <string name="details">Tiedot</string>
+    <string name="discard">Hylkää</string>
+    <string name="dismiss">Sulje</string>
+    <string name="extract_selected">Pura valitut</string>
+    <string name="grant_permission_action">Myönnä lupa</string>
+    <string name="in_progress">Käynnissä</string>
+    <string name="install_open_with">Asenna (Avaa sovelluksella)</string>
+    <string name="loaded_charset_notice">Ladattu muodossa %1$s; tallennus muuntaa UTF-8-muotoon.</string>
+    <string name="new_name">Uusi nimi</string>
+    <string name="no_entries_in_archive">Arkistosta ei löytynyt kohteita.</string>
+    <string name="no_location_selected">Sijaintia ei ole valittu</string>
+    <string name="no_tasks">Ei tehtäviä juuri nyt.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Avaa kansiona</string>
+    <string name="password_plain">Salasana</string>
+    <string name="password_required">Salasana vaaditaan</string>
+    <string name="pick_folder">Valitse kansio</string>
+    <string name="read_only">Vain luku</string>
+    <string name="recent">Viimeisin</string>
+    <string name="save">Tallenna</string>
+    <string name="save_error">Tallennusvirhe</string>
+    <string name="save_here">Tallenna tähän</string>
+    <string name="save_into_folder">Tallenna tähän kansioon</string>
+    <string name="select">Valitse</string>
+    <string name="select_entries">Valitse kohteet</string>
+    <string name="task_center">Tehtäväkeskus</string>
+    <string name="archive_encrypted">Tämä arkisto on salattu. Anna salasana sen lukituksen avaamiseksi.</string>
+    <string name="unlock">Avaa lukitus</string>
+    <string name="unsaved_changes">Tallentamattomat muutokset</string>
+    <string name="unsaved_changes_confirm">Sinulla on tallentamattomia muutoksia. Haluatko hylätä ne?</string>
+    <string name="selected_count">%1$d valittu</string>
 </resources>

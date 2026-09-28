@@ -9,6 +9,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Parcelable
 import androidx.core.content.FileProvider
+import app.fluffy.R
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.SafIo
@@ -279,7 +280,7 @@ suspend fun Context.shareExported(
         if (this@shareExported !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
     }
 
-    startActivity(Intent.createChooser(send, "Share"))
+    startActivity(Intent.createChooser(send, getString(R.string.share)))
 }
 
 suspend fun Context.shareWithFolders(

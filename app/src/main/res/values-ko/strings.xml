@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">추가</string>
+    <string name="apply">적용</string>
+    <string name="back">뒤로</string>
+    <string name="bookmark_name">북마크 이름</string>
+    <string name="bookmark_current_location">현재 위치를 북마크에 추가</string>
+    <string name="browse_files">파일 찾아보기</string>
+    <string name="confirm">확인</string>
+    <string name="details">세부정보</string>
+    <string name="discard">무시</string>
+    <string name="dismiss">닫기</string>
+    <string name="extract_selected">선택 항목 압축 풀기</string>
+    <string name="grant_permission_action">권한 부여</string>
+    <string name="in_progress">진행 중</string>
+    <string name="install_open_with">설치(이 앱으로 열기)</string>
+    <string name="loaded_charset_notice">%1$s(으)로 불러왔으며, 저장하면 UTF-8로 변환됩니다.</string>
+    <string name="new_name">새 이름</string>
+    <string name="no_entries_in_archive">이 아카이브에서 항목을 찾을 수 없습니다.</string>
+    <string name="no_location_selected">선택된 위치 없음</string>
+    <string name="no_tasks">현재 작업이 없습니다.</string>
+    <string name="ok">확인</string>
+    <string name="open_as_folder">폴더로 열기</string>
+    <string name="password_plain">비밀번호</string>
+    <string name="password_required">비밀번호 필요</string>
+    <string name="pick_folder">폴더 선택</string>
+    <string name="read_only">읽기 전용</string>
+    <string name="recent">최근</string>
+    <string name="save">저장</string>
+    <string name="save_error">저장 오류</string>
+    <string name="save_here">여기에 저장</string>
+    <string name="save_into_folder">이 폴더에 저장</string>
+    <string name="select">선택</string>
+    <string name="select_entries">항목 선택</string>
+    <string name="task_center">작업 센터</string>
+    <string name="archive_encrypted">이 아카이브는 암호화되어 있습니다. 잠금을 해제하려면 비밀번호를 입력하세요.</string>
+    <string name="unlock">잠금 해제</string>
+    <string name="unsaved_changes">저장하지 않은 변경 사항</string>
+    <string name="unsaved_changes_confirm">저장하지 않은 변경 사항이 있습니다. 취소하시겠습니까?</string>
+    <string name="selected_count">%1$d개 선택됨</string>
 </resources>

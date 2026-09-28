@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Hozzáadás</string>
+    <string name="apply">Alkalmaz</string>
+    <string name="back">Vissza</string>
+    <string name="bookmark_name">Könyvjelző neve</string>
+    <string name="bookmark_current_location">Az aktuális hely hozzáadása a könyvjelzőkhöz</string>
+    <string name="browse_files">Fájlok böngészése</string>
+    <string name="confirm">Megerősítés</string>
+    <string name="details">Részletek</string>
+    <string name="discard">Elvetés</string>
+    <string name="dismiss">Bezárás</string>
+    <string name="extract_selected">Kiválasztottak kicsomagolása</string>
+    <string name="grant_permission_action">Engedély megadása</string>
+    <string name="in_progress">Folyamatban</string>
+    <string name="install_open_with">Telepítés (Megnyitás ezzel)</string>
+    <string name="loaded_charset_notice">%1$s formátumban betöltve; a mentés UTF-8-ra alakítja.</string>
+    <string name="new_name">Új név</string>
+    <string name="no_entries_in_archive">Ebben az archívumban nem található bejegyzés.</string>
+    <string name="no_location_selected">Nincs kiválasztva hely</string>
+    <string name="no_tasks">Jelenleg nincsenek feladatok.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Megnyitás mappaként</string>
+    <string name="password_plain">Jelszó</string>
+    <string name="password_required">Jelszó szükséges</string>
+    <string name="pick_folder">Mappa kiválasztása</string>
+    <string name="read_only">Csak olvasható</string>
+    <string name="recent">Legutóbbi</string>
+    <string name="save">Mentés</string>
+    <string name="save_error">Mentési hiba</string>
+    <string name="save_here">Mentés ide</string>
+    <string name="save_into_folder">Mentés ebbe a mappába</string>
+    <string name="select">Kiválasztás</string>
+    <string name="select_entries">Bejegyzések kiválasztása</string>
+    <string name="task_center">Feladatközpont</string>
+    <string name="archive_encrypted">Ez az archívum titkosított. A feloldáshoz add meg a jelszót.</string>
+    <string name="unlock">Feloldás</string>
+    <string name="unsaved_changes">Mentetlen módosítások</string>
+    <string name="unsaved_changes_confirm">Vannak mentetlen módosításaid. Elveted ezeket?</string>
+    <string name="selected_count">%1$d kiválasztva</string>
 </resources>

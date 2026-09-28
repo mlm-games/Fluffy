@@ -42,8 +42,10 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import app.fluffy.R
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.SafIo
@@ -215,7 +217,7 @@ internal fun MediaPlayerScreen(
                     colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent),
                     navigationIcon = {
                         IconButton(onClick = onClose) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Color.White)
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = Color.White)
                         }
                     }
                 )
@@ -403,11 +405,11 @@ private fun PlaybackSpeedDialog(
         title = "Playback Speed",
         confirmButton = {
             TextButton(onClick = { onSelect(selected); onDismiss() }) {
-                Text("Apply")
+                Text(stringResource(R.string.apply))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     ) {
         Column {
@@ -453,11 +455,11 @@ private fun VolumeDialog(
         title = "Volume",
         confirmButton = {
             TextButton(onClick = { onVolumeChange(volume); onDismiss() }) {
-                Text("Apply")
+                Text(stringResource(R.string.apply))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Cancel") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
         }
     ) {
         Column(

@@ -1,5 +1,6 @@
 package app.fluffy.ui.dialogs
 
+import app.fluffy.R
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -28,7 +30,7 @@ fun AddBookmarkDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Bookmark") },
+        title = { Text(stringResource(R.string.add_bookmark)) },
         text = {
             Column(
                 modifier = Modifier
@@ -37,14 +39,14 @@ fun AddBookmarkDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 Text(
-                    "Bookmark the current location",
+                    stringResource(R.string.bookmark_current_location),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Bookmark Name") },
+                    label = { Text(stringResource(R.string.bookmark_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -55,12 +57,12 @@ fun AddBookmarkDialog(
                 onClick = { onConfirm(name) },
                 enabled = name.isNotBlank()
             ) {
-                Text("Add")
+                Text(stringResource(R.string.add))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel))
             }
         }
     )

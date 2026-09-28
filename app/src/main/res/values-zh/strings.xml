@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">添加</string>
+    <string name="apply">应用</string>
+    <string name="back">返回</string>
+    <string name="bookmark_name">书签名称</string>
+    <string name="bookmark_current_location">将当前位置添加为书签</string>
+    <string name="browse_files">浏览文件</string>
+    <string name="confirm">确认</string>
+    <string name="details">详情</string>
+    <string name="discard">忽略</string>
+    <string name="dismiss">关闭</string>
+    <string name="extract_selected">解压所选项</string>
+    <string name="grant_permission_action">授予权限</string>
+    <string name="in_progress">进行中</string>
+    <string name="install_open_with">安装（使用其他应用打开）</string>
+    <string name="loaded_charset_notice">以 %1$s 加载；保存时将转换为 UTF-8。</string>
+    <string name="new_name">新名称</string>
+    <string name="no_entries_in_archive">此压缩包中未找到任何条目。</string>
+    <string name="no_location_selected">未选择位置</string>
+    <string name="no_tasks">当前没有任务。</string>
+    <string name="ok">确定</string>
+    <string name="open_as_folder">作为文件夹打开</string>
+    <string name="password_plain">密码</string>
+    <string name="password_required">需要密码</string>
+    <string name="pick_folder">选择文件夹</string>
+    <string name="read_only">只读</string>
+    <string name="recent">最近</string>
+    <string name="save">保存</string>
+    <string name="save_error">保存失败</string>
+    <string name="save_here">保存到此处</string>
+    <string name="save_into_folder">保存到此文件夹</string>
+    <string name="select">选择</string>
+    <string name="select_entries">选择条目</string>
+    <string name="task_center">任务中心</string>
+    <string name="archive_encrypted">此压缩包已加密。请输入密码以解锁。</string>
+    <string name="unlock">解锁</string>
+    <string name="unsaved_changes">未保存的更改</string>
+    <string name="unsaved_changes_confirm">有未保存的更改。要放弃吗？</string>
+    <string name="selected_count">已选择 %1$d 项</string>
 </resources>

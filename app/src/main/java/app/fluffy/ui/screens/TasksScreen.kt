@@ -8,8 +8,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.work.WorkInfo
+import app.fluffy.R
 import app.fluffy.ui.components.AppTopBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -21,7 +23,7 @@ fun TasksScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = { Text("Tasks") },
+                title = { Text(stringResource(R.string.tasks)) },
                 navigationIcon = { IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null) } }
             )
         }

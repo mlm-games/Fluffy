@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Thêm</string>
+    <string name="apply">Áp dụng</string>
+    <string name="back">Quay lại</string>
+    <string name="bookmark_name">Tên dấu trang</string>
+    <string name="bookmark_current_location">Thêm vị trí hiện tại vào dấu trang</string>
+    <string name="browse_files">Duyệt tệp</string>
+    <string name="confirm">Xác nhận</string>
+    <string name="details">Chi tiết</string>
+    <string name="discard">Bỏ qua</string>
+    <string name="dismiss">Đóng</string>
+    <string name="extract_selected">Giải nén mục đã chọn</string>
+    <string name="grant_permission_action">Cấp quyền</string>
+    <string name="in_progress">Đang xử lý</string>
+    <string name="install_open_with">Cài đặt (Mở bằng)</string>
+    <string name="loaded_charset_notice">Đã tải dưới dạng %1$s; lưu sẽ chuyển sang UTF-8.</string>
+    <string name="new_name">Tên mới</string>
+    <string name="no_entries_in_archive">Không tìm thấy mục nào trong kho lưu trữ này.</string>
+    <string name="no_location_selected">Chưa chọn vị trí</string>
+    <string name="no_tasks">Hiện không có tác vụ nào.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Mở dưới dạng thư mục</string>
+    <string name="password_plain">Mật khẩu</string>
+    <string name="password_required">Cần mật khẩu</string>
+    <string name="pick_folder">Chọn thư mục</string>
+    <string name="read_only">Chỉ đọc</string>
+    <string name="recent">Gần đây</string>
+    <string name="save">Lưu</string>
+    <string name="save_error">Lỗi khi lưu</string>
+    <string name="save_here">Lưu tại đây</string>
+    <string name="save_into_folder">Lưu vào thư mục này</string>
+    <string name="select">Chọn</string>
+    <string name="select_entries">Chọn các mục</string>
+    <string name="task_center">Trung tâm tác vụ</string>
+    <string name="archive_encrypted">Kho lưu trữ này đã được mã hóa. Hãy nhập mật khẩu để mở khóa.</string>
+    <string name="unlock">Mở khóa</string>
+    <string name="unsaved_changes">Thay đổi chưa lưu</string>
+    <string name="unsaved_changes_confirm">Bạn có thay đổi chưa lưu. Bạn có muốn bỏ qua không?</string>
+    <string name="selected_count">Đã chọn %1$d</string>
 </resources>

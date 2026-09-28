@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Lägg till</string>
+    <string name="apply">Använd</string>
+    <string name="back">Tillbaka</string>
+    <string name="bookmark_name">Bokmärkesnamn</string>
+    <string name="bookmark_current_location">Lägg till den aktuella platsen i bokmärken</string>
+    <string name="browse_files">Bläddra bland filer</string>
+    <string name="confirm">Bekräfta</string>
+    <string name="details">Detaljer</string>
+    <string name="discard">Avfärda</string>
+    <string name="dismiss">Stäng</string>
+    <string name="extract_selected">Extrahera markerade</string>
+    <string name="grant_permission_action">Bevilja behörighet</string>
+    <string name="in_progress">Pågår</string>
+    <string name="install_open_with">Installera (Öppna med)</string>
+    <string name="loaded_charset_notice">Inläst som %1$s; att spara omvandlar till UTF-8.</string>
+    <string name="new_name">Nytt namn</string>
+    <string name="no_entries_in_archive">Inga poster hittades i det här arkivet.</string>
+    <string name="no_location_selected">Ingen plats vald</string>
+    <string name="no_tasks">Inga uppgifter just nu.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Öppna som mapp</string>
+    <string name="password_plain">Lösenord</string>
+    <string name="password_required">Lösenord krävs</string>
+    <string name="pick_folder">Välj mapp</string>
+    <string name="read_only">Skrivskyddad</string>
+    <string name="recent">Senaste</string>
+    <string name="save">Spara</string>
+    <string name="save_error">Fel vid sparande</string>
+    <string name="save_here">Spara här</string>
+    <string name="save_into_folder">Spara i den här mappen</string>
+    <string name="select">Välj</string>
+    <string name="select_entries">Välj poster</string>
+    <string name="task_center">Uppgiftscenter</string>
+    <string name="archive_encrypted">Det här arkivet är krypterat. Ange lösenordet för att låsa upp det.</string>
+    <string name="unlock">Lås upp</string>
+    <string name="unsaved_changes">Ej sparade ändringar</string>
+    <string name="unsaved_changes_confirm">Du har ej sparade ändringar. Vill du avfärda dem?</string>
+    <string name="selected_count">%1$d valda</string>
 </resources>

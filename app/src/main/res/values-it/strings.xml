@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Aggiungi</string>
+    <string name="apply">Applica</string>
+    <string name="back">Indietro</string>
+    <string name="bookmark_name">Nome segnalibro</string>
+    <string name="bookmark_current_location">Aggiungi la posizione attuale ai segnalibri</string>
+    <string name="browse_files">Sfoglia file</string>
+    <string name="confirm">Conferma</string>
+    <string name="details">Dettagli</string>
+    <string name="discard">Scarta</string>
+    <string name="dismiss">Chiudi</string>
+    <string name="extract_selected">Estrai selezionati</string>
+    <string name="grant_permission_action">Concedi autorizzazione</string>
+    <string name="in_progress">In corso</string>
+    <string name="install_open_with">Installa (Apri con)</string>
+    <string name="loaded_charset_notice">Caricato come %1$s; il salvataggio converte in UTF-8.</string>
+    <string name="new_name">Nuovo nome</string>
+    <string name="no_entries_in_archive">Nessuna voce trovata in questo archivio.</string>
+    <string name="no_location_selected">Nessuna posizione selezionata</string>
+    <string name="no_tasks">Nessuna attività al momento.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Apri come cartella</string>
+    <string name="password_plain">Password</string>
+    <string name="password_required">Password richiesta</string>
+    <string name="pick_folder">Scegli cartella</string>
+    <string name="read_only">Sola lettura</string>
+    <string name="recent">Recenti</string>
+    <string name="save">Salva</string>
+    <string name="save_error">Errore di salvataggio</string>
+    <string name="save_here">Salva qui</string>
+    <string name="save_into_folder">Salva in questa cartella</string>
+    <string name="select">Seleziona</string>
+    <string name="select_entries">Seleziona voci</string>
+    <string name="task_center">Centro attività</string>
+    <string name="archive_encrypted">Questo archivio è crittografato. Inserisci la password per sbloccarlo.</string>
+    <string name="unlock">Sblocca</string>
+    <string name="unsaved_changes">Modifiche non salvate</string>
+    <string name="unsaved_changes_confirm">Hai modifiche non salvate. Vuoi scartarle?</string>
+    <string name="selected_count">%1$d selezionati</string>
 </resources>

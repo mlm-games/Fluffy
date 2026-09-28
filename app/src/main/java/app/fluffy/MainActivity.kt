@@ -47,6 +47,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -57,6 +58,7 @@ import androidx.navigation3.runtime.entryProvider
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.work.WorkInfo
+import app.fluffy.R
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.SafIo
@@ -690,7 +692,7 @@ class MainActivity : ComponentActivity() {
 
                 if (showOverwriteDialog.value) {
                     ConfirmationDialog(
-                        title = "Confirm",
+                        title = stringResource(R.string.confirm),
                         message = overwriteMessage.value,
                         onConfirm = {
                             showOverwriteDialog.value = false
@@ -985,7 +987,7 @@ private fun MiniTaskIndicator(
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     TextButton(onClick = onOpenTasks) {
-                        Text("Details")
+                        Text(stringResource(R.string.details))
                     }
                 }
                 if (showProgressBar) {
@@ -1024,13 +1026,13 @@ private fun TaskCenterSheet(
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Text(
-            "Task Center",
+            stringResource(R.string.task_center),
             style = MaterialTheme.typography.titleMedium
         )
 
         if (active.isEmpty() && finished.isEmpty()) {
             Text(
-                "No tasks at the moment.",
+                stringResource(R.string.no_tasks),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1038,7 +1040,7 @@ private fun TaskCenterSheet(
 
         if (active.isNotEmpty()) {
             Text(
-                "In progress",
+                stringResource(R.string.in_progress),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.primary
             )
@@ -1048,7 +1050,7 @@ private fun TaskCenterSheet(
         if (finished.isNotEmpty()) {
             Spacer(Modifier.height(8.dp))
             Text(
-                "Recent",
+                stringResource(R.string.recent),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -1095,7 +1097,7 @@ private fun TaskRowCompact(
                             contentColor = MaterialTheme.colorScheme.error
                         )
                     ) {
-                        Text("Cancel")
+                        Text(stringResource(R.string.cancel))
                     }
                 }
             }

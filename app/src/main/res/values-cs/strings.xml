@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Přidat</string>
+    <string name="apply">Použít</string>
+    <string name="back">Zpět</string>
+    <string name="bookmark_name">Název záložky</string>
+    <string name="bookmark_current_location">Přidat aktuální místo do záložek</string>
+    <string name="browse_files">Procházet soubory</string>
+    <string name="confirm">Potvrdit</string>
+    <string name="details">Podrobnosti</string>
+    <string name="discard">Zahodit</string>
+    <string name="dismiss">Zavřít</string>
+    <string name="extract_selected">Extrahovat vybrané</string>
+    <string name="grant_permission_action">Udělit oprávnění</string>
+    <string name="in_progress">Probíhá</string>
+    <string name="install_open_with">Nainstalovat (Otevřít pomocí)</string>
+    <string name="loaded_charset_notice">Načteno jako %1$s; uložení převede do UTF-8.</string>
+    <string name="new_name">Nový název</string>
+    <string name="no_entries_in_archive">V tomto archivu nejsou žádné položky.</string>
+    <string name="no_location_selected">Není vybráno žádné místo</string>
+    <string name="no_tasks">Momentálně žádné úlohy.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Otevřít jako složku</string>
+    <string name="password_plain">Heslo</string>
+    <string name="password_required">Vyžadováno heslo</string>
+    <string name="pick_folder">Vybrat složku</string>
+    <string name="read_only">Jen pro čtení</string>
+    <string name="recent">Nedávné</string>
+    <string name="save">Uložit</string>
+    <string name="save_error">Chyba uložení</string>
+    <string name="save_here">Uložit sem</string>
+    <string name="save_into_folder">Uložit do této složky</string>
+    <string name="select">Vybrat</string>
+    <string name="select_entries">Vybrat položky</string>
+    <string name="task_center">Centrum úloh</string>
+    <string name="archive_encrypted">Tento archiv je zašifrovaný. Zadejte heslo pro odemčení.</string>
+    <string name="unlock">Odemknout</string>
+    <string name="unsaved_changes">Neuložené změny</string>
+    <string name="unsaved_changes_confirm">Máte neuložené změny. Chcete je zahodit?</string>
+    <string name="selected_count">Vybráno: %1$d</string>
 </resources>

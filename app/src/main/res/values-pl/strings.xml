@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Dodaj</string>
+    <string name="apply">Zastosuj</string>
+    <string name="back">Wstecz</string>
+    <string name="bookmark_name">Nazwa zakładki</string>
+    <string name="bookmark_current_location">Dodaj bieżącą lokalizację do zakładek</string>
+    <string name="browse_files">Przeglądaj pliki</string>
+    <string name="confirm">Potwierdź</string>
+    <string name="details">Szczegóły</string>
+    <string name="discard">Odrzuć</string>
+    <string name="dismiss">Zamknij</string>
+    <string name="extract_selected">Rozpakuj zaznaczone</string>
+    <string name="grant_permission_action">Przyznaj uprawnienie</string>
+    <string name="in_progress">W toku</string>
+    <string name="install_open_with">Zainstaluj (Otwórz za pomocą)</string>
+    <string name="loaded_charset_notice">Wczytano jako %1$s; zapisywanie konwertuje do UTF-8.</string>
+    <string name="new_name">Nowa nazwa</string>
+    <string name="no_entries_in_archive">Nie znaleziono wpisów w tym archiwum.</string>
+    <string name="no_location_selected">Nie wybrano lokalizacji</string>
+    <string name="no_tasks">Obecnie brak zadań.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Otwórz jako folder</string>
+    <string name="password_plain">Hasło</string>
+    <string name="password_required">Wymagane hasło</string>
+    <string name="pick_folder">Wybierz folder</string>
+    <string name="read_only">Tylko do odczytu</string>
+    <string name="recent">Ostatnie</string>
+    <string name="save">Zapisz</string>
+    <string name="save_error">Błąd zapisu</string>
+    <string name="save_here">Zapisz tutaj</string>
+    <string name="save_into_folder">Zapisz w tym folderze</string>
+    <string name="select">Wybierz</string>
+    <string name="select_entries">Wybierz wpisy</string>
+    <string name="task_center">Centrum zadań</string>
+    <string name="archive_encrypted">To archiwum jest zaszyfrowane. Wprowadź hasło, aby je odblokować.</string>
+    <string name="unlock">Odblokuj</string>
+    <string name="unsaved_changes">Niezapisane zmiany</string>
+    <string name="unsaved_changes_confirm">Masz niezapisane zmiany. Odrzucić je?</string>
+    <string name="selected_count">Zaznaczono: %1$d</string>
 </resources>

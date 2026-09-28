@@ -20,10 +20,12 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import app.fluffy.R
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.SafIo
@@ -96,7 +98,7 @@ private fun TextViewerScreen(uri: Uri, title: String, io: SafIo, onClose: () -> 
         topBar = {
             TopAppBar(
                 title = { Text(title) },
-                navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back") } }
+                navigationIcon = { IconButton(onClick = onClose) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back)) } }
             )
         }
     ) { pv ->

@@ -161,4 +161,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Προσθήκη</string>
+    <string name="apply">Εφαρμογή</string>
+    <string name="back">Πίσω</string>
+    <string name="bookmark_name">Όνομα σελιδοδείκτη</string>
+    <string name="bookmark_current_location">Προσθήκη τρέχουσας θέσης στα αγαπημένα</string>
+    <string name="browse_files">Περιήγηση αρχείων</string>
+    <string name="confirm">Επιβεβαίωση</string>
+    <string name="details">Λεπτομέρειες</string>
+    <string name="discard">Απόρριψη</string>
+    <string name="dismiss">Κλείσιμο</string>
+    <string name="extract_selected">Εξαγωγή επιλεγμένων</string>
+    <string name="grant_permission_action">Χορήγηση άδειας</string>
+    <string name="in_progress">Σε εξέλιξη</string>
+    <string name="install_open_with">Εγκατάσταση (Άνοιγμα με)</string>
+    <string name="loaded_charset_notice">Φορτώθηκε ως %1$s· η αποθήκευση μετατρέπει σε UTF-8.</string>
+    <string name="new_name">Νέο όνομα</string>
+    <string name="no_entries_in_archive">Δεν βρέθηκαν καταχωρίσεις σε αυτό το αρχείο.</string>
+    <string name="no_location_selected">Δεν επιλέχθηκε τοποθεσία</string>
+    <string name="no_tasks">Δεν υπάρχουν εργασίες αυτή τη στιγμή.</string>
+    <string name="ok">Εντάξει</string>
+    <string name="open_as_folder">Άνοιγμα ως φάκελο</string>
+    <string name="password_plain">Κωδικός πρόσβασης</string>
+    <string name="password_required">Απαιτείται κωδικός πρόσβασης</string>
+    <string name="pick_folder">Επιλογή φακέλου</string>
+    <string name="read_only">Μόνο ανάγνωση</string>
+    <string name="recent">Πρόσφατα</string>
+    <string name="save">Αποθήκευση</string>
+    <string name="save_error">Σφάλμα αποθήκευσης</string>
+    <string name="save_here">Αποθήκευση εδώ</string>
+    <string name="save_into_folder">Αποθήκευση σε αυτόν τον φάκελο</string>
+    <string name="select">Επιλογή</string>
+    <string name="select_entries">Επιλογή καταχωρίσεων</string>
+    <string name="task_center">Κέντρο εργασιών</string>
+    <string name="archive_encrypted">Αυτό το αρχείο είναι κρυπτογραφημένο. Εισαγάγετε τον κωδικό για ξεκλείδωμα.</string>
+    <string name="unlock">Ξεκλείδωμα</string>
+    <string name="unsaved_changes">Μη αποθηκευμένες αλλαγές</string>
+    <string name="unsaved_changes_confirm">Έχετε μη αποθηκευμένες αλλαγές. Θέλετε να τις απορρίψετε;</string>
+    <string name="selected_count">%1$d επιλεγμένα</string>
 </resources>

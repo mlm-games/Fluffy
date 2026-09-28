@@ -309,14 +309,14 @@ fun ArchiveViewerScreen(
                             Icon(Icons.Filled.FileOpen, contentDescription = stringResource(R.string.extract_all))
                         }
                         IconButton(onClick = { selectionMode = !selectionMode }) {
-                            Icon(Icons.AutoMirrored.Filled.FactCheck, contentDescription = "Select entries")
+                            Icon(Icons.AutoMirrored.Filled.FactCheck, contentDescription = stringResource(R.string.select_entries))
                         }
                         if (selectionMode && selected.values.any { it }) {
                             IconButton(onClick = {
                                 val paths = selected.entries.filter { it.value }.map { it.key }
                                 onExtractSelected(archiveUri, paths, password.ifBlank { null })
                             }) {
-                                Icon(Icons.Filled.DoneAll, contentDescription = "Extract selected")
+                                Icon(Icons.Filled.DoneAll, contentDescription = stringResource(R.string.extract_selected))
                             }
                         }
                         val isApk = remember(title) { title.lowercase().endsWith(".apk") }
@@ -352,7 +352,7 @@ fun ArchiveViewerScreen(
                                     snackBarManager.show("No installer found")
                                 }
                             }) {
-                                Icon(Icons.Default.InstallDesktop, contentDescription = "Install (Open with)")
+                                Icon(Icons.Default.InstallDesktop, contentDescription = stringResource(R.string.install_open_with))
                             }
                         }
                     }
@@ -394,7 +394,7 @@ fun ArchiveViewerScreen(
                                                 containerColor = MaterialTheme.colorScheme.primary
                                             )
                                         ) {
-                                            Text("Open as folder")
+                                            Text(stringResource(R.string.open_as_folder))
                                         }
                                     }
                                 }
@@ -474,7 +474,7 @@ fun ArchiveViewerScreen(
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
-                                "No entries found in this archive.",
+                                stringResource(R.string.no_entries_in_archive),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -489,16 +489,16 @@ fun ArchiveViewerScreen(
         var local by rememberSaveable { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { askPassword = false },
-            title = { Text("Password Required") },
+            title = { Text(stringResource(R.string.password_required)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("This archive is encrypted. Enter the password to unlock it.")
+                    Text(stringResource(R.string.archive_encrypted))
                     OutlinedTextField(
                         value = local,
                         onValueChange = { local = it },
                         singleLine = true,
                         visualTransformation = PasswordVisualTransformation(),
-                        label = { Text("Password") },
+                        label = { Text(stringResource(R.string.password_plain)) },
                         colors = ThemeDefaults.outlinedTextFieldColors(),
                         modifier = Modifier.fillMaxWidth()
                     )
@@ -514,7 +514,7 @@ fun ArchiveViewerScreen(
                         contentColor = MaterialTheme.colorScheme.primary
                     )
                 ) {
-                    Text("Unlock")
+                    Text(stringResource(R.string.unlock))
                 }
             },
             dismissButton = {
@@ -524,7 +524,7 @@ fun ArchiveViewerScreen(
                         contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 ) {
-                    Text("Cancel")
+                    Text(stringResource(R.string.cancel))
                 }
             }
         )

@@ -117,7 +117,7 @@
         name="setting_show_thumbnails_desc"
     >Load image previews in list and grid (could cause lag for old TVs)</string>
     <string name="setting_dynamic_color">Dynamic colors</string>
-    <string name="setting_dynamic_color_desc">Android 12+</string>
+    <string name="setting_dynamic_color_desc" translatable="false">Android 12+</string>
     <string name="setting_oled_black">Pure black (OLED)</string>
     <string name="setting_zip_level">ZIP compression level</string>
     <string name="setting_zip_level_desc">0 = no compression, 9 = maximum compression</string>
@@ -180,4 +180,42 @@
         <item>@string/option_list</item>
         <item>@string/option_grid</item>
     </string-array>
+    <string name="add">Add</string>
+    <string name="apply">Apply</string>
+    <string name="back">Back</string>
+    <string name="bookmark_name">Bookmark Name</string>
+    <string name="bookmark_current_location">Bookmark the current location</string>
+    <string name="browse_files">Browse Files</string>
+    <string name="confirm">Confirm</string>
+    <string name="details">Details</string>
+    <string name="discard">Discard</string>
+    <string name="dismiss">Dismiss</string>
+    <string name="extract_selected">Extract selected</string>
+    <string name="grant_permission_action">Grant Permission</string>
+    <string name="in_progress">In progress</string>
+    <string name="install_open_with">Install (Open with)</string>
+    <string name="loaded_charset_notice">Loaded as %1$s; saving converts to UTF-8.</string>
+    <string name="new_name">New name</string>
+    <string name="no_entries_in_archive">No entries found in this archive.</string>
+    <string name="no_location_selected">No location selected</string>
+    <string name="no_tasks">No tasks at the moment.</string>
+    <string name="ok">OK</string>
+    <string name="open_as_folder">Open as folder</string>
+    <string name="password_plain">Password</string>
+    <string name="password_required">Password Required</string>
+    <string name="pick_folder">Pick Folder</string>
+    <string name="read_only">Read Only</string>
+    <string name="recent">Recent</string>
+    <string name="save">Save</string>
+    <string name="save_error">Save Error</string>
+    <string name="save_here">Save here</string>
+    <string name="save_into_folder">Save into this folder</string>
+    <string name="select">Select</string>
+    <string name="select_entries">Select entries</string>
+    <string name="task_center">Task Center</string>
+    <string name="archive_encrypted">This archive is encrypted. Enter the password to unlock it.</string>
+    <string name="unlock">Unlock</string>
+    <string name="unsaved_changes">Unsaved changes</string>
+    <string name="unsaved_changes_confirm">You have unsaved changes. Do you want to discard them?</string>
+    <string name="selected_count">%1$d selected</string>
 </resources>
