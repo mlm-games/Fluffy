@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="about_fluffy">Acerca de</string>
+    <string name="about_fluffy">Sobre la aplicación y preguntas frecuentes</string>
     <string name="screen_time">Tiempo de pantalla</string>
-    <string name="learn_more">Aprenda más</string>
-    <string name="cannot_access">No se puede acceder %s: %s</string>
-    <string name="shizuku_not_running">Shizuku no está ejecutándose</string>
-    <string name="root_access_not_available">Acceso root no disponible</string>
-    <string name="enable_root_or_shizuku">Habilitar Root o Shizuku en Configuración</string>
+    <string name="learn_more">Más información</string>
+    <string name="cannot_access">No se puede acceder a %s: %s</string>
+    <string name="shizuku_not_running">Shizuku no se está ejecutando</string>
+    <string name="root_access_not_available">El acceso root no está disponible</string>
+    <string name="enable_root_or_shizuku">Activa Root o Shizuku en los ajustes</string>
     <string name="internal_storage">Almacenamiento interno</string>
     <string name="external_storage">Almacenamiento externo</string>
     <string name="path_does_not_exist">La ruta no existe</string>
-    <string name="path_is_not_readable">La ruta no es legible</string>
-    <string name="choose_destination_folder">Elegir carpeta de destino</string>
-    <string name="new_folder">Nueva carpeta</string>
-    <string name="new_file">Nuevo archivo</string>
-    <string name="paste_from_clipboard">Pegar desde portapapeles</string>
+    <string name="path_is_not_readable">La ruta no se puede leer</string>
+    <string name="choose_destination_folder">Elige la carpeta de destino</string>
+    <string name="new_folder">Carpeta nueva</string>
+    <string name="new_file">Archivo nuevo</string>
+    <string name="paste_from_clipboard">Pegar desde el portapapeles</string>
     <string name="saf_location">Ubicación SAF</string>
-    <string name="select_a_location">Seleccionar una ubicación</string>
+    <string name="select_a_location">Selecciona una ubicación</string>
     <string name="home">Inicio</string>
     <string name="create">Crear</string>
-    <string name="settings">Configuración</string>
+    <string name="settings">Ajustes</string>
     <string name="quick_access">Acceso rápido</string>
-    <string name="pick_saf_folder">Seleccionar carpeta SAF</string>
+    <string name="pick_saf_folder">Elegir carpeta SAF</string>
     <string name="more">Más</string>
     <string name="deselect_all">Deseleccionar todo</string>
     <string name="select_all">Seleccionar todo</string>
@@ -29,7 +29,7 @@
     <string name="tasks">Tareas</string>
     <string name="cancel">Cancelar</string>
     <string name="use_this_folder">Usar esta carpeta</string>
-    <string name="select_a_file">Seleccionar un archivo</string>
+    <string name="select_a_file">Selecciona un archivo</string>
     <string name="selected">%s seleccionados</string>
     <string name="clear">Limpiar</string>
     <string name="zip">Zip</string>
@@ -43,17 +43,17 @@
     <string name="filename">Nombre de archivo</string>
     <string name="create_7z">Crear 7z</string>
     <string name="password">Contraseña (opcional)</string>
-    <string name="create_new_folder">Crear nueva carpeta</string>
+    <string name="create_new_folder">Crear carpeta nueva</string>
     <string name="folder_name">Nombre de carpeta</string>
-    <string name="create_new_file">Crear nuevo archivo</string>
+    <string name="create_new_file">Crear archivo nuevo</string>
     <string name="file_name">Nombre de archivo</string>
     <string name="paste">Pegar</string>
-    <string name="overwrite_file">¿Sobrescribir archivo?</string>
-    <string name="storage_permission_required">Permiso de almacenamiento requerido</string>
-    <string name="grant_permission">Conceder permiso para explorar archivos (reabrir al conceder)</string>
+    <string name="overwrite_file">¿Sobrescribir el archivo?</string>
+    <string name="storage_permission_required">Se requiere permiso de almacenamiento</string>
+    <string name="grant_permission">Concede permiso para explorar los archivos (vuelve a abrir tras concederlo)</string>
     <string name="bookmarks">Marcadores</string>
     <string name="edit">Editar</string>
-    <string name="tap_to_remove">Toque para eliminar</string>
+    <string name="tap_to_remove">Toca para quitar</string>
     <string name="storage">Almacenamiento</string>
     <string name="downloads">Descargas</string>
     <string name="documents">Documentos</string>
@@ -62,8 +62,103 @@
     <string name="movies">Películas</string>
     <string name="dcim">DCIM</string>
     <string name="security">Seguridad</string>
-    <string name="this_folder_is_empty_or_inaccessible">Esta carpeta está vacía o es inaccesible.</string>
+    <string name="this_folder_is_empty_or_inaccessible">Esta carpeta está vacía o no es accesible.</string>
     <string name="go_up">Subir</string>
     <string name="open_quick_access">Abrir acceso rápido</string>
-    <string name="accessibility_service_description">Se necesita el permiso de Accesibilidad para activar el bloqueo con doble toque. Cualquier dato recolectado por Fluffy no saldrá de su dispositivo.</string>
+    <string name="accessibility_service_description">El permiso de accesibilidad es necesario para activar el bloqueo con doble toque. Ningún dato recopilado por Fluffy a través de este servicio sale de tu dispositivo.</string>
+    <string name="info">Información</string>
+    <string name="properties">Propiedades</string>
+    <string name="storage_info">Información de almacenamiento</string>
+    <string name="total_storage">Stockage total</string>
+    <string name="remaining_storage">Almacenamiento restante</string>
+    <string name="used_of_total">%1$s usados de %2$s</string>
+    <string name="name">Nombre</string>
+    <string name="type">Tipo</string>
+    <string name="size">Tamaño</string>
+    <string name="path">Ruta</string>
+    <string name="modified">Modificado</string>
+    <string name="mime_type">Tipo MIME</string>
+    <string name="items">Elementos</string>
+    <string name="folder">Carpeta</string>
+    <string name="file">Archivo</string>
+    <string name="readable">Legible</string>
+    <string name="writable">Con permiso de escritura</string>
+    <string name="yes">Sí</string>
+    <string name="no">No</string>
+    <string name="unknown">Desconocido</string>
+    <string name="selection_summary">Resumen de la selección</string>
+    <string name="files_count">Archivos: %1$d</string>
+    <string name="folders_count">Carpetas: %1$d</string>
+    <string name="total_size">Tamaño total: %1$s</string>
+    <string name="close">Cerrar</string>
+    <string name="setting_default_sort">Orden predeterminado</string>
+    <string name="setting_default_sort_desc">Orden predeterminado de las listas</string>
+    <string name="setting_sort_reverse">Invertir el orden</string>
+    <string name="setting_sort_reverse_desc">Invertir el orden actual (p. ej. los mayores primero)</string>
+    <string name="setting_show_hidden">Mostrar archivos ocultos</string>
+    <string name="setting_show_hidden_desc">Mostrar archivos y carpetas que empiezan por un punto (.)</string>
+    <string name="setting_show_file_count">Mostrar el recuento de archivos en las carpetas</string>
+    <string name="setting_show_file_count_desc">Mostrar cuántos archivos hay en los directorios</string>
+    <string name="setting_show_storage_info">Mostrar el botón de información de almacenamiento</string>
+    <string name="setting_show_storage_info_desc">Mostrar un botón de información en Acceso rápido que abra los detalles de almacenamiento del dispositivo</string>
+    <string name="setting_always_inapp_picker">Mostrar el selector de carpetas en todas partes</string>
+    <string name="setting_always_inapp_picker_desc">Ayuda a evitar problemas con carpetas stub, y también para operaciones root</string>
+    <string name="setting_theme">Tema</string>
+    <string name="setting_view_mode">Modo de vista</string>
+    <string name="setting_view_mode_desc">Disposición predeterminada de las listas de archivos</string>
+    <string name="setting_show_thumbnails">Mostrar miniaturas</string>
+    <string name="setting_show_thumbnails_desc">Cargar vistas previas de imagen en lista y cuadrícula (puede ralentizar televisores antiguos)</string>
+    <string name="setting_dynamic_color">Colores dinámicos</string>
+    <string name="setting_dynamic_color_desc">Android 12+</string>
+    <string name="setting_oled_black">Negro puro (OLED)</string>
+    <string name="setting_zip_level">Nivel de compresión ZIP</string>
+    <string name="setting_zip_level_desc">0 = sin compresión, 9 = compresión máxima</string>
+    <string name="setting_enable_root">Activar el acceso root</string>
+    <string name="setting_enable_root_desc">Explorar y escribir en carpetas del sistema mediante el shell root</string>
+    <string name="setting_enable_shizuku">Activar Shizuku</string>
+    <string name="setting_enable_shizuku_desc">Usar Shizuku para comandos de shell e instalación de APK</string>
+    <string name="setting_extract_into_subfolder">Extraer en una subcarpeta</string>
+    <string name="setting_extract_into_subfolder_desc">Crear una carpeta con el nombre del archivo al extraer</string>
+    <string name="setting_prefer_cr_mime">Preferir el MIME del ContentResolver</string>
+    <string name="setting_prefer_cr_mime_desc">Determinar el tipo por el archivo y no por la extensión para «Abrir con» y las vistas previas</string>
+    <string name="setting_prefer_builtin_viewers">Preferir los visores integrados</string>
+    <string name="setting_prefer_builtin_viewers_desc">Abrir imágenes, audio/vídeo, PDF y texto en Fluffy en lugar del diálogo del sistema.</string>
+    <string name="setting_warn_shell_writes">Avisar antes de escrituras elevadas</string>
+    <string name="setting_warn_shell_writes_desc">Pedir confirmación antes de escribir o borrar mediante root o Shizuku</string>
+    <string name="setting_support_development">Apoyar el desarrollo</string>
+    <string name="setting_support_development_desc">Si esta aplicación te resulta útil, considera apoyar su desarrollo continuo</string>
+    <string name="category_general_settings">General</string>
+    <string name="category_appearance_settings">Apariencia</string>
+    <string name="category_archives">Archivos comprimidos</string>
+    <string name="category_system_settings">Sistema</string>
+    <string name="extract_here">Extraer aquí</string>
+    <string name="extract_all">Extraer todo…</string>
+    <string name="available">Disponible</string>
+    <string name="not_available">No disponible</string>
+    <string name="running">En ejecución</string>
+    <string name="not_running">No se está ejecutando</string>
+    <string name="option_recently_updated">Actualizados recientemente</string>
+    <string name="option_recently_added">Añadidos recientemente</string>
+    <string name="option_system">Sistema</string>
+    <string name="option_light">Claro</string>
+    <string name="option_dark">Oscuro</string>
+    <string name="option_list">Lista</string>
+    <string name="option_grid">Cuadrícula</string>
+    <string name="run_action">Ejecutar</string>
+    <string-array name="setting_default_sort_options">
+        <item>@string/name</item>
+        <item>@string/option_recently_updated</item>
+        <item>@string/size</item>
+        <item>@string/option_recently_added</item>
+        <item>@string/type</item>
+    </string-array>
+    <string-array name="setting_theme_options">
+        <item>@string/option_system</item>
+        <item>@string/option_light</item>
+        <item>@string/option_dark</item>
+    </string-array>
+    <string-array name="setting_view_mode_options">
+        <item>@string/option_list</item>
+        <item>@string/option_grid</item>
+    </string-array>
 </resources>

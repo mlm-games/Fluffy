@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_fluffy">درباره و پرسش‌های متداول</string>
+    <string name="screen_time">زمان صفحه</string>
+    <string name="learn_more">بیشتر بدانید</string>
+    <string name="cannot_access">دسترسی به %s ممکن نیست: %s</string>
+    <string name="shizuku_not_running">Shizuku در حال اجرا نیست</string>
+    <string name="root_access_not_available">دسترسی root در دسترس نیست</string>
+    <string name="enable_root_or_shizuku">Root یا Shizuku را در تنظیمات فعال کنید</string>
+    <string name="internal_storage">ذخیره‌سازی داخلی</string>
+    <string name="external_storage">ذخیره‌سازی خارجی</string>
+    <string name="path_does_not_exist">مسیر وجود ندارد</string>
+    <string name="path_is_not_readable">مسیر خواندنی نیست</string>
+    <string name="choose_destination_folder">انتخاب پوشهٔ مقصد</string>
+    <string name="new_folder">پوشهٔ جدید</string>
+    <string name="new_file">فایل جدید</string>
+    <string name="paste_from_clipboard">چسباندن از بریده‌دان</string>
+    <string name="saf_location">موقعیت SAF</string>
+    <string name="select_a_location">یک موقعیت انتخاب کنید</string>
+    <string name="home">خانه</string>
+    <string name="create">ایجاد</string>
+    <string name="settings">تنظیمات</string>
+    <string name="quick_access">دسترسی سریع</string>
+    <string name="pick_saf_folder">انتخاب پوشهٔ SAF</string>
+    <string name="more">بیشتر</string>
+    <string name="deselect_all">لغو انتخاب همه</string>
+    <string name="select_all">انتخاب همه</string>
+    <string name="add_bookmark">افزودن نشانک</string>
+    <string name="tasks">وظایف</string>
+    <string name="cancel">لغو</string>
+    <string name="use_this_folder">استفاده از این پوشه</string>
+    <string name="select_a_file">یک فایل انتخاب کنید</string>
+    <string name="selected">%s انتخاب شد</string>
+    <string name="clear">پاک کردن</string>
+    <string name="zip">Zip</string>
+    <string name="share">هم‌رسانی</string>
+    <string name="copy">کپی…</string>
+    <string name="move">جابه‌جا کردن…</string>
+    <string name="delete">حذف</string>
+    <string name="rename">تغییر نام</string>
+    <string name="open_with">باز کردن با</string>
+    <string name="create_zip">ایجاد ZIP</string>
+    <string name="filename">نام فایل</string>
+    <string name="create_7z">ایجاد 7z</string>
+    <string name="password">گذرواژه (اختیاری)</string>
+    <string name="create_new_folder">ایجاد پوشهٔ جدید</string>
+    <string name="folder_name">نام پوشه</string>
+    <string name="create_new_file">ایجاد فایل جدید</string>
+    <string name="file_name">نام فایل</string>
+    <string name="paste">چسباندن</string>
+    <string name="overwrite_file">جایگزینی فایل؟</string>
+    <string name="storage_permission_required">مجوز ذخیره‌سازی لازم است</string>
+    <string name="grant_permission">برای مرور فایل‌ها اجازه بدهید (پس از اعطا، دوباره باز کنید)</string>
+    <string name="bookmarks">نشانک‌ها</string>
+    <string name="edit">ویرایش</string>
+    <string name="tap_to_remove">برای برداشتن ضربه بزنید</string>
+    <string name="storage">ذخیره‌سازی</string>
+    <string name="downloads">دانلودها</string>
+    <string name="documents">اسناد</string>
+    <string name="pictures">تصاویر</string>
+    <string name="music">موسیقی</string>
+    <string name="movies">فیلم‌ها</string>
+    <string name="dcim">DCIM</string>
+    <string name="security">امنیت</string>
+    <string name="this_folder_is_empty_or_inaccessible">این پوشه خالی یا غیرقابل دسترسی است.</string>
+    <string name="go_up">یک سطح بالا</string>
+    <string name="open_quick_access">باز کردن دسترسی سریع</string>
+    <string name="accessibility_service_description">برای فعال شدن قفل با اشارهٔ دوبار، مجوز دسترس‌پذیری لازم است. هیچ داده‌ای که Fluffy از طریق این سرویس جمع‌آوری کند از دستگاه شما خارج نمی‌شود.</string>
+    <string name="info">اطلاعات</string>
+    <string name="properties">ویژگی‌ها</string>
+    <string name="storage_info">اطلاعات ذخیره‌سازی</string>
+    <string name="total_storage">کل فضای ذخیره‌سازی</string>
+    <string name="remaining_storage">فضای باقی‌مانده</string>
+    <string name="used_of_total">%1$s استفاده‌شده از %2$s</string>
+    <string name="name">نام</string>
+    <string name="type">نوع</string>
+    <string name="size">حجم</string>
+    <string name="path">مسیر</string>
+    <string name="modified">تغییر یافته</string>
+    <string name="mime_type">نوع MIME</string>
+    <string name="items">موارد</string>
+    <string name="folder">پوشه</string>
+    <string name="file">فایل</string>
+    <string name="readable">خواندنی</string>
+    <string name="writable">قابل نوشتن</string>
+    <string name="yes">بله</string>
+    <string name="no">خیر</string>
+    <string name="unknown">نامشخص</string>
+    <string name="selection_summary">خلاصهٔ انتخاب</string>
+    <string name="files_count">فایل‌ها: %1$d</string>
+    <string name="folders_count">پوشه‌ها: %1$d</string>
+    <string name="total_size">حجم کل: %1$s</string>
+    <string name="close">بستن</string>
+    <string name="setting_default_sort">مرتب‌سازی پیش‌فرض</string>
+    <string name="setting_default_sort_desc">مرتب‌سازی پیش‌فرض فهرست‌ها</string>
+    <string name="setting_sort_reverse">مرتب‌سازی معکوس</string>
+    <string name="setting_sort_reverse_desc">ترتیب فعلی را معکوس کن (مثلاً بزرگ‌ترین‌ها ابتدا)</string>
+    <string name="setting_show_hidden">نمایش فایل‌های پنهان</string>
+    <string name="setting_show_hidden_desc">نمایش فایل‌ها و پوشه‌هایی که با نقطه (.) شروع می‌شوند</string>
+    <string name="setting_show_file_count">نمایش تعداد فایل‌ها در پوشه‌ها</string>
+    <string name="setting_show_file_count_desc">نمایش تعداد فایل‌ها در پوشه‌ها</string>
+    <string name="setting_show_storage_info">نمایش دکمهٔ اطلاعات ذخیره‌سازی</string>
+    <string name="setting_show_storage_info_desc">نمایش یک دکمهٔ اطلاعات در دسترسی سریع که جزئیات ذخیره‌سازی دستگاه را باز می‌کند</string>
+    <string name="setting_always_inapp_picker">نمایش انتخابگر پوشه در همه‌جا</string>
+    <string name="setting_always_inapp_picker_desc">به پرهیز از مشکل پوشه‌های ناقص کمک می‌کند و برای عملیات root هم مفید است</string>
+    <string name="setting_theme">پوسته</string>
+    <string name="setting_view_mode">حالت نمایش</string>
+    <string name="setting_view_mode_desc">چیدمان پیش‌فرض فهرست‌های فایل</string>
+    <string name="setting_show_thumbnails">نمایش تصاویر بندانگشتی</string>
+    <string name="setting_show_thumbnails_desc">بارگذاری پیش‌نمایش تصاویر در فهرست و شبکه (ممکن است تلویزیون‌های قدیمی را کند کند)</string>
+    <string name="setting_dynamic_color">رنگ‌های پویا</string>
+    <string name="setting_dynamic_color_desc">اندروید ۱۲ به بعد</string>
+    <string name="setting_oled_black">سیاه خالص (OLED)</string>
+    <string name="setting_zip_level">سطح فشرده‌سازی ZIP</string>
+    <string name="setting_zip_level_desc">۰ = بدون فشرده‌سازی، ۹ = بیشترین فشرده‌سازی</string>
+    <string name="setting_enable_root">فعال‌سازی دسترسی root</string>
+    <string name="setting_enable_root_desc">مرور و نوشتن در پوشه‌های سیستم از طریق پوستهٔ root</string>
+    <string name="setting_enable_shizuku">فعال‌سازی Shizuku</string>
+    <string name="setting_enable_shizuku_desc">استفاده از Shizuku برای فرمان‌های پوسته و نصب APK</string>
+    <string name="setting_extract_into_subfolder">استخراج در زیرپوشه</string>
+    <string name="setting_extract_into_subfolder_desc">هنگام استخراج، پوشه‌ای با نام بایگانی ساخته شود</string>
+    <string name="setting_prefer_cr_mime">ترجیح MIME از ContentResolver</string>
+    <string name="setting_prefer_cr_mime_desc">تعیین نوع از روی فایل، نه پسوند، برای «باز کردن با» و پیش‌نمایش‌ها</string>
+    <string name="setting_prefer_builtin_viewers">ترجیح نمایشگرهای داخلی</string>
+    <string name="setting_prefer_builtin_viewers_desc">باز کردن تصاویر، صدا و ویدیو، PDF و متن در Fluffy به‌جای پنجرهٔ سیستم.</string>
+    <string name="setting_warn_shell_writes">هشدار پیش از نوشتن با دسترسی بالا</string>
+    <string name="setting_warn_shell_writes_desc">پیش از نوشتن یا حذف از طریق root یا Shizuku تأیید بگیرید</string>
+    <string name="setting_support_development">پشتیبانی از توسعه</string>
+    <string name="setting_support_development_desc">اگر این برنامه برایتان مفید است، از ادامهٔ توسعهٔ آن پشتیبانی کنید</string>
+    <string name="category_general_settings">عمومی</string>
+    <string name="category_appearance_settings">ظاهر</string>
+    <string name="category_archives">بایگانی‌ها</string>
+    <string name="category_system_settings">سیستم</string>
+    <string name="extract_here">استخراج در اینجا</string>
+    <string name="extract_all">استخراج همه…</string>
+    <string name="available">در دسترس</string>
+    <string name="not_available">در دسترس نیست</string>
+    <string name="running">در حال اجرا</string>
+    <string name="not_running">در حال اجرا نیست</string>
+    <string name="option_recently_updated">اخیراً به‌روزرسانی‌شده</string>
+    <string name="option_recently_added">اخیراً افزوده‌شده</string>
+    <string name="option_system">سیستم</string>
+    <string name="option_light">روشن</string>
+    <string name="option_dark">تیره</string>
+    <string name="option_list">فهرست</string>
+    <string name="option_grid">شبکه</string>
+    <string name="run_action">اجرا</string>
+    <string-array name="setting_default_sort_options">
+        <item>@string/name</item>
+        <item>@string/option_recently_updated</item>
+        <item>@string/size</item>
+        <item>@string/option_recently_added</item>
+        <item>@string/type</item>
+    </string-array>
+    <string-array name="setting_theme_options">
+        <item>@string/option_system</item>
+        <item>@string/option_light</item>
+        <item>@string/option_dark</item>
+    </string-array>
+    <string-array name="setting_view_mode_options">
+        <item>@string/option_list</item>
+        <item>@string/option_grid</item>
+    </string-array>
+</resources>

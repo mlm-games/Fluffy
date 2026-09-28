@@ -69,8 +69,8 @@
     <string name="info">Información</string>
     <string name="properties">Propiedades</string>
     <string name="storage_info">Información de almacenamiento</string>
-    <string name="total_storage">Stockage total</string>
-    <string name="remaining_storage">Almacenamiento restante</string>
+    <string name="total_storage">Almacenamiento total</string>
+    <string name="remaining_storage">Espacio restante</string>
     <string name="used_of_total">%1$s usados de %2$s</string>
     <string name="name">Nombre</string>
     <string name="type">Tipo</string>

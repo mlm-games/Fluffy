@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_fluffy">Tietoja ja UKK</string>
+    <string name="screen_time">Näytön aika</string>
+    <string name="learn_more">Lue lisää</string>
+    <string name="cannot_access">Ei voi käyttää: %s: %s</string>
+    <string name="shizuku_not_running">Shizuku ei ole käynnissä</string>
+    <string name="root_access_not_available">Root-käyttö ei ole käytettävissä</string>
+    <string name="enable_root_or_shizuku">Ota Root tai Shizuku käyttöön asetuksista</string>
+    <string name="internal_storage">Sisäinen tallennustila</string>
+    <string name="external_storage">Ulkoinen tallennustila</string>
+    <string name="path_does_not_exist">Polkua ei ole olemassa</string>
+    <string name="path_is_not_readable">Polkua ei voi lukea</string>
+    <string name="choose_destination_folder">Valitse kohdekansio</string>
+    <string name="new_folder">Uusi kansio</string>
+    <string name="new_file">Uusi tiedosto</string>
+    <string name="paste_from_clipboard">Liitä leikepöydältä</string>
+    <string name="saf_location">SAF-sijainti</string>
+    <string name="select_a_location">Valitse sijainti</string>
+    <string name="home">Koti</string>
+    <string name="create">Luo</string>
+    <string name="settings">Asetukset</string>
+    <string name="quick_access">Pikakäyttö</string>
+    <string name="pick_saf_folder">Valitse SAF-kansio</string>
+    <string name="more">Lisää</string>
+    <string name="deselect_all">Poista kaikki valinnat</string>
+    <string name="select_all">Valitse kaikki</string>
+    <string name="add_bookmark">Lisää kirjanmerkki</string>
+    <string name="tasks">Tehtävät</string>
+    <string name="cancel">Peruuta</string>
+    <string name="use_this_folder">Käytä tätä kansiota</string>
+    <string name="select_a_file">Valitse tiedosto</string>
+    <string name="selected">%s valittu</string>
+    <string name="clear">Tyhjennä</string>
+    <string name="zip">Zip</string>
+    <string name="share">Jaa</string>
+    <string name="copy">Kopioi…</string>
+    <string name="move">Siirrä…</string>
+    <string name="delete">Poista</string>
+    <string name="rename">Nimeä uudelleen</string>
+    <string name="open_with">Avaa sovelluksella</string>
+    <string name="create_zip">Luo ZIP</string>
+    <string name="filename">Tiedostonimi</string>
+    <string name="create_7z">Luo 7z</string>
+    <string name="password">Salasana (valinnainen)</string>
+    <string name="create_new_folder">Luo uusi kansio</string>
+    <string name="folder_name">Kansion nimi</string>
+    <string name="create_new_file">Luo uusi tiedosto</string>
+    <string name="file_name">Tiedoston nimi</string>
+    <string name="paste">Liitä</string>
+    <string name="overwrite_file">Korvataanko tiedosto?</string>
+    <string name="storage_permission_required">Tallennustilan lupa vaaditaan</string>
+    <string name="grant_permission">Anna lupa selata tiedostoja (avaa uudelleen luvan myöntämisen jälkeen)</string>
+    <string name="bookmarks">Kirjanmerkit</string>
+    <string name="edit">Muokkaa</string>
+    <string name="tap_to_remove">Poista napauttamalla</string>
+    <string name="storage">Tallennustila</string>
+    <string name="downloads">Lataukset</string>
+    <string name="documents">Asiakirjat</string>
+    <string name="pictures">Kuvat</string>
+    <string name="music">Musiikki</string>
+    <string name="movies">Elokuvat</string>
+    <string name="dcim">DCIM</string>
+    <string name="security">Turvallisuus</string>
+    <string name="this_folder_is_empty_or_inaccessible">Tämä kansio on tyhjä tai ei ole käytettävissä.</string>
+    <string name="go_up">Ylös</string>
+    <string name="open_quick_access">Avaa pika käyttö</string>
+    <string name="accessibility_service_description">Esteettömyyslupa tarvitaan kaksoisnapautuksella lukitsemisen käyttöönottoon. Kaikki tiedot, jotka Fluffy hankkii tämän palvelun kautta, eivät poistu laitteeltasi.</string>
+    <string name="info">Tiedot</string>
+    <string name="properties">Ominaisuudet</string>
+    <string name="storage_info">Tallennustilan tiedot</string>
+    <string name="total_storage">Kokonaistallennustila</string>
+    <string name="remaining_storage">Vapaa tallennustila</string>
+    <string name="used_of_total">%1$s käytetty kohteesta %2$s</string>
+    <string name="name">Nimi</string>
+    <string name="type">Tyyppi</string>
+    <string name="size">Koko</string>
+    <string name="path">Polku</string>
+    <string name="modified">Muokattu</string>
+    <string name="mime_type">MIME-tyyppi</string>
+    <string name="items">Kohteet</string>
+    <string name="folder">Kansio</string>
+    <string name="file">Tiedosto</string>
+    <string name="readable">Luettavissa</string>
+    <string name="writable">Kirjoitettavissa</string>
+    <string name="yes">Kyllä</string>
+    <string name="no">Ei</string>
+    <string name="unknown">Tuntematon</string>
+    <string name="selection_summary">Valinnan yhteenveto</string>
+    <string name="files_count">Tiedostot: %1$d</string>
+    <string name="folders_count">Kansiot: %1$d</string>
+    <string name="total_size">Kokonaiskoko: %1$s</string>
+    <string name="close">Sulje</string>
+    <string name="setting_default_sort">Oletusjärjestys</string>
+    <string name="setting_default_sort_desc">Listojen oletusjärjestys</string>
+    <string name="setting_sort_reverse">Käännä järjestys</string>
+    <string name="setting_sort_reverse_desc">Käännä nykyinen järjestysjärjestys (esim. suurin ensin)</string>
+    <string name="setting_show_hidden">Näytä piilotiedostot</string>
+    <string name="setting_show_hidden_desc">Näytä pisteellä (.) alkavat tiedostot ja kansiot</string>
+    <string name="setting_show_file_count">Näytä tiedostojen määrä kansioissa</string>
+    <string name="setting_show_file_count_desc">Näytä hakemistojen tiedostomäärä</string>
+    <string name="setting_show_storage_info">Näytä tallennustiedojen painike</string>
+    <string name="setting_show_storage_info_desc">Näytä pikaesuuksessa tietopainike, joka avaa laitteen tallennustiedot</string>
+    <string name="setting_always_inapp_picker">Näytä kansionvalitsin kaikkialla</string>
+    <string name="setting_always_inapp_picker_desc">Auttaa välttämään välikansioiden ongelmia ja on hyödyllinen root-toiminnoille</string>
+    <string name="setting_theme">Teema</string>
+    <string name="setting_view_mode">Näyttötila</string>
+    <string name="setting_view_mode_desc">Tiedostoluetteloiden oletusasettelu</string>
+    <string name="setting_show_thumbnails">Näytä pikkukuvat</string>
+    <string name="setting_show_thumbnails_desc">Lataa kuvien esikatselut listassa ja ruudussa (voi hidastaa vanhoja televisioita)</string>
+    <string name="setting_dynamic_color">Dynaamiset värit</string>
+    <string name="setting_dynamic_color_desc">Android 12+</string>
+    <string name="setting_oled_black">Puhdas musta (OLED)</string>
+    <string name="setting_zip_level">ZIP-puristustaso</string>
+    <string name="setting_zip_level_desc">0 = ei puristusta, 9 = suurin puristus</string>
+    <string name="setting_enable_root">Ota root-käyttö käyttöön</string>
+    <string name="setting_enable_root_desc">Selaa ja kirjoita järjestelmähakemistoja root-kuorella</string>
+    <string name="setting_enable_shizuku">Ota Shizuku käyttöön</string>
+    <string name="setting_enable_shizuku_desc">Käytä Shizukua kuorikomennoille ja APK-asennukselle</string>
+    <string name="setting_extract_into_subfolder">Pura alikansioon</string>
+    <string name="setting_extract_into_subfolder_desc">Luo purkamisen yhteydessä arkiston nimellä oleva kansio</string>
+    <string name="setting_prefer_cr_mime">Suosi ContentResolverin MIME-tyyppiä</string>
+    <string name="setting_prefer_cr_mime_desc">Määritä tyyppi tiedostosta, ei päteestä, kun käytetään Avaa sovelluksella ja esikatseluja</string>
+    <string name="setting_prefer_builtin_viewers">Suosi sisäänrakennettuja katseluita</string>
+    <string name="setting_prefer_builtin_viewers_desc">Avaa kuvat, ääni/video, PDF ja teksti Fluffyssä järjestelmän valikon sijaan.</string>
+    <string name="setting_warn_shell_writes">Varoita ennen laajennettuja kirjoituksia</string>
+    <string name="setting_warn_shell_writes_desc">Pyydä vahvistus ennen kirjoittamista tai poistamista rootilla tai Shizukulla</string>
+    <string name="setting_support_development">Tue kehitystä</string>
+    <string name="setting_support_development_desc">Jos sovellus on sinulle hyödyllinen, harkitse sen jatkokehityksen tukemista</string>
+    <string name="category_general_settings">Yleiset</string>
+    <string name="category_appearance_settings">Ulkoasu</string>
+    <string name="category_archives">Arkistot</string>
+    <string name="category_system_settings">Järjestelmä</string>
+    <string name="extract_here">Pura tähän</string>
+    <string name="extract_all">Pura kaikki…</string>
+    <string name="available">Saatavilla</string>
+    <string name="not_available">Ei saatavilla</string>
+    <string name="running">käynnissä</string>
+    <string name="not_running">Ei käynnissä</string>
+    <string name="option_recently_updated">Viimeksi päivitetyt</string>
+    <string name="option_recently_added">Viimeksi lisätyt</string>
+    <string name="option_system">Järjestelmä</string>
+    <string name="option_light">Vaalea</string>
+    <string name="option_dark">Tumma</string>
+    <string name="option_list">Lista</string>
+    <string name="option_grid">Ruudukko</string>
+    <string name="run_action">Suorita</string>
+    <string-array name="setting_default_sort_options">
+        <item>@string/name</item>
+        <item>@string/option_recently_updated</item>
+        <item>@string/size</item>
+        <item>@string/option_recently_added</item>
+        <item>@string/type</item>
+    </string-array>
+    <string-array name="setting_theme_options">
+        <item>@string/option_system</item>
+        <item>@string/option_light</item>
+        <item>@string/option_dark</item>
+    </string-array>
+    <string-array name="setting_view_mode_options">
+        <item>@string/option_list</item>
+        <item>@string/option_grid</item>
+    </string-array>
+</resources>

@@ -18,11 +18,15 @@ import app.fluffy.ui.components.snackbar.SnackbarManager
 import app.fluffy.viewmodel.FileBrowserViewModel
 import app.fluffy.viewmodel.SettingsViewModel
 import app.fluffy.viewmodel.TasksViewModel
+import io.github.mlmgames.settings.core.resources.AndroidStringResourceProvider
+import io.github.mlmgames.settings.core.resources.StringResourceProvider
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val appModule = module {
+    single<StringResourceProvider> { AndroidStringResourceProvider(androidContext()) }
+
     single { StorageAccessPolicy(androidContext()) }
 
     single { SettingsRepository(androidContext()) }

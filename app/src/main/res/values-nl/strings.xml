@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_fluffy">Over en FAQ\\\\\\\\\\\\\\\'s</string>
+    <string name="screen_time">Schermtijd</string>
+    <string name="learn_more">Meer informatie</string>
+    <string name="cannot_access">Geen toegang tot %s: %s</string>
+    <string name="shizuku_not_running">Shizuku is niet gestart</string>
+    <string name="root_access_not_available">Root-toegang niet beschikbaar</string>
+    <string name="enable_root_or_shizuku">Root of Shizuku inschakelen in Instellingen</string>
+    <string name="internal_storage">Interne opslag</string>
+    <string name="external_storage">Externe opslag</string>
+    <string name="path_does_not_exist">Pad bestaat niet</string>
+    <string name="path_is_not_readable">Pad is niet leesbaar</string>
+    <string name="choose_destination_folder">Kies doelmap</string>
+    <string name="new_folder">Nieuwe map</string>
+    <string name="new_file">Nieuw bestand</string>
+    <string name="paste_from_clipboard">Plakken vanaf klembord</string>
+    <string name="saf_location">SAF-locatie</string>
+    <string name="select_a_location">Selecteer een locatie</string>
+    <string name="home">Start</string>
+    <string name="create">Maken</string>
+    <string name="settings">Instellingen</string>
+    <string name="quick_access">Snelle toegang</string>
+    <string name="pick_saf_folder">SAF-map kiezen</string>
+    <string name="more">Meer</string>
+    <string name="deselect_all">Alles deselecteren</string>
+    <string name="select_all">Alles selecteren</string>
+    <string name="add_bookmark">Bladwijzer toevoegen</string>
+    <string name="tasks">Taken</string>
+    <string name="cancel">Annuleren</string>
+    <string name="use_this_folder">Deze map gebruiken</string>
+    <string name="select_a_file">Selecteer een bestand</string>
+    <string name="selected">%s geselecteerd</string>
+    <string name="clear">Wissen</string>
+    <string name="zip">Zip</string>
+    <string name="share">Delen</string>
+    <string name="copy">Kopiëren…</string>
+    <string name="move">Verplaatsen…</string>
+    <string name="delete">Verwijderen</string>
+    <string name="rename">Hernoemen</string>
+    <string name="open_with">Openen met</string>
+    <string name="create_zip">ZIP maken</string>
+    <string name="filename">Bestandsnaam</string>
+    <string name="create_7z">7z maken</string>
+    <string name="password">Wachtwoord (optioneel)</string>
+    <string name="create_new_folder">Nieuwe map maken</string>
+    <string name="folder_name">Naam van map</string>
+    <string name="create_new_file">Nieuw bestand maken</string>
+    <string name="file_name">Bestandsnaam</string>
+    <string name="paste">Plakken</string>
+    <string name="overwrite_file">Bestand overschrijven?</string>
+    <string name="storage_permission_required">Opslagtoestemming vereist</string>
+    <string name="grant_permission">Geef toestemming om bestanden te doorzoeken (heropen na het verlenen)</string>
+    <string name="bookmarks">Bladwijzers</string>
+    <string name="edit">Bewerken</string>
+    <string name="tap_to_remove">Tik om te verwijderen</string>
+    <string name="storage">Opslag</string>
+    <string name="downloads">Downloads</string>
+    <string name="documents">Documenten</string>
+    <string name="pictures">Afbeeldingen</string>
+    <string name="music">Muziek</string>
+    <string name="movies">Films</string>
+    <string name="dcim">DCIM</string>
+    <string name="security">Beveiliging</string>
+    <string name="this_folder_is_empty_or_inaccessible">Deze map is leeg of niet toegankelijk.</string>
+    <string name="go_up">Omhoog</string>
+    <string name="open_quick_access">Snelle toegang openen</string>
+    <string name="accessibility_service_description">De toegankelijkheidstoestemming is nodig om dubbeltikken om te vergrendelen in te schakelen. Gegevens die Fluffy via deze dienst verkrijgt, verlaten je apparaat niet.</string>
+    <string name="info">Info</string>
+    <string name="properties">Eigenschappen</string>
+    <string name="storage_info">Opslaginfo</string>
+    <string name="total_storage">Totale opslag</string>
+    <string name="remaining_storage">Resterende opslag</string>
+    <string name="used_of_total">%1$s gebruikt van %2$s</string>
+    <string name="name">Naam</string>
+    <string name="type">Type</string>
+    <string name="size">Grootte</string>
+    <string name="path">Pad</string>
+    <string name="modified">Gewijzigd</string>
+    <string name="mime_type">MIME-type</string>
+    <string name="items">Items</string>
+    <string name="folder">Map</string>
+    <string name="file">Bestand</string>
+    <string name="readable">Leesbaar</string>
+    <string name="writable">Beschrijfbaar</string>
+    <string name="yes">Ja</string>
+    <string name="no">Nee</string>
+    <string name="unknown">Onbekend</string>
+    <string name="selection_summary">Overzicht selectie</string>
+    <string name="files_count">Bestanden: %1$d</string>
+    <string name="folders_count">Mappen: %1$d</string>
+    <string name="total_size">Totale grootte: %1$s</string>
+    <string name="close">Sluiten</string>
+    <string name="setting_default_sort">Standaard sortering</string>
+    <string name="setting_default_sort_desc">Standaard sortering voor lijsten</string>
+    <string name="setting_sort_reverse">Sortering omkeren</string>
+    <string name="setting_sort_reverse_desc">Huidige sorteervolgorde omkeren (bijv. grootste eerst)</string>
+    <string name="setting_show_hidden">Verborgen bestanden tonen</string>
+    <string name="setting_show_hidden_desc">Bestanden en mappen tonen die met een punt beginnen (.)</string>
+    <string name="setting_show_file_count">Aantal bestanden in mappen tonen</string>
+    <string name="setting_show_file_count_desc">Aantal bestanden in mappen tonen</string>
+    <string name="setting_show_storage_info">Knop voor opslaginformatie tonen</string>
+    <string name="setting_show_storage_info_desc">Een infoknop in Snelle toegang tonen die de opslagdetails van het apparaat opent</string>
+    <string name="setting_always_inapp_picker">Mapkiezer overal tonen</string>
+    <string name="setting_always_inapp_picker_desc">Helpt problemen met stubmappen voorkomen en is ook nuttig bij root-bewerkingen</string>
+    <string name="setting_theme">Thema</string>
+    <string name="setting_view_mode">Weergavemodus</string>
+    <string name="setting_view_mode_desc">Standaardindeling voor bestandslijsten</string>
+    <string name="setting_show_thumbnails">Miniaturen tonen</string>
+    <string name="setting_show_thumbnails_desc">Afbeeldingsvoorbeelden laden in lijst en raster (kan oude tv\\\'s vertragen)</string>
+    <string name="setting_dynamic_color">Dynamische kleuren</string>
+    <string name="setting_dynamic_color_desc">Android 12+</string>
+    <string name="setting_oled_black">Puur zwart (OLED)</string>
+    <string name="setting_zip_level">ZIP-compressieniveau</string>
+    <string name="setting_zip_level_desc">0 = geen compressie, 9 = maximale compressie</string>
+    <string name="setting_enable_root">Root-toegang inschakelen</string>
+    <string name="setting_enable_root_desc">Systeemmappen verkennen en beschrijven via de root-shell</string>
+    <string name="setting_enable_shizuku">Shizuku inschakelen</string>
+    <string name="setting_enable_shizuku_desc">Shizuku gebruiken voor shell-opdrachten en APK-installatie</string>
+    <string name="setting_extract_into_subfolder">Uitpakken naar submap</string>
+    <string name="setting_extract_into_subfolder_desc">Bij het uitpakken een map met de naam van het archief maken</string>
+    <string name="setting_prefer_cr_mime">MIME van ContentResolver verkiezen</string>
+    <string name="setting_prefer_cr_mime_desc">Type op basis van het bestand in plaats van de extensie bepalen, voor \\\"Openen met\\\" en voorbeelden</string>
+    <string name="setting_prefer_builtin_viewers">Ingebouwde viewers verkiezen</string>
+    <string name="setting_prefer_builtin_viewers_desc">Afbeeldingen, audio/video, pdf en tekst in Fluffy openen in plaats van het systeemvenster.</string>
+    <string name="setting_warn_shell_writes">Waarschuwen voor schrijfacties met verhoogde rechten</string>
+    <string name="setting_warn_shell_writes_desc">Bevestiging vragen voor schrijven of verwijderen via root of Shizuku</string>
+    <string name="setting_support_development">Ontwikkeling steunen</string>
+    <string name="setting_support_development_desc">Als deze app je bevalt, overweeg dan om de verdere ontwikkeling ervan te steunen</string>
+    <string name="category_general_settings">Algemeen</string>
+    <string name="category_appearance_settings">Weergave</string>
+    <string name="category_archives">Archieven</string>
+    <string name="category_system_settings">Systeem</string>
+    <string name="extract_here">Hier uitpakken</string>
+    <string name="extract_all">Alles uitpakken…</string>
+    <string name="available">Beschikbaar</string>
+    <string name="not_available">Niet beschikbaar</string>
+    <string name="running">Draait</string>
+    <string name="not_running">Draait niet</string>
+    <string name="option_recently_updated">Recent bijgewerkt</string>
+    <string name="option_recently_added">Recent toegevoegd</string>
+    <string name="option_system">Systeem</string>
+    <string name="option_light">Licht</string>
+    <string name="option_dark">Donker</string>
+    <string name="option_list">Lijst</string>
+    <string name="option_grid">Raster</string>
+    <string name="run_action">Uitvoeren</string>
+    <string-array name="setting_default_sort_options">
+        <item>@string/name</item>
+        <item>@string/option_recently_updated</item>
+        <item>@string/size</item>
+        <item>@string/option_recently_added</item>
+        <item>@string/type</item>
+    </string-array>
+    <string-array name="setting_theme_options">
+        <item>@string/option_system</item>
+        <item>@string/option_light</item>
+        <item>@string/option_dark</item>
+    </string-array>
+    <string-array name="setting_view_mode_options">
+        <item>@string/option_list</item>
+        <item>@string/option_grid</item>
+    </string-array>
+</resources>

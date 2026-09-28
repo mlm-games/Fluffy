@@ -3,6 +3,7 @@ package app.fluffy.ui.screens
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.animation.core.tween
@@ -54,13 +55,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.activity.compose.BackHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
+import app.fluffy.R
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
@@ -73,14 +75,14 @@ import app.fluffy.ui.theme.ThemeDefaults
 import app.fluffy.util.AppLog
 import app.fluffy.util.ArchiveTypes
 import app.fluffy.util.UiFormat.formatSize
+import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream
 import org.koin.compose.koinInject
-import java.io.File
-import java.io.FileOutputStream
-import java.io.OutputStream
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
 @Composable
@@ -304,7 +306,7 @@ fun ArchiveViewerScreen(
                 actions = {
                     if (listing.isNotEmpty()) {
                         IconButton(onClick = { onExtractTo(archiveUri, password.ifBlank { null }) }) {
-                            Icon(Icons.Filled.FileOpen, contentDescription = "Extract all…")
+                            Icon(Icons.Filled.FileOpen, contentDescription = stringResource(R.string.extract_all))
                         }
                         IconButton(onClick = { selectionMode = !selectionMode }) {
                             Icon(Icons.AutoMirrored.Filled.FactCheck, contentDescription = "Select entries")

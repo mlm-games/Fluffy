@@ -14,8 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLocale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
+import app.fluffy.R
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.AppSettingsSchema
 import app.fluffy.ui.components.MyScreenScaffold
@@ -28,6 +30,7 @@ import app.fluffy.shell.RootAccess
 import app.fluffy.shell.ShizukuAccess
 import app.fluffy.viewmodel.SettingsViewModel
 import io.github.mlmgames.settings.core.SettingField
+import io.github.mlmgames.settings.core.resources.StringResourceProvider
 import io.github.mlmgames.settings.core.types.Button
 import io.github.mlmgames.settings.core.types.Dropdown
 import io.github.mlmgames.settings.core.types.Slider
@@ -38,6 +41,7 @@ import kotlin.reflect.KClass
 fun SettingsScreen(vm: SettingsViewModel) {
     val settings by vm.settings.collectAsState()
     val context = LocalContext.current
+    val stringProvider: StringResourceProvider = org.koin.compose.koinInject()
 
     LaunchedEffect(Unit) {
         vm.events.collect { event ->
@@ -76,10 +80,21 @@ fun SettingsScreen(vm: SettingsViewModel) {
     val shizukuAvail = remember(refreshTick) { ShizukuAccess.isAvailable() }
     val locale = LocalLocale.current.platformLocale
 
-    fun categoryTitle(cat: KClass<*>): String =
-        cat.simpleName?.lowercase()?.replaceFirstChar { it.titlecase(locale) } ?: "Settings"
+    val settingsTitle = stringResource(R.string.settings)
+    val categoryTitles: Map<KClass<*>, String> =
+        AppSettingsSchema.orderedCategories().associateWith { cat ->
+            val annotation = cat.java.getAnnotation(
+                io.github.mlmgames.settings.core.annotations.CategoryDefinition::class.java
+            )
+            if (annotation != null && annotation.titleRes != 0) {
+                stringResource(annotation.titleRes)
+            } else {
+                cat.simpleName?.lowercase()?.replaceFirstChar { it.titlecase(locale) }
+                    ?: settingsTitle
+            }
+        }
 
-    MyScreenScaffold(title = "Settings") { _ ->
+    MyScreenScaffold(title = settingsTitle) { _ ->
         LazyVerticalGrid(
             columns = gridCells,
             contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp),
@@ -95,7 +110,7 @@ fun SettingsScreen(vm: SettingsViewModel) {
 
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Text(
-                        text = categoryTitle(category),
+                        text = categoryTitles[category] ?: settingsTitle,
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -106,23 +121,34 @@ fun SettingsScreen(vm: SettingsViewModel) {
                         val meta = field.meta ?: return@item
                         val enabledBySchema = schema.isEnabled(settings, field)
 
+                        val resolvedDescription = meta.resolvedDescription(stringProvider)
                         val descriptionOverride = when (field.name) {
                             "enableRoot" -> {
-                                val suffix = if (rootAvail) "Available" else "Not available"
-                                listOf(meta.description, suffix).filter { it.isNotBlank() }.joinToString(" • ")
+                                val suffix = if (rootAvail) {
+                                    stringResource(R.string.available)
+                                } else {
+                                    stringResource(R.string.not_available)
+                                }
+                                listOf(resolvedDescription, suffix)
+                                    .filter { it.isNotBlank() }.joinToString(" • ")
                             }
                             "enableShizuku" -> {
-                                val suffix = if (shizukuAvail) "Running" else "Not running"
-                                listOf(meta.description, suffix).filter { it.isNotBlank() }.joinToString(" • ")
+                                val suffix = if (shizukuAvail) {
+                                    stringResource(R.string.running)
+                                } else {
+                                    stringResource(R.string.not_running)
+                                }
+                                listOf(resolvedDescription, suffix)
+                                    .filter { it.isNotBlank() }.joinToString(" • ")
                             }
-                            else -> meta.description
+                            else -> resolvedDescription
                         }.takeIf { it.isNotBlank() }
 
                         when (meta.type) {
                             Toggle::class -> {
                                 val value = (field.get(settings) as? Boolean) ?: false
                                 SettingsToggle(
-                                    title = meta.title,
+                                    title = meta.resolvedTitle(stringProvider),
                                     description = descriptionOverride,
                                     isChecked = value,
                                     enabled = enabledBySchema,
@@ -132,10 +158,10 @@ fun SettingsScreen(vm: SettingsViewModel) {
 
                             Dropdown::class -> {
                                 val idx = (field.get(settings) as? Int) ?: 0
-                                val options = meta.options
+                                val options = meta.resolvedOptions(stringProvider)
                                 SettingsItem(
-                                    title = meta.title,
-                                    subtitle = options.getOrNull(idx) ?: "Unknown",
+                                    title = meta.resolvedTitle(stringProvider),
+                                    subtitle = options.getOrNull(idx) ?: stringResource(R.string.unknown),
                                     description = descriptionOverride,
                                     enabled = enabledBySchema
                                 ) {
@@ -151,7 +177,7 @@ fun SettingsScreen(vm: SettingsViewModel) {
                                     else -> ""
                                 }
                                 SettingsItem(
-                                    title = meta.title,
+                                    title = meta.resolvedTitle(stringProvider),
                                     subtitle = subtitle,
                                     description = descriptionOverride,
                                     enabled = enabledBySchema
@@ -163,9 +189,9 @@ fun SettingsScreen(vm: SettingsViewModel) {
 
                             Button::class -> {
                                 SettingsAction(
-                                    title = meta.title,
+                                    title = meta.resolvedTitle(stringProvider),
                                     description = descriptionOverride,
-                                    buttonText = "Run",
+                                    buttonText = stringResource(R.string.run_action),
                                     enabled = enabledBySchema,
                                     onClick = { vm.performAction(field.name) }
                                 )
@@ -183,8 +209,8 @@ fun SettingsScreen(vm: SettingsViewModel) {
         if (field != null && meta != null) {
             val idx = (field.get(settings) as? Int) ?: 0
             DropdownSettingDialog(
-                title = meta.title,
-                options = meta.options,
+                title = meta.resolvedTitle(stringProvider),
+                options = meta.resolvedOptions(stringProvider),
                 selectedIndex = idx,
                 onDismiss = { showDropdown = false },
                 onOptionSelected = { i ->
@@ -205,7 +231,7 @@ fun SettingsScreen(vm: SettingsViewModel) {
                 else -> 0f
             }
             SliderSettingDialog(
-                title = meta.title,
+                title = meta.resolvedTitle(stringProvider),
                 currentValue = cur,
                 min = meta.min,
                 max = meta.max,

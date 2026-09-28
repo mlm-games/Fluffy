@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_fluffy">Giới thiệu và câu hỏi thường gặp</string>
+    <string name="screen_time">Thời gian sử dụng màn hình</string>
+    <string name="learn_more">Tìm hiểu thêm</string>
+    <string name="cannot_access">Không thể truy cập %s: %s</string>
+    <string name="shizuku_not_running">Shizuku chưa chạy</string>
+    <string name="root_access_not_available">Không có quyền root</string>
+    <string name="enable_root_or_shizuku">Bật Root hoặc Shizuku trong Cài đặt</string>
+    <string name="internal_storage">Bộ nhớ trong</string>
+    <string name="external_storage">Bộ nhớ ngoài</string>
+    <string name="path_does_not_exist">Đường dẫn không tồn tại</string>
+    <string name="path_is_not_readable">Không đọc được đường dẫn</string>
+    <string name="choose_destination_folder">Chọn thư mục đích</string>
+    <string name="new_folder">Thư mục mới</string>
+    <string name="new_file">Tệp mới</string>
+    <string name="paste_from_clipboard">Dán từ bảng nhớ tạm</string>
+    <string name="saf_location">Vị trí SAF</string>
+    <string name="select_a_location">Chọn một vị trí</string>
+    <string name="home">Trang chủ</string>
+    <string name="create">Tạo</string>
+    <string name="settings">Cài đặt</string>
+    <string name="quick_access">Truy cập nhanh</string>
+    <string name="pick_saf_folder">Chọn thư mục SAF</string>
+    <string name="more">Thêm</string>
+    <string name="deselect_all">Bỏ chọn tất cả</string>
+    <string name="select_all">Chọn tất cả</string>
+    <string name="add_bookmark">Thêm dấu trang</string>
+    <string name="tasks">Tác vụ</string>
+    <string name="cancel">Hủy</string>
+    <string name="use_this_folder">Dùng thư mục này</string>
+    <string name="select_a_file">Chọn một tệp</string>
+    <string name="selected">Đã chọn %s</string>
+    <string name="clear">Xóa</string>
+    <string name="zip">Zip</string>
+    <string name="share">Chia sẻ</string>
+    <string name="copy">Sao chép…</string>
+    <string name="move">Di chuyển…</string>
+    <string name="delete">Xóa</string>
+    <string name="rename">Đổi tên</string>
+    <string name="open_with">Mở bằng</string>
+    <string name="create_zip">Tạo tệp ZIP</string>
+    <string name="filename">Tên tệp</string>
+    <string name="create_7z">Tạo tệp 7z</string>
+    <string name="password">Mật khẩu (tùy chọn)</string>
+    <string name="create_new_folder">Tạo thư mục mới</string>
+    <string name="folder_name">Tên thư mục</string>
+    <string name="create_new_file">Tạo tệp mới</string>
+    <string name="file_name">Tên tệp</string>
+    <string name="paste">Dán</string>
+    <string name="overwrite_file">Ghi đè tệp?</string>
+    <string name="storage_permission_required">Cần cấp quyền bộ nhớ</string>
+    <string name="grant_permission">Cấp quyền duyệt tệp (mở lại sau khi cấp quyền)</string>
+    <string name="bookmarks">Dấu trang</string>
+    <string name="edit">Chỉnh sửa</string>
+    <string name="tap_to_remove">Chạm để gỡ bỏ</string>
+    <string name="storage">Bộ nhớ</string>
+    <string name="downloads">Tải xuống</string>
+    <string name="documents">Tài liệu</string>
+    <string name="pictures">Ảnh</string>
+    <string name="music">Âm nhạc</string>
+    <string name="movies">Phim</string>
+    <string name="dcim">DCIM</string>
+    <string name="security">Bảo mật</string>
+    <string name="this_folder_is_empty_or_inaccessible">Thư mục này trống hoặc không truy cập được.</string>
+    <string name="go_up">Đi lên</string>
+    <string name="open_quick_access">Mở truy cập nhanh</string>
+    <string name="accessibility_service_description">Cần có quyền trợ năng để bật khóa bằng thao tác nhấn đúp. Mọi dữ liệu mà Fluffy thu thập qua dịch vụ này sẽ không rời khỏi thiết bị của bạn.</string>
+    <string name="info">Thông tin</string>
+    <string name="properties">Thuộc tính</string>
+    <string name="storage_info">Thông tin bộ nhớ</string>
+    <string name="total_storage">Tổng dung lượng</string>
+    <string name="remaining_storage">Dung lượng còn lại</string>
+    <string name="used_of_total">Đã dùng %1$s trên %2$s</string>
+    <string name="name">Tên</string>
+    <string name="type">Loại</string>
+    <string name="size">Kích thước</string>
+    <string name="path">Đường dẫn</string>
+    <string name="modified">Đã sửa đổi</string>
+    <string name="mime_type">Loại MIME</string>
+    <string name="items">Mục</string>
+    <string name="folder">Thư mục</string>
+    <string name="file">Tệp</string>
+    <string name="readable">Đọc được</string>
+    <string name="writable">Có thể ghi</string>
+    <string name="yes">Có</string>
+    <string name="no">Không</string>
+    <string name="unknown">Không rõ</string>
+    <string name="selection_summary">Tóm tắt lựa chọn</string>
+    <string name="files_count">Tệp: %1$d</string>
+    <string name="folders_count">Thư mục: %1$d</string>
+    <string name="total_size">Tổng dung lượng: %1$s</string>
+    <string name="close">Đóng</string>
+    <string name="setting_default_sort">Đặt hình thức xếp theo mặc định</string>
+    <string name="setting_default_sort_desc">Cách sắp xếp mặc định cho danh sách</string>
+    <string name="setting_sort_reverse">Đảo thứ tự sắp xếp</string>
+    <string name="setting_sort_reverse_desc">Đảo thứ tự sắp xếp hiện tại (ví dụ lớn nhất trước)</string>
+    <string name="setting_show_hidden">Hiện tệp ẩn</string>
+    <string name="setting_show_hidden_desc">Hiện các tệp và thư mục bắt đầu bằng dấu chấm (.)</string>
+    <string name="setting_show_file_count">Hiện số tệp trong thư mục</string>
+    <string name="setting_show_file_count_desc">Hiện số tệp trong các thư mục</string>
+    <string name="setting_show_storage_info">Hiện nút thông tin bộ nhớ</string>
+    <string name="setting_show_storage_info_desc">Hiện một nút thông tin trong Truy cập nhanh để mở chi tiết bộ nhớ của thiết bị</string>
+    <string name="setting_always_inapp_picker">Luôn hiện bộ chọn thư mục</string>
+    <string name="setting_always_inapp_picker_desc">Giúp tránh sự cố với thư mục giả và cũng hữu ích cho các thao tác root</string>
+    <string name="setting_theme">Chủ đề</string>
+    <string name="setting_view_mode">Chế độ xem</string>
+    <string name="setting_view_mode_desc">Bố cục mặc định cho danh sách tệp</string>
+    <string name="setting_show_thumbnails">Hiện hình thu nhỏ</string>
+    <string name="setting_show_thumbnails_desc">Tải xem trước hình ảnh ở dạng danh sách và lưới (có thể làm chậm TV cũ)</string>
+    <string name="setting_dynamic_color">Màu động</string>
+    <string name="setting_dynamic_color_desc">Android 12 trở lên</string>
+    <string name="setting_oled_black">Đen tuyệt đối (OLED)</string>
+    <string name="setting_zip_level">Mức nén ZIP</string>
+    <string name="setting_zip_level_desc">0 = không nén, 9 = nén tối đa</string>
+    <string name="setting_enable_root">Bật truy cập root</string>
+    <string name="setting_enable_root_desc">Duyệt và ghi vào các thư mục hệ thống qua shell root</string>
+    <string name="setting_enable_shizuku">Bật Shizuku</string>
+    <string name="setting_enable_shizuku_desc">Dùng Shizuku cho lệnh shell và cài đặt APK</string>
+    <string name="setting_extract_into_subfolder">Giải nén vào thư mục con</string>
+    <string name="setting_extract_into_subfolder_desc">Tạo thư mục cùng tên với tệp nén khi giải nén</string>
+    <string name="setting_prefer_cr_mime">Ưu tiên MIME từ ContentResolver</string>
+    <string name="setting_prefer_cr_mime_desc">Xác định loại theo tệp chứ không theo phần mở rộng, cho Mở bằng và xem trước</string>
+    <string name="setting_prefer_builtin_viewers">Ưu tiên trình xem tích hợp</string>
+    <string name="setting_prefer_builtin_viewers_desc">Mở ảnh, âm thanh/video, PDF và văn bản trong Fluffy thay vì hộp thoại của hệ thống.</string>
+    <string name="setting_warn_shell_writes">Cảnh báo trước khi ghi với quyền nâng cao</string>
+    <string name="setting_warn_shell_writes_desc">Hỏi xác nhận trước khi ghi hoặc xóa qua root hoặc Shizuku</string>
+    <string name="setting_support_development">Ủng hộ phát triển</string>
+    <string name="setting_support_development_desc">Nếu ứng dụng này hữu ích với bạn, hãy cân nhắc hỗ trợ để nó tiếp tục phát triển</string>
+    <string name="category_general_settings">Chung</string>
+    <string name="category_appearance_settings">Giao diện</string>
+    <string name="category_archives">Tệp nén</string>
+    <string name="category_system_settings">Hệ thống</string>
+    <string name="extract_here">Giải nén vào đây</string>
+    <string name="extract_all">Giải nén tất cả…</string>
+    <string name="available">Khả dụng</string>
+    <string name="not_available">Không khả dụng</string>
+    <string name="running">Đang chạy</string>
+    <string name="not_running">Không chạy</string>
+    <string name="option_recently_updated">Mới cập nhật</string>
+    <string name="option_recently_added">Mới thêm</string>
+    <string name="option_system">Hệ thống</string>
+    <string name="option_light">Sáng</string>
+    <string name="option_dark">Tối</string>
+    <string name="option_list">Danh sách</string>
+    <string name="option_grid">Lưới</string>
+    <string name="run_action">Chạy</string>
+    <string-array name="setting_default_sort_options">
+        <item>@string/name</item>
+        <item>@string/option_recently_updated</item>
+        <item>@string/size</item>
+        <item>@string/option_recently_added</item>
+        <item>@string/type</item>
+    </string-array>
+    <string-array name="setting_theme_options">
+        <item>@string/option_system</item>
+        <item>@string/option_light</item>
+        <item>@string/option_dark</item>
+    </string-array>
+    <string-array name="setting_view_mode_options">
+        <item>@string/option_list</item>
+        <item>@string/option_grid</item>
+    </string-array>
+</resources>

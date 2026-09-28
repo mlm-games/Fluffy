@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_fluffy">O aplikaci a FAQ</string>
+    <string name="screen_time">Čas na obrazovce</string>
+    <string name="learn_more">Zjistit více</string>
+    <string name="cannot_access">Nelze přistupovat k %s: %s</string>
+    <string name="shizuku_not_running">Shizuku není spuštěný</string>
+    <string name="root_access_not_available">Přístup root není dostupný</string>
+    <string name="enable_root_or_shizuku">Povolte Root nebo Shizuku v Nastavení</string>
+    <string name="internal_storage">Vnitřní úložiště</string>
+    <string name="external_storage">Externí úložiště</string>
+    <string name="path_does_not_exist">Cesta neexistuje</string>
+    <string name="path_is_not_readable">Cesta není čitelná</string>
+    <string name="choose_destination_folder">Vyberte cílovou složku</string>
+    <string name="new_folder">Nová složka</string>
+    <string name="new_file">Nový soubor</string>
+    <string name="paste_from_clipboard">Vložit ze schránky</string>
+    <string name="saf_location">Umístění SAF</string>
+    <string name="select_a_location">Vyberte umístění</string>
+    <string name="home">Domů</string>
+    <string name="create">Vytvořit</string>
+    <string name="settings">Nastavení</string>
+    <string name="quick_access">Rychlý přístup</string>
+    <string name="pick_saf_folder">Vyberte složku SAF</string>
+    <string name="more">Více</string>
+    <string name="deselect_all">Zrušit výběr všeho</string>
+    <string name="select_all">Vybrat vše</string>
+    <string name="add_bookmark">Přidat záložku</string>
+    <string name="tasks">Úkoly</string>
+    <string name="cancel">Zrušit</string>
+    <string name="use_this_folder">Použít tuto složku</string>
+    <string name="select_a_file">Vyberte soubor</string>
+    <string name="selected">Vybráno: %s</string>
+    <string name="clear">Vymazat</string>
+    <string name="zip">Zip</string>
+    <string name="share">Sdílet</string>
+    <string name="copy">Kopírovat…</string>
+    <string name="move">Přesunout…</string>
+    <string name="delete">Smazat</string>
+    <string name="rename">Přejmenovat</string>
+    <string name="open_with">Otevřít v aplikaci</string>
+    <string name="create_zip">Vytvořit ZIP</string>
+    <string name="filename">Název souboru</string>
+    <string name="create_7z">Vytvořit 7z</string>
+    <string name="password">Heslo (volitelné)</string>
+    <string name="create_new_folder">Vytvořit novou složku</string>
+    <string name="folder_name">Název složky</string>
+    <string name="create_new_file">Vytvořit nový soubor</string>
+    <string name="file_name">Název souboru</string>
+    <string name="paste">Vložit</string>
+    <string name="overwrite_file">Přepsat soubor?</string>
+    <string name="storage_permission_required">Vyžadováno oprávnění k úložišti</string>
+    <string name="grant_permission">Udělte oprávnění k procházení souborů (znovu otevřete po udělení)</string>
+    <string name="bookmarks">Záložky</string>
+    <string name="edit">Upravit</string>
+    <string name="tap_to_remove">Klepnutím odeberete</string>
+    <string name="storage">Úložiště</string>
+    <string name="downloads">Stahování</string>
+    <string name="documents">Dokumenty</string>
+    <string name="pictures">Obrázky</string>
+    <string name="music">Hudba</string>
+    <string name="movies">Filmy</string>
+    <string name="dcim">DCIM</string>
+    <string name="security">Zabezpečení</string>
+    <string name="this_folder_is_empty_or_inaccessible">Tato složka je prázdná nebo nepřístupná.</string>
+    <string name="go_up">Nahoru</string>
+    <string name="open_quick_access">Otevřít rychlý přístup</string>
+    <string name="accessibility_service_description">Oprávnění přístupnosti je nutné pro zapnutí zamykání dvojitým ťuknutím. Jakákoli data, která Fluffy získá prostřednictvím této služby, neopustí vaše zařízení.</string>
+    <string name="info">Info</string>
+    <string name="properties">Vlastnosti</string>
+    <string name="storage_info">Informace o úložišti</string>
+    <string name="total_storage">Celkové úložiště</string>
+    <string name="remaining_storage">Zbývající úložiště</string>
+    <string name="used_of_total">Využito %1$s z %2$s</string>
+    <string name="name">Název</string>
+    <string name="type">Typ</string>
+    <string name="size">Velikost</string>
+    <string name="path">Cesta</string>
+    <string name="modified">Změněno</string>
+    <string name="mime_type">Typ MIME</string>
+    <string name="items">Položky</string>
+    <string name="folder">Složka</string>
+    <string name="file">Soubor</string>
+    <string name="readable">Čitelné</string>
+    <string name="writable">Zapisovatelné</string>
+    <string name="yes">Ano</string>
+    <string name="no">Ne</string>
+    <string name="unknown">Neznámé</string>
+    <string name="selection_summary">Souhrn výběru</string>
+    <string name="files_count">Soubory: %1$d</string>
+    <string name="folders_count">Složky: %1$d</string>
+    <string name="total_size">Celková velikost: %1$s</string>
+    <string name="close">Zavřít</string>
+    <string name="setting_default_sort">Výchozí řazení</string>
+    <string name="setting_default_sort_desc">Výchozí řazení seznamů</string>
+    <string name="setting_sort_reverse">Obrátit řazení</string>
+    <string name="setting_sort_reverse_desc">Obrátit aktuální pořadí (např. největší nahoře)</string>
+    <string name="setting_show_hidden">Zobrazit skryté soubory</string>
+    <string name="setting_show_hidden_desc">Zobrazit soubory a složky začínající tečkou (.)</string>
+    <string name="setting_show_file_count">Zobrazit počet souborů ve složkách</string>
+    <string name="setting_show_file_count_desc">Zobrazit počet souborů v adresářích</string>
+    <string name="setting_show_storage_info">Zobrazit tlačítko s informací o úložišti</string>
+    <string name="setting_show_storage_info_desc">Zobrazit v rychlém přístupu tlačítko, které otevře podrobnosti úložiště zařízení</string>
+    <string name="setting_always_inapp_picker">Všude zobrazit výběr složky</string>
+    <string name="setting_always_inapp_picker_desc">Pomáhá vyhnout se problémům se složkami náhradníků a je užitečné i pro operace root</string>
+    <string name="setting_theme">Motiv</string>
+    <string name="setting_view_mode">Režim zobrazení</string>
+    <string name="setting_view_mode_desc">Výchozí rozvržení seznamů souborů</string>
+    <string name="setting_show_thumbnails">Zobrazit náhledy</string>
+    <string name="setting_show_thumbnails_desc">Načítat náhledy obrázků v seznamu a mřížce (na starších televizorech může zpomalovat)</string>
+    <string name="setting_dynamic_color">Dynamické barvy</string>
+    <string name="setting_dynamic_color_desc">Android 12+</string>
+    <string name="setting_oled_black">Čistá černá (OLED)</string>
+    <string name="setting_zip_level">Úroveň komprese ZIP</string>
+    <string name="setting_zip_level_desc">0 = bez komprese, 9 = maximální komprese</string>
+    <string name="setting_enable_root">Povolit přístup root</string>
+    <string name="setting_enable_root_desc">Procházet a zapisovat do systémových složek přes kořenový shell</string>
+    <string name="setting_enable_shizuku">Povolit Shizuku</string>
+    <string name="setting_enable_shizuku_desc">Použít Shizuku pro příkazy shellu a instalaci APK</string>
+    <string name="setting_extract_into_subfolder">Rozbalit do podsložky</string>
+    <string name="setting_extract_into_subfolder_desc">Při rozbalování vytvořit složku pojmenovanou po archivu</string>
+    <string name="setting_prefer_cr_mime">Upřednostnit MIME z ContentResolver</string>
+    <string name="setting_prefer_cr_mime_desc">Určit typ podle souboru, ne podle přípony, pro „Otevřít v aplikaci“ a náhledy</string>
+    <string name="setting_prefer_builtin_viewers">Upřednostnit vestavěné prohlížeče</string>
+    <string name="setting_prefer_builtin_viewers_desc">Otevírat obrázky, zvuk a video, PDF a text ve Fluffy místo systémového dialogu.</string>
+    <string name="setting_warn_shell_writes">Varovat před zápisy se zvýšenými právy</string>
+    <string name="setting_warn_shell_writes_desc">Před zápisem nebo smazáním přes root či Shizuku vyžadovat potvrzení</string>
+    <string name="setting_support_development">Podpořit vývoj</string>
+    <string name="setting_support_development_desc">Pokud vám tato aplikace pomáhá, zvažte podporu jejího dalšího vývoje</string>
+    <string name="category_general_settings">Obecné</string>
+    <string name="category_appearance_settings">Vzhled</string>
+    <string name="category_archives">Archivy</string>
+    <string name="category_system_settings">Systém</string>
+    <string name="extract_here">Rozbalit sem</string>
+    <string name="extract_all">Rozbalit vše…</string>
+    <string name="available">Dostupné</string>
+    <string name="not_available">Nedostupné</string>
+    <string name="running">Běží</string>
+    <string name="not_running">neběží</string>
+    <string name="option_recently_updated">Naposledy aktualizované</string>
+    <string name="option_recently_added">Naposledy přidané</string>
+    <string name="option_system">Systém</string>
+    <string name="option_light">Světlý</string>
+    <string name="option_dark">Tmavý</string>
+    <string name="option_list">Seznam</string>
+    <string name="option_grid">Mřížka</string>
+    <string name="run_action">Spustit</string>
+    <string-array name="setting_default_sort_options">
+        <item>@string/name</item>
+        <item>@string/option_recently_updated</item>
+        <item>@string/size</item>
+        <item>@string/option_recently_added</item>
+        <item>@string/type</item>
+    </string-array>
+    <string-array name="setting_theme_options">
+        <item>@string/option_system</item>
+        <item>@string/option_light</item>
+        <item>@string/option_dark</item>
+    </string-array>
+    <string-array name="setting_view_mode_options">
+        <item>@string/option_list</item>
+        <item>@string/option_grid</item>
+    </string-array>
+</resources>

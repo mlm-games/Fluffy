@@ -92,4 +92,92 @@
     <string name="folders_count">Folders: %1$d</string>
     <string name="total_size">Total size: %1$s</string>
     <string name="close">Close</string>
+
+    <string name="setting_default_sort">Default sort</string>
+    <string name="setting_default_sort_desc">Default sorting for lists</string>
+    <string name="setting_sort_reverse">Reverse sort</string>
+    <string name="setting_sort_reverse_desc">Reverse current sort order (e.g. largest first)</string>
+    <string name="setting_show_hidden">Show hidden files</string>
+    <string name="setting_show_hidden_desc">Show files and folders starting with a dot (.)</string>
+    <string name="setting_show_file_count">Show file count in dirs</string>
+    <string name="setting_show_file_count_desc">Show count of files in directories</string>
+    <string name="setting_show_storage_info">Show storage info button</string>
+    <string
+        name="setting_show_storage_info_desc"
+    >Show an info button on Quick Access that opens device storage details</string>
+    <string name="setting_always_inapp_picker">Show in-app folder picker everywhere</string>
+    <string
+        name="setting_always_inapp_picker_desc"
+    >Helps prevent stub issues (if not handled), and also for root ops</string>
+    <string name="setting_theme">Theme</string>
+    <string name="setting_view_mode">View mode</string>
+    <string name="setting_view_mode_desc">Default layout for file lists</string>
+    <string name="setting_show_thumbnails">Show thumbnails</string>
+    <string
+        name="setting_show_thumbnails_desc"
+    >Load image previews in list and grid (could cause lag for old TVs)</string>
+    <string name="setting_dynamic_color">Dynamic colors</string>
+    <string name="setting_dynamic_color_desc">Android 12+</string>
+    <string name="setting_oled_black">Pure black (OLED)</string>
+    <string name="setting_zip_level">ZIP compression level</string>
+    <string name="setting_zip_level_desc">0 = no compression, 9 = maximum compression</string>
+    <string name="setting_enable_root">Enable Root access</string>
+    <string name="setting_enable_root_desc">Browse and write to system folders using root shell</string>
+    <string name="setting_enable_shizuku">Enable Shizuku</string>
+    <string name="setting_enable_shizuku_desc">Use Shizuku for shell commands and APK install</string>
+    <string name="setting_extract_into_subfolder">Extract into subfolder</string>
+    <string
+        name="setting_extract_into_subfolder_desc"
+    >Create a folder named after the archive when extracting</string>
+    <string name="setting_prefer_cr_mime">Prefer ContentResolver MIME</string>
+    <string
+        name="setting_prefer_cr_mime_desc"
+    >Get type based on file and not from extension for "Open with" and previews when available</string>
+    <string name="setting_prefer_builtin_viewers">Prefer built-in viewers</string>
+    <string
+        name="setting_prefer_builtin_viewers_desc"
+    >Open images, audio/video, PDF and text in Fluffy instead of the system Open with dialog.</string>
+    <string name="setting_warn_shell_writes">Warn before elevated writes</string>
+    <string
+        name="setting_warn_shell_writes_desc"
+    >Show a confirmation before writing/deleting via root or Shizuku</string>
+    <string name="setting_support_development">Support Development</string>
+    <string
+        name="setting_support_development_desc"
+    >If you find this app useful, consider supporting its continued development</string>
+    <string name="category_general_settings">General</string>
+    <string name="category_appearance_settings">Appearance</string>
+    <string name="category_archives">Archives</string>
+    <string name="category_system_settings">System</string>
+    <string name="extract_here">Extract here</string>
+    <string name="extract_all">Extract all…</string>
+    <string name="available">Available</string>
+    <string name="not_available">Not available</string>
+    <string name="running">Running</string>
+    <string name="not_running">Not running</string>
+    <string name="option_recently_updated">Recently updated</string>
+    <string name="option_recently_added">Recently added</string>
+    <string name="option_system">System</string>
+    <string name="option_light">Light</string>
+    <string name="option_dark">Dark</string>
+    <string name="option_list">List</string>
+    <string name="option_grid">Grid</string>
+    <string name="run_action">Run</string>
+
+    <string-array name="setting_default_sort_options">
+        <item>@string/name</item>
+        <item>@string/option_recently_updated</item>
+        <item>@string/size</item>
+        <item>@string/option_recently_added</item>
+        <item>@string/type</item>
+    </string-array>
+    <string-array name="setting_theme_options">
+        <item>@string/option_system</item>
+        <item>@string/option_light</item>
+        <item>@string/option_dark</item>
+    </string-array>
+    <string-array name="setting_view_mode_options">
+        <item>@string/option_list</item>
+        <item>@string/option_grid</item>
+    </string-array>
 </resources>

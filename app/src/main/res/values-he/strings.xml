@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_fluffy">אודות ושאלות נפוצות</string>
+    <string name="screen_time">זמן מסך</string>
+    <string name="learn_more">מידע נוסף</string>
+    <string name="cannot_access">לא ניתן לגשת אל %s: %s</string>
+    <string name="shizuku_not_running">Shizuku אינו פועל</string>
+    <string name="root_access_not_available">גישת root אינה זמינה</string>
+    <string name="enable_root_or_shizuku">הפעלת Root או Shizuku בהגדרות</string>
+    <string name="internal_storage">אחסון פנימי</string>
+    <string name="external_storage">אחסון חיצוני</string>
+    <string name="path_does_not_exist">הנתיב אינו קיים</string>
+    <string name="path_is_not_readable">הנתיב אינו קריא</string>
+    <string name="choose_destination_folder">בחירת תיקיית יעד</string>
+    <string name="new_folder">תיקייה חדשה</string>
+    <string name="new_file">קובץ חדש</string>
+    <string name="paste_from_clipboard">הדבקה מהלוח</string>
+    <string name="saf_location">מיקום SAF</string>
+    <string name="select_a_location">בחר מיקום</string>
+    <string name="home">בית</string>
+    <string name="create">יצירה</string>
+    <string name="settings">הגדרות</string>
+    <string name="quick_access">גישה מהירה</string>
+    <string name="pick_saf_folder">בחירת תיקיית SAF</string>
+    <string name="more">עוד</string>
+    <string name="deselect_all">ביטול הבחירה של הכול</string>
+    <string name="select_all">בחר הכול</string>
+    <string name="add_bookmark">הוספת סימנייה</string>
+    <string name="tasks">משימות</string>
+    <string name="cancel">ביטול</string>
+    <string name="use_this_folder">השתמש בתיקייה זו</string>
+    <string name="select_a_file">בחר קובץ</string>
+    <string name="selected">%s נבחרו</string>
+    <string name="clear">ניקוי</string>
+    <string name="zip">Zip</string>
+    <string name="share">שיתוף</string>
+    <string name="copy">העתקה…</string>
+    <string name="move">העברה…</string>
+    <string name="delete">מחיקה</string>
+    <string name="rename">שינוי שם</string>
+    <string name="open_with">פתיחה בעם</string>
+    <string name="create_zip">יצירת ZIP</string>
+    <string name="filename">שם קובץ</string>
+    <string name="create_7z">יצירת 7z</string>
+    <string name="password">סיסמה (רשות)</string>
+    <string name="create_new_folder">יצירת תיקייה חדשה</string>
+    <string name="folder_name">שם התיקייה</string>
+    <string name="create_new_file">יצירת קובץ חדש</string>
+    <string name="file_name">שם הקובץ</string>
+    <string name="paste">הדבקה</string>
+    <string name="overwrite_file">להחליף את הקובץ?</string>
+    <string name="storage_permission_required">נדרשת הרשאת אחסון</string>
+    <string name="grant_permission">יש להעניק הרשאה לעיון בקבצים (יש לפתוח מחדש לאחר המתן ההרשאה)</string>
+    <string name="bookmarks">סימניות</string>
+    <string name="edit">עריכה</string>
+    <string name="tap_to_remove">הקש כדי להסיר</string>
+    <string name="storage">אחסון</string>
+    <string name="downloads">הורדות</string>
+    <string name="documents">מסמכים</string>
+    <string name="pictures">תמונות</string>
+    <string name="music">מוזיקה</string>
+    <string name="movies">סרטים</string>
+    <string name="dcim">DCIM</string>
+    <string name="security">אבטחה</string>
+    <string name="this_folder_is_empty_or_inaccessible">התיקייה הזו ריקה או אינה נגישה.</string>
+    <string name="go_up">למעלה</string>
+    <string name="open_quick_access">פתיחת גישה מהירה</string>
+    <string name="accessibility_service_description">הרשאת נגישות נדרשת כדי להפעיל נעילה בהחלקה כפולה. נתונים ש-Fluffy אוסף באמצעות שירות זה אינם עוזבים את המכשיר שלך.</string>
+    <string name="info">מידע</string>
+    <string name="properties">מאפיינים</string>
+    <string name="storage_info">פרטי אחסון</string>
+    <string name="total_storage">אחסון כולל</string>
+    <string name="remaining_storage">אחסון פנוי</string>
+    <string name="used_of_total">%1$s בשימוש מתוך %2$s</string>
+    <string name="name">שם</string>
+    <string name="type">סוג</string>
+    <string name="size">גודל</string>
+    <string name="path">נתיב</string>
+    <string name="modified">שונה</string>
+    <string name="mime_type">סוג MIME</string>
+    <string name="items">פריטים</string>
+    <string name="folder">תיקייה</string>
+    <string name="file">קובץ</string>
+    <string name="readable">קריא</string>
+    <string name="writable">ניתן לכתיבה</string>
+    <string name="yes">כן</string>
+    <string name="no">לא</string>
+    <string name="unknown">לא ידוע</string>
+    <string name="selection_summary">סיכום הבחירה</string>
+    <string name="files_count">קבצים: %1$d</string>
+    <string name="folders_count">תיקיות: %1$d</string>
+    <string name="total_size">גודל כולל: %1$s</string>
+    <string name="close">סגירה</string>
+    <string name="setting_default_sort">מיון ברירת מחדל</string>
+    <string name="setting_default_sort_desc">מיון ברירת מחדל לרשימות</string>
+    <string name="setting_sort_reverse">מיון הפוך</string>
+    <string name="setting_sort_reverse_desc">היפוך סדר המיון הנוכחי (למשל, הגדולים תחילה)</string>
+    <string name="setting_show_hidden">הצגת קבצים מוסתרים</string>
+    <string name="setting_show_hidden_desc">הצגת קבצים ותיקיות שמתחילים בנקודה (.)</string>
+    <string name="setting_show_file_count">הצגת מספר הקבצים בתיקיות</string>
+    <string name="setting_show_file_count_desc">הצגת מספר הקבצים בתיקיות המערכת</string>
+    <string name="setting_show_storage_info">הצגת כפתור מידע על אחסון</string>
+    <string name="setting_show_storage_info_desc">הצגה בגישה מהירה של כפתור מידע שפותח את פרטי האחסון של המכשיר</string>
+    <string name="setting_always_inapp_picker">הצגת בוחר התיקיות בכל מקום</string>
+    <string name="setting_always_inapp_picker_desc">עוזר למנוע בעיות בתיקיות חלופיות, ונחוץ גם לפעולות root</string>
+    <string name="setting_theme">ערכת נושא</string>
+    <string name="setting_view_mode">מצב תצוגה</string>
+    <string name="setting_view_mode_desc">פריסה ברירת מחדל לרשימות קבצים</string>
+    <string name="setting_show_thumbnails">הצגת תמונות ממוזערות</string>
+    <string name="setting_show_thumbnails_desc">טעינת תצוגות מקדימות של תמונות ברשימה וברשת (עלול להאט טלוויזיות ישנות)</string>
+    <string name="setting_dynamic_color">צבעים דינמיים</string>
+    <string name="setting_dynamic_color_desc">Android 12 ומעלה</string>
+    <string name="setting_oled_black">שחור מלא (OLED)</string>
+    <string name="setting_zip_level">רמת דחיסת ZIP</string>
+    <string name="setting_zip_level_desc">0 = ללא דחיסה, 9 = דחיסה מרבית</string>
+    <string name="setting_enable_root">הפעלת גישת root</string>
+    <string name="setting_enable_root_desc">עיון וכתיבה בתיקיות המערכת דרך מעטפת root</string>
+    <string name="setting_enable_shizuku">הפעלת Shizuku</string>
+    <string name="setting_enable_shizuku_desc">שימוש ב-Shizuku לפקודות מעטפת ולהתקנת APK</string>
+    <string name="setting_extract_into_subfolder">חילוץ לתיקיית משנה</string>
+    <string name="setting_extract_into_subfolder_desc">יצירת תיקייה בשם הארכיון בעת החילוץ</string>
+    <string name="setting_prefer_cr_mime">העדפת MIME מ-ContentResolver</string>
+    <string name="setting_prefer_cr_mime_desc">קביעת הסוג לפי הקובץ ולא לפי הסיומת, עבור «פתח באמצעות» ותצוגות מקדימות</string>
+    <string name="setting_prefer_builtin_viewers">העדפת הצוגנים המובנים</string>
+    <string name="setting_prefer_builtin_viewers_desc">פתיחת תמונות, אודיו/וידאו, PDF וטקסט ב-Fluffy במקום בדיאלוג המערכת.</string>
+    <string name="setting_warn_shell_writes">אזהרה לפני כתיבה בהרשאות מורחבות</string>
+    <string name="setting_warn_shell_writes_desc">בקשת אישור לפני כתיבה או מחיקה דרך root או Shizuku</string>
+    <string name="setting_support_development">תמיכה בפיתוח</string>
+    <string name="setting_support_development_desc">אם האפליקציה שימושית עבורך, שקול לתמוך בהמשך הפיתוח שלה</string>
+    <string name="category_general_settings">כללי</string>
+    <string name="category_appearance_settings">מראה</string>
+    <string name="category_archives">ארכיונים</string>
+    <string name="category_system_settings">מערכת</string>
+    <string name="extract_here">חלץ כאן</string>
+    <string name="extract_all">חלץ הכול…</string>
+    <string name="available">זמין</string>
+    <string name="not_available">לא זמין</string>
+    <string name="running">פועל</string>
+    <string name="not_running">לא פועל</string>
+    <string name="option_recently_updated">עודכנו לאחרונה</string>
+    <string name="option_recently_added">נוספו לאחרונה</string>
+    <string name="option_system">מערכת</string>
+    <string name="option_light">בהיר</string>
+    <string name="option_dark">כהה</string>
+    <string name="option_list">רשימה</string>
+    <string name="option_grid">רשת</string>
+    <string name="run_action">הפעל</string>
+    <string-array name="setting_default_sort_options">
+        <item>@string/name</item>
+        <item>@string/option_recently_updated</item>
+        <item>@string/size</item>
+        <item>@string/option_recently_added</item>
+        <item>@string/type</item>
+    </string-array>
+    <string-array name="setting_theme_options">
+        <item>@string/option_system</item>
+        <item>@string/option_light</item>
+        <item>@string/option_dark</item>
+    </string-array>
+    <string-array name="setting_view_mode_options">
+        <item>@string/option_list</item>
+        <item>@string/option_grid</item>
+    </string-array>
+</resources>

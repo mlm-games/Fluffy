@@ -7,6 +7,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
+import android.graphics.pdf.PdfRenderer
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.ParcelFileDescriptor
@@ -58,13 +59,16 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
+import app.fluffy.R
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.ShellEntry
 import app.fluffy.io.ShellIo
@@ -75,6 +79,10 @@ import app.fluffy.util.UiFormat.formatDate
 import app.fluffy.util.UiFormat.formatSize
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import java.io.File
+import java.io.IOException
+import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.min
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -82,12 +90,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.io.File
-import java.io.IOException
-import java.util.concurrent.ConcurrentHashMap
-import androidx.core.net.toUri
-import android.graphics.pdf.PdfRenderer
-import kotlin.math.min
 
 private val pdfDarkModeMatrix = ColorMatrix(
     floatArrayOf(
@@ -439,7 +441,7 @@ fun FileListRow(
                 ) {
                     Icon(
                         imageVector = Icons.Filled.Unarchive,
-                        contentDescription = "Extract here",
+                        contentDescription = stringResource(R.string.extract_here),
                         tint = colorScheme.primary
                     )
                 }
@@ -555,7 +557,7 @@ fun FileGridItem(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Unarchive,
-                            contentDescription = "Extract here",
+                            contentDescription = stringResource(R.string.extract_here),
                             tint = colorScheme.primary
                         )
                     }

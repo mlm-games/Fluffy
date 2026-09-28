@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_fluffy">Σχετικά και Συχνές ερωτήσεις</string>
+    <string name="screen_time">Χρόνος οθόνης</string>
+    <string name="learn_more">Μάθετε περισσότερα</string>
+    <string name="cannot_access">Δεν είναι δυνατή η πρόσβαση σε %s: %s</string>
+    <string name="shizuku_not_running">Το Shizuku δεν εκτελείται</string>
+    <string name="root_access_not_available">Η πρόσβαση root δεν είναι διαθέσιμη</string>
+    <string name="enable_root_or_shizuku">Ενεργοποιήστε το Root ή το Shizuku στις Ρυθμίσεις</string>
+    <string name="internal_storage">Εσωτερική αποθήκευση</string>
+    <string name="external_storage">Εξωτερική αποθήκευση</string>
+    <string name="path_does_not_exist">Η διαδρομή δεν υπάρχει</string>
+    <string name="path_is_not_readable">Η διαδρομή δεν είναι αναγνώσιμη</string>
+    <string name="choose_destination_folder">Επιλέξτε φάκελο προορισμού</string>
+    <string name="new_folder">Νέος φάκελος</string>
+    <string name="new_file">Νέο αρχείο</string>
+    <string name="paste_from_clipboard">Επικόλληση από το πρόχειρο</string>
+    <string name="saf_location">Τοποθεσία SAF</string>
+    <string name="select_a_location">Επιλέξτε μια τοποθεσία</string>
+    <string name="home">Αρχική</string>
+    <string name="create">Δημιουργία</string>
+    <string name="settings">Ρυθμίσεις</string>
+    <string name="quick_access">Γρήγορη πρόσβαση</string>
+    <string name="pick_saf_folder">Επιλέξτε φάκελο SAF</string>
+    <string name="more">Περισσότερα</string>
+    <string name="deselect_all">Κατάργηση επιλογής όλων</string>
+    <string name="select_all">Επιλογή όλων</string>
+    <string name="add_bookmark">Προσθήκη σελιδοδεικτή</string>
+    <string name="tasks">Εργασίες</string>
+    <string name="cancel">Ακύρωση</string>
+    <string name="use_this_folder">Χρήση αυτού του φακέλου</string>
+    <string name="select_a_file">Επιλέξτε ένα αρχείο</string>
+    <string name="selected">%s επιλεγμένα</string>
+    <string name="clear">Καθαρισμός</string>
+    <string name="zip">Zip</string>
+    <string name="share">Κοινή χρήση</string>
+    <string name="copy">Αντιγραφή…</string>
+    <string name="move">Μετακίνηση…</string>
+    <string name="delete">Διαγραφή</string>
+    <string name="rename">Μετονομασία</string>
+    <string name="open_with">Άνοιγμα με</string>
+    <string name="create_zip">Δημιουργία ZIP</string>
+    <string name="filename">Όνομα αρχείου</string>
+    <string name="create_7z">Δημιουργία 7z</string>
+    <string name="password">Κωδικός πρόσβασης (προαιρετικό)</string>
+    <string name="create_new_folder">Δημιουργία νέου φακέλου</string>
+    <string name="folder_name">Όνομα φακέλου</string>
+    <string name="create_new_file">Δημιουργία νέου αρχείου</string>
+    <string name="file_name">Όνομα αρχείου</string>
+    <string name="paste">Επικόλληση</string>
+    <string name="overwrite_file">Αντικατάσταση αρχείου;</string>
+    <string name="storage_permission_required">Απαιτείται άδεια αποθηκευτικού χώρου</string>
+    <string name="grant_permission">Παραχωρήστε άδεια για περιήγηση στα αρχεία (ανοίξτε ξανά μετά την παραχώρηση)</string>
+    <string name="bookmarks">Σελιδοδείκτες</string>
+    <string name="edit">Επεξεργασία</string>
+    <string name="tap_to_remove">Πατήστε για αφαίρεση</string>
+    <string name="storage">Αποθηκευτικός χώρος</string>
+    <string name="downloads">Λήψεις</string>
+    <string name="documents">Έγγραφα</string>
+    <string name="pictures">Εικόνες</string>
+    <string name="music">Μουσική</string>
+    <string name="movies">Ταινίες</string>
+    <string name="dcim">DCIM</string>
+    <string name="security">Ασφάλεια</string>
+    <string name="this_folder_is_empty_or_inaccessible">Αυτός ο φάκελος είναι κενός ή μη προσβάσιμος.</string>
+    <string name="go_up">Επάνω</string>
+    <string name="open_quick_access">Άνοιγμα γρήγορης πρόσβασης</string>
+    <string name="accessibility_service_description">Η άδεια προσβασιμότητας απαιτείται για την ενεργοποίηση του κλειδώματος με διπλό πάτημα. Τυχόν δεδομένα που συλλέγει το Fluffy μέσω αυτής της υπηρεσίας δεν απομακρύνονται από τη συσκευή σας.</string>
+    <string name="info">Πληροφορίες</string>
+    <string name="properties">Ιδιότητες</string>
+    <string name="storage_info">Πληροφορίες αποθηκευτικού χώρου</string>
+    <string name="total_storage">Συνολικός αποθηκευτικός χώρος</string>
+    <string name="remaining_storage">Διαθέσιμος αποθηκευτικός χώρος</string>
+    <string name="used_of_total">%1$s σε χρήση από %2$s</string>
+    <string name="name">Όνομα</string>
+    <string name="type">Τύπος</string>
+    <string name="size">Μέγεθος</string>
+    <string name="path">Διαδρομή</string>
+    <string name="modified">Τροποποιήθηκε</string>
+    <string name="mime_type">Τύπος MIME</string>
+    <string name="items">Στοιχεία</string>
+    <string name="folder">Φάκελος</string>
+    <string name="file">Αρχείο</string>
+    <string name="readable">Αναγνώσιμο</string>
+    <string name="writable">Με δυνατότητα εγγραφής</string>
+    <string name="yes">Ναι</string>
+    <string name="no">Όχι</string>
+    <string name="unknown">Άγνωστο</string>
+    <string name="selection_summary">Σύνοψη επιλογής</string>
+    <string name="files_count">Αρχεία: %1$d</string>
+    <string name="folders_count">Φάκελοι: %1$d</string>
+    <string name="total_size">Συνολικό μέγεθος: %1$s</string>
+    <string name="close">Κλείσιμο</string>
+    <string name="setting_default_sort">Подразумевано сортиране</string>
+    <string name="setting_default_sort_desc">Подразумевано сортиране на списъците</string>
+    <string name="setting_sort_reverse">Обратно сортиране</string>
+    <string name="setting_sort_reverse_desc">Обърнете текущия ред (например най-големите първо)</string>
+    <string name="setting_show_hidden">Показване на скрити файлове</string>
+    <string name="setting_show_hidden_desc">Показване на файлове и папки, започващи с точка (.)</string>
+    <string name="setting_show_file_count">Показване на броя файлове в папките</string>
+    <string name="setting_show_file_count_desc">Показване на броя файлове в директориите</string>
+    <string name="setting_show_storage_info">Показване на бутона за информация за паметта</string>
+    <string name="setting_show_storage_info_desc">Показване в бърз достъп на бутон с информация, който отваря данните за паметта на устройството</string>
+    <string name="setting_always_inapp_picker">Показване на избора на папка навсякъде</string>
+    <string name="setting_always_inapp_picker_desc">Помага да се избегнат проблеми с временни папки и е полезно за операции с root</string>
+    <string name="setting_theme">Тема</string>
+    <string name="setting_view_mode">Режим на показване</string>
+    <string name="setting_view_mode_desc">Подразбиращ се изглед на списъците с файлове</string>
+    <string name="setting_show_thumbnails">Показване на миниатюри</string>
+    <string name="setting_show_thumbnails_desc">Зареждане на визуализации на изображенията в списък и мрежа (може да забави старите телевизори)</string>
+    <string name="setting_dynamic_color">Динамични цветове</string>
+    <string name="setting_dynamic_color_desc">Android 12+</string>
+    <string name="setting_oled_black">Чисто черно (OLED)</string>
+    <string name="setting_zip_level">Ниво на ZIP компресия</string>
+    <string name="setting_zip_level_desc">0 = без компресия, 9 = максимална компресия</string>
+    <string name="setting_enable_root">Включване на root достъп</string>
+    <string name="setting_enable_root_desc">Преглед и запис в системни папки чрез root обвивката</string>
+    <string name="setting_enable_shizuku">Включване на Shizuku</string>
+    <string name="setting_enable_shizuku_desc">Използване на Shizuku за команди в обвивката и инсталиране на APK</string>
+    <string name="setting_extract_into_subfolder">Разархивиране в подпапка</string>
+    <string name="setting_extract_into_subfolder_desc">При разархивиране да се създаде папка с името на архива</string>
+    <string name="setting_prefer_cr_mime">Предпочитане на MIME от ContentResolver</string>
+    <string name="setting_prefer_cr_mime_desc">Определяне на типа по файла, а не по разширението, за „Отваряне с“ и визуализации</string>
+    <string name="setting_prefer_builtin_viewers">Предпочитане на вградените програми за преглед</string>
+    <string name="setting_prefer_builtin_viewers_desc">Отваряне на изображения, аудио/видео, PDF и текст във Fluffy вместо в системния диалог.</string>
+    <string name="setting_warn_shell_writes">Предупреждение преди запис с разширени права</string>
+    <string name="setting_warn_shell_writes_desc">Изискване на потвърждение преди запис или изтриване чрез root или Shizuku</string>
+    <string name="setting_support_development">Подкрепете разработването</string>
+    <string name="setting_support_development_desc">Ако приложението е полезно за вас, помислете да подкрепите по-нататъшната му разработка</string>
+    <string name="category_general_settings">Общи</string>
+    <string name="category_appearance_settings">Вид</string>
+    <string name="category_archives">Архиви</string>
+    <string name="category_system_settings">Система</string>
+    <string name="extract_here">Разархивиране тук</string>
+    <string name="extract_all">Разархивиране на всичко…</string>
+    <string name="available">Достъпно</string>
+    <string name="not_available">Не е налично</string>
+    <string name="running">Работи</string>
+    <string name="not_running">Не работи</string>
+    <string name="option_recently_updated">Наскоро обновени</string>
+    <string name="option_recently_added">Наскоро добавени</string>
+    <string name="option_system">Системна</string>
+    <string name="option_light">Светла</string>
+    <string name="option_dark">Тъмна</string>
+    <string name="option_list">Списък</string>
+    <string name="option_grid">Мрежа</string>
+    <string name="run_action">Изпълнение</string>
+    <string-array name="setting_default_sort_options">
+        <item>@string/name</item>
+        <item>@string/option_recently_updated</item>
+        <item>@string/size</item>
+        <item>@string/option_recently_added</item>
+        <item>@string/type</item>
+    </string-array>
+    <string-array name="setting_theme_options">
+        <item>@string/option_system</item>
+        <item>@string/option_light</item>
+        <item>@string/option_dark</item>
+    </string-array>
+    <string-array name="setting_view_mode_options">
+        <item>@string/option_list</item>
+        <item>@string/option_grid</item>
+    </string-array>
+</resources>

@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="about_fluffy">Tentang dan FAQ</string>
+    <string name="screen_time">Waktu layar</string>
+    <string name="learn_more">Pelajari lebih lanjut</string>
+    <string name="cannot_access">Tidak dapat mengakses %s: %s</string>
+    <string name="shizuku_not_running">Shizuku tidak berjalan</string>
+    <string name="root_access_not_available">Akses root tidak tersedia</string>
+    <string name="enable_root_or_shizuku">Aktifkan Root atau Shizuku di Pengaturan</string>
+    <string name="internal_storage">Penyimpanan Internal</string>
+    <string name="external_storage">Penyimpanan Eksternal</string>
+    <string name="path_does_not_exist">Jalur tidak ada</string>
+    <string name="path_is_not_readable">Jalur tidak dapat dibaca</string>
+    <string name="choose_destination_folder">Pilih folder tujuan</string>
+    <string name="new_folder">Folder Baru</string>
+    <string name="new_file">Berkas Baru</string>
+    <string name="paste_from_clipboard">Tempel dari Papan Klip</string>
+    <string name="saf_location">Lokasi SAF</string>
+    <string name="select_a_location">Pilih sebuah lokasi</string>
+    <string name="home">Beranda</string>
+    <string name="create">Buat</string>
+    <string name="settings">Pengaturan</string>
+    <string name="quick_access">Akses Cepat</string>
+    <string name="pick_saf_folder">Pilih Folder SAF</string>
+    <string name="more">Selengkapnya</string>
+    <string name="deselect_all">Batalkan semua pilihan</string>
+    <string name="select_all">Pilih semua</string>
+    <string name="add_bookmark">Tambah Bookmark</string>
+    <string name="tasks">Tugas</string>
+    <string name="cancel">Batal</string>
+    <string name="use_this_folder">Gunakan folder ini</string>
+    <string name="select_a_file">Pilih sebuah berkas</string>
+    <string name="selected">%s dipilih</string>
+    <string name="clear">Bersihkan</string>
+    <string name="zip">Zip</string>
+    <string name="share">Bagikan</string>
+    <string name="copy">Salin…</string>
+    <string name="move">Pindahkan…</string>
+    <string name="delete">Hapus</string>
+    <string name="rename">Ganti nama</string>
+    <string name="open_with">Buka Dengan</string>
+    <string name="create_zip">Buat ZIP</string>
+    <string name="filename">Nama berkas</string>
+    <string name="create_7z">Buat 7z</string>
+    <string name="password">Sandi (opsional)</string>
+    <string name="create_new_folder">Buat Folder Baru</string>
+    <string name="folder_name">Nama folder</string>
+    <string name="create_new_file">Buat File Baru</string>
+    <string name="file_name">Nama berkas</string>
+    <string name="paste">Tempel</string>
+    <string name="overwrite_file">Timpa berkas?</string>
+    <string name="storage_permission_required">Izin Penyimpanan Diperlukan</string>
+    <string name="grant_permission">Beri izin untuk menjelajah berkas (buka ulang setelah diberi izin)</string>
+    <string name="bookmarks">Bookmark</string>
+    <string name="edit">Edit</string>
+    <string name="tap_to_remove">Ketuk untuk menghapus</string>
+    <string name="storage">Penyimpanan</string>
+    <string name="downloads">Unduhan</string>
+    <string name="documents">Dokumen</string>
+    <string name="pictures">Gambar</string>
+    <string name="music">Musik</string>
+    <string name="movies">Film</string>
+    <string name="dcim">DCIM</string>
+    <string name="security">Keamanan</string>
+    <string name="this_folder_is_empty_or_inaccessible">Folder ini kosong atau tidak dapat diakses.</string>
+    <string name="go_up">Ke atas</string>
+    <string name="open_quick_access">Buka Akses Cepat</string>
+    <string name="accessibility_service_description">Izin aksesibilitas diperlukan untuk mengaktifkan kunci dengan ketukan ganda. Data yang dikumpulkan Fluffy melalui layanan ini tidak akan meninggalkan perangkat Anda.</string>
+    <string name="info">Info</string>
+    <string name="properties">Properti</string>
+    <string name="storage_info">Info penyimpanan</string>
+    <string name="total_storage">Total penyimpanan</string>
+    <string name="remaining_storage">Penyimpanan tersisa</string>
+    <string name="used_of_total">%1$s terpakai dari %2$s</string>
+    <string name="name">Nama</string>
+    <string name="type">Tipe</string>
+    <string name="size">Ukuran</string>
+    <string name="path">Jalur</string>
+    <string name="modified">Diubah</string>
+    <string name="mime_type">Tipe MIME</string>
+    <string name="items">Item</string>
+    <string name="folder">Map</string>
+    <string name="file">Berkas</string>
+    <string name="readable">Dapat dibaca</string>
+    <string name="writable">Dapat ditulisi</string>
+    <string name="yes">Ya</string>
+    <string name="no">Tidak</string>
+    <string name="unknown">Tidak diketahui</string>
+    <string name="selection_summary">Ringkasan pilihan</string>
+    <string name="files_count">Berkas: %1$d</string>
+    <string name="folders_count">Folder: %1$d</string>
+    <string name="total_size">Total ukuran: %1$s</string>
+    <string name="close">Tutup</string>
+    <string name="setting_default_sort">Pengurutan bawaan</string>
+    <string name="setting_default_sort_desc">Pengurutan bawaan untuk daftar</string>
+    <string name="setting_sort_reverse">Balik urutan</string>
+    <string name="setting_sort_reverse_desc">Balik urutan saat ini (misalnya yang terbesar lebih dulu)</string>
+    <string name="setting_show_hidden">Tampilkan berkas tersembunyi</string>
+    <string name="setting_show_hidden_desc">Tampilkan berkas dan folder yang diawali titik (.)</string>
+    <string name="setting_show_file_count">Tampilkan jumlah berkas dalam folder</string>
+    <string name="setting_show_file_count_desc">Tampilkan jumlah berkas dalam direktori</string>
+    <string name="setting_show_storage_info">Tampilkan tombol info penyimpanan</string>
+    <string name="setting_show_storage_info_desc">Tampilkan tombol info di Akses Cepat yang membuka rincian penyimpanan perangkat</string>
+    <string name="setting_always_inapp_picker">Tampilkan pemilih folder di semua tempat</string>
+    <string name="setting_always_inapp_picker_desc">Membantu menghindari masalah folder stub, dan juga berguna untuk operasi root</string>
+    <string name="setting_theme">Tema</string>
+    <string name="setting_view_mode">Mode tampilan</string>
+    <string name="setting_view_mode_desc">Tata letak bawaan untuk daftar berkas</string>
+    <string name="setting_show_thumbnails">Tampilkan thumbnail</string>
+    <string name="setting_show_thumbnails_desc">Muat pratinjau gambar di daftar dan kisi (dapat memperlambat TV lama)</string>
+    <string name="setting_dynamic_color">Warna dinamis</string>
+    <string name="setting_dynamic_color_desc">Android 12+</string>
+    <string name="setting_oled_black">Hitam pekat (OLED)</string>
+    <string name="setting_zip_level">Tingkat kompresi ZIP</string>
+    <string name="setting_zip_level_desc">0 = tanpa kompresi, 9 = kompresi maksimum</string>
+    <string name="setting_enable_root">Aktifkan akses root</string>
+    <string name="setting_enable_root_desc">Jelajahi dan tulis ke folder sistem lewat shell root</string>
+    <string name="setting_enable_shizuku">Aktifkan Shizuku</string>
+    <string name="setting_enable_shizuku_desc">Gunakan Shizuku untuk perintah shell dan pemasangan APK</string>
+    <string name="setting_extract_into_subfolder">Ekstrak ke subfolder</string>
+    <string name="setting_extract_into_subfolder_desc">Buat folder bernama arsip saat mengekstrak</string>
+    <string name="setting_prefer_cr_mime">Lebih suka MIME dari ContentResolver</string>
+    <string name="setting_prefer_cr_mime_desc">Tentukan tipe dari berkas, bukan ekstensi, untuk Buka dengan dan pratinjau</string>
+    <string name="setting_prefer_builtin_viewers">Lebih suka penampil bawaan</string>
+    <string name="setting_prefer_builtin_viewers_desc">Buka gambar, audio/video, PDF, dan teks di Fluffy, bukan dialog sistem.</string>
+    <string name="setting_warn_shell_writes">Peringatkan sebelum menulis dengan hak akses tinggi</string>
+    <string name="setting_warn_shell_writes_desc">Minta konfirmasi sebelum menulis atau menghapus lewat root atau Shizuku</string>
+    <string name="setting_support_development">Dukung pengembangan</string>
+    <string name="setting_support_development_desc">Jika aplikasi ini berguna bagi Anda, pertimbangkan untuk mendukung pengembangan selanjutnya</string>
+    <string name="category_general_settings">Umum</string>
+    <string name="category_appearance_settings">Tampilan</string>
+    <string name="category_archives">Arsip</string>
+    <string name="category_system_settings">Sistem</string>
+    <string name="extract_here">Ekstrak ke sini</string>
+    <string name="extract_all">Ekstrak semua…</string>
+    <string name="available">Tersedia</string>
+    <string name="not_available">Tidak tersedia</string>
+    <string name="running">Berjalan</string>
+    <string name="not_running">Tidak berjalan</string>
+    <string name="option_recently_updated">Baru diperbarui</string>
+    <string name="option_recently_added">Baru ditambahkan</string>
+    <string name="option_system">Sistem</string>
+    <string name="option_light">Terang</string>
+    <string name="option_dark">Gelap</string>
+    <string name="option_list">Daftar</string>
+    <string name="option_grid">Kisi</string>
+    <string name="run_action">Jalankan</string>
+    <string-array name="setting_default_sort_options">
+        <item>@string/name</item>
+        <item>@string/option_recently_updated</item>
+        <item>@string/size</item>
+        <item>@string/option_recently_added</item>
+        <item>@string/type</item>
+    </string-array>
+    <string-array name="setting_theme_options">
+        <item>@string/option_system</item>
+        <item>@string/option_light</item>
+        <item>@string/option_dark</item>
+    </string-array>
+    <string-array name="setting_view_mode_options">
+        <item>@string/option_list</item>
+        <item>@string/option_grid</item>
+    </string-array>
+</resources>
