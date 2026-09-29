@@ -2,8 +2,13 @@ name: Android App Releases
 on:
   workflow_dispatch:
     inputs:
-      upload_releases:
-        description: 'Upload releases'
+      upload_to_play:
+        description: 'Upload AAB to Google Play'
+        required: true
+        default: true
+        type: boolean
+      publish_github_release:
+        description: 'Publish GitHub release'
         required: true
         default: true
         type: boolean
@@ -37,10 +42,11 @@ jobs:
   release:
     uses: mlm-games/ci/.github/workflows/android-release.yml@v1
     with:
+      publish-release: ${{ inputs.publish_github_release }}
       app-name: Fluffy
       app-slug: fluffy
       application-id: app.fluffy
-      play-track: ${{ inputs.play_track }}
+      play-track: ${{ inputs.upload_to_play && inputs.play_track || 'none' }}
       bump-type: ${{ inputs.bump_type }}
       prerelease: ${{ inputs.mark_prerelease }}
     secrets:
