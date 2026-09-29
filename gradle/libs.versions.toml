@@ -38,7 +38,7 @@ shizuku = "13.1.5"
 apkDist = "0.5.2"
 ksp = "2.3.0"
 composeBom = "2026.07.00"
-kmpSettingsCore = "0.10.1"
+kmpSettingsCore = "0.10.3"
 composeMediaPlayer = "0.11.3"
 
 koinBom = "4.2.2"
