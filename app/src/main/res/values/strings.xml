@@ -218,4 +218,12 @@
     <string name="unsaved_changes">Unsaved changes</string>
     <string name="unsaved_changes_confirm">You have unsaved changes. Do you want to discard them?</string>
     <string name="selected_count">%1$d selected</string>
+    <string name="search">Search</string>
+    <string name="search_filter_hint">Filter this folder</string>
+    <string name="search_no_matches">No matches</string>
+    <string name="search_match_count">%1$d of %2$d</string>
+    <string name="search_recursive">Search all folders</string>
+    <string name="search_recursive_hint">Search in %1$s</string>
+    <string name="search_type_to_begin">Type to search</string>
+    <string name="search_truncated">Showing %1$d results, stopped after %2$d folders. Narrow your search.</string>
 </resources>

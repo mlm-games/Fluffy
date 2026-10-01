@@ -42,6 +42,8 @@ A fast, modern file manager with common archive support and an Android TV-friend
 
 ## Features
 - Browse internal storage or any SAF folder
+- Filter the current folder by name or search recursively across subfolders, matching folders as well as files
+- Search inside archives
 - Create ZIP/7z; extract ZIP, 7z, TAR, TGZ, TBZ2, TXZ, APK/JAR
 - Encrypted archives: ZIP (AES) and 7z
 - Open archives like folders; extract selected paths

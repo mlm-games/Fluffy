@@ -77,12 +77,14 @@ import app.fluffy.helper.purgeOldViewerCache
 import app.fluffy.helper.toViewableUris
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.operations.ArchiveJobManager
+import app.fluffy.search.SearchHit
 import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.ui.components.DirectoryCounter
 import app.fluffy.ui.components.snackbar.LauncherSnackbarHost
 import app.fluffy.ui.components.snackbar.SnackbarManager
 import app.fluffy.ui.screens.ArchiveViewerScreen
 import app.fluffy.ui.screens.FileBrowserScreen
+import app.fluffy.ui.screens.SearchScreen
 import app.fluffy.ui.screens.SettingsScreen
 import app.fluffy.ui.screens.TasksScreen
 import app.fluffy.ui.theme.FluffyTheme
@@ -92,6 +94,7 @@ import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.FileBrowserViewModel
 import app.fluffy.viewmodel.PendingAction
+import app.fluffy.viewmodel.SearchViewModel
 import app.fluffy.viewmodel.SettingsViewModel
 import app.fluffy.viewmodel.TasksViewModel
 import kotlinx.coroutines.Dispatchers
@@ -101,6 +104,7 @@ import kotlinx.coroutines.withContext
 import org.koin.android.ext.android.inject
 import org.koin.androidx.viewmodel.ext.android.viewModel
 import org.koin.compose.koinInject
+import org.koin.compose.viewmodel.koinViewModel
 import java.io.File
 import java.util.UUID
 
@@ -142,6 +146,15 @@ class MainActivity : AppCompatActivity() {
                 else -> null
             }
         }
+    }
+
+    private fun parentDirUriOf(fileUri: Uri): Uri {
+        val path = fileUri.path
+        if (path.isNullOrEmpty()) return fileUri
+        val cut = path.trimEnd('/').lastIndexOf('/')
+        if (cut < 0) return fileUri
+        val parentPath = path.trimEnd('/').substring(0, cut).ifEmpty { "/" }
+        return fileUri.buildUpon().path(parentPath).build()
     }
 
     private val storagePermissionLauncher = registerForActivityResult(
@@ -433,6 +446,10 @@ class MainActivity : AppCompatActivity() {
                                             backStack.add(ScreenKey.Archive(uri = arch.toString()))
                                         },
 
+                                        onOpenRecursiveSearch = { dirUri ->
+                                            backStack.add(ScreenKey.Search(scope = dirUri.toString()))
+                                        },
+
                                         onCopySelected = { list ->
                                             pendingAction = PendingAction.Copy(list)
                                             launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
@@ -632,6 +649,27 @@ class MainActivity : AppCompatActivity() {
                                             filesVM.openDir(dirUri)
                                             if (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
                                         }
+                                    )
+                                }
+
+                                entry<ScreenKey.Search> { args ->
+                                    val scopeUri = runCatching { args.scope.toUri() }.getOrNull()
+                                    val searchVm: SearchViewModel = koinViewModel()
+                                    LaunchedEffect(scopeUri) { scopeUri?.let(searchVm::setScope) }
+                                    SearchScreen(
+                                        scopeLabel = scopeUri?.path ?: args.scope,
+                                        onBack = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) },
+                                        onOpenResult = { hit ->
+                                            val target = if (hit.isDir) hit.uri else parentDirUriOf(hit.uri)
+                                            val path = if (target.scheme == "file") target.path else null
+                                            if (path != null) {
+                                                filesVM.openFileSystemPath(File(path))
+                                            } else {
+                                                filesVM.openDir(target)
+                                            }
+                                            if (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
+                                        },
+                                        viewModel = searchVm
                                     )
                                 }
 

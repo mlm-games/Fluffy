@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.InstallDesktop
 import androidx.compose.material.icons.filled.OpenWith
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -111,8 +112,19 @@ fun ArchiveViewerScreen(
     var selectionMode by remember { mutableStateOf(false) }
     val selected = remember { mutableStateMapOf<String, Boolean>() }
     var currentPath by rememberSaveable(archiveUri) { mutableStateOf("") }
+    var searchActive by rememberSaveable(archiveUri) { mutableStateOf(false) }
+    var searchQuery by rememberSaveable(archiveUri) { mutableStateOf("") }
 
-    BackHandler(enabled = currentPath.isNotBlank()) {
+    fun closeSearch() {
+        searchActive = false
+        searchQuery = ""
+    }
+
+    BackHandler(enabled = searchActive) {
+        closeSearch()
+    }
+
+    BackHandler(enabled = !searchActive && currentPath.isNotBlank()) {
         val parent = currentPath.trimEnd('/').substringBeforeLast('/', "")
         currentPath = if (parent.isNotBlank()) "$parent/" else ""
     }
@@ -122,10 +134,14 @@ fun ArchiveViewerScreen(
     val snackBarManager: SnackbarManager = koinInject()
 
 
+    val archiveFilter = searchQuery.trim()
+    val isArchiveFiltering = archiveFilter.isNotEmpty()
+
     // Visible (top-level directory within currentPath)
-    val visible = remember(listing, currentPath) {
+    val visible = remember(listing, currentPath, archiveFilter) {
         val dirs = mutableMapOf<String, Int>()   // name -> child count
         val files = mutableListOf<ArchiveEngine.Entry>()
+        val lowerFilter = archiveFilter.lowercase()
 
         val prefix = currentPath
         listing.forEach { e ->
@@ -135,9 +151,13 @@ fun ArchiveViewerScreen(
             val firstSeg = rest.substringBefore('/', missingDelimiterValue = rest)
             val isDirectChildDir = rest.contains('/')
             if (isDirectChildDir) {
-                if (firstSeg.isNotBlank()) dirs[firstSeg] = (dirs[firstSeg] ?: 0) + 1
+                if (firstSeg.isNotBlank() &&
+                    (lowerFilter.isEmpty() || firstSeg.lowercase().contains(lowerFilter))
+                ) dirs[firstSeg] = (dirs[firstSeg] ?: 0) + 1
             } else if (rest.isNotBlank()) {
-                files += e.copy(path = rest) // leaf name
+                if (lowerFilter.isEmpty() || firstSeg.lowercase().contains(lowerFilter)) {
+                    files += e.copy(path = rest) // leaf name
+                }
             }
         }
 
@@ -145,6 +165,18 @@ fun ArchiveViewerScreen(
             ArchiveEngine.Entry(path = ensureDirSuffix(name), isDir = true, size = 0, time = 0L)
         }
         dirEntries + files.sortedBy { it.path.lowercase() }
+    }
+
+    val levelTotal = remember(listing, currentPath) {
+        val prefix = currentPath
+        val children = HashSet<String>()
+        listing.forEach { e ->
+            val p = e.path.replace('\\', '/')
+            if (!p.startsWith(prefix)) return@forEach
+            val rest = p.removePrefix(prefix)
+            if (rest.isNotBlank()) children.add(rest.substringBefore('/'))
+        }
+        children.size
     }
 
     fun openPreview(uri: Uri, name: String, ctx: Context, settings: AppSettings) {
@@ -305,6 +337,9 @@ fun ArchiveViewerScreen(
                 },
                 actions = {
                     if (listing.isNotEmpty()) {
+                        IconButton(onClick = { searchActive = true }) {
+                            Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search))
+                        }
                         IconButton(onClick = { onExtractTo(archiveUri, password.ifBlank { null }) }) {
                             Icon(Icons.Filled.FileOpen, contentDescription = stringResource(R.string.extract_all))
                         }
@@ -358,6 +393,15 @@ fun ArchiveViewerScreen(
                     }
                 }
             )
+            if (searchActive) {
+                SearchFilterBar(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                    matchCount = visible.size,
+                    totalCount = levelTotal,
+                    onClose = { closeSearch() },
+                )
+            }
         }
     ) { pv ->
         Column(Modifier.fillMaxSize().padding(pv)) {
@@ -399,6 +443,34 @@ fun ArchiveViewerScreen(
                                     }
                                 }
                             }
+                        }
+                    }
+                    hasList && visible.isEmpty() && isArchiveFiltering -> {
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                stringResource(R.string.search_no_matches),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                    hasList && visible.isEmpty() -> {
+                        Box(
+                            Modifier
+                                .fillMaxSize()
+                                .padding(16.dp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                stringResource(R.string.this_folder_is_empty_or_inaccessible),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     }
                     hasList -> {

@@ -101,6 +101,31 @@ class SafIo(
         return files.sortedWith(compareBy<File> { !it.isDirectory }.thenBy { it.name.lowercase() })
     }
 
+    fun listChildRefs(uri: Uri): List<ChildRef> {
+        val refs = when (uri.scheme) {
+            "root", "shizuku" -> listShell(uri).map { ChildRef(it.name, it.uri, it.isDir) }
+            "content", "file" -> listChildren(uri).mapNotNull { df ->
+                val name = df.name ?: return@mapNotNull null
+                ChildRef(name, df.uri, df.isDirectory)
+            }
+            else -> emptyList()
+        }
+        return refs.sortedWith(compareBy<ChildRef> { !it.isDir }.thenBy { it.name.lowercase() })
+    }
+
+    fun isSymlinkUri(uri: Uri): Boolean =
+        uri.scheme == "file" && uri.path?.let { File(it).isSymlink() } == true
+
+    fun cycleKey(uri: Uri): String = when (uri.scheme) {
+        "content" -> uri.toString()
+        "file" -> {
+            val p = uri.path ?: return uri.toString()
+            val canonical = runCatching { File(p).canonicalPath }.getOrDefault(p)
+            Uri.fromFile(File(canonical)).toString()
+        }
+        else -> uri.toString()
+    }
+
     fun openIn(uri: Uri): InputStream {
         return when {
             isRoot(uri) -> shellIo.openInRoot(path(uri))

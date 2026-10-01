@@ -15,8 +15,10 @@ import app.fluffy.shell.RootAccess
 import app.fluffy.shell.RootBackend
 import app.fluffy.shell.ShizukuAccess
 import app.fluffy.shell.ShizukuBackend
+import app.fluffy.search.FileSearchEngine
 import app.fluffy.ui.components.snackbar.SnackbarManager
 import app.fluffy.viewmodel.FileBrowserViewModel
+import app.fluffy.viewmodel.SearchViewModel
 import app.fluffy.viewmodel.SettingsViewModel
 import app.fluffy.viewmodel.TasksViewModel
 import io.github.mlmgames.settings.core.resources.StringResourceProvider
@@ -48,7 +50,10 @@ val appModule = module {
 
     single { SnackbarManager() }
 
+    single { FileSearchEngine(get()) }
+
     viewModel { FileBrowserViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { SearchViewModel(get(), get()) }
     viewModel { TasksViewModel(get(), get()) }
     viewModel { SettingsViewModel(get()) }
 }

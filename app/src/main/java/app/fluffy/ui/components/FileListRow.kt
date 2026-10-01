@@ -136,6 +136,19 @@ data class RowModel(
     val subtitle: String
 )
 
+fun rowModelForSearchHit(hit: app.fluffy.search.SearchHit): RowModel = RowModel(
+    name = hit.name,
+    uri = hit.uri,
+    isDir = hit.isDir,
+    isArchive = !hit.isDir && FileSystemAccess.isArchiveFile(hit.name),
+    isImage = !hit.isDir && FileSystemAccess.getMimeType(hit.name).startsWith("image/"),
+    isVideo = !hit.isDir && FileSystemAccess.getMimeType(hit.name).startsWith("video/"),
+    isPdf = !hit.isDir && FileSystemAccess.getMimeType(hit.name).startsWith("application/pdf"),
+    isAudio = !hit.isDir && FileSystemAccess.getMimeType(hit.name).startsWith("audio/"),
+    isApk = !hit.isDir && hit.name.lowercase().endsWith(".apk"),
+    subtitle = hit.parentPath
+)
+
 fun File.toRowModel(): RowModel = RowModel(
     name = name,
     uri = Uri.fromFile(this),
