@@ -225,5 +225,6 @@
     <string name="search_recursive">Search all folders</string>
     <string name="search_recursive_hint">Search in %1$s</string>
     <string name="search_type_to_begin">Type to search</string>
+    <string name="search_searching">Searching…</string>
     <string name="search_truncated">Showing %1$d results, stopped after %2$d folders. Narrow your search.</string>
 </resources>

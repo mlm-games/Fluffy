@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -114,10 +116,16 @@ fun SearchScreen(
         }
 
         if (state.isSearching) {
-            LinearProgressIndicator(Modifier.fillMaxWidth())
+            LinearProgressIndicator(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(4.dp)
+            )
+        } else {
+            Spacer(Modifier.fillMaxWidth().height(4.dp))
         }
 
-        if (state.hits.isEmpty() && !state.isSearching) {
+        if (state.hits.isEmpty()) {
             Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -130,8 +138,11 @@ fun SearchScreen(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     Text(
-                        if (state.hasQuery) stringResource(R.string.search_no_matches)
-                        else stringResource(R.string.search_type_to_begin),
+                        when {
+                            !state.hasQuery -> stringResource(R.string.search_type_to_begin)
+                            state.isSearching -> stringResource(R.string.search_searching)
+                            else -> stringResource(R.string.search_no_matches)
+                        },
                         style = MaterialTheme.typography.titleMedium
                     )
                 }

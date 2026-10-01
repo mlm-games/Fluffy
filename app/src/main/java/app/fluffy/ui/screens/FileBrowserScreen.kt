@@ -433,22 +433,10 @@ fun FileBrowserScreen(
                                     }
                                 }
                             }
-                            IconButton(onClick = onShowQuickAccess) {
-                                Icon(Icons.Default.Home, contentDescription = stringResource(R.string.home))
-                            }
                             if (totalCount > 0) {
                                 IconButton(onClick = { searchActive = true }) {
                                     Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search))
                                 }
-                            }
-                            IconButton(
-                                onClick = { onViewModeChange(if (viewMode == 0) 1 else 0) }
-                            ) {
-                                Icon(
-                                    imageVector = if (viewMode == 0) Icons.Filled.GridView
-                                                  else Icons.AutoMirrored.Filled.ViewList,
-                                    contentDescription = if (viewMode == 0) "Grid view" else "List view"
-                                )
                             }
                         }
                         if (showStorageInfo &&
@@ -464,11 +452,6 @@ fun FileBrowserScreen(
                         }
                         IconButton(onClick = onOpenSettings) {
                                 Icon(Icons.Default.Settings, contentDescription = stringResource(R.string.settings))
-                        }
-                        if (!pickFolderMode) {
-                            IconButton(onClick = onPickRoot) {
-                                Icon(Icons.Default.FolderOpen, contentDescription = stringResource(R.string.pick_saf_folder))
-                            }
                         }
                         Box {
                             IconButton(onClick = { overflowMenuExpanded = true }) {
@@ -536,6 +519,44 @@ fun FileBrowserScreen(
                                         onOpenTasks()
                                     }
                                 )
+                                if (canUp && currentLocation !is BrowseLocation.QuickAccess) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.home)) },
+                                        leadingIcon = { Icon(Icons.Default.Home, null) },
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            onShowQuickAccess()
+                                        }
+                                    )
+                                }
+                                if (currentLocation !is BrowseLocation.QuickAccess) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(stringResource(if (viewMode == 0) R.string.option_grid else R.string.option_list))
+                                        },
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = if (viewMode == 0) Icons.Filled.GridView
+                                                              else Icons.AutoMirrored.Filled.ViewList,
+                                                null
+                                            )
+                                        },
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            onViewModeChange(if (viewMode == 0) 1 else 0)
+                                        }
+                                    )
+                                }
+                                if (!pickFolderMode) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.pick_saf_folder)) },
+                                        leadingIcon = { Icon(Icons.Default.FolderOpen, null) },
+                                        onClick = {
+                                            overflowMenuExpanded = false
+                                            onPickRoot()
+                                        }
+                                    )
+                                }
                             }
                         }
                     }

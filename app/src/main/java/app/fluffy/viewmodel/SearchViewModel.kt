@@ -59,7 +59,7 @@ class SearchViewModel(
         job?.cancel()
         job = null
         _state.update {
-            it.copy(query = query, hits = emptyList(), isSearching = true, truncated = false, visitedDirs = 0)
+            it.copy(query = query, isSearching = true)
         }
         debounceJob?.cancel()
         debounceJob = viewModelScope.launch {
@@ -89,7 +89,7 @@ class SearchViewModel(
             return
         }
         job?.cancel()
-        _state.update { it.copy(isSearching = true, hits = emptyList(), truncated = false, visitedDirs = 0) }
+        _state.update { it.copy(isSearching = true) }
         job = viewModelScope.launch(Dispatchers.IO) {
             val showHidden = runCatching { settingsRepository.settingsFlow.first().showHidden }
                 .getOrDefault(false)
