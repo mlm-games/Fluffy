@@ -198,7 +198,6 @@
     <string name="unlock">Mở khóa</string>
     <string name="unsaved_changes">Thay đổi chưa lưu</string>
     <string name="unsaved_changes_confirm">Bạn có thay đổi chưa lưu. Bạn có muốn bỏ qua không?</string>
-    <string name="selected_count">Đã chọn %1$d</string>
     <string name="search">Tìm kiếm</string>
     <string name="search_filter_hint">Lọc thư mục này</string>
     <string name="search_no_matches">Không có kết quả khớp</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Tìm trong %1$s</string>
     <string name="search_type_to_begin">Gõ để tìm kiếm</string>
     <string name="search_searching">Đang tìm…</string>
-    <string name="search_truncated">Đang hiển thị %1$d kết quả, đã dừng sau %2$d thư mục. Hãy thu hẹp tìm kiếm.</string>
     <string name="done">Xong</string>
     <string name="archive">Tầp nén</string>
     <string name="failed_to_open_pdf">Không thể mở PDF – tệp có thể bị học không phải là PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">Đồi tưởng đã chọn là thư mục.</string>
     <string name="volume">Độ thanh</string>
     <string name="image">Ảnh</string>
-    <string name="item_count_one">1 đồi tưởng</string>
-    <string name="item_count_many">%1$d đồi tưởng</string>
     <string name="speed_normal">Bình thường</string>
     <string name="no_app_available">Không có ứng dụng nào để mở tệp này</string>
     <string name="fileprovider_error">FileProvider chưa được cấu hình cho đường dẫn này</string>
@@ -236,4 +232,38 @@
     <string name="moving_files">Đang di chuyển tệp</string>
     <string name="copying_files">Đang sao chép tệp</string>
     <string name="untitled">Không có tiêu đề</string>
+    <string name="invalid_name">Tên không hợp lệ</string>
+    <string name="name_no_slash">Tên không được chứa \'/\'</string>
+    <string name="already_exists">Đã tồn tại</string>
+    <string name="mkdir_failed">mkdir thất bại</string>
+    <string name="create_failed">Không thể tạo</string>
+    <string name="cannot_create_folder">Không thể tạo thư mục: %1$s</string>
+    <string name="cannot_create_file">Không thể tạo tệp: %1$s</string>
+    <string name="path_not_accessible">Đường dẫn không tồn tại hoặc không truy cập được</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (không khả dụng)</string>
+    <string name="internal_storage_root">Bộ nhớ trong (root)</string>
+    <string name="internal_root">Root trong</string>
+    <string name="external_root">Root ngoài</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (không chạy)</string>
+    <string name="internal_storage_shizuku">Bộ nhớ trong (shizuku)</string>
+    <string name="internal_shizuku">Trong (shizuku)</string>
+    <string name="external_shizuku">Ngoài (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Ngôn ngữ</string>
+    <plurals name="item_count">
+        <item quantity="other">%1$d mục</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="other">Đã chọn %1$d</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="other">Đang hiển thị %1$d kết quả, đã dừng sau %2$d thư mục. Hãy thu hẹp tìm kiếm.</item>
+    </plurals>
 </resources>

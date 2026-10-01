@@ -198,7 +198,6 @@
     <string name="unlock">解锁</string>
     <string name="unsaved_changes">未保存的更改</string>
     <string name="unsaved_changes_confirm">有未保存的更改。要放弃吗？</string>
-    <string name="selected_count">已选择 %1$d 项</string>
     <string name="search">搜索</string>
     <string name="search_filter_hint">筛选此文件夹</string>
     <string name="search_no_matches">无匹配项</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">在 %1$s 中搜索</string>
     <string name="search_type_to_begin">输入以搜索</string>
     <string name="search_searching">正在搜索…</string>
-    <string name="search_truncated">已显示 %1$d 个结果，在 %2$d 个文件夹后停止。请缩小搜索范围。</string>
     <string name="done">完成</string>
     <string name="archive">压缩包</string>
     <string name="failed_to_open_pdf">无法打开 PDF – 文件可能已损坏或不是 PDF (err=3)。</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">所选项目是文件夹。</string>
     <string name="volume">音量</string>
     <string name="image">图片</string>
-    <string name="item_count_one">1 项</string>
-    <string name="item_count_many">%1$d 项</string>
     <string name="speed_normal">标准</string>
     <string name="no_app_available">没有可打开此文件的应用</string>
     <string name="fileprovider_error">未为此路径配置 FileProvider</string>
@@ -236,4 +232,38 @@
     <string name="moving_files">正在移动文件</string>
     <string name="copying_files">正在复制文件</string>
     <string name="untitled">未命名</string>
+    <string name="invalid_name">名称无效</string>
+    <string name="name_no_slash">名称不能包含 \'/\'</string>
+    <string name="already_exists">已存在</string>
+    <string name="mkdir_failed">mkdir 失败</string>
+    <string name="create_failed">创建失败</string>
+    <string name="cannot_create_folder">无法创建文件夹: %1$s</string>
+    <string name="cannot_create_file">无法创建文件: %1$s</string>
+    <string name="path_not_accessible">路径不存在或无法访问</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (不可用)</string>
+    <string name="internal_storage_root">内部存储 (root)</string>
+    <string name="internal_root">内部 root</string>
+    <string name="external_root">外部 root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (未运行)</string>
+    <string name="internal_storage_shizuku">内部存储 (shizuku)</string>
+    <string name="internal_shizuku">内部 (shizuku)</string>
+    <string name="external_shizuku">外部 (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">语言</string>
+    <plurals name="item_count">
+        <item quantity="other">%1$d 项</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="other">已选择 %1$d 项</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="other">已显示 %1$d 个结果，在 %2$d 个文件夹后停止。请缩小搜索范围。</item>
+    </plurals>
 </resources>

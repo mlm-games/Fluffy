@@ -198,7 +198,6 @@
     <string name="unlock">Odemknout</string>
     <string name="unsaved_changes">Neuložené změny</string>
     <string name="unsaved_changes_confirm">Máte neuložené změny. Chcete je zahodit?</string>
-    <string name="selected_count">Vybráno: %1$d</string>
     <string name="search">Hledat</string>
     <string name="search_filter_hint">Filtrovat tuto složku</string>
     <string name="search_no_matches">Žádné shody</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Hledat v %1$s</string>
     <string name="search_type_to_begin">Zadejte hledaný text</string>
     <string name="search_searching">Hledání…</string>
-    <string name="search_truncated">Zobrazeno %1$d výsledků, zastaveno po %2$d složkách. Zpřesněte hledání.</string>
     <string name="done">Hotovo</string>
     <string name="archive">Archiv</string>
     <string name="failed_to_open_pdf">Soubor PDF se nepodařilo otevřít – soubor může být poškozený nebo není PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">Vybraná položka je složka.</string>
     <string name="volume">Hlasitost</string>
     <string name="image">Obrázek</string>
-    <string name="item_count_one">1 položka</string>
-    <string name="item_count_many">%1$d položek</string>
     <string name="speed_normal">Normální</string>
     <string name="no_app_available">Pro otevření tohoto souboru není k dispozici žádná aplikace</string>
     <string name="fileprovider_error">FileProvider není pro tuto cestu nakonfigurován</string>
@@ -236,4 +232,47 @@
     <string name="moving_files">Přesouvání souborů</string>
     <string name="copying_files">Kopírování souborů</string>
     <string name="untitled">Bez názvu</string>
+    <string name="invalid_name">Neplatný název</string>
+    <string name="name_no_slash">Název nesmí obsahovat \'/\'</string>
+    <string name="already_exists">Již existuje</string>
+    <string name="mkdir_failed">mkdir se nezdařilo</string>
+    <string name="create_failed">Vytvoření se nezdařilo</string>
+    <string name="cannot_create_folder">Složku nelze vytvořit: %1$s</string>
+    <string name="cannot_create_file">Soubor nelze vytvořit: %1$s</string>
+    <string name="path_not_accessible">Cesta neexistuje nebo není přístupná</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (nedostupné)</string>
+    <string name="internal_storage_root">Vnitřní úložiště (root)</string>
+    <string name="internal_root">Vnitřní root</string>
+    <string name="external_root">Externí root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (není spuštěno)</string>
+    <string name="internal_storage_shizuku">Vnitřní úložiště (shizuku)</string>
+    <string name="internal_shizuku">Vnitřní (shizuku)</string>
+    <string name="external_shizuku">Externí (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Jazyk</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d položka</item>
+        <item quantity="few">%1$d položky</item>
+        <item quantity="many">%1$d položek</item>
+        <item quantity="other">%1$d položek</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">Vybráno: %1$d</item>
+        <item quantity="few">Vybráno: %1$d</item>
+        <item quantity="many">Vybráno: %1$d</item>
+        <item quantity="other">Vybráno: %1$d</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">Zobrazen %1$d výsledek, zastaveno po %2$d složkách. Zpřesněte hledání.</item>
+        <item quantity="few">Zobrazeny %1$d výsledky, zastaveno po %2$d složkách. Zpřesněte hledání.</item>
+        <item quantity="many">Zobrazeno %1$d výsledků, zastaveno po %2$d složkách. Zpřesněte hledání.</item>
+        <item quantity="other">Zobrazeno %1$d výsledků, zastaveno po %2$d složkách. Zpřesněte hledání.</item>
+    </plurals>
 </resources>

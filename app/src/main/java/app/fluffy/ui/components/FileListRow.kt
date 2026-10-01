@@ -59,6 +59,7 @@ import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -426,8 +427,7 @@ fun FileListRow(
                             } else {
                                 when (val c = dirCount) {
                                     null -> "…"
-                                    1 -> stringResource(R.string.item_count_one)
-                                    else -> stringResource(R.string.item_count_many, c)
+                                    else -> pluralStringResource(R.plurals.item_count, c, c)
                                 }
                             }
                         } else {
@@ -593,8 +593,7 @@ fun FileGridItem(
                     if (!showFileCount) stringResource(R.string.folder)
                     else when (val c = dirCount) {
                         null -> "…"
-                        1 -> stringResource(R.string.item_count_one)
-                        else -> stringResource(R.string.item_count_many, c)
+                        else -> pluralStringResource(R.plurals.item_count, c, c)
                     }
                 } else model.subtitle
 

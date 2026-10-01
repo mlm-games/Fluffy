@@ -198,7 +198,6 @@
     <string name="unlock">Розблокувати</string>
     <string name="unsaved_changes">Незбережені зміни</string>
     <string name="unsaved_changes_confirm">Є незбережені зміни. Відмінити їх?</string>
-    <string name="selected_count">Вибрано: %1$d</string>
     <string name="search">Пошук</string>
     <string name="search_filter_hint">Фільтрувати цю теку</string>
     <string name="search_no_matches">Немає збігів</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Пошук у %1$s</string>
     <string name="search_type_to_begin">Введіть запит</string>
     <string name="search_searching">Пошук…</string>
-    <string name="search_truncated">Показано %1$d результатів, зупинено після %2$d тек. Уточніть запит.</string>
     <string name="done">Готово</string>
     <string name="archive">Архів</string>
     <string name="failed_to_open_pdf">Не вдалося відкрити PDF – файл може бути пошкодженим або не є PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">Вибраний елемент - тека.</string>
     <string name="volume">Гучність</string>
     <string name="image">Зображення</string>
-    <string name="item_count_one">1 елемент</string>
-    <string name="item_count_many">%1$d елементів</string>
     <string name="speed_normal">Звичайна</string>
     <string name="no_app_available">Немає застосунку для відкриття цього файлу</string>
     <string name="fileprovider_error">FileProvider не налаштовано для цього шляху</string>
@@ -236,4 +232,47 @@
     <string name="moving_files">Переміщення файлів</string>
     <string name="copying_files">Копіювання файлів</string>
     <string name="untitled">Без назви</string>
+    <string name="invalid_name">Недопустима назва</string>
+    <string name="name_no_slash">Назва не повинна містити \'/\'</string>
+    <string name="already_exists">Вже існує</string>
+    <string name="mkdir_failed">mkdir не виконано</string>
+    <string name="create_failed">Не вдалося створити</string>
+    <string name="cannot_create_folder">Не вдалося створити теку: %1$s</string>
+    <string name="cannot_create_file">Не вдалося створити файл: %1$s</string>
+    <string name="path_not_accessible">Шлях не існує або недоступний</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (недоступно)</string>
+    <string name="internal_storage_root">Внутрішня пам\'ять (root)</string>
+    <string name="internal_root">Внутрішній root</string>
+    <string name="external_root">Зовнішній root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (не запущено)</string>
+    <string name="internal_storage_shizuku">Внутрішня пам\'ять (shizuku)</string>
+    <string name="internal_shizuku">Внутрішній (shizuku)</string>
+    <string name="external_shizuku">Зовнішній (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Мова</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d елемент</item>
+        <item quantity="few">%1$d елементи</item>
+        <item quantity="many">%1$d елементів</item>
+        <item quantity="other">%1$d елементів</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">Вибрано: %1$d</item>
+        <item quantity="few">Вибрано: %1$d</item>
+        <item quantity="many">Вибрано: %1$d</item>
+        <item quantity="other">Вибрано: %1$d</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">Показано %1$d результат, зупинено після %2$d тек. Уточніть запит.</item>
+        <item quantity="few">Показано %1$d результати, зупинено після %2$d тек. Уточніть запит.</item>
+        <item quantity="many">Показано %1$d результатів, зупинено після %2$d тек. Уточніть запит.</item>
+        <item quantity="other">Показано %1$d результатів, зупинено після %2$d тек. Уточніть запит.</item>
+    </plurals>
 </resources>

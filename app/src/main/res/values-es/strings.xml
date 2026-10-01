@@ -198,7 +198,6 @@
     <string name="unlock">Desbloquear</string>
     <string name="unsaved_changes">Cambios sin guardar</string>
     <string name="unsaved_changes_confirm">Tienes cambios sin guardar. ¿Quieres descartarlos?</string>
-    <string name="selected_count">%1$d seleccionados</string>
     <string name="search">Buscar</string>
     <string name="search_filter_hint">Filtrar esta carpeta</string>
     <string name="search_no_matches">Sin coincidencias</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Buscar en %1$s</string>
     <string name="search_type_to_begin">Escribe para buscar</string>
     <string name="search_searching">Buscando…</string>
-    <string name="search_truncated">Se mostraron %1$d resultados, se detuvo después de %2$d carpetas. Acota la búsqueda.</string>
     <string name="done">Listo</string>
     <string name="archive">Archivo</string>
     <string name="failed_to_open_pdf">No se pudo abrir el PDF – el archivo puede estar dañado o no ser un PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">El elemento seleccionado es una carpeta.</string>
     <string name="volume">Volumen</string>
     <string name="image">Imagen</string>
-    <string name="item_count_one">1 elemento</string>
-    <string name="item_count_many">%1$d elementos</string>
     <string name="speed_normal">Normal</string>
     <string name="no_app_available">No hay ninguna aplicación disponible para abrir este archivo</string>
     <string name="fileprovider_error">FileProvider no está configurado para esta ruta</string>
@@ -236,4 +232,44 @@
     <string name="moving_files">Moviendo archivos</string>
     <string name="copying_files">Copiando archivos</string>
     <string name="untitled">Sin título</string>
+    <string name="invalid_name">Nombre no válido</string>
+    <string name="name_no_slash">El nombre no debe contener \'/\'</string>
+    <string name="already_exists">Ya existe</string>
+    <string name="mkdir_failed">mkdir falló</string>
+    <string name="create_failed">Error al crear</string>
+    <string name="cannot_create_folder">No se puede crear la carpeta: %1$s</string>
+    <string name="cannot_create_file">No se puede crear el archivo: %1$s</string>
+    <string name="path_not_accessible">La ruta no existe o no es accesible</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (no disponible)</string>
+    <string name="internal_storage_root">Almacenamiento interno (root)</string>
+    <string name="internal_root">Root interno</string>
+    <string name="external_root">Root externo</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (no está en ejecución)</string>
+    <string name="internal_storage_shizuku">Almacenamiento interno (shizuku)</string>
+    <string name="internal_shizuku">Interno (shizuku)</string>
+    <string name="external_shizuku">Externo (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Idioma</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d elemento</item>
+        <item quantity="many">%1$d elementos</item>
+        <item quantity="other">%1$d elementos</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%1$d seleccionado</item>
+        <item quantity="many">%1$d seleccionados</item>
+        <item quantity="other">%1$d seleccionados</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">Se mostró %1$d resultado, se detuvo después de %2$d carpetas. Acota la búsqueda.</item>
+        <item quantity="many">Se mostraron %1$d resultados, se detuvo después de %2$d carpetas. Acota la búsqueda.</item>
+        <item quantity="other">Se mostraron %1$d resultados, se detuvo después de %2$d carpetas. Acota la búsqueda.</item>
+    </plurals>
 </resources>

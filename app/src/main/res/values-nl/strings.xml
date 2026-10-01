@@ -198,7 +198,6 @@
     <string name="unlock">Ontgrendelen</string>
     <string name="unsaved_changes">Niet-opgeslagen wijzigingen</string>
     <string name="unsaved_changes_confirm">U hebt niet-opgeslagen wijzigingen. Wilt u deze verwerpen?</string>
-    <string name="selected_count">%1$d geselecteerd</string>
     <string name="search">Zoeken</string>
     <string name="search_filter_hint">Deze map filteren</string>
     <string name="search_no_matches">Geen overeenkomsten</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Zoeken in %1$s</string>
     <string name="search_type_to_begin">Typ om te zoeken</string>
     <string name="search_searching">Zoeken…</string>
-    <string name="search_truncated">%1$d resultaten weergegeven, gestopt na %2$d mappen. Verfijn je zoekopdracht.</string>
     <string name="done">Klaar</string>
     <string name="archive">Archief</string>
     <string name="failed_to_open_pdf">Kan PDF niet openen – het bestand is mogelijk beschadigd of geen PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">Geselecteerd item is een map.</string>
     <string name="volume">Volume</string>
     <string name="image">Afbeelding</string>
-    <string name="item_count_one">1 item</string>
-    <string name="item_count_many">%1$d items</string>
     <string name="speed_normal">Normaal</string>
     <string name="no_app_available">Geen app beschikbaar om dit bestand te openen</string>
     <string name="fileprovider_error">FileProvider is niet geconfigureerd voor dit pad</string>
@@ -236,4 +232,41 @@
     <string name="moving_files">Bestanden verplaatsen</string>
     <string name="copying_files">Bestanden kopiëren</string>
     <string name="untitled">Naamloos</string>
+    <string name="invalid_name">Ongeldige naam</string>
+    <string name="name_no_slash">De naam mag geen \'/\' bevatten</string>
+    <string name="already_exists">Bestaat al</string>
+    <string name="mkdir_failed">mkdir mislukt</string>
+    <string name="create_failed">Aanmaken mislukt</string>
+    <string name="cannot_create_folder">Kan map niet maken: %1$s</string>
+    <string name="cannot_create_file">Kan bestand niet maken: %1$s</string>
+    <string name="path_not_accessible">Het pad bestaat niet of is niet toegankelijk</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (niet beschikbaar)</string>
+    <string name="internal_storage_root">Interne opslag (root)</string>
+    <string name="internal_root">Interne root</string>
+    <string name="external_root">Externe root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (niet actief)</string>
+    <string name="internal_storage_shizuku">Interne opslag (shizuku)</string>
+    <string name="internal_shizuku">Intern (shizuku)</string>
+    <string name="external_shizuku">Extern (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Taal</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%1$d geselecteerd</item>
+        <item quantity="other">%1$d geselecteerd</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">%1$d resultaat weergegeven, gestopt na %2$d mappen. Verfijn je zoekopdracht.</item>
+        <item quantity="other">%1$d resultaten weergegeven, gestopt na %2$d mappen. Verfijn je zoekopdracht.</item>
+    </plurals>
 </resources>

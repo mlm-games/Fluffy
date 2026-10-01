@@ -198,7 +198,6 @@
     <string name="unlock">Разблокировать</string>
     <string name="unsaved_changes">Несохранённые изменения</string>
     <string name="unsaved_changes_confirm">Есть несохранённые изменения. Отменить их?</string>
-    <string name="selected_count">Выбрано: %1$d</string>
     <string name="search">Поиск</string>
     <string name="search_filter_hint">Фильтровать эту папку</string>
     <string name="search_no_matches">Нет совпадений</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Поиск в %1$s</string>
     <string name="search_type_to_begin">Введите запрос</string>
     <string name="search_searching">Поиск…</string>
-    <string name="search_truncated">Показано %1$d результатов, остановлено после %2$d папок. Уточните запрос.</string>
     <string name="done">Готово</string>
     <string name="archive">Архив</string>
     <string name="failed_to_open_pdf">Не удалось открыть PDF – файл может быть повреждён или не является PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">Выбранный элемент - папка.</string>
     <string name="volume">Громкость</string>
     <string name="image">Изображение</string>
-    <string name="item_count_one">1 элемент</string>
-    <string name="item_count_many">%1$d элементов</string>
     <string name="speed_normal">Обычная</string>
     <string name="no_app_available">Нет приложения для открытия этого файла</string>
     <string name="fileprovider_error">FileProvider не настроен для этого пути</string>
@@ -236,4 +232,47 @@
     <string name="moving_files">Перемещение файлов</string>
     <string name="copying_files">Копирование файлов</string>
     <string name="untitled">Без имени</string>
+    <string name="invalid_name">Недопустимое имя</string>
+    <string name="name_no_slash">Имя не должно содержать \'/\'</string>
+    <string name="already_exists">Уже существует</string>
+    <string name="mkdir_failed">mkdir не выполнен</string>
+    <string name="create_failed">Не удалось создать</string>
+    <string name="cannot_create_folder">Не удалось создать папку: %1$s</string>
+    <string name="cannot_create_file">Не удалось создать файл: %1$s</string>
+    <string name="path_not_accessible">Путь не существует или недоступен</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (недоступно)</string>
+    <string name="internal_storage_root">Внутренняя память (root)</string>
+    <string name="internal_root">Внутренний root</string>
+    <string name="external_root">Внешний root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (не запущен)</string>
+    <string name="internal_storage_shizuku">Внутренняя память (shizuku)</string>
+    <string name="internal_shizuku">Внутренний (shizuku)</string>
+    <string name="external_shizuku">Внешний (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Язык</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d элемент</item>
+        <item quantity="few">%1$d элемента</item>
+        <item quantity="many">%1$d элементов</item>
+        <item quantity="other">%1$d элементов</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">Выбрано: %1$d</item>
+        <item quantity="few">Выбрано: %1$d</item>
+        <item quantity="many">Выбрано: %1$d</item>
+        <item quantity="other">Выбрано: %1$d</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">Показан %1$d результат, остановлено после %2$d папок. Уточните запрос.</item>
+        <item quantity="few">Показано %1$d результата, остановлено после %2$d папок. Уточните запрос.</item>
+        <item quantity="many">Показано %1$d результатов, остановлено после %2$d папок. Уточните запрос.</item>
+        <item quantity="other">Показано %1$d результатов, остановлено после %2$d папок. Уточните запрос.</item>
+    </plurals>
 </resources>

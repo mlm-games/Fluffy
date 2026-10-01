@@ -198,7 +198,6 @@
     <string name="unlock">Avaa lukitus</string>
     <string name="unsaved_changes">Tallentamattomat muutokset</string>
     <string name="unsaved_changes_confirm">Sinulla on tallentamattomia muutoksia. Haluatko hylätä ne?</string>
-    <string name="selected_count">%1$d valittu</string>
     <string name="search">Hae</string>
     <string name="search_filter_hint">Suodata tätä kansiota</string>
     <string name="search_no_matches">Ei osumia</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Hae sijainnissa %1$s</string>
     <string name="search_type_to_begin">Kirjoita hakeaksesi</string>
     <string name="search_searching">Haetaan…</string>
-    <string name="search_truncated">Näytetään %1$d tulosta, pysäytetty %2$d kansion jälkeen. Tarkenna hakua.</string>
     <string name="done">Valmis</string>
     <string name="archive">Arkisto</string>
     <string name="failed_to_open_pdf">PDF:ia ei voitu avata – tiedosto on ehkä vioittunut tai ei ole PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">Valittu kohde on kansio.</string>
     <string name="volume">Äänenvoimakkuus</string>
     <string name="image">Kuva</string>
-    <string name="item_count_one">1 kohde</string>
-    <string name="item_count_many">%1$d kohdetta</string>
     <string name="speed_normal">Tavallinen</string>
     <string name="no_app_available">Tiedoston avaamiseen ei ole sovellusta</string>
     <string name="fileprovider_error">FileProvider ei ole määritetty tälle polulle</string>
@@ -236,4 +232,41 @@
     <string name="moving_files">Tiedostojen siirtäminen</string>
     <string name="copying_files">Tiedostojen kopiointi</string>
     <string name="untitled">Nimetön</string>
+    <string name="invalid_name">Virheellinen nimi</string>
+    <string name="name_no_slash">Nimi ei saa sisältää \'/\'</string>
+    <string name="already_exists">On jo olemassa</string>
+    <string name="mkdir_failed">mkdir epäonnistui</string>
+    <string name="create_failed">Luonti epäonnistui</string>
+    <string name="cannot_create_folder">Kansion luonti ei onnistu: %1$s</string>
+    <string name="cannot_create_file">Tiedoston luonti ei onnistu: %1$s</string>
+    <string name="path_not_accessible">Polkua ei ole olemassa tai se ei ole käytettävissä</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (ei käytettävissä)</string>
+    <string name="internal_storage_root">Sisäinen tallennus (root)</string>
+    <string name="internal_root">Sisäinen root</string>
+    <string name="external_root">Ulkoinen root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (ei käynnissä)</string>
+    <string name="internal_storage_shizuku">Sisäinen tallennus (shizuku)</string>
+    <string name="internal_shizuku">Sisäinen (shizuku)</string>
+    <string name="external_shizuku">Ulkoinen (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Kieli</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d kohde</item>
+        <item quantity="other">%1$d kohdetta</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%1$d valittu</item>
+        <item quantity="other">%1$d valittu</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">Näytetään %1$d tulos, pysäytetty %2$d kansion jälkeen. Tarkenna hakua.</item>
+        <item quantity="other">Näytetään %1$d tulosta, pysäytetty %2$d kansion jälkeen. Tarkenna hakua.</item>
+    </plurals>
 </resources>

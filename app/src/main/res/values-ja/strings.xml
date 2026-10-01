@@ -198,7 +198,6 @@
     <string name="unlock">ロック解除</string>
     <string name="unsaved_changes">未保存の変更</string>
     <string name="unsaved_changes_confirm">未保存の変更があります。破棄しますか？</string>
-    <string name="selected_count">%1$d 件選択</string>
     <string name="search">検索</string>
     <string name="search_filter_hint">このフォルダを絞り込む</string>
     <string name="search_no_matches">一致なし</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">%1$s を検索</string>
     <string name="search_type_to_begin">検索するには入力してください</string>
     <string name="search_searching">検索中…</string>
-    <string name="search_truncated">%1$d 件を表示、%2$d フォルダで停止しました。検索条件を絞り込んでください。</string>
     <string name="done">完了</string>
     <string name="archive">アーカイブ</string>
     <string name="failed_to_open_pdf">PDFを開けませんでした – ファイルが破損しているかPDFではない可能があります (err=3)。</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">選択された項目はフォルダです。</string>
     <string name="volume">音量</string>
     <string name="image">画像</string>
-    <string name="item_count_one">1 件</string>
-    <string name="item_count_many">%1$d 件</string>
     <string name="speed_normal">標準</string>
     <string name="no_app_available">このファイルを開くアプリがありません</string>
     <string name="fileprovider_error">このパスに FileProvider が設定されていません</string>
@@ -236,4 +232,38 @@
     <string name="moving_files">ファイルを移動しています</string>
     <string name="copying_files">ファイルをコピーしています</string>
     <string name="untitled">無題</string>
+    <string name="invalid_name">無効な名前です</string>
+    <string name="name_no_slash">名前に \'/\' を含めることはできません</string>
+    <string name="already_exists">既に存在します</string>
+    <string name="mkdir_failed">mkdir に失敗しました</string>
+    <string name="create_failed">作成に失敗しました</string>
+    <string name="cannot_create_folder">フォルダーを作成できません: %1$s</string>
+    <string name="cannot_create_file">ファイルを作成できません: %1$s</string>
+    <string name="path_not_accessible">パスが存在しないか、アクセスできません</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (利用できません)</string>
+    <string name="internal_storage_root">内部ストレージ (root)</string>
+    <string name="internal_root">内部 root</string>
+    <string name="external_root">外部 root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (実行されていません)</string>
+    <string name="internal_storage_shizuku">内部ストレージ (shizuku)</string>
+    <string name="internal_shizuku">内部 (shizuku)</string>
+    <string name="external_shizuku">外部 (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">言語</string>
+    <plurals name="item_count">
+        <item quantity="other">%1$d 件</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="other">%1$d 件選択</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="other">%1$d 件を表示、%2$d フォルダで停止しました。検索条件を絞り込んでください。</item>
+    </plurals>
 </resources>

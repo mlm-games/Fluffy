@@ -1,11 +1,14 @@
 package app.fluffy.viewmodel
 
+import android.content.Context
 import android.net.Uri
 import android.os.Environment
+import androidx.annotation.StringRes
 import androidx.documentfile.provider.DocumentFile
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import app.fluffy.R
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.data.repository.Bookmark
 import app.fluffy.data.repository.BookmarksRepository
@@ -61,6 +64,7 @@ data class FileBrowserState(
 )
 
 class FileBrowserViewModel(
+    private val appContext: Context,
     private val io: SafIo,
     private val fileSystemAccess: FileSystemAccess,
     @Suppress("unused") private val archive: ArchiveEngine,
@@ -104,6 +108,11 @@ class FileBrowserViewModel(
         }
         initializeFileAccess()
     }
+
+    private fun getString(id: Int, vararg args: Any): String = appContext.getString(id, *args)
+
+    private fun cannotCreate(@StringRes format: Int, e: Exception): String =
+        getString(format, e.message ?: getString(R.string.create_failed))
 
     private fun initializeFileAccess() {
         viewModelScope.launch {
@@ -168,11 +177,23 @@ class FileBrowserViewModel(
                     val path = if (normalized.startsWith("/")) normalized else "/$normalized"
                     val scheme = if (access == "root") "root" else "shizuku"
                     if (scheme == "shizuku" && !ShizukuAccess.isAvailable()) {
-                        snackbarManager.show("Cannot access ${bookmark.name}: Shizuku is not running")
+                        snackbarManager.show(
+                            getString(
+                                R.string.cannot_access,
+                                bookmark.name,
+                                getString(R.string.shizuku_not_running)
+                            )
+                        )
                         return@launch
                     }
                     if (scheme == "root" && !RootAccess.isAvailable()) {
-                        snackbarManager.show("Cannot access ${bookmark.name}: Root access not available")
+                        snackbarManager.show(
+                            getString(
+                                R.string.cannot_access,
+                                bookmark.name,
+                                getString(R.string.root_access_not_available)
+                            )
+                        )
                         return@launch
                     }
                     val uri = Uri.Builder().scheme(scheme).path(path).build()
@@ -227,21 +248,25 @@ class FileBrowserViewModel(
             }
 
             if (showShizuku || showRoot) {
-                val missing = if (!file.exists()) "Path does not exist" else "Path is not readable"
-                snackbarManager.show("Cannot access ${bookmark.name}: $missing")
+                val missing = if (!file.exists()) {
+                    getString(R.string.path_does_not_exist)
+                } else {
+                    getString(R.string.path_is_not_readable)
+                }
+                snackbarManager.show(getString(R.string.cannot_access, bookmark.name, missing))
                 return@launch
             }
 
             val reason = when {
-                !showRoot && !showShizuku -> "Enable Root or Shizuku in Settings"
-                showShizuku && !ShizukuAccess.isAvailable() -> "Shizuku is not running"
-                showRoot && !RootAccess.isAvailable() -> "Root access not available"
-                else -> "Path does not exist or is not accessible"
+                !showRoot && !showShizuku -> getString(R.string.enable_root_or_shizuku)
+                showShizuku && !ShizukuAccess.isAvailable() -> getString(R.string.shizuku_not_running)
+                showRoot && !RootAccess.isAvailable() -> getString(R.string.root_access_not_available)
+                else -> getString(R.string.path_not_accessible)
             }
 
             snackbarManager.show(
-                message = "Cannot access ${bookmark.name}: $reason",
-                actionLabel = if (!showRoot && !showShizuku) "Settings" else null,
+                message = getString(R.string.cannot_access, bookmark.name, reason),
+                actionLabel = if (!showRoot && !showShizuku) getString(R.string.settings) else null,
             )
         }
     }
@@ -254,7 +279,8 @@ class FileBrowserViewModel(
         val seenFilePaths = mutableSetOf<String>()
         storageRoots.forEachIndexed { idx, root ->
             if (seenFilePaths.add(root.absolutePath)) {
-                val label = if (idx == 0) "Internal Storage" else "External Storage"
+                val label = if (idx == 0) getString(R.string.internal_storage)
+                else getString(R.string.external_storage)
                 items.add(
                     QuickAccessItem(
                         name = label,
@@ -266,19 +292,21 @@ class FileBrowserViewModel(
             }
         }
 
+        data class FolderEntry(val label: String, val icon: String, val dir: String)
+
         // Common public folders (unchanged)
         val folders = listOf(
-            "Downloads" to Environment.DIRECTORY_DOWNLOADS,
-            "Documents" to Environment.DIRECTORY_DOCUMENTS,
-            "Pictures" to Environment.DIRECTORY_PICTURES,
-            "Music" to Environment.DIRECTORY_MUSIC,
-            "Movies" to Environment.DIRECTORY_MOVIES,
-            "DCIM" to Environment.DIRECTORY_DCIM
+            FolderEntry(getString(R.string.downloads), "downloads", Environment.DIRECTORY_DOWNLOADS),
+            FolderEntry(getString(R.string.documents), "documents", Environment.DIRECTORY_DOCUMENTS),
+            FolderEntry(getString(R.string.pictures), "pictures", Environment.DIRECTORY_PICTURES),
+            FolderEntry(getString(R.string.music), "music", Environment.DIRECTORY_MUSIC),
+            FolderEntry(getString(R.string.movies), "movies", Environment.DIRECTORY_MOVIES),
+            FolderEntry("DCIM", "dcim", Environment.DIRECTORY_DCIM)
         )
-        folders.forEach { (name, dir) ->
-            val file = Environment.getExternalStoragePublicDirectory(dir)
+        folders.forEach { entry ->
+            val file = Environment.getExternalStoragePublicDirectory(entry.dir)
             if (file.exists()) {
-                items.add(QuickAccessItem(name, name.lowercase(), file, null))
+                items.add(QuickAccessItem(entry.label, entry.icon, file, null))
             }
         }
 
@@ -286,7 +314,8 @@ class FileBrowserViewModel(
             val available = RootAccess.isAvailable()
             items.add(
                 QuickAccessItem(
-                    if (available) "Root /" else "Root / (not available)",
+                    if (available) getString(R.string.root_slash)
+                    else getString(R.string.root_slash_unavailable),
                     "root",
                     null,
                     Uri.Builder().scheme("root").path("/").build(),
@@ -299,7 +328,7 @@ class FileBrowserViewModel(
             rootSeenPaths.add(internalPath)
             items.add(
                 QuickAccessItem(
-                    "Internal Storage (root)",
+                    getString(R.string.internal_storage_root),
                     "root",
                     null,
                     Uri.Builder().scheme("root").path(internalPath).build(),
@@ -310,7 +339,8 @@ class FileBrowserViewModel(
             storageRoots.forEachIndexed { idx, root ->
                 val path = root.absolutePath
                 if (rootSeenPaths.add(path)) {
-                    val name = if (idx == 0) "Internal Root" else "External Root"
+                    val name = if (idx == 0) getString(R.string.internal_root)
+                    else getString(R.string.external_root)
                     items.add(
                         QuickAccessItem(
                             name = "$name ($path)",
@@ -325,7 +355,7 @@ class FileBrowserViewModel(
 
             items.add(
                 QuickAccessItem(
-                    "Termux Home (root)",
+                    getString(R.string.termux_home_root),
                     "terminal",
                     null,
                     Uri.Builder().scheme("root")
@@ -336,7 +366,7 @@ class FileBrowserViewModel(
             )
             items.add(
                 QuickAccessItem(
-                    "Termux Storage (root)",
+                    getString(R.string.termux_storage_root),
                     "terminal",
                     null,
                     Uri.Builder().scheme("root")
@@ -351,7 +381,8 @@ class FileBrowserViewModel(
             val available = ShizukuAccess.isAvailable()
             items.add(
                 QuickAccessItem(
-                    if (available) "Shizuku /" else "Shizuku / (not running)",
+                    if (available) getString(R.string.shizuku_slash)
+                    else getString(R.string.shizuku_slash_not_running),
                     "shizuku",
                     null,
                     Uri.Builder().scheme("shizuku").path("/").build(),
@@ -364,7 +395,7 @@ class FileBrowserViewModel(
             shizukuSeenPaths.add(internalPath)
             items.add(
                 QuickAccessItem(
-                    "Internal Storage (shizuku)",
+                    getString(R.string.internal_storage_shizuku),
                     "shizuku",
                     null,
                     Uri.Builder().scheme("shizuku").path(internalPath).build(),
@@ -375,7 +406,8 @@ class FileBrowserViewModel(
             storageRoots.forEachIndexed { idx, root ->
                 val path = root.absolutePath
                 if (shizukuSeenPaths.add(path)) {
-                    val name = if (idx == 0) "Internal (shizuku)" else "External (shizuku)"
+                    val name = if (idx == 0) getString(R.string.internal_shizuku)
+                    else getString(R.string.external_shizuku)
                     items.add(
                         QuickAccessItem(
                             name = "$name ($path)",
@@ -390,7 +422,7 @@ class FileBrowserViewModel(
 
             items.add(
                 QuickAccessItem(
-                    "Termux Home (shizuku)",
+                    getString(R.string.termux_home_shizuku),
                     "terminal",
                     null,
                     Uri.Builder().scheme("shizuku")
@@ -401,7 +433,7 @@ class FileBrowserViewModel(
             )
             items.add(
                 QuickAccessItem(
-                    "Termux Storage (shizuku)",
+                    getString(R.string.termux_storage_shizuku),
                     "terminal",
                     null,
                     Uri.Builder().scheme("shizuku")
@@ -432,7 +464,7 @@ class FileBrowserViewModel(
     fun openFileSystemPath(file: File) {
         viewModelScope.launch {
             if (!file.exists()) {
-                _state.value = _state.value.copy(error = "Path does not exist")
+                _state.value = _state.value.copy(error = getString(R.string.path_does_not_exist))
                 return@launch
             }
             val location = BrowseLocation.FileSystem(file)
@@ -708,11 +740,11 @@ class FileBrowserViewModel(
 
     private fun validateNewName(name: String): Boolean {
         if (name.isBlank() || name == "." || name == "..") {
-            viewModelScope.launch { snackbarManager.show("Invalid name") }
+            viewModelScope.launch { snackbarManager.show(getString(R.string.invalid_name)) }
             return false
         }
         if ('/' in name || '\\' in name || '\u0000' in name) {
-            viewModelScope.launch { snackbarManager.show("Name must not contain '/'") }
+            viewModelScope.launch { snackbarManager.show(getString(R.string.name_no_slash)) }
             return false
         }
         return true
@@ -727,13 +759,13 @@ class FileBrowserViewModel(
                     try {
                         val newFolder = withContext(Dispatchers.IO) {
                             val f = File(location.file, name)
-                            if (f.exists()) throw IllegalStateException("Already exists")
-                            if (!f.mkdirs()) throw java.io.IOException("mkdir failed")
+                            if (f.exists()) throw IllegalStateException(getString(R.string.already_exists))
+                            if (!f.mkdirs()) throw java.io.IOException(getString(R.string.mkdir_failed))
                             f
                         }
                         refresh()
                     } catch (e: Exception) {
-                        snackbarManager.show("Cannot create folder: ${e.message}")
+                        snackbarManager.show(cannotCreate(R.string.cannot_create_folder, e))
                     }
                 }
                 is BrowseLocation.SAF -> {
@@ -742,7 +774,7 @@ class FileBrowserViewModel(
                             withContext(Dispatchers.IO) { io.createDir(parent, name) }
                             refresh()
                         } catch (e: Exception) {
-                            snackbarManager.show("Cannot create folder: ${e.message}")
+                            snackbarManager.show(cannotCreate(R.string.cannot_create_folder, e))
                         }
                     }
                 }
@@ -760,12 +792,12 @@ class FileBrowserViewModel(
                     try {
                         withContext(Dispatchers.IO) {
                             val newFile = File(location.file, name)
-                            if (newFile.exists()) throw IllegalStateException("Already exists")
-                            if (!newFile.createNewFile()) throw java.io.IOException("Create failed")
+                            if (newFile.exists()) throw IllegalStateException(getString(R.string.already_exists))
+                            if (!newFile.createNewFile()) throw java.io.IOException(getString(R.string.create_failed))
                         }
                         refresh()
                     } catch (e: Exception) {
-                        snackbarManager.show("Cannot create file: ${e.message}")
+                        snackbarManager.show(cannotCreate(R.string.cannot_create_file, e))
                     }
                 }
                 is BrowseLocation.SAF -> {
@@ -774,7 +806,7 @@ class FileBrowserViewModel(
                             withContext(Dispatchers.IO) { io.createFile(parent, name) }
                             refresh()
                         } catch (e: Exception) {
-                            snackbarManager.show("Cannot create file: ${e.message}")
+                            snackbarManager.show(cannotCreate(R.string.cannot_create_file, e))
                         }
                     }
                 }
@@ -792,12 +824,12 @@ class FileBrowserViewModel(
                     try {
                         withContext(Dispatchers.IO) {
                             val newFile = File(location.file, name)
-                            if (newFile.exists()) throw IllegalStateException("Already exists")
+                            if (newFile.exists()) throw IllegalStateException(getString(R.string.already_exists))
                             val tmp = File.createTempFile(".fluffy_", ".tmp", location.file)
                             try {
                                 tmp.writeText(content)
                                 if (!tmp.renameTo(newFile)) {
-                                    if (!newFile.createNewFile()) throw java.io.IOException("Create failed")
+                                    if (!newFile.createNewFile()) throw java.io.IOException(getString(R.string.create_failed))
                                     newFile.writeText(content)
                                 }
                             } finally {
@@ -806,7 +838,7 @@ class FileBrowserViewModel(
                         }
                         refresh()
                     } catch (e: Exception) {
-                        snackbarManager.show("Cannot create file: ${e.message}")
+                        snackbarManager.show(cannotCreate(R.string.cannot_create_file, e))
                     }
                 }
                 is BrowseLocation.SAF -> {
@@ -818,7 +850,7 @@ class FileBrowserViewModel(
                             }
                             refresh()
                         } catch (e: Exception) {
-                            snackbarManager.show("Cannot create file: ${e.message}")
+                            snackbarManager.show(cannotCreate(R.string.cannot_create_file, e))
                         }
                     }
                 }
@@ -832,7 +864,7 @@ class FileBrowserViewModel(
         return when (val location = st.currentLocation) {
             is BrowseLocation.FileSystem -> location.file.absolutePath
             is BrowseLocation.SAF -> st.currentDir?.path ?: ""
-            is BrowseLocation.QuickAccess -> "Quick Access"
+            is BrowseLocation.QuickAccess -> getString(R.string.quick_access)
             null -> ""
         }
     }

@@ -198,7 +198,6 @@
     <string name="unlock">باز کردن قفل</string>
     <string name="unsaved_changes">تغییرات ذخیره‌نشده</string>
     <string name="unsaved_changes_confirm">تغییرات ذخیره‌نشده دارید. می‌خواهید آن‌ها را رد کنید؟</string>
-    <string name="selected_count">%1$d انتخاب‌شده</string>
     <string name="search">جستجو</string>
     <string name="search_filter_hint">فیلتر این پوشه</string>
     <string name="search_no_matches">موردی یافت نشد</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">جستجو در %1$s</string>
     <string name="search_type_to_begin">برای جستجو تایپ کنید</string>
     <string name="search_searching">در حال جستجو…</string>
-    <string name="search_truncated">نمایش %1$d نتیجه، پس از %2$d پوشه متوقف شد. جستجو را محدود کنید.</string>
     <string name="done">انجم</string>
     <string name="archive">بایگانی</string>
     <string name="failed_to_open_pdf">باز کردن PDF ممکن نیست – پرونده شاید خراب است یا PDF نیست (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">موقع انتخاب شده یک پوشه است.</string>
     <string name="volume">صدا</string>
     <string name="image">تصویر</string>
-    <string name="item_count_one">1 موقع</string>
-    <string name="item_count_many">%1$d موقع</string>
     <string name="speed_normal">عادی</string>
     <string name="no_app_available">هیچ برنامه‌ای برای باز کردن این پرونده موجود نیست</string>
     <string name="fileprovider_error">FileProvider برای این مسیر پیکربندی نشده است</string>
@@ -236,4 +232,41 @@
     <string name="moving_files">در حال جابه‌جایی پرونده‌ها</string>
     <string name="copying_files">در حال رونوشت پرونده‌ها</string>
     <string name="untitled">بدون عنوان</string>
+    <string name="invalid_name">نام نامعتبر</string>
+    <string name="name_no_slash">نام نباید شامل \'/\' باشد</string>
+    <string name="already_exists">از قبل موجود است</string>
+    <string name="mkdir_failed">mkdir ناموفق بود</string>
+    <string name="create_failed">ایجاد ناموفق بود</string>
+    <string name="cannot_create_folder">ایجاد پوشه ممکن نیست: %1$s</string>
+    <string name="cannot_create_file">ایجاد پرونده ممکن نیست: %1$s</string>
+    <string name="path_not_accessible">مسیر وجود ندارد یا در دسترس نیست</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (در دسترس نیست)</string>
+    <string name="internal_storage_root">فضای داخلی (root)</string>
+    <string name="internal_root">root داخلی</string>
+    <string name="external_root">root خارجی</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (در حال اجرا نیست)</string>
+    <string name="internal_storage_shizuku">فضای داخلی (shizuku)</string>
+    <string name="internal_shizuku">داخلی (shizuku)</string>
+    <string name="external_shizuku">خارجی (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">زبان</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d مورد</item>
+        <item quantity="other">%1$d مورد</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%1$d انتخاب‌شده</item>
+        <item quantity="other">%1$d انتخاب‌شده</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">نمایش %1$d نتیجه، پس از %2$d پوشه متوقف شد. جستجو را محدود کنید.</item>
+        <item quantity="other">نمایش %1$d نتیجه، پس از %2$d پوشه متوقف شد. جستجو را محدود کنید.</item>
+    </plurals>
 </resources>

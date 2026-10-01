@@ -198,7 +198,6 @@
     <string name="unlock">שחרור נעילה</string>
     <string name="unsaved_changes">שינויים שלא נשמרו</string>
     <string name="unsaved_changes_confirm">יש לך שינויים שלא נשמרו. האם לבטל אותם?</string>
-    <string name="selected_count">%1$d נבחרו</string>
     <string name="search">חיפוש</string>
     <string name="search_filter_hint">סינון התיקייה הזו</string>
     <string name="search_no_matches">אין התאמות</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">חיפוש בתוך %1$s</string>
     <string name="search_type_to_begin">הקלד לחיפוש</string>
     <string name="search_searching">מחפש…</string>
-    <string name="search_truncated">מוצג %1$d תוצאות, הופסק לאחר %2$d תיקיות. צמצם את החיפוש.</string>
     <string name="done">בוצע</string>
     <string name="archive">ארכיון</string>
     <string name="failed_to_open_pdf">לא ניתן לפתוח את ה‑PDF – ה꜐וב יכול להיות פגום או שאינו PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">הפריט הנבחר הוא תיקיה.</string>
     <string name="volume">עוצמה</string>
     <string name="image">תמונה</string>
-    <string name="item_count_one">1 פריט</string>
-    <string name="item_count_many">%1$d פריטים</string>
     <string name="speed_normal">רגיל</string>
     <string name="no_app_available">אין יישום זמין לפתיחת קובץ זה</string>
     <string name="fileprovider_error">ה־FileProvider אינו מוגדר עבור נתיב זה</string>
@@ -236,4 +232,44 @@
     <string name="moving_files">מעבר קבצים</string>
     <string name="copying_files">העתקת קבצים</string>
     <string name="untitled">ללא שם</string>
+    <string name="invalid_name">שם לא חוקי</string>
+    <string name="name_no_slash">השם אינו יכול להכיל \'/\'</string>
+    <string name="already_exists">כבר קיים</string>
+    <string name="mkdir_failed">ה־mkdir נכשל</string>
+    <string name="create_failed">היצירה נכשלה</string>
+    <string name="cannot_create_folder">לא ניתן ליצור תיקייה: %1$s</string>
+    <string name="cannot_create_file">לא ניתן ליצור קובץ: %1$s</string>
+    <string name="path_not_accessible">הנתיב אינו קיים או שאינו נגיש</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (לא זמין)</string>
+    <string name="internal_storage_root">אחסון פנימי (root)</string>
+    <string name="internal_root">root פנימי</string>
+    <string name="external_root">root חיצוני</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (לא פועל)</string>
+    <string name="internal_storage_shizuku">אחסון פנימי (shizuku)</string>
+    <string name="internal_shizuku">פנימי (shizuku)</string>
+    <string name="external_shizuku">חיצוני (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">שפה</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d פריט</item>
+        <item quantity="two">%1$d פריטים</item>
+        <item quantity="other">%1$d פריטים</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%1$d נבחר</item>
+        <item quantity="two">%1$d נבחרו</item>
+        <item quantity="other">%1$d נבחרו</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">הוצג %1$d תוצאה, הופסק לאחר %2$d תיקיות. צמצם את החיפוש.</item>
+        <item quantity="two">מוצג %1$d תוצאות, הופסק לאחר %2$d תיקיות. צמצם את החיפוש.</item>
+        <item quantity="other">מוצג %1$d תוצאות, הופסק לאחר %2$d תיקיות. צמצם את החיפוש.</item>
+    </plurals>
 </resources>

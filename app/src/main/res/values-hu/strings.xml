@@ -198,7 +198,6 @@
     <string name="unlock">Feloldás</string>
     <string name="unsaved_changes">Mentetlen módosítások</string>
     <string name="unsaved_changes_confirm">Vannak mentetlen módosításaid. Elveted ezeket?</string>
-    <string name="selected_count">%1$d kiválasztva</string>
     <string name="search">Keresés</string>
     <string name="search_filter_hint">Szűrés ebben a mappában</string>
     <string name="search_no_matches">Nincs találat</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Keresés itt: %1$s</string>
     <string name="search_type_to_begin">A kereséshez írj</string>
     <string name="search_searching">Keresés…</string>
-    <string name="search_truncated">%1$d találat megjelenítve, %2$d után leállítva. Szűkítse a keresést.</string>
     <string name="done">Kész</string>
     <string name="archive">Archívum</string>
     <string name="failed_to_open_pdf">A PDF megnyitása nem sikerült – a fájl sérült lehet, vagy nem PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">A kijelölt elem egy mappa.</string>
     <string name="volume">Hangerő</string>
     <string name="image">Kép</string>
-    <string name="item_count_one">1 elem</string>
-    <string name="item_count_many">%1$d elem</string>
     <string name="speed_normal">Normális</string>
     <string name="no_app_available">Nincs alkalmazás a fájl megnyitásához</string>
     <string name="fileprovider_error">A FileProvider nincs beállítva ehhez az útvonalhoz</string>
@@ -236,4 +232,41 @@
     <string name="moving_files">Fájlok áthelyezése</string>
     <string name="copying_files">Fájlok másolása</string>
     <string name="untitled">Névtelen</string>
+    <string name="invalid_name">Érvénytelen név</string>
+    <string name="name_no_slash">A név nem tartalmazhat \'/\'</string>
+    <string name="already_exists">Már létezik</string>
+    <string name="mkdir_failed">A mkdir nem sikerült</string>
+    <string name="create_failed">A létrehozás nem sikerült</string>
+    <string name="cannot_create_folder">Nem hozható létre mappa: %1$s</string>
+    <string name="cannot_create_file">Nem hozható létre fájl: %1$s</string>
+    <string name="path_not_accessible">Az útvonal nem létezik vagy nem érhető el</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (nem érhető el)</string>
+    <string name="internal_storage_root">Belső tárhely (root)</string>
+    <string name="internal_root">Belső root</string>
+    <string name="external_root">Külső root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (nem fut)</string>
+    <string name="internal_storage_shizuku">Belső tárhely (shizuku)</string>
+    <string name="internal_shizuku">Belső (shizuku)</string>
+    <string name="external_shizuku">Külső (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Nyelv</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d elem</item>
+        <item quantity="other">%1$d elem</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%1$d kiválasztva</item>
+        <item quantity="other">%1$d kiválasztva</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">%1$d találat megjelenítve, %2$d után leállítva. Szűkítse a keresést.</item>
+        <item quantity="other">%1$d találat megjelenítve, %2$d után leállítva. Szűkítse a keresést.</item>
+    </plurals>
 </resources>

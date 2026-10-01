@@ -198,7 +198,6 @@
     <string name="unlock">Entsperren</string>
     <string name="unsaved_changes">Nicht gespeicherte Änderungen</string>
     <string name="unsaved_changes_confirm">Du hast nicht gespeicherte Änderungen. Verwerfen?</string>
-    <string name="selected_count">%1$d ausgewählt</string>
     <string name="search">Suche</string>
     <string name="search_filter_hint">Diesen Ordner filtern</string>
     <string name="search_no_matches">Keine Treffer</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">In %1$s suchen</string>
     <string name="search_type_to_begin">Zum Suchen tippen</string>
     <string name="search_searching">Suche läuft…</string>
-    <string name="search_truncated">%1$d Ergebnisse angezeigt, nach %2$d Ordnern gestoppt. Suche eingrenzen.</string>
     <string name="done">Fertig</string>
     <string name="archive">Archiv</string>
     <string name="failed_to_open_pdf">PDF konnte nicht geöffnet werden – die Datei ist möglicherweise beschädigt oder kein PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">Ausgewähltes Element ist ein Ordner.</string>
     <string name="volume">Lautstärke</string>
     <string name="image">Bild</string>
-    <string name="item_count_one">1 Element</string>
-    <string name="item_count_many">%1$d Elemente</string>
     <string name="speed_normal">Normal</string>
     <string name="no_app_available">Keine App zum Öffnen dieser Datei verfügbar</string>
     <string name="fileprovider_error">FileProvider ist für diesen Pfad nicht konfiguriert</string>
@@ -236,4 +232,41 @@
     <string name="moving_files">Dateien werden verschoben</string>
     <string name="copying_files">Dateien werden kopiert</string>
     <string name="untitled">Unbenannt</string>
+    <string name="invalid_name">Ungültiger Name</string>
+    <string name="name_no_slash">Name darf kein \'/\' enthalten</string>
+    <string name="already_exists">Bereits vorhanden</string>
+    <string name="mkdir_failed">mkdir fehlgeschlagen</string>
+    <string name="create_failed">Erstellen fehlgeschlagen</string>
+    <string name="cannot_create_folder">Ordner konnte nicht erstellt werden: %1$s</string>
+    <string name="cannot_create_file">Datei konnte nicht erstellt werden: %1$s</string>
+    <string name="path_not_accessible">Pfad existiert nicht oder ist nicht zugänglich</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (nicht verfügbar)</string>
+    <string name="internal_storage_root">Interner Speicher (root)</string>
+    <string name="internal_root">Internes Root</string>
+    <string name="external_root">Externes Root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (nicht aktiv)</string>
+    <string name="internal_storage_shizuku">Interner Speicher (shizuku)</string>
+    <string name="internal_shizuku">Intern (shizuku)</string>
+    <string name="external_shizuku">Extern (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Sprache</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d Element</item>
+        <item quantity="other">%1$d Elemente</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%1$d ausgewählt</item>
+        <item quantity="other">%1$d ausgewählt</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">%1$d Ergebnis angezeigt, nach %2$d Ordnern gestoppt. Suche eingrenzen.</item>
+        <item quantity="other">%1$d Ergebnisse angezeigt, nach %2$d Ordnern gestoppt. Suche eingrenzen.</item>
+    </plurals>
 </resources>

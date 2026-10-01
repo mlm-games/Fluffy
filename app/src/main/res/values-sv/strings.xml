@@ -198,7 +198,6 @@
     <string name="unlock">Lås upp</string>
     <string name="unsaved_changes">Ej sparade ändringar</string>
     <string name="unsaved_changes_confirm">Du har ej sparade ändringar. Vill du avfärda dem?</string>
-    <string name="selected_count">%1$d valda</string>
     <string name="search">Sök</string>
     <string name="search_filter_hint">Filtrera den här mappen</string>
     <string name="search_no_matches">Inga träffar</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Sök i %1$s</string>
     <string name="search_type_to_begin">Skriv för att söka</string>
     <string name="search_searching">Söker…</string>
-    <string name="search_truncated">Visar %1$d resultat, stoppade efter %2$d mappar. Avgränsa sökningen.</string>
     <string name="done">Klar</string>
     <string name="archive">Arkiv</string>
     <string name="failed_to_open_pdf">Kunde inte öppna PDF-filen – filen kan vara skadad eller inte vara en PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">Det valda objektet är en mapp.</string>
     <string name="volume">Volym</string>
     <string name="image">Bild</string>
-    <string name="item_count_one">1 objekt</string>
-    <string name="item_count_many">%1$d objekt</string>
     <string name="speed_normal">Normal</string>
     <string name="no_app_available">Ingen app tillgänglig för att öppna den här filen</string>
     <string name="fileprovider_error">FileProvider är inte konfigurerad för den här sökvägen</string>
@@ -236,4 +232,41 @@
     <string name="moving_files">Flyttar filer</string>
     <string name="copying_files">Kopierar filer</string>
     <string name="untitled">Namnlös</string>
+    <string name="invalid_name">Ogiltigt namn</string>
+    <string name="name_no_slash">Namnet får inte innehålla \'/\'</string>
+    <string name="already_exists">Finns redan</string>
+    <string name="mkdir_failed">mkdir misslyckades</string>
+    <string name="create_failed">Misslyckades att skapa</string>
+    <string name="cannot_create_folder">Kan inte skapa mapp: %1$s</string>
+    <string name="cannot_create_file">Kan inte skapa fil: %1$s</string>
+    <string name="path_not_accessible">Sökvägen finns inte eller är inte åtkomlig</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (inte tillgänglig)</string>
+    <string name="internal_storage_root">Internt lagringsutrymme (root)</string>
+    <string name="internal_root">Internt root</string>
+    <string name="external_root">Externt root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (kör inte)</string>
+    <string name="internal_storage_shizuku">Internt lagringsutrymme (shizuku)</string>
+    <string name="internal_shizuku">Internt (shizuku)</string>
+    <string name="external_shizuku">Externt (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Språk</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d objekt</item>
+        <item quantity="other">%1$d objekt</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%1$d vald</item>
+        <item quantity="other">%1$d valda</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">Visar %1$d resultat, stoppade efter %2$d mappar. Avgränsa sökningen.</item>
+        <item quantity="other">Visar %1$d resultat, stoppade efter %2$d mappar. Avgränsa sökningen.</item>
+    </plurals>
 </resources>

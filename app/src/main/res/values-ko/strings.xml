@@ -198,7 +198,6 @@
     <string name="unlock">잠금 해제</string>
     <string name="unsaved_changes">저장하지 않은 변경 사항</string>
     <string name="unsaved_changes_confirm">저장하지 않은 변경 사항이 있습니다. 취소하시겠습니까?</string>
-    <string name="selected_count">%1$d개 선택됨</string>
     <string name="search">검색</string>
     <string name="search_filter_hint">이 폴더 필터링</string>
     <string name="search_no_matches">일치 항목 없음</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">%1$s 검색</string>
     <string name="search_type_to_begin">검색할 내용 입력</string>
     <string name="search_searching">검색 중…</string>
-    <string name="search_truncated">%1$d개 표시, %2$d개 폴더에서 중지됨. 검색어를 좁혀 보세요.</string>
     <string name="done">완료</string>
     <string name="archive">압축 파일</string>
     <string name="failed_to_open_pdf">PDF를 열 수 없습니다 – 파일이 손상되었거나 PDF가 아니면 아시러운다 (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">선택된 항목은 폴더입니다.</string>
     <string name="volume">음량</string>
     <string name="image">이미지</string>
-    <string name="item_count_one">1개</string>
-    <string name="item_count_many">%1$d개</string>
     <string name="speed_normal">기본</string>
     <string name="no_app_available">이 파일을 열 수 있는 앱이 없습니다</string>
     <string name="fileprovider_error">이 경로에 FileProvider가 구성되지 않았습니다</string>
@@ -236,4 +232,38 @@
     <string name="moving_files">파일 이동 중</string>
     <string name="copying_files">파일 복사 중</string>
     <string name="untitled">제목 없음</string>
+    <string name="invalid_name">잘못된 이름입니다</string>
+    <string name="name_no_slash">이름에 \'/\'를 포함할 수 없습니다</string>
+    <string name="already_exists">이미 존재합니다</string>
+    <string name="mkdir_failed">mkdir에 실패했습니다</string>
+    <string name="create_failed">만들기에 실패했습니다</string>
+    <string name="cannot_create_folder">폴더를 만들 수 없습니다: %1$s</string>
+    <string name="cannot_create_file">파일을 만들 수 없습니다: %1$s</string>
+    <string name="path_not_accessible">경로가 없거나 접근할 수 없습니다</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (사용 불가)</string>
+    <string name="internal_storage_root">내부 저장소 (root)</string>
+    <string name="internal_root">내부 root</string>
+    <string name="external_root">외부 root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (실행 중 아님)</string>
+    <string name="internal_storage_shizuku">내부 저장소 (shizuku)</string>
+    <string name="internal_shizuku">내부 (shizuku)</string>
+    <string name="external_shizuku">외부 (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">언어</string>
+    <plurals name="item_count">
+        <item quantity="other">%1$d개</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="other">%1$d개 선택됨</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="other">%1$d개 표시, %2$d개 폴더에서 중지됨. 검색어를 좁혀 보세요.</item>
+    </plurals>
 </resources>

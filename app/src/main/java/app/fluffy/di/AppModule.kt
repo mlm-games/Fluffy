@@ -52,7 +52,7 @@ val appModule = module {
 
     single { FileSearchEngine(get()) }
 
-    viewModel { FileBrowserViewModel(get(), get(), get(), get(), get(), get()) }
+    viewModel { FileBrowserViewModel(androidContext(), get(), get(), get(), get(), get(), get()) }
     viewModel { SearchViewModel(get(), get()) }
     viewModel { TasksViewModel(get(), get()) }
     viewModel { SettingsViewModel(get()) }

@@ -198,7 +198,6 @@
     <string name="unlock">فتح القفل</string>
     <string name="unsaved_changes">تغييرات غير محفوظة</string>
     <string name="unsaved_changes_confirm">لديك تغييرات غير محفوظة. هل تريد تجاهلها؟</string>
-    <string name="selected_count">%1$d محدد</string>
     <string name="search">بحث</string>
     <string name="search_filter_hint">تصفية هذا المجلد</string>
     <string name="search_no_matches">لا تطابقات</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">البحث في %1$s</string>
     <string name="search_type_to_begin">اكتب للبحث</string>
     <string name="search_searching">جارٍ البحث…</string>
-    <string name="search_truncated">تم عرض %1$d نتيجة، وأُوقف البحث بعد %2$d مجلدًا. ضيّق نطاق البحث.</string>
     <string name="done">تم</string>
     <string name="archive">أرشيف</string>
     <string name="failed_to_open_pdf">تعذّر فتح ملف PDF – قد يكون الملف تالفًا أو ليس بصيغة PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">العنصر المحدد مجلد.</string>
     <string name="volume">مستوى الصوت</string>
     <string name="image">صورة</string>
-    <string name="item_count_one">عنصر واحد</string>
-    <string name="item_count_many">%1$d عنصرًا</string>
     <string name="speed_normal">عادي</string>
     <string name="no_app_available">لا توجد تطبيقات لفتح هذا الملف</string>
     <string name="fileprovider_error">FileProvider غير مهيأ لهذا المسار</string>
@@ -236,4 +232,53 @@
     <string name="moving_files">جارٍ نقل الملفات</string>
     <string name="copying_files">جارٍ نسخ الملفات</string>
     <string name="untitled">بدون عنوان</string>
+    <string name="invalid_name">اسم غير صالح</string>
+    <string name="name_no_slash">يجب ألا يحتوي الاسم على \'/\'</string>
+    <string name="already_exists">موجود بالفعل</string>
+    <string name="mkdir_failed">فشل mkdir</string>
+    <string name="create_failed">فشل الإنشاء</string>
+    <string name="cannot_create_folder">تعذّر إنشاء المجلد: %1$s</string>
+    <string name="cannot_create_file">تعذّر إنشاء الملف: %1$s</string>
+    <string name="path_not_accessible">المسار غير موجود أو غير متاح</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (غير متاح)</string>
+    <string name="internal_storage_root">التخزين الداخلي (root)</string>
+    <string name="internal_root">root الداخلي</string>
+    <string name="external_root">root الخارجي</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (غير قيد التشغيل)</string>
+    <string name="internal_storage_shizuku">التخزين الداخلي (shizuku)</string>
+    <string name="internal_shizuku">الداخلي (shizuku)</string>
+    <string name="external_shizuku">الخارجي (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">اللغة</string>
+    <plurals name="item_count">
+        <item quantity="zero">%1$d عنصر</item>
+        <item quantity="one">%1$d عنصر</item>
+        <item quantity="two">%1$d عنصر</item>
+        <item quantity="few">%1$d عناصر</item>
+        <item quantity="many">%1$d عنصرًا</item>
+        <item quantity="other">%1$d عنصرًا</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="zero">%1$d محدد</item>
+        <item quantity="one">%1$d محدد</item>
+        <item quantity="two">%1$d محدد</item>
+        <item quantity="few">%1$d محددة</item>
+        <item quantity="many">%1$d محددًا</item>
+        <item quantity="other">%1$d محددًا</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="zero">تم عرض %1$d نتيجة، وأُوقف البحث بعد %2$d مجلدًا. ضيّق نطاق البحث.</item>
+        <item quantity="one">تم عرض %1$d نتيجة، وأُوقف البحث بعد %2$d مجلدًا. ضيّق نطاق البحث.</item>
+        <item quantity="two">تم عرض %1$d نتيجة، وأُوقف البحث بعد %2$d مجلدًا. ضيّق نطاق البحث.</item>
+        <item quantity="few">تم عرض %1$d نتائج، وأُوقف البحث بعد %2$d مجلدًا. ضيّق نطاق البحث.</item>
+        <item quantity="many">تم عرض %1$d نتيجة، وأُوقف البحث بعد %2$d مجلدًا. ضيّق نطاق البحث.</item>
+        <item quantity="other">تم عرض %1$d نتيجة، وأُوقف البحث بعد %2$d مجلدًا. ضيّق نطاق البحث.</item>
+    </plurals>
 </resources>

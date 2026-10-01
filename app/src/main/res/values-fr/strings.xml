@@ -198,7 +198,6 @@
     <string name="unlock">Déverrouiller</string>
     <string name="unsaved_changes">Modifications non enregistrées</string>
     <string name="unsaved_changes_confirm">Vous avez des modifications non enregistrées. Voulez-vous les abandonner ?</string>
-    <string name="selected_count">%1$d sélectionné(s)</string>
     <string name="search">Rechercher</string>
     <string name="search_filter_hint">Filtrer ce dossier</string>
     <string name="search_no_matches">Aucun résultat</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Rechercher dans %1$s</string>
     <string name="search_type_to_begin">Tapez pour rechercher</string>
     <string name="search_searching">Recherche…</string>
-    <string name="search_truncated">%1$d résultats affichés, arrêt après %2$d dossiers. Affinez votre recherche.</string>
     <string name="done">Terminé</string>
     <string name="archive">Archive</string>
     <string name="failed_to_open_pdf">Impossible d\'ouvrir le PDF – le fichier est peut-être corrompu ou n\'est pas un PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">L\'élément sélectionné est un dossier.</string>
     <string name="volume">Volume</string>
     <string name="image">Image</string>
-    <string name="item_count_one">1 élément</string>
-    <string name="item_count_many">%1$d éléments</string>
     <string name="speed_normal">Normal</string>
     <string name="no_app_available">Aucune application disponible pour ouvrir ce fichier</string>
     <string name="fileprovider_error">FileProvider n\'est pas configuré pour ce chemin</string>
@@ -236,4 +232,44 @@
     <string name="moving_files">Déplacement des fichiers</string>
     <string name="copying_files">Copie des fichiers</string>
     <string name="untitled">Sans titre</string>
+    <string name="invalid_name">Nom invalide</string>
+    <string name="name_no_slash">Le nom ne doit contenir aucun \'/\'</string>
+    <string name="already_exists">Existe déjà</string>
+    <string name="mkdir_failed">mkdir a échoué</string>
+    <string name="create_failed">Échec de la création</string>
+    <string name="cannot_create_folder">Impossible de créer le dossier : %1$s</string>
+    <string name="cannot_create_file">Impossible de créer le fichier : %1$s</string>
+    <string name="path_not_accessible">Le chemin n\'existe pas ou n\'est pas accessible</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (non disponible)</string>
+    <string name="internal_storage_root">Stockage interne (root)</string>
+    <string name="internal_root">Root interne</string>
+    <string name="external_root">Root externe</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (arrêté)</string>
+    <string name="internal_storage_shizuku">Stockage interne (shizuku)</string>
+    <string name="internal_shizuku">Interne (shizuku)</string>
+    <string name="external_shizuku">Externe (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Langue</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d élément</item>
+        <item quantity="many">%1$d éléments</item>
+        <item quantity="other">%1$d éléments</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%1$d sélectionné</item>
+        <item quantity="many">%1$d sélectionné(s)</item>
+        <item quantity="other">%1$d sélectionné(s)</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">%1$d résultat affiché, arrêt après %2$d dossiers. Affinez votre recherche.</item>
+        <item quantity="many">%1$d résultats affichés, arrêt après %2$d dossiers. Affinez votre recherche.</item>
+        <item quantity="other">%1$d résultats affichés, arrêt après %2$d dossiers. Affinez votre recherche.</item>
+    </plurals>
 </resources>

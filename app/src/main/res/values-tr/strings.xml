@@ -198,7 +198,6 @@
     <string name="unlock">Kilidi aç</string>
     <string name="unsaved_changes">Kaydedilmemiş değişiklikler</string>
     <string name="unsaved_changes_confirm">Kaydedilmemiş değişikliklerin var. Bunları yoksayılsın mı?</string>
-    <string name="selected_count">%1$d seçildi</string>
     <string name="search">Ara</string>
     <string name="search_filter_hint">Bu klasörü filtrele</string>
     <string name="search_no_matches">Eşleşme yok</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">%1$s içinde ara</string>
     <string name="search_type_to_begin">Aramak için yaz</string>
     <string name="search_searching">Aranıyor…</string>
-    <string name="search_truncated">%1$d sonuç gösterildi, %2$d klasörden sonra durduruldu. Aramanızı daraltın.</string>
     <string name="done">Bitti</string>
     <string name="archive">Arşiv</string>
     <string name="failed_to_open_pdf">PDF açılamadı – dosya bozulmuş veya PDF değil olabilir (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">Seçili öge bir klasör.</string>
     <string name="volume">Ses</string>
     <string name="image">Görüntü</string>
-    <string name="item_count_one">Öğe</string>
-    <string name="item_count_many">%1$d öğe</string>
     <string name="speed_normal">Normal</string>
     <string name="no_app_available">Bu dosyayı açmak için kullanılabilir uygulama yok</string>
     <string name="fileprovider_error">FileProvider bu yol için yapılandırılmamış</string>
@@ -236,4 +232,41 @@
     <string name="moving_files">Dosyalar taşınıyor</string>
     <string name="copying_files">Dosyalar kopyalanıyor</string>
     <string name="untitled">Adsız</string>
+    <string name="invalid_name">Geçersiz ad</string>
+    <string name="name_no_slash">Ad \'/\' içeremez</string>
+    <string name="already_exists">Zaten var</string>
+    <string name="mkdir_failed">mkdir başarısız oldu</string>
+    <string name="create_failed">Oluşturma başarısız oldu</string>
+    <string name="cannot_create_folder">Klasör oluşturulamıyor: %1$s</string>
+    <string name="cannot_create_file">Dosya oluşturulamıyor: %1$s</string>
+    <string name="path_not_accessible">Yol mevcut değil veya erişilemiyor</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (kullanılamıyor)</string>
+    <string name="internal_storage_root">Dahili depolama (root)</string>
+    <string name="internal_root">Dahili root</string>
+    <string name="external_root">Harici root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (çalışmıyor)</string>
+    <string name="internal_storage_shizuku">Dahili depolama (shizuku)</string>
+    <string name="internal_shizuku">Dahili (shizuku)</string>
+    <string name="external_shizuku">Harici (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Dil</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d öğe</item>
+        <item quantity="other">%1$d öğe</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%1$d seçildi</item>
+        <item quantity="other">%1$d seçildi</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">%1$d sonuç gösterildi, %2$d klasörden sonra durduruldu. Aramanızı daraltın.</item>
+        <item quantity="other">%1$d sonuç gösterildi, %2$d klasörden sonra durduruldu. Aramanızı daraltın.</item>
+    </plurals>
 </resources>

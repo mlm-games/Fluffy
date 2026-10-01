@@ -3,10 +3,11 @@ package app.fluffy.data.repository
 import android.content.Context
 import app.fluffy.R
 import io.github.mlmgames.settings.core.resources.AndroidStringResourceProvider
+import io.github.mlmgames.settings.core.resources.SettingsTextKeys
 import io.github.mlmgames.settings.core.resources.StringResourceProvider
 
 /**
- * Maps [FluffySettingsKeys] to Android resources.
+ * Maps settings title keys to Android resources.
  *
  * `AndroidStringResourceProvider` consults its key resolver before falling back to
  * the built-in key set, so one table serves both the string and string-array paths
@@ -36,6 +37,7 @@ private val settingsResources: Map<String, Int> = mapOf(
     FluffySettingsKeys.SETTING_VIEW_MODE to R.string.setting_view_mode,
     FluffySettingsKeys.SETTING_WARN_SHELL_WRITES to R.string.setting_warn_shell_writes,
     FluffySettingsKeys.SETTING_ZIP_LEVEL to R.string.setting_zip_level,
+    SettingsTextKeys.LANGUAGE to R.string.setting_language,
     FluffySettingsKeys.SETTING_ALWAYS_INAPP_PICKER_DESCRIPTION to
         R.string.setting_always_inapp_picker_desc,
     FluffySettingsKeys.SETTING_DEFAULT_SORT_DESCRIPTION to R.string.setting_default_sort_desc,

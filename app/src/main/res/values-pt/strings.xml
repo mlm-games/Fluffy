@@ -198,7 +198,6 @@
     <string name="unlock">Desbloquear</string>
     <string name="unsaved_changes">Alterações não salvas</string>
     <string name="unsaved_changes_confirm">Você tem alterações não salvas. Deseja descartá-las?</string>
-    <string name="selected_count">%1$d selecionado(s)</string>
     <string name="search">Pesquisar</string>
     <string name="search_filter_hint">Filtrar esta pasta</string>
     <string name="search_no_matches">Sem correspondências</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Pesquisar em %1$s</string>
     <string name="search_type_to_begin">Escreva para pesquisar</string>
     <string name="search_searching">A pesquisar…</string>
-    <string name="search_truncated">A mostrar %1$d resultados, interrompido após %2$d pastas. Refine a pesquisa.</string>
     <string name="done">Concluído</string>
     <string name="archive">Arquivo</string>
     <string name="failed_to_open_pdf">Não foi possível abrir o PDF – o arquivo pode estar corrompido ou não é um PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">O item selecionado é uma pasta.</string>
     <string name="volume">Volume</string>
     <string name="image">Imagem</string>
-    <string name="item_count_one">1 item</string>
-    <string name="item_count_many">%1$d itens</string>
     <string name="speed_normal">Normal</string>
     <string name="no_app_available">Não existe nenhuma aplicação para abrir este ficheiro</string>
     <string name="fileprovider_error">O FileProvider não está configurado para este caminho</string>
@@ -236,4 +232,44 @@
     <string name="moving_files">A mover ficheiros</string>
     <string name="copying_files">A copiar ficheiros</string>
     <string name="untitled">Sem título</string>
+    <string name="invalid_name">Nome inválido</string>
+    <string name="name_no_slash">O nome não deve conter \'/\'</string>
+    <string name="already_exists">Já existe</string>
+    <string name="mkdir_failed">mkdir falhou</string>
+    <string name="create_failed">Falha ao criar</string>
+    <string name="cannot_create_folder">Não é possível criar a pasta: %1$s</string>
+    <string name="cannot_create_file">Não é possível criar o ficheiro: %1$s</string>
+    <string name="path_not_accessible">O caminho não existe ou não está acessível</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (indisponível)</string>
+    <string name="internal_storage_root">Armazenamento interno (root)</string>
+    <string name="internal_root">Root interno</string>
+    <string name="external_root">Root externo</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (não está em execução)</string>
+    <string name="internal_storage_shizuku">Armazenamento interno (shizuku)</string>
+    <string name="internal_shizuku">Interno (shizuku)</string>
+    <string name="external_shizuku">Externo (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Idioma</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="many">%1$d itens</item>
+        <item quantity="other">%1$d itens</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%1$d selecionado</item>
+        <item quantity="many">%1$d selecionado(s)</item>
+        <item quantity="other">%1$d selecionado(s)</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">A mostrar %1$d resultado, interrompido após %2$d pastas. Refine a pesquisa.</item>
+        <item quantity="many">A mostrar %1$d resultados, interrompido após %2$d pastas. Refine a pesquisa.</item>
+        <item quantity="other">A mostrar %1$d resultados, interrompido após %2$d pastas. Refine a pesquisa.</item>
+    </plurals>
 </resources>

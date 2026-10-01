@@ -198,7 +198,6 @@
     <string name="unlock">Ξεκλείδωμα</string>
     <string name="unsaved_changes">Μη αποθηκευμένες αλλαγές</string>
     <string name="unsaved_changes_confirm">Έχετε μη αποθηκευμένες αλλαγές. Θέλετε να τις απορρίψετε;</string>
-    <string name="selected_count">%1$d επιλεγμένα</string>
     <string name="search">Αναζήτηση</string>
     <string name="search_filter_hint">Φιλτράρισμα αυτού του φακέλου</string>
     <string name="search_no_matches">Χωρίς αντιστοιχίες</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Αναζήτηση σε %1$s</string>
     <string name="search_type_to_begin">Πληκτρολογήστε για αναζήτηση</string>
     <string name="search_searching">Γίνεται αναζήτηση…</string>
-    <string name="search_truncated">Εμφάνιση %1$d αποτελεσμάτων, διακοπή μετά από %2$d φακέλους. Περιορίστε την αναζήτηση.</string>
     <string name="done">Τέλος</string>
     <string name="archive">Αρχείο</string>
     <string name="failed_to_open_pdf">Αδυναμία ανοίγματος PDF – το αρχείο μπορεί να είναι κατεστραμμένο ή να μην είναι PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">Το επιλεγμένο στοιχείο είναι φέκελος.</string>
     <string name="volume">Ένταση</string>
     <string name="image">Εικόνα</string>
-    <string name="item_count_one">1 στοιχείο</string>
-    <string name="item_count_many">%1$d στοιχεία</string>
     <string name="speed_normal">Κανονικό</string>
     <string name="no_app_available">Δεν υπάρχει εφαρμογή για το άνοιγμα αυτού του αρχείου</string>
     <string name="fileprovider_error">Το FileProvider δεν έχει ρυθμιστεί για αυτή τη διαδρομή</string>
@@ -236,4 +232,41 @@
     <string name="moving_files">Μεταφορά αρχείων</string>
     <string name="copying_files">Αντιγραφή αρχείων</string>
     <string name="untitled">Χωρίς τίτλο</string>
+    <string name="invalid_name">Μη έγκυρο όνομα</string>
+    <string name="name_no_slash">Το όνομα δεν πρέπει να περιέχει \'/\'</string>
+    <string name="already_exists">Υπάρχει ήδη</string>
+    <string name="mkdir_failed">Το mkdir απέτυχε</string>
+    <string name="create_failed">Η δημιουργία απέτυχε</string>
+    <string name="cannot_create_folder">Αδυναμία δημιουργίας φακέλου: %1$s</string>
+    <string name="cannot_create_file">Αδυναμία δημιουργίας αρχείου: %1$s</string>
+    <string name="path_not_accessible">Ο διάδρομος δεν υπάρχει ή δεν είναι προσβάσιμος</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (μη διαθέσιμο)</string>
+    <string name="internal_storage_root">Εσωτερικός χώρος (root)</string>
+    <string name="internal_root">Εσωτερικό root</string>
+    <string name="external_root">Εξωτερικό root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (δεν εκτελείται)</string>
+    <string name="internal_storage_shizuku">Εσωτερικός χώρος (shizuku)</string>
+    <string name="internal_shizuku">Εσωτερικό (shizuku)</string>
+    <string name="external_shizuku">Εξωτερικό (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Γλώσσα</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d στοιχείο</item>
+        <item quantity="other">%1$d στοιχεία</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">%1$d επιλεγμένο</item>
+        <item quantity="other">%1$d επιλεγμένα</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">Εμφάνιση %1$d αποτέλεσμα, διακοπή μετά από %2$d φακέλους. Περιορίστε την αναζήτηση.</item>
+        <item quantity="other">Εμφάνιση %1$d αποτελεσμάτων, διακοπή μετά από %2$d φακέλους. Περιορίστε την αναζήτηση.</item>
+    </plurals>
 </resources>

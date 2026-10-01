@@ -198,7 +198,6 @@
     <string name="unlock">Otključaj</string>
     <string name="unsaved_changes">Nespremljene promjene</string>
     <string name="unsaved_changes_confirm">Imate nespremljene promjene. Želite li ih odbaciti?</string>
-    <string name="selected_count">Odabrano: %1$d</string>
     <string name="search">Pretraži</string>
     <string name="search_filter_hint">Filtriraj ovu mapu</string>
     <string name="search_no_matches">Nema podudaranja</string>
@@ -207,7 +206,6 @@
     <string name="search_recursive_hint">Pretraži u %1$s</string>
     <string name="search_type_to_begin">Upiši za pretragu</string>
     <string name="search_searching">Pretraživanje…</string>
-    <string name="search_truncated">Prikazano %1$d rezultata, zaustavljeno nakon %2$d mapa. Sužite pretragu.</string>
     <string name="done">Gotovo</string>
     <string name="archive">Arhiva</string>
     <string name="failed_to_open_pdf">Nije moguće otvoriti PDF – datoteka je možda oštećena ili nije PDF (err=3).</string>
@@ -225,8 +223,6 @@
     <string name="error_selected_is_folder">Odabrana stavka je mapa.</string>
     <string name="volume">Glasnoća</string>
     <string name="image">Slika</string>
-    <string name="item_count_one">1 stavka</string>
-    <string name="item_count_many">%1$d stavki</string>
     <string name="speed_normal">Normalno</string>
     <string name="no_app_available">Nema dostupne aplikacije za otvaranje ove datoteke</string>
     <string name="fileprovider_error">FileProvider nije konfiguriran za ovu putanju</string>
@@ -236,4 +232,44 @@
     <string name="moving_files">Premještanje datoteka</string>
     <string name="copying_files">Kopiranje datoteka</string>
     <string name="untitled">Bez naziva</string>
+    <string name="invalid_name">Nevažeće ime</string>
+    <string name="name_no_slash">Ime ne smije sadržavati \'/\'</string>
+    <string name="already_exists">Već postoji</string>
+    <string name="mkdir_failed">mkdir nije uspio</string>
+    <string name="create_failed">Stvaranje nije uspjelo</string>
+    <string name="cannot_create_folder">Nije moguće stvoriti mapu: %1$s</string>
+    <string name="cannot_create_file">Nije moguće stvoriti datoteku: %1$s</string>
+    <string name="path_not_accessible">Putanja ne postoji ili nije pristupačna</string>
+    <string name="root_slash">Root /</string>
+    <string name="root_slash_unavailable">Root / (nije dostupno)</string>
+    <string name="internal_storage_root">Interna memorija (root)</string>
+    <string name="internal_root">Interni root</string>
+    <string name="external_root">Vanjski root</string>
+    <string name="termux_home_root">Termux Home (root)</string>
+    <string name="termux_storage_root">Termux Storage (root)</string>
+    <string name="shizuku_slash">Shizuku /</string>
+    <string name="shizuku_slash_not_running">Shizuku / (ne radi)</string>
+    <string name="internal_storage_shizuku">Interna memorija (shizuku)</string>
+    <string name="internal_shizuku">Interni (shizuku)</string>
+    <string name="external_shizuku">Vanjski (shizuku)</string>
+    <string name="termux_home_shizuku">Termux Home (shizuku)</string>
+    <string name="termux_storage_shizuku">Termux Storage (shizuku)</string>
+    <string name="setting_language">Jezik</string>
+    <plurals name="item_count">
+        <item quantity="one">%1$d stavka</item>
+        <item quantity="few">%1$d stavke</item>
+        <item quantity="other">%1$d stavki</item>
+    </plurals>
+
+    <plurals name="selected_count">
+        <item quantity="one">Odabrano: %1$d</item>
+        <item quantity="few">Odabrano: %1$d</item>
+        <item quantity="other">Odabrano: %1$d</item>
+    </plurals>
+
+    <plurals name="search_truncated">
+        <item quantity="one">Prikazan %1$d rezultat, zaustavljen nakon %2$d mapa. Sužite pretragu.</item>
+        <item quantity="few">Prikazana %1$d rezultata, zaustavljena nakon %2$d mapa. Sužite pretragu.</item>
+        <item quantity="other">Prikazano %1$d rezultata, zaustavljeno nakon %2$d mapa. Sužite pretragu.</item>
+    </plurals>
 </resources>
