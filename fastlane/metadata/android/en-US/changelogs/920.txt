@@ -1,0 +1,4 @@
+- Move few topbar icons to the overflow dropdown
+- Search and filter functionailty
+- Move to kmp-settings 0.10.3
+- Upgrade to kmp-settings 0.10.1 for key-based setting localisation

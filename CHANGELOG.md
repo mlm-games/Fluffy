@@ -1,3 +1,11 @@
+## v4.5.0
+
+- Move few topbar icons to the overflow dropdown
+- Search and filter functionailty
+- Move to kmp-settings 0.10.3
+- Upgrade to kmp-settings 0.10.1 for key-based setting localisation
+
+
 ## v4.4.7
 
 - No user-facing changes were mentioned since previous release
