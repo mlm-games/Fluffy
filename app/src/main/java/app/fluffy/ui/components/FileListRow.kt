@@ -422,12 +422,12 @@ fun FileListRow(
                     val subtitleText =
                         if (model.isDir) {
                             if (!showFileCount) {
-                                "Folder"
+                                stringResource(R.string.folder)
                             } else {
                                 when (val c = dirCount) {
                                     null -> "…"
-                                    1 -> "1 item"
-                                    else -> "$c items"
+                                    1 -> stringResource(R.string.item_count_one)
+                                    else -> stringResource(R.string.item_count_many, c)
                                 }
                             }
                         } else {
@@ -590,11 +590,11 @@ fun FileGridItem(
 
             val subtitleText =
                 if (model.isDir) {
-                    if (!showFileCount) "Folder"
+                    if (!showFileCount) stringResource(R.string.folder)
                     else when (val c = dirCount) {
                         null -> "…"
-                        1 -> "1 item"
-                        else -> "$c items"
+                        1 -> stringResource(R.string.item_count_one)
+                        else -> stringResource(R.string.item_count_many, c)
                     }
                 } else model.subtitle
 

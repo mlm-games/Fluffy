@@ -90,6 +90,7 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
 
     val context = LocalContext.current
     val hasChanges = currentText != originalContent && !isLoading && originalContent != null
+    val failedToOpen = stringResource(R.string.failed_to_open)
 
     LaunchedEffect(uri) {
         if (originalContent != null) {
@@ -109,7 +110,7 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                 isLoading = false
             }
             .onFailure { e ->
-                error = e.message ?: "Failed to open"
+                error = e.message ?: failedToOpen
                 isLoading = false
             }
     }

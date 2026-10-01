@@ -326,13 +326,14 @@ private fun FullscreenPdfViewer(
     var doc by remember(uri) { mutableStateOf<PdfDoc?>(null) }
     var loading by remember(uri) { mutableStateOf(true) }
     var loadError by remember(uri) { mutableStateOf<String?>(null) }
+    val pdfLoadError = stringResource(R.string.failed_to_open_pdf)
 
     LaunchedEffect(uri) {
         loading = true
         loadError = null
         doc = PdfDoc.open(context, uri)
         loading = false
-        if (doc == null) loadError = "Failed to open PDF – file may be corrupted or not a PDF (err=3)."
+        if (doc == null) loadError = pdfLoadError
     }
 
     if (loading) {
@@ -348,7 +349,7 @@ private fun FullscreenPdfViewer(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(24.dp)
             ) {
-                Text(loadError ?: "Failed to open PDF", style = MaterialTheme.typography.titleMedium)
+                Text(loadError ?: pdfLoadError, style = MaterialTheme.typography.titleMedium)
                 Spacer(Modifier.padding(8.dp))
                 Button(onClick = onClose) { Text(stringResource(R.string.close)) }
             }
@@ -411,7 +412,7 @@ private fun FullscreenPdfViewer(
                         IconButton(onClick = { pdfDarkMode = !pdfDarkMode }) {
                             Icon(
                                 imageVector = if (pdfDarkMode) Icons.Outlined.LightMode else Icons.Outlined.DarkMode,
-                                contentDescription = if (pdfDarkMode) "Switch to light" else "Switch to dark"
+                                contentDescription = if (pdfDarkMode) stringResource(R.string.switch_to_light) else stringResource(R.string.switch_to_dark)
                             )
                         }
                     }

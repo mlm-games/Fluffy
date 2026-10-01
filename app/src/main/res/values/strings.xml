@@ -117,7 +117,7 @@
         name="setting_show_thumbnails_desc"
     >Load image previews in list and grid (could cause lag for old TVs)</string>
     <string name="setting_dynamic_color">Dynamic colors</string>
-    <string name="setting_dynamic_color_desc" translatable="false">Android 12+</string>
+    <string name="setting_dynamic_color_desc">Android 12+</string>
     <string name="setting_oled_black">Pure black (OLED)</string>
     <string name="setting_zip_level">ZIP compression level</string>
     <string name="setting_zip_level_desc">0 = no compression, 9 = maximum compression</string>
@@ -227,4 +227,32 @@
     <string name="search_type_to_begin">Type to search</string>
     <string name="search_searching">Searching…</string>
     <string name="search_truncated">Showing %1$d results, stopped after %2$d folders. Narrow your search.</string>
+    <string name="done">Done</string>
+    <string name="archive">Archive</string>
+    <string name="failed_to_open_pdf">Failed to open PDF – file may be corrupted or not a PDF (err=3).</string>
+    <string name="failed_to_open">Failed to open</string>
+    <string name="failed_to_open_archive">Failed to open archive: %1$s</string>
+    <string name="playback_speed">Playback Speed</string>
+    <string name="switch_to_light">Switch to light</string>
+    <string name="switch_to_dark">Switch to dark</string>
+    <string name="image_viewer">Image Viewer</string>
+    <string name="file_too_large_preview">File too large to preview</string>
+    <string name="unknown_error">Unknown error</string>
+    <string name="error_folder_not_archive">This appears to be a folder, not an archive.</string>
+    <string name="error_archive_password">This archive is password protected.</string>
+    <string name="error_archive_format">Archive format not supported.</string>
+    <string name="error_selected_is_folder">Selected item is a folder.</string>
+    <string name="volume">Volume</string>
+    <string name="image">Image</string>
+    <string name="item_count_one">1 item</string>
+    <string name="item_count_many">%1$d items</string>
+    <string name="speed_normal">Normal</string>
+    <string name="no_app_available">No app available to open this file</string>
+    <string name="fileprovider_error">FileProvider not configured for this path</string>
+    <string name="cannot_launch_installer">Cannot launch installer</string>
+    <string name="no_installer_found">No installer found</string>
+    <string name="cta_banner">F-Droid is under threat. Google is changing the way you install apps on your phone. We need your help.</string>
+    <string name="moving_files">Moving files</string>
+    <string name="copying_files">Copying files</string>
+    <string name="untitled">Untitled</string>
 </resources>

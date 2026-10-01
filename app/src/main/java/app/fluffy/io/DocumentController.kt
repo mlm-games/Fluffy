@@ -3,6 +3,7 @@ package app.fluffy.io
 import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
+import app.fluffy.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
@@ -49,10 +50,10 @@ object DocumentController : KoinComponent {
                             if (it.moveToFirst()) it.getLong(0) else -1L
                         } ?: -1L
                     }.getOrDefault(-1L)
-                    if (size > maxSize) throw IOException("File too large")
+                    if (size > maxSize) throw IOException(context.getString(R.string.file_too_large_preview))
                     context.contentResolver.openInputStream(uri)?.use { input ->
                         val bytes = readCapped(input, maxSize)
-                        val name = queryName(context, uri) ?: "Untitled"
+                        val name = queryName(context, uri) ?: context.getString(R.string.untitled)
                         val readOnly = isContentReadOnly(context, uri)
                         DocInfo(name, bytes, readOnly)
                     } ?: throw IOException("Stream null")

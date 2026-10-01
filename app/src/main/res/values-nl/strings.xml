@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="about_fluffy">Over en FAQ\\\\\\\\\\\\\\\'s</string>
+    <string name="about_fluffy">Over en FAQ\'s</string>
     <string name="screen_time">Schermtijd</string>
     <string name="learn_more">Meer informatie</string>
     <string name="cannot_access">Geen toegang tot %s: %s</string>
@@ -107,7 +107,7 @@
     <string name="setting_view_mode">Weergavemodus</string>
     <string name="setting_view_mode_desc">Standaardindeling voor bestandslijsten</string>
     <string name="setting_show_thumbnails">Miniaturen tonen</string>
-    <string name="setting_show_thumbnails_desc">Afbeeldingsvoorbeelden laden in lijst en raster (kan oude tv\\\'s vertragen)</string>
+    <string name="setting_show_thumbnails_desc">Afbeeldingsvoorbeelden laden in lijst en raster (kan oude tv\'s vertragen)</string>
     <string name="setting_dynamic_color">Dynamische kleuren</string>
     <string name="setting_dynamic_color_desc">Android 12+</string>
     <string name="setting_oled_black">Puur zwart (OLED)</string>
@@ -120,7 +120,7 @@
     <string name="setting_extract_into_subfolder">Uitpakken naar submap</string>
     <string name="setting_extract_into_subfolder_desc">Bij het uitpakken een map met de naam van het archief maken</string>
     <string name="setting_prefer_cr_mime">MIME van ContentResolver verkiezen</string>
-    <string name="setting_prefer_cr_mime_desc">Type op basis van het bestand in plaats van de extensie bepalen, voor \\\"Openen met\\\" en voorbeelden</string>
+    <string name="setting_prefer_cr_mime_desc">Type op basis van het bestand in plaats van de extensie bepalen, voor \"Openen met\" en voorbeelden</string>
     <string name="setting_prefer_builtin_viewers">Ingebouwde viewers verkiezen</string>
     <string name="setting_prefer_builtin_viewers_desc">Afbeeldingen, audio/video, pdf en tekst in Fluffy openen in plaats van het systeemvenster.</string>
     <string name="setting_warn_shell_writes">Waarschuwen voor schrijfacties met verhoogde rechten</string>
@@ -199,4 +199,41 @@
     <string name="unsaved_changes">Niet-opgeslagen wijzigingen</string>
     <string name="unsaved_changes_confirm">U hebt niet-opgeslagen wijzigingen. Wilt u deze verwerpen?</string>
     <string name="selected_count">%1$d geselecteerd</string>
+    <string name="search">Zoeken</string>
+    <string name="search_filter_hint">Deze map filteren</string>
+    <string name="search_no_matches">Geen overeenkomsten</string>
+    <string name="search_match_count">%1$d van %2$d</string>
+    <string name="search_recursive">Zoeken in alle mappen</string>
+    <string name="search_recursive_hint">Zoeken in %1$s</string>
+    <string name="search_type_to_begin">Typ om te zoeken</string>
+    <string name="search_searching">Zoeken…</string>
+    <string name="search_truncated">%1$d resultaten weergegeven, gestopt na %2$d mappen. Verfijn je zoekopdracht.</string>
+    <string name="done">Klaar</string>
+    <string name="archive">Archief</string>
+    <string name="failed_to_open_pdf">Kan PDF niet openen – het bestand is mogelijk beschadigd of geen PDF (err=3).</string>
+    <string name="failed_to_open">Kon niet worden geopend</string>
+    <string name="failed_to_open_archive">Kan archief niet openen: %1$s</string>
+    <string name="playback_speed">Afspeelsnelheid</string>
+    <string name="switch_to_light">Overschakelen naar licht</string>
+    <string name="switch_to_dark">Overschakelen naar donker</string>
+    <string name="image_viewer">Afbeeldingsviewer</string>
+    <string name="file_too_large_preview">Bestand te groot om te tonen</string>
+    <string name="unknown_error">Onbekende fout</string>
+    <string name="error_folder_not_archive">Dit lijkt een map, geen archief.</string>
+    <string name="error_archive_password">Dit archief is beveiligd met een wachtwoord.</string>
+    <string name="error_archive_format">Archiefformaat wordt niet ondersteund.</string>
+    <string name="error_selected_is_folder">Geselecteerd item is een map.</string>
+    <string name="volume">Volume</string>
+    <string name="image">Afbeelding</string>
+    <string name="item_count_one">1 item</string>
+    <string name="item_count_many">%1$d items</string>
+    <string name="speed_normal">Normaal</string>
+    <string name="no_app_available">Geen app beschikbaar om dit bestand te openen</string>
+    <string name="fileprovider_error">FileProvider is niet geconfigureerd voor dit pad</string>
+    <string name="cannot_launch_installer">Installer kan niet worden gestart</string>
+    <string name="no_installer_found">Geen installer gevonden</string>
+    <string name="cta_banner">F-Droid wordt bedreigd. Google verandert de manier waarop u apps op uw telefoon installeert. Wij hebben uw hulp nodig.</string>
+    <string name="moving_files">Bestanden verplaatsen</string>
+    <string name="copying_files">Bestanden kopiëren</string>
+    <string name="untitled">Naamloos</string>
 </resources>

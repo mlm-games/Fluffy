@@ -71,6 +71,8 @@ class TextViewerActivity : ComponentActivity(), KoinComponent {
 @Composable
 private fun TextViewerScreen(uri: Uri, title: String, io: SafIo, onClose: () -> Unit) {
     BackHandler { onClose() }
+    val msgTooLarge = stringResource(R.string.file_too_large_preview)
+    val msgFailedOpen = stringResource(R.string.failed_to_open)
     var content by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
 
@@ -88,16 +90,16 @@ private fun TextViewerScreen(uri: Uri, title: String, io: SafIo, onClose: () -> 
                         val n = input.read(buf)
                         if (n == -1) break
                         total += n
-                        if (total > max + 1L) throw IllegalStateException("File too large to preview")
+                        if (total > max + 1L) throw IllegalStateException(msgTooLarge)
                         out.write(buf, 0, n)
                     }
-                    if (total > max) throw IllegalStateException("File too large to preview")
+                    if (total > max) throw IllegalStateException(msgTooLarge)
                     val bytes = out.toByteArray()
                     val charset = sniffCharset(bytes) ?: Charsets.UTF_8
                     String(bytes, charset)
                 }
             }
-        }.onSuccess { content = it }.onFailure { error = it.message ?: "Failed to open" }
+        }.onSuccess { content = it }.onFailure { error = it.message ?: msgFailedOpen }
     }
 
     Scaffold(
@@ -110,7 +112,7 @@ private fun TextViewerScreen(uri: Uri, title: String, io: SafIo, onClose: () -> 
     ) { pv ->
         when {
             error != null -> Box(Modifier.fillMaxSize().padding(pv), contentAlignment = Alignment.Center) {
-                Text(error ?: "Error", color = MaterialTheme.colorScheme.error)
+                Text(error ?: stringResource(R.string.unknown_error), color = MaterialTheme.colorScheme.error)
             }
             content == null -> Box(Modifier.fillMaxSize().padding(pv), contentAlignment = Alignment.Center) {
                 CircularWavyProgressIndicator()

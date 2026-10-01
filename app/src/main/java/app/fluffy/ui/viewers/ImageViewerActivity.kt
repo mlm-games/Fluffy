@@ -425,10 +425,10 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
     private fun deriveTitle(uris: List<Uri>, currentIndex: Int): String {
         return if (uris.size > 1) {
             val currentUri = uris.getOrNull(currentIndex)
-            val name = currentUri?.lastPathSegment?.substringAfterLast('/') ?: "Image"
+            val name = currentUri?.lastPathSegment?.substringAfterLast('/') ?: getString(R.string.image)
             "$name (${currentIndex + 1}/${uris.size})"
         } else {
-            uris.firstOrNull()?.lastPathSegment?.substringAfterLast('/') ?: "Image Viewer"
+            uris.firstOrNull()?.lastPathSegment?.substringAfterLast('/') ?: getString(R.string.image_viewer)
         }
     }
 }

@@ -12,6 +12,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import app.fluffy.R
 import app.fluffy.io.SafIo
 import app.fluffy.util.AppLog
 import kotlinx.coroutines.Dispatchers
@@ -26,7 +27,7 @@ class FileOpsWorker(appContext: Context, params: WorkerParameters) :
 
     override suspend fun getForegroundInfo(): ForegroundInfo {
         val op = inputData.getString(KEY_OP) ?: OP_COPY
-        val title = if (op == OP_MOVE) "Moving files" else "Copying files"
+        val title = applicationContext.getString(if (op == OP_MOVE) R.string.moving_files else R.string.copying_files)
         return createForeground(title)
     }
 

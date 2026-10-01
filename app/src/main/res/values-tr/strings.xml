@@ -6,7 +6,7 @@
     <string name="cannot_access">%s erişilemiyor: %s</string>
     <string name="shizuku_not_running">Shizuku çalışmıyor</string>
     <string name="root_access_not_available">Root erişimi kullanılamıyor</string>
-    <string name="enable_root_or_shizuku">Ayarlardan Root veya Shizuku\\\\\\\\\\\\\\\'yu etkinleştirin</string>
+    <string name="enable_root_or_shizuku">Ayarlardan Root veya Shizuku\'yu etkinleştirin</string>
     <string name="internal_storage">Dahili depolama</string>
     <string name="external_storage">Harici depolama</string>
     <string name="path_does_not_exist">Yol mevcut değil</string>
@@ -65,7 +65,7 @@
     <string name="this_folder_is_empty_or_inaccessible">Bu klasör boş veya erişilemiyor.</string>
     <string name="go_up">Yukarı</string>
     <string name="open_quick_access">Hızlı erişimi aç</string>
-    <string name="accessibility_service_description">Çift dokunuşla kilitlemeyi etkinleştirmek için erişilebilirlik izni gerekir. Fluffy\\\\\\\\\\\\\\\'nin bu hizmet üzerinden topladığı hiçbir veri cihazınızdan çıkmaz.</string>
+    <string name="accessibility_service_description">Çift dokunuşla kilitlemeyi etkinleştirmek için erişilebilirlik izni gerekir. Fluffy\'nin bu hizmet üzerinden topladığı hiçbir veri cihazınızdan çıkmaz.</string>
     <string name="info">Bilgi</string>
     <string name="properties">Özellikler</string>
     <string name="storage_info">Depolama bilgisi</string>
@@ -115,12 +115,12 @@
     <string name="setting_zip_level_desc">0 = sıkıştırma yok, 9 = en yüksek sıkıştırma</string>
     <string name="setting_enable_root">Root erişimini etkinleştir</string>
     <string name="setting_enable_root_desc">Sistem klasörlerine root kabuğuyla göz at ve yaz</string>
-    <string name="setting_enable_shizuku">Shizuku\\\'yu etkinleştir</string>
+    <string name="setting_enable_shizuku">Shizuku\'yu etkinleştir</string>
     <string name="setting_enable_shizuku_desc">Kabuk komutları ve APK kurulumu için Shizuku kullan</string>
     <string name="setting_extract_into_subfolder">Alt klasöre çıkar</string>
     <string name="setting_extract_into_subfolder_desc">Çıkarırken arşivle aynı adı taşıyan bir klasör oluştur</string>
     <string name="setting_prefer_cr_mime">ContentReader MIME türünü tercih et</string>
-    <string name="setting_prefer_cr_mime_desc">\\\"Şununla aç\\\" ve önizlemeler için türü uzantıdan değil dosyadan belirle</string>
+    <string name="setting_prefer_cr_mime_desc">\"Şununla aç\" ve önizlemeler için türü uzantıdan değil dosyadan belirle</string>
     <string name="setting_prefer_builtin_viewers">Yerleşik görüntüleyicileri tercih et</string>
     <string name="setting_prefer_builtin_viewers_desc">Resimleri, ses/video, PDF ve metni sistem iletişim kutusu yerine Fluffy içinde aç.</string>
     <string name="setting_warn_shell_writes">Yükseltilmiş yazma işlemlerinden önce uyar</string>
@@ -199,4 +199,41 @@
     <string name="unsaved_changes">Kaydedilmemiş değişiklikler</string>
     <string name="unsaved_changes_confirm">Kaydedilmemiş değişikliklerin var. Bunları yoksayılsın mı?</string>
     <string name="selected_count">%1$d seçildi</string>
+    <string name="search">Ara</string>
+    <string name="search_filter_hint">Bu klasörü filtrele</string>
+    <string name="search_no_matches">Eşleşme yok</string>
+    <string name="search_match_count">%1$d / %2$d</string>
+    <string name="search_recursive">Tüm klasörlerde ara</string>
+    <string name="search_recursive_hint">%1$s içinde ara</string>
+    <string name="search_type_to_begin">Aramak için yaz</string>
+    <string name="search_searching">Aranıyor…</string>
+    <string name="search_truncated">%1$d sonuç gösterildi, %2$d klasörden sonra durduruldu. Aramanızı daraltın.</string>
+    <string name="done">Bitti</string>
+    <string name="archive">Arşiv</string>
+    <string name="failed_to_open_pdf">PDF açılamadı – dosya bozulmuş veya PDF değil olabilir (err=3).</string>
+    <string name="failed_to_open">Açılamadı</string>
+    <string name="failed_to_open_archive">Arşiv açılamadı: %1$s</string>
+    <string name="playback_speed">Oynatma hızı</string>
+    <string name="switch_to_light">Açık temaya geç</string>
+    <string name="switch_to_dark">Koyu temaya geç</string>
+    <string name="image_viewer">Görüntüleyici</string>
+    <string name="file_too_large_preview">Dosya önizleme için çok büyük</string>
+    <string name="unknown_error">Bilinmeyen hata</string>
+    <string name="error_folder_not_archive">Bu bir klasör gibi görünüyor, arşiv değil.</string>
+    <string name="error_archive_password">Bu arşiv parola ile korumalı.</string>
+    <string name="error_archive_format">Arşiv biçimi desteklenmiyor</string>
+    <string name="error_selected_is_folder">Seçili öge bir klasör.</string>
+    <string name="volume">Ses</string>
+    <string name="image">Görüntü</string>
+    <string name="item_count_one">Öğe</string>
+    <string name="item_count_many">%1$d öğe</string>
+    <string name="speed_normal">Normal</string>
+    <string name="no_app_available">Bu dosyayı açmak için kullanılabilir uygulama yok</string>
+    <string name="fileprovider_error">FileProvider bu yol için yapılandırılmamış</string>
+    <string name="cannot_launch_installer">Yükleyici başlatılamıyor</string>
+    <string name="no_installer_found">Yükleyici bulunamadı</string>
+    <string name="cta_banner">F-Droid tehdit altında. Google, telefonunuza uygulama yükleme şeklinizi değiştiriyor. Yardımınıza ihtiyacımız var.</string>
+    <string name="moving_files">Dosyalar taşınıyor</string>
+    <string name="copying_files">Dosyalar kopyalanıyor</string>
+    <string name="untitled">Adsız</string>
 </resources>

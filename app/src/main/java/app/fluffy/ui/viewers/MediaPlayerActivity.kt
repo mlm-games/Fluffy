@@ -408,7 +408,7 @@ private fun PlaybackSpeedDialog(
 
     FluffyDialog(
         onDismissRequest = onDismiss,
-        title = "Playback Speed",
+        title = stringResource(R.string.playback_speed),
         confirmButton = {
             TextButton(onClick = { onSelect(selected); onDismiss() }) {
                 Text(stringResource(R.string.apply))
@@ -439,7 +439,7 @@ private fun PlaybackSpeedDialog(
                     )
                     Spacer(Modifier.width(12.dp))
                     Text(
-                        text = if (speed == 1f) "Normal" else "${speed}x",
+                        text = if (speed == 1f) stringResource(R.string.speed_normal) else "${speed}x",
                         style = MaterialTheme.typography.bodyLarge
                     )
                 }
@@ -458,7 +458,7 @@ private fun VolumeDialog(
 
     FluffyDialog(
         onDismissRequest = onDismiss,
-        title = "Volume",
+        title = stringResource(R.string.volume),
         confirmButton = {
             TextButton(onClick = { onVolumeChange(volume); onDismiss() }) {
                 Text(stringResource(R.string.apply))

@@ -360,8 +360,8 @@ fun FileBrowserScreen(
             Column {
                 if (showCtaBanner) {
                     AlertBanner(
-                        text = "F-Droid is under threat. Google is changing the way you install apps on your phone. We need your help.",
-                        linkText = "Learn more",
+                        text = stringResource(R.string.cta_banner),
+                        linkText = stringResource(R.string.learn_more),
                         url = "https://keepandroidopen.org",
                         onDismiss = {
                             showCtaBanner = false
@@ -464,7 +464,13 @@ fun FileBrowserScreen(
                             ) {
                                 if (currentLocation !is BrowseLocation.QuickAccess && totalItems > 0 && !pickFolderMode) {
                                     DropdownMenuItem(
-                                        text = { Text(if (allSelected) "Deselect All" else "Select All") },
+                                        text = {
+                                            Text(
+                                                stringResource(
+                                                    if (allSelected) R.string.deselect_all else R.string.select_all
+                                                )
+                                            )
+                                        },
                                         leadingIcon = { Icon(Icons.Default.Checklist, null) },
                                         onClick = {
                                             overflowMenuExpanded = false
@@ -1196,7 +1202,7 @@ fun FileBrowserScreen(
     // Overwrite confirmation (ZIP / 7z)
     if (showOverwriteConfirm) {
         ConfirmationDialog(
-            title = "Overwrite file?",
+            title = stringResource(R.string.overwrite_file),
             message = overwriteMessage,
             onConfirm = {
                 showOverwriteConfirm = false
@@ -1308,7 +1314,7 @@ private fun QuickAccessView(
                     )
                     if (hasBookmarks) {
                         TextButton(onClick = { isEditMode = !isEditMode }) {
-                            Text(if (isEditMode) "Done" else "Edit")
+                            Text(stringResource(if (isEditMode) R.string.done else R.string.edit))
                         }
                     }
                 }
@@ -1859,7 +1865,7 @@ private fun BookmarkCard(
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                text = if (isEditMode) "Tap to remove" else bookmark.name,
+                text = if (isEditMode) stringResource(R.string.tap_to_remove) else bookmark.name,
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,

@@ -97,6 +97,17 @@ fun ArchiveViewerScreen(
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    val msgNoAppAvailable = stringResource(R.string.no_app_available)
+    val msgSelectedIsFolder = stringResource(R.string.error_selected_is_folder)
+    val msgUnknownError = stringResource(R.string.unknown_error)
+    val msgFolderNotArchive = stringResource(R.string.error_folder_not_archive)
+    val msgArchivePassword = stringResource(R.string.error_archive_password)
+    val msgArchiveFormat = stringResource(R.string.error_archive_format)
+    val fmtFailedArchive = stringResource(R.string.failed_to_open_archive)
+    val msgFileProvider = stringResource(R.string.fileprovider_error)
+    val msgCannotLaunch = stringResource(R.string.cannot_launch_installer)
+    val msgNoInstaller = stringResource(R.string.no_installer_found)
+
     val io = koinInject<SafIo>()
     val archive = koinInject<ArchiveEngine>()
     val settingsRepo = koinInject<SettingsRepository>()
@@ -189,7 +200,7 @@ fun ArchiveViewerScreen(
             }
         } else uri
         if (finalUri == null) {
-            snackBarManager.show("No app available to open this file")
+            snackBarManager.show(msgNoAppAvailable)
             return
         }
         runCatching {
@@ -226,7 +237,7 @@ fun ArchiveViewerScreen(
 
         if (doc?.isDirectory == true && mimeType.startsWith("vnd.android.document") ) {
             loading = false
-            error = "Selected item is a folder."
+            error = msgSelectedIsFolder
             canOpenAsFolder = true
             listing = emptyList()
             return
@@ -295,22 +306,22 @@ fun ArchiveViewerScreen(
                 }
             }
 
-            val msg = ex.localizedMessage ?: "Unknown error"
+            val msg = ex.localizedMessage ?: msgUnknownError
             error = when {
                 msg.contains("EISDIR", ignoreCase = true) ||
                         msg.contains("is a directory", ignoreCase = true) -> {
                     canOpenAsFolder = true
-                    "This appears to be a folder, not an archive."
+                    msgFolderNotArchive
                 }
                 msg.contains("password", ignoreCase = true) ||
                         msg.contains("Wrong Password", ignoreCase = true) -> {
                     askPassword = true
-                    "This archive is password protected."
+                    msgArchivePassword
                 }
                 msg.contains("not supported", ignoreCase = true) -> {
-                    "Archive format not supported."
+                    msgArchiveFormat
                 }
-                else -> "Failed to open archive: $msg"
+                else -> fmtFailedArchive.format(msg)
             }
         }
 
@@ -323,7 +334,7 @@ fun ArchiveViewerScreen(
     Scaffold(
         topBar = {
             AppTopBar(
-                title = { Text(title.ifBlank { "Archive" }) },
+                title = { Text(title.ifBlank { stringResource(R.string.archive) }) },
                 navigationIcon = {
                     val canGoUp = currentPath.isNotBlank()
                     IconButton(onClick = {
@@ -366,7 +377,7 @@ fun ArchiveViewerScreen(
                                         )
                                     } catch (e: Exception) {
                                         AppLog.w("ArchiveViewer", "install FileProvider failed: $archiveUri", e)
-                                        snackBarManager.show("FileProvider not configured for this path")
+                                        snackBarManager.show(msgFileProvider)
                                         return@IconButton
                                     }
                                     else -> archiveUri
@@ -381,10 +392,10 @@ fun ArchiveViewerScreen(
                                 val pm = ctx.packageManager
                                 if (intent.resolveActivity(pm) != null) {
                                     runCatching { ctx.startActivity(intent) }.onFailure {
-                                        snackBarManager.show("Cannot launch installer")
+                                        snackBarManager.show(msgCannotLaunch)
                                     }
                                 } else {
-                                    snackBarManager.show("No installer found")
+                                    snackBarManager.show(msgNoInstaller)
                                 }
                             }) {
                                 Icon(Icons.Default.InstallDesktop, contentDescription = stringResource(R.string.install_open_with))
@@ -511,8 +522,9 @@ fun ArchiveViewerScreen(
                                     ListItem(
                                         headlineContent = { Text(e.path.trimEnd('/')) },
                                         supportingContent = {
+                                            val kind = stringResource(if (e.isDir) R.string.folder else R.string.file)
                                             val meta = buildString {
-                                                append(if (e.isDir) "Folder" else "File")
+                                                append(kind)
                                                 if (!e.isDir && e.size > 0) {
                                                     append(" • ${formatSize(e.size)}")
                                                 }
