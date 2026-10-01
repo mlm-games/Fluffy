@@ -1,5 +1,6 @@
 package app.fluffy.ui.viewers
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -30,6 +31,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import app.fluffy.R
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
@@ -41,6 +43,10 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class TextEditorActivity : ComponentActivity(), KoinComponent {
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(ContextCompat.getContextForLanguage(newBase))
+    }
+
     private val io: SafIo by inject()
     private val settings: SettingsRepository by inject()
 

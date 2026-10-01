@@ -8,10 +8,10 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.DocumentsContract
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -61,6 +61,7 @@ import androidx.work.WorkInfo
 import app.fluffy.R
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
+import app.fluffy.data.repository.applyAppLocale
 import app.fluffy.io.SafIo
 import app.fluffy.platform.StorageAccessPolicy
 import app.fluffy.helper.OpenTarget
@@ -103,7 +104,7 @@ import org.koin.compose.koinInject
 import java.io.File
 import java.util.UUID
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
 
     // Picker mode (GET_CONTENT / OPEN_DOCUMENT / OPEN_DOCUMENT_TREE / CREATE_DOCUMENT)
     private var isPickerMode = false
@@ -257,6 +258,12 @@ class MainActivity : ComponentActivity() {
         pickTargetDir = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
             val target = uri ?: return@registerForActivityResult
             handleTargetDirPicked(target)
+        }
+
+        lifecycleScope.launch {
+            settingsRepository.settingsFlow.collect { settings ->
+                applyAppLocale(settings.language.languageTag)
+            }
         }
 
         setContent {

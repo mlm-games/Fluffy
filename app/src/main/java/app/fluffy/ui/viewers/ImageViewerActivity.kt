@@ -1,6 +1,7 @@
 package app.fluffy.ui.viewers
 
 import android.content.ContentUris
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -46,6 +47,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.res.stringResource
+import androidx.core.content.ContextCompat
 import app.fluffy.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -81,6 +83,10 @@ import org.koin.core.component.inject
 import java.io.File
 
 class ImageViewerActivity : ComponentActivity(), KoinComponent {
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(ContextCompat.getContextForLanguage(newBase))
+    }
+
     private val settings: SettingsRepository by inject()
     private val shellIo: ShellIo by inject()
 

@@ -80,6 +80,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import app.fluffy.R
 import app.fluffy.data.repository.AppSettings
@@ -98,6 +99,10 @@ import java.io.File
 import java.io.FileOutputStream
 
 class PdfViewerActivity : ComponentActivity(), KoinComponent {
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(ContextCompat.getContextForLanguage(newBase))
+    }
+
     private val settings: SettingsRepository by inject()
     companion object {
         const val EXTRA_URI = "uri"

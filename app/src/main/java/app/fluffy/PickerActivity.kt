@@ -1,6 +1,7 @@
 package app.fluffy
 
 import android.content.ClipData
+import android.content.Context
 import android.content.Intent
 import android.annotation.SuppressLint
 import android.net.Uri
@@ -16,6 +17,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.ViewModelProvider
 import app.fluffy.data.repository.AppSettings
@@ -37,6 +39,10 @@ import org.koin.android.ext.android.inject
 import java.io.File
 
 class PickerActivity : ComponentActivity() {
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(ContextCompat.getContextForLanguage(newBase))
+    }
 
     private lateinit var filesVM: FileBrowserViewModel
 

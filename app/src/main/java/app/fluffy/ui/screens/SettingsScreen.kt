@@ -157,8 +157,9 @@ fun SettingsScreen(vm: SettingsViewModel) {
                             }
 
                             Dropdown::class -> {
-                                val idx = (field.get(settings) as? Int) ?: 0
-                                val options = meta.resolvedOptions(stringProvider)
+                                val idx = field.toUiDropdownIndex(settings)
+                                    ?: (field.get(settings) as? Int) ?: 0
+                                val options = meta.dropdownLabels(field, stringProvider)
                                 SettingsItem(
                                     title = meta.resolvedTitle(stringProvider),
                                     subtitle = options.getOrNull(idx) ?: stringResource(R.string.unknown),
@@ -207,14 +208,20 @@ fun SettingsScreen(vm: SettingsViewModel) {
         val field = currentField
         val meta = field?.meta
         if (field != null && meta != null) {
-            val idx = (field.get(settings) as? Int) ?: 0
+            val idx = field.toUiDropdownIndex(settings)
+                ?: (field.get(settings) as? Int) ?: 0
             DropdownSettingDialog(
                 title = meta.resolvedTitle(stringProvider),
-                options = meta.resolvedOptions(stringProvider),
+                options = meta.dropdownLabels(field, stringProvider),
                 selectedIndex = idx,
                 onDismiss = { showDropdown = false },
                 onOptionSelected = { i ->
-                    vm.updateSetting(field.name, i)
+                    val current = field.get(settings)
+                    if (current is Int) {
+                        vm.updateSetting(field.name, i)
+                    } else {
+                        field.fromUiDropdownIndex(i)?.let { vm.updateSetting(field.name, it) }
+                    }
                     showDropdown = false
                 }
             )
