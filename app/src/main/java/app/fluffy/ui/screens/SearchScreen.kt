@@ -127,7 +127,7 @@ fun SearchScreen(
         }
 
         if (state.hits.isEmpty()) {
-            Box(Modifier.weight(1f), contentAlignment = Alignment.Center) {
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
