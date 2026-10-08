@@ -1,3 +1,9 @@
+## v4.5.1
+
+- folder search screen ui fixes
+- fix: empty search results placeholder centering
+
+
 ## v4.5.0
 
 - Move few topbar icons to the overflow dropdown

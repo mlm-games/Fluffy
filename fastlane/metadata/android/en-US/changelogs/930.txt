@@ -1,0 +1,2 @@
+- folder search screen ui fixes
+- fix: empty search results placeholder centering
