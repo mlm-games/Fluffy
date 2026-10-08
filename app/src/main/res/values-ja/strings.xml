@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">%1$s を検索</string>
     <string name="search_type_to_begin">検索するには入力してください</string>
     <string name="search_searching">検索中…</string>
+    <string name="search_stopped">検索を停止しました</string>
     <string name="done">完了</string>
     <string name="archive">アーカイブ</string>
     <string name="failed_to_open_pdf">PDFを開けませんでした – ファイルが破損しているかPDFではない可能があります (err=3)。</string>

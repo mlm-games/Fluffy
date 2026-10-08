@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">جستجو در %1$s</string>
     <string name="search_type_to_begin">برای جستجو تایپ کنید</string>
     <string name="search_searching">در حال جستجو…</string>
+    <string name="search_stopped">جستجو متوقف شد</string>
     <string name="done">انجم</string>
     <string name="archive">بایگانی</string>
     <string name="failed_to_open_pdf">باز کردن PDF ممکن نیست – پرونده شاید خراب است یا PDF نیست (err=3).</string>

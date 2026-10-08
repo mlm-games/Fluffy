@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">Tìm trong %1$s</string>
     <string name="search_type_to_begin">Gõ để tìm kiếm</string>
     <string name="search_searching">Đang tìm…</string>
+    <string name="search_stopped">Đã dừng tìm kiếm</string>
     <string name="done">Xong</string>
     <string name="archive">Tầp nén</string>
     <string name="failed_to_open_pdf">Không thể mở PDF – tệp có thể bị học không phải là PDF (err=3).</string>

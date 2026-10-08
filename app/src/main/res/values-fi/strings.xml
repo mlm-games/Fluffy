@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">Hae sijainnissa %1$s</string>
     <string name="search_type_to_begin">Kirjoita hakeaksesi</string>
     <string name="search_searching">Haetaan…</string>
+    <string name="search_stopped">Haku pysäytetty</string>
     <string name="done">Valmis</string>
     <string name="archive">Arkisto</string>
     <string name="failed_to_open_pdf">PDF:ia ei voitu avata – tiedosto on ehkä vioittunut tai ei ole PDF (err=3).</string>

@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">Zoeken in %1$s</string>
     <string name="search_type_to_begin">Typ om te zoeken</string>
     <string name="search_searching">Zoeken…</string>
+    <string name="search_stopped">Zoeken gestopt</string>
     <string name="done">Klaar</string>
     <string name="archive">Archief</string>
     <string name="failed_to_open_pdf">Kan PDF niet openen – het bestand is mogelijk beschadigd of geen PDF (err=3).</string>

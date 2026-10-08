@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">%1$s içinde ara</string>
     <string name="search_type_to_begin">Aramak için yaz</string>
     <string name="search_searching">Aranıyor…</string>
+    <string name="search_stopped">Arama durduruldu</string>
     <string name="done">Bitti</string>
     <string name="archive">Arşiv</string>
     <string name="failed_to_open_pdf">PDF açılamadı – dosya bozulmuş veya PDF değil olabilir (err=3).</string>

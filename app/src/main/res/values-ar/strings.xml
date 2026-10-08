@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">البحث في %1$s</string>
     <string name="search_type_to_begin">اكتب للبحث</string>
     <string name="search_searching">جارٍ البحث…</string>
+    <string name="search_stopped">تم إيقاف البحث</string>
     <string name="done">تم</string>
     <string name="archive">أرشيف</string>
     <string name="failed_to_open_pdf">تعذّر فتح ملف PDF – قد يكون الملف تالفًا أو ليس بصيغة PDF (err=3).</string>

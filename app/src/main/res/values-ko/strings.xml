@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">%1$s 검색</string>
     <string name="search_type_to_begin">검색할 내용 입력</string>
     <string name="search_searching">검색 중…</string>
+    <string name="search_stopped">검색 중지됨</string>
     <string name="done">완료</string>
     <string name="archive">압축 파일</string>
     <string name="failed_to_open_pdf">PDF를 열 수 없습니다 – 파일이 손상되었거나 PDF가 아니면 아시러운다 (err=3).</string>

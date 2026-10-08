@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">Αναζήτηση σε %1$s</string>
     <string name="search_type_to_begin">Πληκτρολογήστε για αναζήτηση</string>
     <string name="search_searching">Γίνεται αναζήτηση…</string>
+    <string name="search_stopped">Η αναζήτηση σταματήθηκε</string>
     <string name="done">Τέλος</string>
     <string name="archive">Αρχείο</string>
     <string name="failed_to_open_pdf">Αδυναμία ανοίγματος PDF – το αρχείο μπορεί να είναι κατεστραμμένο ή να μην είναι PDF (err=3).</string>

@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">Hledat v %1$s</string>
     <string name="search_type_to_begin">Zadejte hledaný text</string>
     <string name="search_searching">Hledání…</string>
+    <string name="search_stopped">Hledání zastaveno</string>
     <string name="done">Hotovo</string>
     <string name="archive">Archiv</string>
     <string name="failed_to_open_pdf">Soubor PDF se nepodařilo otevřít – soubor může být poškozený nebo není PDF (err=3).</string>

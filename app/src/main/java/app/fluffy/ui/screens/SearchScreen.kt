@@ -14,9 +14,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -32,7 +34,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.pluralStringResource
@@ -56,11 +57,15 @@ fun SearchScreen(
     val state by viewModel.state.collectAsState()
     val keyboard = LocalSoftwareKeyboardController.current
     val fieldFocus = remember { FocusRequester() }
-    val backFocus = remember { FocusRequester() }
 
     LaunchedEffect(Unit) {
         runCatching { fieldFocus.requestFocus() }
         keyboard?.show()
+    }
+
+    val openResult: (SearchHit) -> Unit = { hit ->
+        viewModel.clear()
+        onOpenResult(hit)
     }
 
     Column(Modifier.fillMaxSize()) {
@@ -91,27 +96,23 @@ fun SearchScreen(
                     modifier = Modifier
                         .weight(1f)
                         .focusRequester(fieldFocus)
-                        .focusProperties {
-                            right = backFocus
-                            down = backFocus
-                        }
                 )
-                if (state.isSearching) {
-                    IconButton(onClick = viewModel::cancel) {
-                        Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
+                if (state.hasQuery) {
+                    IconButton(onClick = viewModel::cancel, enabled = state.isSearching) {
+                        Icon(Icons.Filled.Stop, contentDescription = stringResource(R.string.cancel))
                     }
                 }
                 IconButton(
                     onClick = {
                         keyboard?.hide()
-                        viewModel.cancel()
+                        viewModel.clear()
                         onBack()
-                    },
-                    modifier = Modifier
-                        .focusRequester(backFocus)
-                        .focusProperties { left = fieldFocus }
+                    }
                 ) {
-                    Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back)
+                    )
                 }
             }
         }
@@ -142,6 +143,7 @@ fun SearchScreen(
                         when {
                             !state.hasQuery -> stringResource(R.string.search_type_to_begin)
                             state.isSearching -> stringResource(R.string.search_searching)
+                            state.cancelled -> stringResource(R.string.search_stopped)
                             else -> stringResource(R.string.search_no_matches)
                         },
                         style = MaterialTheme.typography.titleMedium
@@ -161,11 +163,11 @@ fun SearchScreen(
                         hasSelection = false,
                         showFileCount = false,
                         onToggleSelect = {},
-                        onOpenDir = { onOpenResult(hit) },
-                        onOpenArchive = { onOpenResult(hit) },
-                        onOpenContent = { _, _ -> onOpenResult(hit) },
-                        onOpenWith = { _, _ -> onOpenResult(hit) },
-                        onClick = { onOpenResult(hit) },
+                        onOpenDir = { openResult(hit) },
+                        onOpenArchive = { openResult(hit) },
+                        onOpenContent = { _, _ -> openResult(hit) },
+                        onOpenWith = { _, _ -> openResult(hit) },
+                        onClick = { openResult(hit) },
                         onExtractHere = null
                     )
                 }

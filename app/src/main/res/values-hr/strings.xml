@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">Pretraži u %1$s</string>
     <string name="search_type_to_begin">Upiši za pretragu</string>
     <string name="search_searching">Pretraživanje…</string>
+    <string name="search_stopped">Pretraživanje zaustavljeno</string>
     <string name="done">Gotovo</string>
     <string name="archive">Arhiva</string>
     <string name="failed_to_open_pdf">Nije moguće otvoriti PDF – datoteka je možda oštećena ili nije PDF (err=3).</string>

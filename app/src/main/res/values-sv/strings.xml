@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">Sök i %1$s</string>
     <string name="search_type_to_begin">Skriv för att söka</string>
     <string name="search_searching">Söker…</string>
+    <string name="search_stopped">Sökningen stoppad</string>
     <string name="done">Klar</string>
     <string name="archive">Arkiv</string>
     <string name="failed_to_open_pdf">Kunde inte öppna PDF-filen – filen kan vara skadad eller inte vara en PDF (err=3).</string>

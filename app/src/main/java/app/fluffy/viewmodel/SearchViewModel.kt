@@ -24,6 +24,7 @@ data class SearchState(
     val scope: Uri? = null,
     val hits: List<SearchHit> = emptyList(),
     val isSearching: Boolean = false,
+    val cancelled: Boolean = false,
     val truncated: Boolean = false,
     val visitedDirs: Int = 0
 ) {
@@ -43,7 +44,7 @@ class SearchViewModel(
 
     fun setScope(uri: Uri) {
         if (_state.value.scope == uri) return
-        _state.update { it.copy(scope = uri) }
+        _state.update { it.copy(scope = uri, hits = emptyList(), truncated = false, visitedDirs = 0) }
         if (_state.value.hasQuery) {
             debounceJob?.cancel()
             run()
@@ -53,13 +54,22 @@ class SearchViewModel(
     fun setQuery(query: String) {
         if (query.trim().isEmpty()) {
             cancel()
-            _state.update { it.copy(query = query, hits = emptyList(), truncated = false, visitedDirs = 0) }
+            _state.update {
+                it.copy(query = query, hits = emptyList(), truncated = false, visitedDirs = 0, cancelled = false)
+            }
             return
         }
         job?.cancel()
         job = null
         _state.update {
-            it.copy(query = query, isSearching = true)
+            it.copy(
+                query = query,
+                isSearching = true,
+                cancelled = false,
+                hits = emptyList(),
+                truncated = false,
+                visitedDirs = 0
+            )
         }
         debounceJob?.cancel()
         debounceJob = viewModelScope.launch {
@@ -73,7 +83,7 @@ class SearchViewModel(
         debounceJob = null
         job?.cancel()
         job = null
-        _state.update { it.copy(isSearching = false) }
+        _state.update { it.copy(isSearching = false, cancelled = it.hasQuery) }
     }
 
     fun clear() {
@@ -85,11 +95,11 @@ class SearchViewModel(
         val scope = _state.value.scope
         val query = _state.value.query
         if (scope == null || query.trim().isEmpty()) {
-            _state.update { it.copy(isSearching = false) }
+            _state.update { it.copy(isSearching = false, cancelled = it.hasQuery) }
             return
         }
         job?.cancel()
-        _state.update { it.copy(isSearching = true) }
+        _state.update { it.copy(isSearching = true, cancelled = false) }
         job = viewModelScope.launch(Dispatchers.IO) {
             val showHidden = runCatching { settingsRepository.settingsFlow.first().showHidden }
                 .getOrDefault(false)
@@ -103,11 +113,13 @@ class SearchViewModel(
             }.getOrNull()
             if (!isActive) return@launch
             _state.update { s ->
-                s.copy(
+                if (!s.isSearching || s.query != query) s
+                else s.copy(
                     hits = outcome?.hits ?: emptyList(),
                     truncated = outcome?.truncated ?: false,
                     visitedDirs = outcome?.visitedDirs ?: 0,
-                    isSearching = false
+                    isSearching = false,
+                    cancelled = outcome == null
                 )
             }
         }

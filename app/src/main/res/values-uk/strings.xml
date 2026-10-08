@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">Пошук у %1$s</string>
     <string name="search_type_to_begin">Введіть запит</string>
     <string name="search_searching">Пошук…</string>
+    <string name="search_stopped">Пошук зупинено</string>
     <string name="done">Готово</string>
     <string name="archive">Архів</string>
     <string name="failed_to_open_pdf">Не вдалося відкрити PDF – файл може бути пошкодженим або не є PDF (err=3).</string>

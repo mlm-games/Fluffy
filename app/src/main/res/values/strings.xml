@@ -225,6 +225,7 @@
     <string name="search_recursive_hint">Search in %1$s</string>
     <string name="search_type_to_begin">Type to search</string>
     <string name="search_searching">Searching…</string>
+    <string name="search_stopped">Search stopped</string>
     <string name="done">Done</string>
     <string name="archive">Archive</string>
     <string name="failed_to_open_pdf">Failed to open PDF – file may be corrupted or not a PDF (err=3).</string>

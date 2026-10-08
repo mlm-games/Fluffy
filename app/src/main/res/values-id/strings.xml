@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">Cari di %1$s</string>
     <string name="search_type_to_begin">Ketik untuk mencari</string>
     <string name="search_searching">Mencari…</string>
+    <string name="search_stopped">Pencarian dihentikan</string>
     <string name="done">Selesai</string>
     <string name="archive">Arsip</string>
     <string name="failed_to_open_pdf">Tidak dapat membuka PDF – file mungkin rusak atau bukan PDF (err=3).</string>

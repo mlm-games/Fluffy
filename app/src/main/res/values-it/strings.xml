@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">Cerca in %1$s</string>
     <string name="search_type_to_begin">Digita per cercare</string>
     <string name="search_searching">Ricerca in corso…</string>
+    <string name="search_stopped">Ricerca interrotta</string>
     <string name="done">Fine</string>
     <string name="archive">Archivio</string>
     <string name="failed_to_open_pdf">Impossibile aprire il PDF – il file potrebbe essere corrotto o non è un PDF (err=3).</string>

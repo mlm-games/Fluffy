@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">Keresés itt: %1$s</string>
     <string name="search_type_to_begin">A kereséshez írj</string>
     <string name="search_searching">Keresés…</string>
+    <string name="search_stopped">Keresés leállítva</string>
     <string name="done">Kész</string>
     <string name="archive">Archívum</string>
     <string name="failed_to_open_pdf">A PDF megnyitása nem sikerült – a fájl sérült lehet, vagy nem PDF (err=3).</string>

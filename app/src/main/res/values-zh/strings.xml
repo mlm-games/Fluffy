@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">在 %1$s 中搜索</string>
     <string name="search_type_to_begin">输入以搜索</string>
     <string name="search_searching">正在搜索…</string>
+    <string name="search_stopped">搜索已停止</string>
     <string name="done">完成</string>
     <string name="archive">压缩包</string>
     <string name="failed_to_open_pdf">无法打开 PDF – 文件可能已损坏或不是 PDF (err=3)。</string>

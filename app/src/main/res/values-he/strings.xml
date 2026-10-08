@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">חיפוש בתוך %1$s</string>
     <string name="search_type_to_begin">הקלד לחיפוש</string>
     <string name="search_searching">מחפש…</string>
+    <string name="search_stopped">החיפוש הופסק</string>
     <string name="done">בוצע</string>
     <string name="archive">ארכיון</string>
     <string name="failed_to_open_pdf">לא ניתן לפתוח את ה‑PDF – ה꜐וב יכול להיות פגום או שאינו PDF (err=3).</string>

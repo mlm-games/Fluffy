@@ -206,6 +206,7 @@
     <string name="search_recursive_hint">Szukaj w %1$s</string>
     <string name="search_type_to_begin">Wpisz, aby szukać</string>
     <string name="search_searching">Wyszukiwanie…</string>
+    <string name="search_stopped">Wyszukiwanie zatrzymane</string>
     <string name="done">Gotowe</string>
     <string name="archive">Archiwum</string>
     <string name="failed_to_open_pdf">Nie można otworzyć pliku PDF – plik może być uszkodzony lub nie jest plikiem PDF (err=3).</string>
