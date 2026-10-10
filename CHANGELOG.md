@@ -1,3 +1,9 @@
+## v4.5.2
+
+- cache management
+- comment out jetbrains toolchain resolv.
+
+
 ## v4.5.1
 
 - folder search screen ui fixes
