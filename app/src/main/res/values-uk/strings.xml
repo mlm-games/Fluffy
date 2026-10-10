@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Показувати в швидкому доступі кнопку, що відкриває відомості про сховище пристрою</string>
     <string name="setting_always_inapp_picker">Завжди показувати вибір теки в застосунку</string>
     <string name="setting_always_inapp_picker_desc">Допомагає уникнути проблем із запасними теками, а також потрібно для операцій root</string>
+    <string name="setting_clear_cache">Очистити кеш</string>
+    <string name="setting_clear_cache_desc">Перегляд вмісту архівів, відкриті документи та створені мініатюри</string>
+    <string name="cache_cleared">Кеш очищено (%1$s)</string>
     <string name="setting_theme">Тема</string>
     <string name="setting_view_mode">Режим перегляду</string>
     <string name="setting_view_mode_desc">Типовий макет списків файлів</string>

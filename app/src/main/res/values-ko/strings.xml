@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">빠른 접근에 기기 저장소 세부 정보를 여는 정보 버튼을 표시합니다</string>
     <string name="setting_always_inapp_picker">항상 앱 내 폴더 선택기 표시</string>
     <string name="setting_always_inapp_picker_desc">스텁 폴더 문제를 피하게 해 주며 root 작업에도 유용합니다</string>
+    <string name="setting_clear_cache">캐시 지우기</string>
+    <string name="setting_clear_cache_desc">압축 파일 미리보기, 열린 문서, 생성된 썸네일</string>
+    <string name="cache_cleared">캐시를 지웠습니다 (%1$s)</string>
     <string name="setting_theme">테마</string>
     <string name="setting_view_mode">보기 모드</string>
     <string name="setting_view_mode_desc">파일 목록의 기본 레이아웃</string>

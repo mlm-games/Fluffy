@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">إظهار زر معلومات في الوصول السريع يفتح تفاصيل تخزين الجهاز</string>
     <string name="setting_always_inapp_picker">إظهار منتقي المجلدات في كل مكان</string>
     <string name="setting_always_inapp_picker_desc">يساعد في تفادي مشاكل المجلدات الوهمية، ويُستخدم أيضًا لعمليات root</string>
+    <string name="setting_clear_cache">مسح الذاكرة المؤقتة</string>
+    <string name="setting_clear_cache_desc">معاينات محتويات الأرشيف والمستندات المفتوحة والصور المصغّرة المُنشأة</string>
+    <string name="cache_cleared">تم مسح الذاكرة المؤقتة (%1$s)</string>
     <string name="setting_theme">السمة</string>
     <string name="setting_view_mode">وضع العرض</string>
     <string name="setting_view_mode_desc">التخطيط الافتراضي لقوائم الملفات</string>

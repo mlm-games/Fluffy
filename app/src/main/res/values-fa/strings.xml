@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">نمایش یک دکمهٔ اطلاعات در دسترسی سریع که جزئیات ذخیره‌سازی دستگاه را باز می‌کند</string>
     <string name="setting_always_inapp_picker">نمایش انتخابگر پوشه در همه‌جا</string>
     <string name="setting_always_inapp_picker_desc">به پرهیز از مشکل پوشه‌های ناقص کمک می‌کند و برای عملیات root هم مفید است</string>
+    <string name="setting_clear_cache">پاک کردن حافظه نهان</string>
+    <string name="setting_clear_cache_desc">پیش‌نمایش محتوای آرشیوها، اسناد بازشده و بندانگشتی‌های ساخته‌شده</string>
+    <string name="cache_cleared">حافظه نهان پاک شد (%1$s)</string>
     <string name="setting_theme">پوسته</string>
     <string name="setting_view_mode">حالت نمایش</string>
     <string name="setting_view_mode_desc">چیدمان پیش‌فرض فهرست‌های فایل</string>

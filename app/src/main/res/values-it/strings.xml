@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Mostra un pulsante info in Accesso rapido che apre i dettagli di archiviazione del dispositivo</string>
     <string name="setting_always_inapp_picker">Mostra il selettore di cartelle ovunque</string>
     <string name="setting_always_inapp_picker_desc">Aiuta a evitare problemi con le cartelle stub, e vale anche per le operazioni root</string>
+    <string name="setting_clear_cache">Cancella cache</string>
+    <string name="setting_clear_cache_desc">Anteprime del contenuto degli archivi, documenti aperti e miniature generate</string>
+    <string name="cache_cleared">Cache cancellata (%1$s)</string>
     <string name="setting_theme">Tema</string>
     <string name="setting_view_mode">Modalità di visualizzazione</string>
     <string name="setting_view_mode_desc">Disposizione predefinita degli elenchi di file</string>

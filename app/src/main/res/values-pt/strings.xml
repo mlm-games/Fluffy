@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Mostrar em Acesso Rápido um botão de informação que abre os detalhes de armazenamento do dispositivo</string>
     <string name="setting_always_inapp_picker">Mostrar o seletor de pastas em todo o lado</string>
     <string name="setting_always_inapp_picker_desc">Ajuda a evitar problemas com pastas provisórias e também é útil para operações root</string>
+    <string name="setting_clear_cache">Limpar cache</string>
+    <string name="setting_clear_cache_desc">Pré-visualizações de ficheiros comprimidos, documentos abertos e miniaturas geradas</string>
+    <string name="cache_cleared">Cache limpo (%1$s)</string>
     <string name="setting_theme">Tema</string>
     <string name="setting_view_mode">Modo de visualização</string>
     <string name="setting_view_mode_desc">Disposição predefinida das listas de ficheiros</string>

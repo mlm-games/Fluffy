@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Hızlı erişimde, cihazın depolama ayrıntılarını açan bir bilgi düğmesi göster</string>
     <string name="setting_always_inapp_picker">Klasör seçiciyi her yerde göster</string>
     <string name="setting_always_inapp_picker_desc">Stub klasör sorunlarını önlemeye yardımcı olur, ayrıca root işlemleri için de kullanışlıdır</string>
+    <string name="setting_clear_cache">Önbelleği temizle</string>
+    <string name="setting_clear_cache_desc">Arşiv içeriğinin önizlemeleri, açılan belgeler ve oluşturulan küçük resimler</string>
+    <string name="cache_cleared">Önbellek temizlendi (%1$s)</string>
     <string name="setting_theme">Tema</string>
     <string name="setting_view_mode">Görünüm modu</string>
     <string name="setting_view_mode_desc">Dosya listeleri için varsayılan düzen</string>

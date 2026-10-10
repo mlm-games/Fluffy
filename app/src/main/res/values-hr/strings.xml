@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">U Brzom pristupu prikaži gumb s informacijama koji otvara pojedinosti pohrane uređaja</string>
     <string name="setting_always_inapp_picker">Svuda prikaži birač mapa</string>
     <string name="setting_always_inapp_picker_desc">Pomaže izbjeći probleme s rezervnim mapama, a korisno je i za root operacije</string>
+    <string name="setting_clear_cache">Očisti predmemoriju</string>
+    <string name="setting_clear_cache_desc">Pregledi sadržaja arhiva, otvoreni dokumenti i generirane minijature</string>
+    <string name="cache_cleared">Predmemorija očišćena (%1$s)</string>
     <string name="setting_theme">Tema</string>
     <string name="setting_view_mode">Način prikaza</string>
     <string name="setting_view_mode_desc">Zadani raspored popisa datoteka</string>

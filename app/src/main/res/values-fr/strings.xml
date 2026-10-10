@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Afficher un bouton d\'info dans l\'accès rapide qui ouvre les détails de stockage de l\'appareil</string>
     <string name="setting_always_inapp_picker">Afficher le sélecteur de dossier partout</string>
     <string name="setting_always_inapp_picker_desc">Évite les problèmes de dossier stub, et sert aussi aux opérations root</string>
+    <string name="setting_clear_cache">Vider le cache</string>
+    <string name="setting_clear_cache_desc">Aperçus du contenu des archives, documents ouverts et miniatures générées</string>
+    <string name="cache_cleared">Cache vidé (%1$s)</string>
     <string name="setting_theme">Thème</string>
     <string name="setting_view_mode">Mode d\'affichage</string>
     <string name="setting_view_mode_desc">Disposition par défaut des listes de fichiers</string>

@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">クイックアクセスに、デバイスのストレージ詳細を開く情報ボタンを表示します</string>
     <string name="setting_always_inapp_picker">アプリ内フォルダーを常に表示</string>
     <string name="setting_always_inapp_picker_desc">スタブフォルダーの問題を回避し、root 操作にも役立ちます</string>
+    <string name="setting_clear_cache">キャッシュを消去</string>
+    <string name="setting_clear_cache_desc">アーカイブ内のファイルのプレビュー、開いたドキュメント、生成されたサムネイル</string>
+    <string name="cache_cleared">キャッシュを消去しました (%1$s)</string>
     <string name="setting_theme">テーマ</string>
     <string name="setting_view_mode">表示モード</string>
     <string name="setting_view_mode_desc">ファイル一覧の既定のレイアウト</string>

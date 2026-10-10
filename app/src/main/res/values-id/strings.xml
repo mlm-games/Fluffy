@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Tampilkan tombol info di Akses Cepat yang membuka rincian penyimpanan perangkat</string>
     <string name="setting_always_inapp_picker">Tampilkan pemilih folder di semua tempat</string>
     <string name="setting_always_inapp_picker_desc">Membantu menghindari masalah folder stub, dan juga berguna untuk operasi root</string>
+    <string name="setting_clear_cache">Hapus cache</string>
+    <string name="setting_clear_cache_desc">Pratinjau isi arsip, dokumen yang dibuka, dan thumbnail yang dibuat</string>
+    <string name="cache_cleared">Cache dihapus (%1$s)</string>
     <string name="setting_theme">Tema</string>
     <string name="setting_view_mode">Mode tampilan</string>
     <string name="setting_view_mode_desc">Tata letak bawaan untuk daftar berkas</string>

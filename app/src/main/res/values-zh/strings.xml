@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">在快速访问中显示一个信息按钮，用于打开设备的存储详情</string>
     <string name="setting_always_inapp_picker">始终显示应用内文件夹选择器</string>
     <string name="setting_always_inapp_picker_desc">有助于避免占位文件夹引发的问题，对 root 操作也有用</string>
+    <string name="setting_clear_cache">清除缓存</string>
+    <string name="setting_clear_cache_desc">压缩包内容预览、已打开的文档和生成的缩略图</string>
+    <string name="cache_cleared">已清除缓存 (%1$s)</string>
     <string name="setting_theme">主题</string>
     <string name="setting_view_mode">显示模式</string>
     <string name="setting_view_mode_desc">文件列表的默认布局</string>

@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">הצגה בגישה מהירה של כפתור מידע שפותח את פרטי האחסון של המכשיר</string>
     <string name="setting_always_inapp_picker">הצגת בוחר התיקיות בכל מקום</string>
     <string name="setting_always_inapp_picker_desc">עוזר למנוע בעיות בתיקיות חלופיות, ונחוץ גם לפעולות root</string>
+    <string name="setting_clear_cache">נקה מטמון</string>
+    <string name="setting_clear_cache_desc">תצוגות מקדימות של תוכן ארכיונים, מסמכים פתוחים ותמונות ממוזערות שנוצרו</string>
+    <string name="cache_cleared">המטמון נוקה (%1$s)</string>
     <string name="setting_theme">ערכת נושא</string>
     <string name="setting_view_mode">מצב תצוגה</string>
     <string name="setting_view_mode_desc">פריסה ברירת מחדל לרשימות קבצים</string>

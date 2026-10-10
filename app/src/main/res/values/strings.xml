@@ -110,9 +110,7 @@
         name="setting_always_inapp_picker_desc"
     >Helps prevent stub issues (if not handled), and also for root ops</string>
     <string name="setting_clear_cache">Clear cache</string>
-    <string
-        name="setting_clear_cache_desc"
-    >Previewed archive entries, opened documents and generated thumbnails</string>
+    <string name="setting_clear_cache_desc">Previewed archive entries, opened documents and generated thumbnails</string>
     <string name="cache_cleared">Cache cleared (%1$s)</string>
     <string name="setting_theme">Theme</string>
     <string name="setting_view_mode">View mode</string>

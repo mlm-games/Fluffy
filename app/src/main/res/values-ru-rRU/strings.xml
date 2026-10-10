@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Показывать в быстром доступе кнопку, открывающую сведения о хранилище устройства</string>
     <string name="setting_always_inapp_picker">Всегда показывать выбор папки в приложении</string>
     <string name="setting_always_inapp_picker_desc">Помогает избежать проблем с заглушками папок, а также нужно для операций root</string>
+    <string name="setting_clear_cache">Очистить кэш</string>
+    <string name="setting_clear_cache_desc">Просмотр содержимого архивов, открытые документы и созданные миниатюры</string>
+    <string name="cache_cleared">Кэш очищен (%1$s)</string>
     <string name="setting_theme">Тема</string>
     <string name="setting_view_mode">Режим отображения</string>
     <string name="setting_view_mode_desc">Вид списка файлов по умолчанию</string>

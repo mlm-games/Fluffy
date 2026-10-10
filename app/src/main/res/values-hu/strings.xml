@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Gyorselérésben adat gomb, amely megnyitja az eszköz tárhelvi adatait</string>
     <string name="setting_always_inapp_picker">Mappaválasztó megjelenítése mindenhol</string>
     <string name="setting_always_inapp_picker_desc">Segít elkerülni a csarlánymappák problémáit, és a root műveletekhez is hasznos</string>
+    <string name="setting_clear_cache">Gyorsítótár törlése</string>
+    <string name="setting_clear_cache_desc">Archívumok tartalmának előnézetei, megnyitott dokumentumok és generált miniatűrök</string>
+    <string name="cache_cleared">Gyorsítótár törölve (%1$s)</string>
     <string name="setting_theme">Téma</string>
     <string name="setting_view_mode">Nézetmód</string>
     <string name="setting_view_mode_desc">Fájllisták alapértelmezett elrendezése</string>

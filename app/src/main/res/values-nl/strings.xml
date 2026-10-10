@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Een infoknop in Snelle toegang tonen die de opslagdetails van het apparaat opent</string>
     <string name="setting_always_inapp_picker">Mapkiezer overal tonen</string>
     <string name="setting_always_inapp_picker_desc">Helpt problemen met stubmappen voorkomen en is ook nuttig bij root-bewerkingen</string>
+    <string name="setting_clear_cache">Cache wissen</string>
+    <string name="setting_clear_cache_desc">Voorbeelden van de inhoud van archieven, geopende documenten en gemaakte miniaturen</string>
+    <string name="cache_cleared">Cache gewist (%1$s)</string>
     <string name="setting_theme">Thema</string>
     <string name="setting_view_mode">Weergavemodus</string>
     <string name="setting_view_mode_desc">Standaardindeling voor bestandslijsten</string>

@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Hiện một nút thông tin trong Truy cập nhanh để mở chi tiết bộ nhớ của thiết bị</string>
     <string name="setting_always_inapp_picker">Luôn hiện bộ chọn thư mục</string>
     <string name="setting_always_inapp_picker_desc">Giúp tránh sự cố với thư mục giả và cũng hữu ích cho các thao tác root</string>
+    <string name="setting_clear_cache">Xóa bộ nhớ đệm</string>
+    <string name="setting_clear_cache_desc">Xem trước nội dung tệp nén, tài liệu đã mở và hình thu nhỏ đã tạo</string>
+    <string name="cache_cleared">Đã xóa bộ nhớ đệm (%1$s)</string>
     <string name="setting_theme">Chủ đề</string>
     <string name="setting_view_mode">Chế độ xem</string>
     <string name="setting_view_mode_desc">Bố cục mặc định cho danh sách tệp</string>

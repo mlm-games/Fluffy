@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Einen Info-Knopf im Schnellzugriff anzeigen, der die Speicherdetails des Geräts öffnet</string>
     <string name="setting_always_inapp_picker">Ordnerauswahl überall anzeigen</string>
     <string name="setting_always_inapp_picker_desc">Hilft, Probleme mit Stub-Ordnern zu vermeiden, und auch bei Root-Vorgängen</string>
+    <string name="setting_clear_cache">Cache leeren</string>
+    <string name="setting_clear_cache_desc">Vorschauen von Archiveinträgen, geöffnete Dokumente und erzeugte Miniaturansichten</string>
+    <string name="cache_cleared">Cache geleert (%1$s)</string>
     <string name="setting_theme">Thema</string>
     <string name="setting_view_mode">Ansichtsmodus</string>
     <string name="setting_view_mode_desc">Standardlayout für Dateilisten</string>

@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Visa en infoknapp i Snabbåtkomst som öppnar enhetens lagringsuppgifter</string>
     <string name="setting_always_inapp_picker">Visa mappväljaren överallt</string>
     <string name="setting_always_inapp_picker_desc">Hjälper till att undvika problem med stubbmappar och är också användbart vid root-åtgärder</string>
+    <string name="setting_clear_cache">Rensa cache</string>
+    <string name="setting_clear_cache_desc">Förhandsvisningar av arkivets innehåll, öppnade dokument och genererade miniatyrer</string>
+    <string name="cache_cleared">Cache rensat (%1$s)</string>
     <string name="setting_theme">Tema</string>
     <string name="setting_view_mode">Visa läge</string>
     <string name="setting_view_mode_desc">Standardlayout för fillistor</string>

@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Εμφάνιση ενός κουμπιού πληροφοριών στη Γρήγορη πρόσβαση που ανοίγει τα στοιχεία αποθήκευσης της συσκευής</string>
     <string name="setting_always_inapp_picker">Εμφάνιση επιλογέα φακέλων της εφαρμογής παντού</string>
     <string name="setting_always_inapp_picker_desc">Βοηθά να αποφευχθούν προβλήματα προσωρινών φακέλων (αν δεν χειρίζεται) και χρησιμεύει για ενέργειες root</string>
+    <string name="setting_clear_cache">Εκκαθάριση προσωρινής μνήμης</string>
+    <string name="setting_clear_cache_desc">Προεπισκοπήσεις περιεχομένου αρχειοθηκών, ανοιχτά έγγραφα και δημιουργημένες μικρογραφίες</string>
+    <string name="cache_cleared">Η προσωρινή μνήμη εκκαθαρίστηκε (%1$s)</string>
     <string name="setting_theme">Θέμα</string>
     <string name="setting_view_mode">Λειτουργία προβολής</string>
     <string name="setting_view_mode_desc">Προεπιλεγμένη διάταξη για τις λίστες αρχείων</string>

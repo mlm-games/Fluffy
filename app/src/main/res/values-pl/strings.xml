@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Pokazuj w szybkim dostępie przycisk otwierający szczegóły pamięci urządzenia</string>
     <string name="setting_always_inapp_picker">Zawsze pokazuj wybór folderu w aplikacji</string>
     <string name="setting_always_inapp_picker_desc">Pomaga uniknąć problemów z folderami zastępczymi, a także przy operacjach root</string>
+    <string name="setting_clear_cache">Wyczyść pamięć podręczną</string>
+    <string name="setting_clear_cache_desc">Podglądy zawartości archiwów, otwarte dokumenty i wygenerowane miniatury</string>
+    <string name="cache_cleared">Pamięć podręczna wyczyszczona (%1$s)</string>
     <string name="setting_theme">Motyw</string>
     <string name="setting_view_mode">Tryb widoku</string>
     <string name="setting_view_mode_desc">Domyślny układ list plików</string>

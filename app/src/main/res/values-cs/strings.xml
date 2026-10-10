@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Zobrazit v rychlém přístupu tlačítko, které otevře podrobnosti úložiště zařízení</string>
     <string name="setting_always_inapp_picker">Všude zobrazit výběr složky</string>
     <string name="setting_always_inapp_picker_desc">Pomáhá vyhnout se problémům se složkami náhradníků a je užitečné i pro operace root</string>
+    <string name="setting_clear_cache">Vymazat mezipaměť</string>
+    <string name="setting_clear_cache_desc">Náhledy položek archivů, otevřené dokumenty a generované miniatury</string>
+    <string name="cache_cleared">Mezipaměť vymazána (%1$s)</string>
     <string name="setting_theme">Motiv</string>
     <string name="setting_view_mode">Režim zobrazení</string>
     <string name="setting_view_mode_desc">Výchozí rozvržení seznamů souborů</string>

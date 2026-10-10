@@ -103,6 +103,9 @@
     <string name="setting_show_storage_info_desc">Näytä pikaesuuksessa tietopainike, joka avaa laitteen tallennustiedot</string>
     <string name="setting_always_inapp_picker">Näytä kansionvalitsin kaikkialla</string>
     <string name="setting_always_inapp_picker_desc">Auttaa välttämään välikansioiden ongelmia ja on hyödyllinen root-toiminnoille</string>
+    <string name="setting_clear_cache">Tyhjennä välimuisti</string>
+    <string name="setting_clear_cache_desc">Pakettien sisällön esikatselut, avatut asiakirjat ja luodut pienoiskuvat</string>
+    <string name="cache_cleared">Välimuisti tyhjennetty (%1$s)</string>
     <string name="setting_theme">Teema</string>
     <string name="setting_view_mode">Näyttötila</string>
     <string name="setting_view_mode_desc">Tiedostoluetteloiden oletusasettelu</string>
