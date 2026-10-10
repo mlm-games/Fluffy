@@ -8,7 +8,6 @@ import app.fluffy.util.AppLog
 import app.fluffy.util.ArchiveTypes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import net.lingala.zip4j.ZipFile
 import net.lingala.zip4j.io.inputstream.ZipInputStream
 import net.lingala.zip4j.io.outputstream.ZipOutputStream
 import net.lingala.zip4j.model.ZipParameters
@@ -40,7 +39,7 @@ class DefaultArchiveEngine(
         when (ArchiveTypes.infer(archiveName) ?: return@withContext ArchiveEngine.ListResult(
             emptyList(), encrypted = false, error = "Unsupported archive type: $archiveName"
         )) {
-            ArchiveTypes.Kind.ZIP   -> listZip(archiveName, open)
+            ArchiveTypes.Kind.ZIP   -> listZip(archiveName, open, password)
             ArchiveTypes.Kind.SEVENZ -> listSevenZ(archiveName, open, password)
             ArchiveTypes.Kind.TAR   -> listTar(open)
             ArchiveTypes.Kind.TARGZ -> listTar { GzipCompressorInputStream(open()) }
@@ -130,44 +129,41 @@ class DefaultArchiveEngine(
 
     private fun listZip(
         archiveName: String,
-        open: () -> InputStream
+        open: () -> InputStream,
+        password: CharArray?
     ): ArchiveEngine.ListResult {
-        val tmp = stageZipTemp(archiveName, open)
         return try {
-            val zf = ZipFile(tmp)
-            val headers = zf.fileHeaders
-            val entries = headers.map { fh ->
-                ArchiveEngine.Entry(
-                    path = fh.fileName,
-                    isDir = fh.isDirectory,
-                    size = fh.uncompressedSize,
-                    time = runCatching { fh.lastModifiedTime }.getOrElse { 0L }
-                )
+            val entries = mutableListOf<ArchiveEngine.Entry>()
+            var anyEncrypted = false
+            ZipInputStream(open(), password).use { zin ->
+                var header = zin.nextEntry
+                while (header != null) {
+                    entries += ArchiveEngine.Entry(
+                        path = header.fileName,
+                        isDir = header.isDirectory,
+                        size = header.uncompressedSize,
+                        time = header.lastModifiedTime
+                    )
+                    anyEncrypted = anyEncrypted || header.isEncrypted
+                    header = zin.nextEntry
+                }
             }
-            val anyEncrypted = headers.any { it.isEncrypted }
             ArchiveEngine.ListResult(entries, encrypted = anyEncrypted)
         } catch (e: Throwable) {
             AppLog.w("ArchiveEngine", "listZip failed: $archiveName", e)
             val msg = (e.message ?: e.toString())
             val lower = msg.lowercase(Locale.ROOT)
-            val encryptedHint = lower.contains("password") || lower.contains("encrypt") ||
+            val isEncryptedHint = lower.contains("password") || lower.contains("encrypt") ||
                 e::class.java.simpleName.lowercase(Locale.ROOT).contains("password")
-            ArchiveEngine.ListResult(emptyList(), encrypted = encryptedHint, error = msg)
-        } finally {
-            tmp.delete()
+            val needsPassword = isEncryptedHint && (password == null || password.isEmpty())
+            ArchiveEngine.ListResult(
+                emptyList(),
+                encrypted = isEncryptedHint,
+                error = if (needsPassword) null else msg
+            )
         }
     }
 
-    private fun stageZipTemp(archiveName: String, open: () -> InputStream): File {
-        val n = archiveName.lowercase(Locale.ROOT)
-        val safe = when {
-            n.endsWith(".zip") -> archiveName
-            n.endsWith(".apk") -> archiveName
-            n.endsWith(".jar") -> archiveName
-            else -> "in.zip"
-        }
-        return io.stageToTemp(safe) { open() }
-    }
 
     // ZIP
     private fun extractZip(

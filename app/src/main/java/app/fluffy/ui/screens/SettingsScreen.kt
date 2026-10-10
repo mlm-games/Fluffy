@@ -1,6 +1,7 @@
 package app.fluffy.ui.screens
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import app.fluffy.R
+import app.fluffy.cache.CacheManager
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.AppSettingsSchema
 import app.fluffy.ui.components.MyScreenScaffold
@@ -29,12 +31,15 @@ import app.fluffy.ui.dialogs.SliderSettingDialog
 import app.fluffy.shell.RootAccess
 import app.fluffy.shell.ShizukuAccess
 import app.fluffy.viewmodel.SettingsViewModel
+import app.fluffy.util.UiFormat.formatSize
 import io.github.mlmgames.settings.core.SettingField
 import io.github.mlmgames.settings.core.resources.StringResourceProvider
 import io.github.mlmgames.settings.core.types.Button
 import io.github.mlmgames.settings.core.types.Dropdown
 import io.github.mlmgames.settings.core.types.Slider
 import io.github.mlmgames.settings.core.types.Toggle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlin.reflect.KClass
 
 @Composable
@@ -42,6 +47,23 @@ fun SettingsScreen(vm: SettingsViewModel) {
     val settings by vm.settings.collectAsState()
     val context = LocalContext.current
     val stringProvider: StringResourceProvider = org.koin.compose.koinInject()
+    val cacheManager: CacheManager = org.koin.compose.koinInject()
+
+    var cacheClearedSize by remember { mutableStateOf<String?>(null) }
+    var refreshTick by remember { mutableIntStateOf(0) }
+    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    DisposableEffect(lifecycle) {
+        val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
+            if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) refreshTick++
+        }
+        lifecycle.addObserver(obs)
+        onDispose { lifecycle.removeObserver(obs) }
+    }
+    val cacheUsage = produceState("", refreshTick) {
+        value = withContext(Dispatchers.IO) {
+            formatSize(cacheManager.size())
+        }
+    }.value
 
     LaunchedEffect(Unit) {
         vm.events.collect { event ->
@@ -53,8 +75,22 @@ fun SettingsScreen(vm: SettingsViewModel) {
                     }.onFailure {
                     }
                 }
-                is SettingsViewModel.UiEvent.Toast -> {}
+                is SettingsViewModel.UiEvent.CacheCleared -> {
+                    cacheClearedSize = formatSize(event.freedBytes)
+                    refreshTick++
+                }
+                is SettingsViewModel.UiEvent.Toast -> {
+                    Toast.makeText(context, event.message, Toast.LENGTH_SHORT).show()
+                }
             }
+        }
+    }
+
+    val cacheClearedMessage = cacheClearedSize?.let { stringResource(R.string.cache_cleared, it) }
+    LaunchedEffect(cacheClearedMessage) {
+        if (cacheClearedMessage != null) {
+            Toast.makeText(context, cacheClearedMessage, Toast.LENGTH_SHORT).show()
+            cacheClearedSize = null
         }
     }
 
@@ -67,15 +103,6 @@ fun SettingsScreen(vm: SettingsViewModel) {
     val cfg = LocalConfiguration.current
     val gridCells = remember(cfg.screenWidthDp) { GridCells.Adaptive(minSize = 420.dp) }
 
-    var refreshTick by remember { mutableIntStateOf(0) }
-    val lifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
-    DisposableEffect(lifecycle) {
-        val obs = androidx.lifecycle.LifecycleEventObserver { _, e ->
-            if (e == androidx.lifecycle.Lifecycle.Event.ON_RESUME) refreshTick++
-        }
-        lifecycle.addObserver(obs)
-        onDispose { lifecycle.removeObserver(obs) }
-    }
     val rootAvail = remember(refreshTick) { RootAccess.isAvailable() }
     val shizukuAvail = remember(refreshTick) { ShizukuAccess.isAvailable() }
     val locale = LocalLocale.current.platformLocale
@@ -141,6 +168,8 @@ fun SettingsScreen(vm: SettingsViewModel) {
                                 listOf(resolvedDescription, suffix)
                                     .filter { it.isNotBlank() }.joinToString(" • ")
                             }
+                            "clearCache" -> listOf(resolvedDescription, cacheUsage)
+                                .filter { it.isNotBlank() }.joinToString(" • ")
                             else -> resolvedDescription
                         }.takeIf { it.isNotBlank() }
 
@@ -192,7 +221,11 @@ fun SettingsScreen(vm: SettingsViewModel) {
                                 SettingsAction(
                                     title = meta.resolvedTitle(stringProvider),
                                     description = descriptionOverride,
-                                    buttonText = stringResource(R.string.run_action),
+                                    buttonText = if (field.name == "clearCache") {
+                                        stringResource(R.string.clear)
+                                    } else {
+                                        stringResource(R.string.run_action)
+                                    },
                                     enabled = enabledBySchema,
                                     onClick = { vm.performAction(field.name) }
                                 )

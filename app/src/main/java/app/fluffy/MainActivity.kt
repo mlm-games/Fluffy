@@ -59,6 +59,7 @@ import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDe
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.work.WorkInfo
 import app.fluffy.R
+import app.fluffy.cache.CacheManager
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.data.repository.applyAppLocale
@@ -68,16 +69,12 @@ import app.fluffy.helper.OpenTarget
 import app.fluffy.helper.detectTarget
 import app.fluffy.helper.launchImageViewer
 import app.fluffy.helper.openContent
-import app.fluffy.helper.purgeOldShareZips
-import app.fluffy.helper.shareExported
 import app.fluffy.helper.shareWithFolders
-import app.fluffy.helper.purgeOldExports
-import app.fluffy.shell.ShizukuAccess
-import app.fluffy.helper.purgeOldViewerCache
 import app.fluffy.helper.toViewableUris
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.operations.ArchiveJobManager
 import app.fluffy.search.SearchHit
+import app.fluffy.shell.ShizukuAccess
 import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.ui.components.DirectoryCounter
 import app.fluffy.ui.components.snackbar.LauncherSnackbarHost
@@ -133,6 +130,7 @@ class MainActivity : AppCompatActivity() {
     private val settingsRepository: SettingsRepository by inject()
     private val storageAccessPolicy: StorageAccessPolicy by inject()
     private val snackbar: SnackbarManager by inject()
+    private val cacheManager: CacheManager by inject()
 
     private val filesVM: FileBrowserViewModel by viewModel()
     private val tasksVM: TasksViewModel by viewModel()
@@ -250,10 +248,6 @@ class MainActivity : AppCompatActivity() {
 
         handleViewIntent(intent)
         checkStoragePermissions()
-
-        purgeOldViewerCache()
-        purgeOldExports()
-        applicationContext.purgeOldIncoming()
 
         pickRoot = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
             uri?.let {
@@ -546,7 +540,6 @@ class MainActivity : AppCompatActivity() {
                                                         ?: "file"
                                                     uri to name
                                                 }
-                                                purgeOldShareZips()
                                                 shareWithFolders(sources) { msg ->
                                                     snackbar.show(msg)
                                                 }
@@ -952,13 +945,16 @@ class MainActivity : AppCompatActivity() {
 
                 if (u.scheme == "content") {
                     val name = sanitizeName(io.queryDisplayName(u))
-                    val out = File(cacheDir, "incoming_${System.currentTimeMillis()}_$name")
+                    val out = cacheManager.tempFile(
+                        CacheManager.Area.Stage, "incoming_", "_$name"
+                    )
                     runCatching {
                         io.openIn(u).use { input ->
                             out.outputStream().use { input.copyTo(it) }
                         }
                         return@map Uri.fromFile(out)
                     }.getOrElse {
+                        runCatching { out.delete() }
                         return@map u
                     }
                 }
@@ -973,15 +969,6 @@ class MainActivity : AppCompatActivity() {
             pendingAction = PendingAction.Copy(staged)
             val s = settingsRepository.settingsFlow.first()
             launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
-        }
-    }
-
-    private fun Context.purgeOldIncoming(maxAgeMs: Long = 72L * 3600_000L) {
-        val now = System.currentTimeMillis()
-        cacheDir.listFiles()?.forEach { f ->
-            if (f.name.startsWith("incoming_") && now - f.lastModified() > maxAgeMs) {
-                runCatching { f.delete() }
-            }
         }
     }
 }

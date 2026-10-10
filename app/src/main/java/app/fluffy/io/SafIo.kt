@@ -5,6 +5,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
 import androidx.documentfile.provider.DocumentFile
+import app.fluffy.cache.CacheManager
 import app.fluffy.util.AppLog
 import app.fluffy.util.isSymlink
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +21,7 @@ class SafIo(
     val context: Context,
     private val fileSystemAccess: FileSystemAccess,
     private val shellIo: ShellIo,
+    private val cacheManager: CacheManager,
 ) {
 
     private val cr: ContentResolver get() = context.contentResolver
@@ -400,10 +402,9 @@ class SafIo(
     }
 
     fun stageToTemp(name: String, input: () -> InputStream): File {
-        val base = File(context.cacheDir, "stage").apply { mkdirs() }
         val safeName = name.substringAfterLast('/').substringAfterLast('\\')
             .replace(Regex("[^A-Za-z0-9._-]"), "_").takeLast(64).ifBlank { "file" }
-        val f = File.createTempFile("stage_${System.currentTimeMillis()}_", "_$safeName", base)
+        val f = cacheManager.tempFile(CacheManager.Area.Stage, "stage_", "_$safeName")
         input().use { i -> f.outputStream().use { o -> i.copyTo(o) } }
         return f
     }

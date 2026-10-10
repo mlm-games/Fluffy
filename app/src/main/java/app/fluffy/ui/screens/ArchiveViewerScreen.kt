@@ -65,6 +65,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import app.fluffy.R
 import app.fluffy.archive.ArchiveEngine
+import app.fluffy.cache.CacheManager
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.helper.openContent
@@ -111,6 +112,7 @@ fun ArchiveViewerScreen(
     val io = koinInject<SafIo>()
     val archive = koinInject<ArchiveEngine>()
     val settingsRepo = koinInject<SettingsRepository>()
+    val cacheManager = koinInject<CacheManager>()
 
     var listing by remember { mutableStateOf<List<ArchiveEngine.Entry>>(emptyList()) }
     var title by remember { mutableStateOf("") }
@@ -512,7 +514,8 @@ fun ArchiveViewerScreen(
                                                     archiveUri = archiveUri,
                                                     pwd = password.ifBlank { null },
                                                     archiveEngine = archive,
-                                                    safIo = io
+                                                    safIo = io,
+                                                    cacheManager = cacheManager
                                                 )
                                                 if (uri != null) openPreview(uri, e.path, ctx, settings)
                                             }
@@ -624,7 +627,8 @@ private suspend fun extractEntryToCache(
     archiveUri: Uri,
     pwd: String?,
     archiveEngine: ArchiveEngine,
-    safIo: SafIo
+    safIo: SafIo,
+    cacheManager: CacheManager
 ): Uri? = withContext(Dispatchers.IO) {
     try {
         fun norm(p: String) = p.trim().trimStart('/').replace('\\', '/')
@@ -632,7 +636,7 @@ private suspend fun extractEntryToCache(
         if (cleanTarget.isBlank() || cleanTarget.split('/').any { it == ".." || it == "." }) return@withContext null
         val rawName = cleanTarget.substringAfterLast('/').ifEmpty { "item" }
         val safeName = rawName.replace(Regex("[^A-Za-z0-9._-]"), "_").takeLast(64).ifBlank { "item" }
-        val out = File.createTempFile("preview_", "_$safeName", ctx.cacheDir)
+        val out = cacheManager.tempFile(CacheManager.Area.Previews, "preview_", "_$safeName")
         var found = false
 
         archiveEngine.extractAll(

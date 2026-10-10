@@ -217,6 +217,16 @@ data class AppSettings(
     val warnBeforeShellWrites: Boolean = false,
 
     @Setting(
+        titleKey = FluffySettingsKeys.SETTING_CLEAR_CACHE,
+        description = "Previewed archive entries, opened documents and generated thumbnails",
+        descriptionKey = FluffySettingsKeys.SETTING_CLEAR_CACHE_DESCRIPTION,
+        category = System::class,
+        type = Button::class
+    )
+    @ActionHandler(ClearCacheAction::class)
+    val clearCache: Unit = Unit,
+
+    @Setting(
         titleKey = FluffySettingsKeys.SETTING_SUPPORT_DEVELOPMENT,
         description = "If you find this app useful, consider supporting its continued development",
         descriptionKey = FluffySettingsKeys.SETTING_SUPPORT_DEVELOPMENT_DESCRIPTION,
@@ -229,6 +239,10 @@ data class AppSettings(
 
 object SupportDevelopmentAction : SettingAction {
     override val id: String = "supportDevelopment"
+}
+
+object ClearCacheAction : SettingAction {
+    override val id: String = "clearCache"
 }
 
 

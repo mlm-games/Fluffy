@@ -11,6 +11,7 @@ import android.os.Parcelable
 import androidx.core.content.FileProvider
 import app.fluffy.R
 import app.fluffy.archive.ArchiveEngine
+import app.fluffy.cache.CacheManager
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.SafIo
 import app.fluffy.ui.viewers.ImageViewerActivity
@@ -38,6 +39,7 @@ sealed class OpenTarget {
 object AppUtilsHelper : KoinComponent {
     val io: SafIo by inject()
     val archive: ArchiveEngine by inject()
+    val cache: CacheManager by inject()
 }
 
 @Suppress("DEPRECATION")
@@ -116,7 +118,7 @@ suspend fun Context.toViewableUri(uri: Uri, displayName: String = "image"): Uri 
     when (uri.scheme) {
         "root", "shizuku" -> {
             val safe = sanitizeCacheName(displayName, "image")
-            val out = File.createTempFile("img_${System.currentTimeMillis()}_", "_$safe", cacheDir)
+            val out = AppUtilsHelper.cache.tempFile(CacheManager.Area.Previews, "img_", "_$safe")
             AppUtilsHelper.io.openIn(uri).use { input -> out.outputStream().use { input.copyTo(it) } }
             FileProvider.getUriForFile(this@toViewableUri, "$packageName.fileprovider", out)
         }
@@ -149,22 +151,6 @@ fun Context.launchImageViewer(uris: List<Uri>, startIndex: Int = 0, title: Strin
     startActivity(intent)
 }
 
-
-
-
-fun Context.purgeOldViewerCache(maxAgeMs: Long = 48L * 3600_000L) {
-    val now = System.currentTimeMillis()
-    cacheDir.listFiles()?.forEach { f ->
-        if (f.name.startsWith("img_") && (now - f.lastModified()) > maxAgeMs) runCatching { f.delete() }
-    }
-}
-
-fun Context.purgeOldExports(maxAgeMs: Long = 72L * 3600_000) { val now = System.currentTimeMillis()
-    cacheDir.listFiles()?.forEach { f -> if (f.name.startsWith("export_") && now - f.lastModified() > maxAgeMs)
-        runCatching { f.delete() } }
-}
-
-
 // Need to copy root:// and shizuku:// to cache and wrap with FileProvider.
 suspend fun Context.exportForOpenWith(src: Uri, displayName: String): Uri = withContext(Dispatchers.IO) {
     when (src.scheme) {
@@ -175,7 +161,9 @@ suspend fun Context.exportForOpenWith(src: Uri, displayName: String): Uri = with
         }
         "root", "shizuku" -> {
             val safe = sanitizeCacheName(displayName)
-            val out = File.createTempFile("export_${System.currentTimeMillis()}_", "_$safe", cacheDir)
+            val out = AppUtilsHelper.cache.tempFile(
+                CacheManager.Area.Previews, "export_", "_$safe"
+            )
             AppUtilsHelper.io.openIn(src).use { `in` -> out.outputStream().use { `in`.copyTo(it) } }
             FileProvider.getUriForFile(this@exportForOpenWith, "$packageName.fileprovider", out)
         }
@@ -319,7 +307,9 @@ suspend fun Context.createTempZipForShare(sources: List<Pair<Uri, String>>): Fil
             sources.first().second.substringBeforeLast('.').ifBlank { "shared" }
         } else "shared_files"
         val safeBase = sanitizeCacheName(base, "shared").take(32)
-        val out = File.createTempFile("share_${System.currentTimeMillis()}_${safeBase}_", ".zip", cacheDir)
+        val out = AppUtilsHelper.cache.tempFile(
+            CacheManager.Area.Work, "share_${safeBase}_", ".zip"
+        )
         try {
             archive.createZip(pairs, { out.outputStream() }, compressionLevel = 5)
         } catch (e: Exception) {
@@ -408,15 +398,6 @@ private fun disambiguateShareName(base: String, seen: MutableSet<String>): Strin
         val cand = if (dot > 0) "${base.substring(0, dot)}_$i${base.substring(dot)}" else "${base}_$i"
         if (seen.add(cand)) return cand
         i++
-    }
-}
-
-fun Context.purgeOldShareZips(maxAgeMs: Long = 72L * 3600_000L) {
-    val now = System.currentTimeMillis()
-    cacheDir.listFiles()?.forEach { f ->
-        if (f.name.startsWith("share_") && f.name.endsWith(".zip") && now - f.lastModified() > maxAgeMs) {
-            runCatching { f.delete() }
-        }
     }
 }
 

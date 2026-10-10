@@ -70,6 +70,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
 import app.fluffy.R
+import app.fluffy.cache.CacheManager
+import app.fluffy.helper.AppUtilsHelper
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.ShellEntry
 import app.fluffy.io.ShellIo
@@ -323,7 +325,9 @@ private fun loadApkIcon(ctx: Context, uri: Uri, size: Int): Bitmap? {
             "file" -> uri.path?.let { File(it) }?.takeIf { it.exists() }
             "content" -> runCatching {
                 ctx.contentResolver.openInputStream(uri)?.use { input ->
-                    val tmp = File.createTempFile("apk_", ".apk", ctx.cacheDir)
+                    val tmp = AppUtilsHelper.cache.tempFile(
+                        CacheManager.Area.Stage, "apk_", ".apk"
+                    )
                     tmp.outputStream().use { input.copyTo(it) }
                     tmp
                 }

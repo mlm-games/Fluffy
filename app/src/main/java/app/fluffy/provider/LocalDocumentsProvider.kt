@@ -20,6 +20,7 @@ import android.graphics.Point
 import android.os.Bundle
 import android.webkit.MimeTypeMap
 import app.fluffy.R
+import app.fluffy.cache.CacheManager
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.util.AppLog
 import app.fluffy.util.ThumbnailHelper
@@ -431,7 +432,7 @@ class LocalDocumentsProvider : DocumentsProvider() {
                 throw FileNotFoundException("Canceled")
             }
 
-            val thumbDir = File(ctx.cacheDir, "thumbnails").apply { mkdirs() }
+            val thumbDir = CacheManager(ctx).dir(CacheManager.Area.Thumbnails)
             val thumbFile = File(thumbDir, thumbKey(file.absolutePath, reqWidth, reqHeight))
             if (!thumbFile.exists() || thumbFile.lastModified() < file.lastModified()) {
                 FileOutputStream(thumbFile).use { out ->

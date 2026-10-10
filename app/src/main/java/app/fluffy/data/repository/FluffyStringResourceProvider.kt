@@ -19,6 +19,7 @@ private val settingsResources: Map<String, Int> = mapOf(
     FluffySettingsKeys.CATEGORY_GENERAL_SETTINGS to R.string.category_general_settings,
     FluffySettingsKeys.CATEGORY_SYSTEM_SETTINGS to R.string.category_system_settings,
     FluffySettingsKeys.SETTING_ALWAYS_INAPP_PICKER to R.string.setting_always_inapp_picker,
+    FluffySettingsKeys.SETTING_CLEAR_CACHE to R.string.setting_clear_cache,
     FluffySettingsKeys.SETTING_DEFAULT_SORT to R.string.setting_default_sort,
     FluffySettingsKeys.SETTING_DYNAMIC_COLOR to R.string.setting_dynamic_color,
     FluffySettingsKeys.SETTING_ENABLE_ROOT to R.string.setting_enable_root,
@@ -40,6 +41,7 @@ private val settingsResources: Map<String, Int> = mapOf(
     SettingsTextKeys.LANGUAGE to R.string.setting_language,
     FluffySettingsKeys.SETTING_ALWAYS_INAPP_PICKER_DESCRIPTION to
         R.string.setting_always_inapp_picker_desc,
+    FluffySettingsKeys.SETTING_CLEAR_CACHE_DESCRIPTION to R.string.setting_clear_cache_desc,
     FluffySettingsKeys.SETTING_DEFAULT_SORT_DESCRIPTION to R.string.setting_default_sort_desc,
     FluffySettingsKeys.SETTING_DYNAMIC_COLOR_DESCRIPTION to R.string.setting_dynamic_color_desc,
     FluffySettingsKeys.SETTING_ENABLE_ROOT_DESCRIPTION to R.string.setting_enable_root_desc,

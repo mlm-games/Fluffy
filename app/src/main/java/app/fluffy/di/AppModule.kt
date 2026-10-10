@@ -3,6 +3,7 @@ package app.fluffy.di
 import androidx.work.WorkManager
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.archive.DefaultArchiveEngine
+import app.fluffy.cache.CacheManager
 import app.fluffy.data.repository.BookmarksRepository
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.data.repository.fluffyStringResourceProvider
@@ -41,7 +42,7 @@ val appModule = module {
     single { ShellIo(get<RootBackend>(), get<ShizukuBackend>()) }
 
     single { FileSystemAccess(androidContext(), get()) }
-    single { SafIo(androidContext(), get(), get()) }
+    single { SafIo(androidContext(), get(), get(), get()) }
 
     single<ArchiveEngine> { DefaultArchiveEngine(androidContext(), get()) }
 
@@ -51,9 +52,10 @@ val appModule = module {
     single { SnackbarManager() }
 
     single { FileSearchEngine(get()) }
+    single { CacheManager(androidContext()) }
 
     viewModel { FileBrowserViewModel(androidContext(), get(), get(), get(), get(), get(), get()) }
     viewModel { SearchViewModel(get(), get()) }
     viewModel { TasksViewModel(get(), get()) }
-    viewModel { SettingsViewModel(get()) }
+    viewModel { SettingsViewModel(get(), get()) }
 }

@@ -83,8 +83,10 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.createBitmap
 import app.fluffy.R
+import app.fluffy.cache.CacheManager
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
+import app.fluffy.helper.AppUtilsHelper
 import app.fluffy.ui.theme.FluffyTheme
 import app.fluffy.util.AppLog
 import kotlinx.coroutines.Dispatchers
@@ -226,7 +228,9 @@ private class PdfDoc(
                         }.getOrNull()
 
                         if (pfd == null) {
-                            tmpFile = File.createTempFile("doc_", ".pdf", context.cacheDir)
+                            tmpFile = AppUtilsHelper.cache.tempFile(
+                                CacheManager.Area.Previews, "doc_", ".pdf"
+                            )
                             runCatching {
                                 context.contentResolver.openInputStream(uri)?.use { src ->
                                     FileOutputStream(tmpFile).use { dst -> src.copyTo(dst) }

@@ -13,6 +13,7 @@ import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
+import app.fluffy.cache.CacheManager
 import app.fluffy.io.SafIo
 import app.fluffy.util.AppLog
 import app.fluffy.util.isSymlink
@@ -29,6 +30,7 @@ import java.util.Date
 class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params), KoinComponent {
 
     private val io: SafIo by inject()
+    private val cacheManager: CacheManager by inject()
 
     override suspend fun getForegroundInfo(): ForegroundInfo = createForeground("Creating 7z archive")
 
@@ -49,7 +51,7 @@ class Create7zWorker(appContext: Context, params: WorkerParameters) : CoroutineW
                 return@withContext Result.failure(workDataOf("error" to "Exists: $outName"))
             }
 
-            val outTmp = File.createTempFile("create_", ".7z", applicationContext.cacheDir)
+            val outTmp = cacheManager.tempFile(CacheManager.Area.Work, "create_", ".7z")
 
             try {
                 val sevenZ = if (password != null) SevenZOutputFile(outTmp, password) else SevenZOutputFile(outTmp)
