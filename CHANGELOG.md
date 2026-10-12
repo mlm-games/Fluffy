@@ -1,3 +1,8 @@
+## v4.5.3
+
+- No user-facing changes were mentioned since previous release
+
+
 ## v4.5.2
 
 - cache management
