@@ -173,17 +173,27 @@ object DocumentController : KoinComponent {
     }
 
     private fun isContentReadOnly(context: Context, uri: Uri): Boolean {
-        return runCatching {
+        if (uri.authority == "${context.packageName}.fileprovider") {
+            return true
+        }
+        val supportsWriteByFlags: Boolean? = runCatching {
             context.contentResolver.query(
                 uri,
                 arrayOf(android.provider.DocumentsContract.Document.COLUMN_FLAGS),
                 null, null, null
             )?.use { c ->
-                if (c.moveToFirst()) {
-                    val flags = c.getLong(0)
-                    (flags and android.provider.DocumentsContract.Document.FLAG_SUPPORTS_WRITE.toLong()) == 0L
-                } else true
-            } ?: true
+                if (!c.moveToFirst()) return@runCatching null
+                val idx = c.getColumnIndex(android.provider.DocumentsContract.Document.COLUMN_FLAGS)
+                if (idx == -1) return@runCatching null
+                val flags = c.getLong(idx)
+                (flags and android.provider.DocumentsContract.Document.FLAG_SUPPORTS_WRITE.toLong()) != 0L
+            }
+        }.getOrNull()
+        if (supportsWriteByFlags == false) return true
+        return runCatching {
+            context.contentResolver.openOutputStream(uri, "wa")?.use { }
+                ?: throw IOException("OutputStream null")
+            false
         }.getOrDefault(true)
     }
 

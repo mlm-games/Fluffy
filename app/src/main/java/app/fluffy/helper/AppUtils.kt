@@ -17,6 +17,7 @@ import app.fluffy.io.SafIo
 import app.fluffy.ui.viewers.ImageViewerActivity
 import app.fluffy.ui.viewers.MediaPlayerActivity
 import app.fluffy.ui.viewers.PdfViewerActivity
+import app.fluffy.ui.viewers.TextEditorActivity
 import app.fluffy.ui.viewers.TextViewerActivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -423,6 +424,18 @@ fun Context.launchTextViewer(uri: Uri, title: String? = null) {
     startActivity(intent)
 }
 
+fun Context.launchTextEditor(uri: Uri, title: String? = null) {
+    val intent = Intent(this, TextEditorActivity::class.java).apply {
+        data = uri
+        title?.let { putExtra(TextEditorActivity.EXTRA_TITLE, it) }
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+        clipData = ClipData.newUri(contentResolver, "text", uri)
+        if (this@launchTextEditor !is Activity) addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+    }
+    startActivity(intent)
+}
+
 fun Context.launchPdfViewer(uri: Uri) {
     val intent = Intent(this, PdfViewerActivity::class.java).apply {
         data = uri
@@ -456,16 +469,26 @@ suspend fun Context.openWithBuiltInViewer(
     displayName: String,
     preferMime: Boolean
 ): Boolean {
+    val nameMime = FileSystemAccess.getMimeType(displayName)
+    val srcMime = if (preferMime) {
+        runCatching { contentResolver.getType(src) }.getOrNull() ?: nameMime
+    } else {
+        nameMime
+    }
+    if (isProbablyText(displayName, srcMime)) {
+        launchTextEditor(src, displayName)
+        return true
+    }
     val exported = exportForOpenWith(src, displayName)
     val mime = if (preferMime) {
-        contentResolver.getType(exported) ?: FileSystemAccess.getMimeType(displayName)
+        contentResolver.getType(exported) ?: nameMime
     } else {
-        FileSystemAccess.getMimeType(displayName)
+        nameMime
     }
 
     return when {
         mime.startsWith("image/") ||
-            FileSystemAccess.getMimeType(displayName).startsWith("image/") -> {
+            nameMime.startsWith("image/") -> {
             val viewable = toViewableUri(exported, displayName)
             launchImageViewer(listOf(viewable), startIndex = 0, title = displayName)
             true
@@ -479,7 +502,7 @@ suspend fun Context.openWithBuiltInViewer(
             true
         }
         isProbablyText(displayName, mime) -> {
-            launchTextViewer(exported, displayName)
+            launchTextEditor(src, displayName)
             true
         }
         else -> false
