@@ -16,7 +16,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -77,9 +76,8 @@ class TextEditorActivity : ComponentActivity(), KoinComponent {
 private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
     val coroutineScope = rememberCoroutineScope()
 
-    var originalContent by rememberSaveable { mutableStateOf<String?>(null) }
-    var currentText by rememberSaveable { mutableStateOf("") }
-    var currentContent by remember(currentText) { mutableStateOf(TextFieldValue(currentText)) }
+    var originalContent by remember { mutableStateOf<String?>(null) }
+    var currentContent by remember { mutableStateOf(TextFieldValue("")) }
     var error by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(true) }
     var isReadOnly by remember { mutableStateOf(false) }
@@ -89,7 +87,7 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
     var showCharsetWarn by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val hasChanges = currentText != originalContent && !isLoading && originalContent != null
+    val hasChanges = currentContent.text != originalContent && !isLoading && originalContent != null
     val failedToOpen = stringResource(R.string.failed_to_open)
 
     LaunchedEffect(uri) {
@@ -104,7 +102,6 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                 loadedCharset = cs
                 if (cs != Charsets.UTF_8) showCharsetWarn = true
                 originalContent = text
-                currentText = text
                 currentContent = TextFieldValue(text, selection = TextRange(0))
                 isReadOnly = docInfo.isReadOnly
                 isLoading = false
@@ -233,9 +230,9 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                             enabled = hasChanges,
                             onClick = {
                                 coroutineScope.launch {
-                                    DocumentController.save(context, uri, currentText.toByteArray(Charsets.UTF_8))
+                                    DocumentController.save(context, uri, currentContent.text.toByteArray(Charsets.UTF_8))
                                         .onSuccess {
-                                            originalContent = currentText
+                                            originalContent = currentContent.text
                                             showCharsetWarn = false
                                         }
                                         .onFailure { e -> saveError = "Failed to save: ${e.message}" }
@@ -284,7 +281,6 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                         BasicTextField(
                             value = currentContent,
                             onValueChange = { newValue ->
-                                currentText = newValue.text
                                 if (newValue.text == currentContent.text &&
                                     newValue.selection.start == newValue.text.length &&
                                     newValue.selection.end == newValue.text.length &&
