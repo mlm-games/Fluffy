@@ -27,8 +27,8 @@ android {
         applicationId = "app.fluffy"
         minSdk = 24
         targetSdk = 37
-        versionCode = 950
-        versionName = "4.5.3"
+        versionCode = 960
+        versionName = "4.5.4"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
