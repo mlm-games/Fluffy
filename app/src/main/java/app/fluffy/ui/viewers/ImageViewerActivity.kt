@@ -75,8 +75,10 @@ import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.ShellIo
 import app.fluffy.ui.theme.FluffyTheme
 import app.fluffy.util.AppLog
-import coil.compose.AsyncImage
-import coil.request.ImageRequest
+import coil3.compose.AsyncImage
+import coil3.imageLoader
+import coil3.request.ImageRequest
+import coil3.request.crossfade
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -741,7 +743,8 @@ fun FullscreenImageViewer(
                             },
                         contentAlignment = Alignment.Center
                     ) {
-                        val req = ImageRequest.Builder(LocalContext.current)
+                        val ctx = LocalContext.current
+                        val req = ImageRequest.Builder(ctx)
                             .data(images[page])
                             .size(targetW, targetH)
                             .crossfade(true)
@@ -749,6 +752,7 @@ fun FullscreenImageViewer(
                         AsyncImage(
                             model = req,
                             contentDescription = null,
+                            imageLoader = ctx.imageLoader,
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Fit
                         )

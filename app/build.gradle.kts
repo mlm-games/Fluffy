@@ -161,6 +161,7 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
+    implementation(libs.coil.video)
 
     implementation(libs.androidx.documentfile)
     implementation(libs.androidx.media3.exoplayer)

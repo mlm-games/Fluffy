@@ -1,12 +1,16 @@
 package app.fluffy.util
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.graphics.pdf.PdfRenderer
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.ParcelFileDescriptor
+import app.fluffy.cache.CacheManager
+import app.fluffy.helper.AppUtilsHelper
 import java.io.File
 import kotlin.math.min
 
@@ -46,41 +50,6 @@ object ThumbnailHelper {
             inPreferredConfig = Bitmap.Config.RGB_565
         }
         return BitmapFactory.decodeFile(file.absolutePath, opts)
-    }
-
-    fun decodeImageUri(ctx: Context, uri: Uri, size: Int): Bitmap? {
-        return try {
-            val optsBounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-            ctx.contentResolver.openInputStream(uri)?.use { stream ->
-                BitmapFactory.decodeStream(stream, null, optsBounds)
-            }
-            if (optsBounds.outWidth <= 0 || optsBounds.outHeight <= 0) return null
-            val sample = calculateInSampleSize(optsBounds, size, size)
-            val opts = BitmapFactory.Options().apply {
-                inSampleSize = sample
-                inPreferredConfig = Bitmap.Config.RGB_565
-            }
-            ctx.contentResolver.openInputStream(uri)?.use { stream2 ->
-                BitmapFactory.decodeStream(stream2, null, opts)
-            }
-        } catch (e: Exception) {
-            AppLog.d("ThumbnailHelper", "decodeImageUri failed: $uri", e)
-            null
-        }
-    }
-
-    fun loadVideoThumbnail(ctx: Context, uri: Uri, size: Int): Bitmap? {
-        val retriever = MediaMetadataRetriever()
-        return try {
-            retriever.setDataSource(ctx, uri)
-            val bitmap = retriever.getFrameAtTime(0, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
-            bitmap?.let { scaleBitmap(it, size) }
-        } catch (e: Exception) {
-            AppLog.d("ThumbnailHelper", "loadVideoThumbnail(uri) failed: $uri", e)
-            null
-        } finally {
-            runCatching { retriever.release() }
-        }
     }
 
     fun loadVideoThumbnail(file: File, size: Int): Bitmap? {
@@ -141,6 +110,37 @@ object ThumbnailHelper {
             null
         } finally {
             runCatching { retriever.release() }
+        }
+    }
+
+    fun loadApkIcon(ctx: Context, uri: Uri, size: Int): Bitmap? {
+        return try {
+            val apkFile: File = when (uri.scheme) {
+                "file" -> uri.path?.let { File(it) }?.takeIf { it.exists() }
+                "content" -> runCatching {
+                    ctx.contentResolver.openInputStream(uri)?.use { input ->
+                        val tmp = AppUtilsHelper.cache.tempFile(CacheManager.Area.Stage, "apk_", ".apk")
+                        tmp.outputStream().use { input.copyTo(it) }
+                        tmp
+                    }
+                }.getOrNull()?.takeIf { it.exists() }
+                else -> null
+            } ?: return null
+            try {
+                val info = ctx.packageManager.getPackageArchiveInfo(apkFile.absolutePath, PackageManager.GET_ACTIVITIES)
+                    ?: return null
+                val appInfo = info.applicationInfo ?: return null
+                appInfo.sourceDir = apkFile.absolutePath
+                appInfo.publicSourceDir = apkFile.absolutePath
+                val drawable = appInfo.loadIcon(ctx.packageManager) ?: return null
+                val bmp = (drawable as? BitmapDrawable)?.bitmap ?: return null
+                scaleBitmap(bmp, size)
+            } finally {
+                if (uri.scheme == "content") runCatching { apkFile.delete() }
+            }
+        } catch (e: Exception) {
+            AppLog.d("ThumbnailHelper", "loadApkIcon failed: $uri", e)
+            null
         }
     }
 }
