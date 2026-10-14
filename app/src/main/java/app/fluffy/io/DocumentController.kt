@@ -186,6 +186,24 @@ object DocumentController : KoinComponent {
 
     private data class ChildDoc(val uri: Uri, val name: String, val mime: String?)
 
+    /**
+     * Resolves a URI to the file behind it when the path is reachable without a provider
+     * grant, which is the case for shared storage under MANAGE_EXTERNAL_STORAGE. Inbound
+     * intents grant a single document, so provider metadata and provider deletes both fail.
+     */
+    fun directFile(uri: Uri): File? = when (uri.scheme) {
+        "file" -> uri.path?.let(::File)?.takeIf { it.exists() }
+        "content" -> try {
+            val relative = DocumentsContract.getDocumentId(uri).substringAfter(':', "")
+            if (relative.isEmpty() || relative.startsWith("/")) null
+            else File(Environment.getExternalStorageDirectory(), relative).takeIf { it.exists() }
+        } catch (e: Exception) {
+            AppLog.d("DocumentController", "direct file lookup failed for $uri", e)
+            null
+        }
+        else -> null
+    }
+
     private fun directSiblings(uri: Uri, isImageName: (String) -> Boolean): List<Uri>? = try {
         val docId = DocumentsContract.getDocumentId(uri)
         val relative = docId.substringAfter(':', "")

@@ -38,6 +38,9 @@
     <string name="copy">Copy…</string>
     <string name="move">Move…</string>
     <string name="delete">Delete</string>
+    <string name="delete_confirm">Delete %1$s?</string>
+    <string name="delete_failed">Couldn\'t delete the file</string>
+    <string name="error">Error</string>
     <string name="rename">Rename</string>
     <string name="open_with">Open With</string>
     <string name="create_zip">Create ZIP</string>

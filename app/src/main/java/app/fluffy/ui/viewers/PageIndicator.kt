@@ -3,8 +3,11 @@ package app.fluffy.ui.viewers
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
@@ -100,37 +103,40 @@ fun EditablePageIndicator(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp)
     ) {
-        BasicTextField(
-            value = field,
-            onValueChange = { incoming ->
-                val digits = incoming.text.filter { it.isDigit() }.take(6)
-                field = TextFieldValue(digits, TextRange(digits.length))
-            },
-            modifier = Modifier
-                .semantics { contentDescription = "Page $shown of $pageCount" }
-                .background(
-                    if (editing) MaterialTheme.colorScheme.surfaceVariant
-                    else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
-                    shape
-                )
-                .border(
-                    width = if (editing) 1.dp else 0.dp,
-                    color = MaterialTheme.colorScheme.primary,
-                    shape = shape
-                )
-                .padding(horizontal = 2.dp, vertical = 1.dp),
-            textStyle = MaterialTheme.typography.labelLarge.copy(
-                color = MaterialTheme.colorScheme.onSurface,
-                textAlign = TextAlign.Center
-            ),
-            singleLine = true,
-            cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number,
-                imeAction = ImeAction.Go
-            ),
-            keyboardActions = KeyboardActions(onGo = { commit() })
-        )
+        Box(Modifier.width(IntrinsicSize.Min)) {
+            BasicTextField(
+                value = field,
+                onValueChange = { incoming ->
+                    val digits = incoming.text.filter { it.isDigit() }.take(6)
+                    field = TextFieldValue(digits, TextRange(digits.length))
+                },
+                modifier = Modifier
+                    .semantics { contentDescription = "Page $shown of $pageCount" }
+                    .background(
+                        if (editing) MaterialTheme.colorScheme.surfaceVariant
+                        else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f),
+                        shape
+                    )
+                    .border(
+                        width = if (editing) 2.dp else 1.dp,
+                        color = if (editing) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.outline,
+                        shape = shape
+                    )
+                    .padding(horizontal = 8.dp, vertical = 1.dp),
+                textStyle = MaterialTheme.typography.labelLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    textAlign = TextAlign.Center
+                ),
+                singleLine = true,
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Go
+                ),
+                keyboardActions = KeyboardActions(onGo = { commit() })
+            )
+        }
         Text(
             text = "/ $pageCount",
             style = MaterialTheme.typography.labelLarge,

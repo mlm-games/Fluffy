@@ -3,6 +3,7 @@
 package app.fluffy.ui.viewers
 
 import android.content.Context
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -82,7 +83,7 @@ class MediaPlayerActivity : ComponentActivity(), KoinComponent {
             val dark = when (s.themeMode) { 0 -> isSystemInDarkTheme(); 1 -> false; else -> true }
             FluffyTheme(darkTheme = dark, useAuroraTheme = s.useAuroraTheme) {
                 MediaPlayerScreen(
-                    url = uri.toString(), title = title,
+                    uri = uri, title = title,
                     onClose = { finish() }
                 )
             }
@@ -96,7 +97,7 @@ private val PLAYBACK_SPEEDS = listOf(0.25f, 0.5f, 0.75f, 1f, 1.25f, 1.5f, 1.75f,
 @UnstableApi
 @Composable
 internal fun MediaPlayerScreen(
-    url: String,
+    uri: Uri,
     title: String,
     onClose: () -> Unit
 ) {
@@ -110,8 +111,8 @@ internal fun MediaPlayerScreen(
     var interactionTick by remember { mutableIntStateOf(0) }
     var savedPos by rememberSaveable { mutableFloatStateOf(0f) }
 
-    LaunchedEffect(url) {
-        playerState.openUri(url)
+    LaunchedEffect(uri) {
+        playerState.openUri(uri.toString())
         if (savedPos > 1f) runCatching { playerState.seekTo(savedPos) }
     }
 
@@ -225,6 +226,9 @@ internal fun MediaPlayerScreen(
                         IconButton(onClick = onClose) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back), tint = Color.White)
                         }
+                    },
+                    actions = {
+                        ViewerActionBar(uri = uri, onDeleted = onClose, iconTint = Color.White)
                     }
                 )
             }

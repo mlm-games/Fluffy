@@ -232,7 +232,8 @@ fun FullscreenImageViewer(
     if (images.isEmpty()) return
 
     val safeInitial = initialPage.coerceIn(0, images.lastIndex)
-    val pagerState = rememberPagerState(initialPage = safeInitial, pageCount = { images.size })
+    var pages by remember { mutableStateOf(images) }
+    val pagerState = rememberPagerState(initialPage = safeInitial, pageCount = { pages.size })
 
     BackHandler { onClose() }
 
@@ -261,7 +262,7 @@ fun FullscreenImageViewer(
         contentFocus.requestFocus()
     }
 
-    val displayIndex by remember { derivedStateOf { (pagerState.currentPage + 1).coerceIn(1, images.size) } }
+    val displayIndex by remember { derivedStateOf { (pagerState.currentPage + 1).coerceIn(1, pages.size) } }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -271,7 +272,7 @@ fun FullscreenImageViewer(
                     title = {
                         EditablePageIndicator(
                             currentPage = pagerState.currentPage,
-                            pageCount = images.size,
+                            pageCount = pages.size,
                             onNavigate = { viewerScope.launch { pagerState.scrollToPage(it) } },
                             onEditingFinished = { contentFocus.requestFocus() }
                         )
@@ -279,6 +280,19 @@ fun FullscreenImageViewer(
                     navigationIcon = {
                         IconButton(onClick = onClose) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
+                        }
+                    },
+                    actions = {
+                        val current = pages.getOrNull(pagerState.currentPage)?.let(Uri::parse)
+                        if (current != null) {
+                            ViewerActionBar(
+                                uri = current,
+                                onDeleted = {
+                                    val index = pagerState.currentPage
+                                    pages = pages.filterIndexed { i, _ -> i != index }
+                                    if (pages.isEmpty()) onClose()
+                                }
+                            )
                         }
                     }
                 )
@@ -341,7 +355,7 @@ fun FullscreenImageViewer(
                         Key.DirectionRight -> {
                             if (currentPageScale <= 1.01f) {
                                 // Navigate pages at 1x
-                                if (!isNavigating && pagerState.currentPage < images.lastIndex) {
+                                if (!isNavigating && pagerState.currentPage < pages.lastIndex) {
                                     isNavigating = true
                                     viewerScope.launch {
                                         try {
@@ -478,7 +492,7 @@ fun FullscreenImageViewer(
                                 val scale = scaleAnim.value
                                 val offset = offsetAnim.value
                                 val new = clampOffset(offset + Offset(-panStepX, 0f), scale)
-                                if (new == offset && (maxBoundsX(scale) - offset.x) <= 4f && maxBoundsX(scale) > 0f && !isNavigating && pagerState.currentPage < images.lastIndex) {
+                                if (new == offset && (maxBoundsX(scale) - offset.x) <= 4f && maxBoundsX(scale) > 0f && !isNavigating && pagerState.currentPage < pages.lastIndex) {
                                     // At edge, navigate
                                     isNavigating = true
                                     viewerScope.launch {

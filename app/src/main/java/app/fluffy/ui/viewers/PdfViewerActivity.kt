@@ -424,6 +424,7 @@ private fun FullscreenPdfViewer(
                                 contentDescription = if (pdfDarkMode) stringResource(R.string.switch_to_light) else stringResource(R.string.switch_to_dark)
                             )
                         }
+                        ViewerActionBar(uri = uri, onDeleted = onClose)
                     }
                 )
             }
