@@ -4,10 +4,7 @@ import android.content.ContentUris
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
-import android.provider.OpenableColumns
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
@@ -72,7 +69,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
-import app.fluffy.io.ShellIo
+import app.fluffy.io.DocumentController
 import app.fluffy.ui.theme.FluffyTheme
 import app.fluffy.util.AppLog
 import coil3.compose.AsyncImage
@@ -90,7 +87,6 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
     }
 
     private val settings: SettingsRepository by inject()
-    private val shellIo: ShellIo by inject()
 
     companion object {
         const val EXTRA_IMAGES = "images"
@@ -142,8 +138,7 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
                     if (images == null) {
                         images = withContext(Dispatchers.IO) {
                             val singleUri = initialUris.first()
-                            val originalName = getFileName(singleUri)
-                            val discovered = runCatching { discoverSiblingImages(singleUri) }.getOrDefault(listOf(singleUri))
+                            val discovered = DocumentController.listImageSiblings(this@ImageViewerActivity, singleUri)
                             if (discovered.size > 1) discovered else initialUris
                         }
                         val finalList = images ?: initialUris
@@ -166,214 +161,6 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
                 }
             }
         }
-    }
-
-    private fun discoverSiblingImages(uri: Uri): List<Uri> {
-        val imageExtensions = setOf("jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic", "heif")
-
-        fun isImage(name: String): Boolean {
-            val ext = name.substringAfterLast('.', "").lowercase()
-            return ext in imageExtensions
-        }
-
-        return when (uri.scheme) {
-            "file" -> {
-                // For file:// URIs, we can directly access the directory
-                val file = File(uri.path ?: return listOf(uri))
-                val parent = file.parentFile ?: return listOf(uri)
-
-                if (!parent.canRead()) return listOf(uri)
-
-                parent.listFiles()
-                    ?.filter { it.isFile && isImage(it.name) }
-                    ?.sortedBy { it.name.lowercase() }
-                    ?.map { Uri.fromFile(it) }
-                    ?: listOf(uri)
-            }
-
-            "content" -> {
-
-                // Approach 1: Try to get the actual file path and use file system access
-                val filePath = getFilePathFromContentUri(uri)
-                if (filePath != null) {
-                    val file = File(filePath)
-                    val parent = file.parentFile
-                    if (parent?.canRead() == true) {
-                        val images = parent.listFiles()
-                            ?.filter { it.isFile && isImage(it.name) }
-                            ?.sortedBy { it.name.lowercase() }
-                            ?.map {
-                                // Try to get content URI for each file, fallback to file URI
-                                tryGetContentUri(it) ?: Uri.fromFile(it)
-                            }
-                            ?: listOf(uri)
-
-                        if (images.size > 1) return images
-                    }
-                }
-
-                // Approach 2: Check if this is a media content URI and query MediaStore
-                val mediaImages = tryQueryMediaStore(uri)
-                if (mediaImages.size > 1) return mediaImages
-
-                // Fallback
-                listOf(uri)
-            }
-
-            "root", "shizuku" -> {
-                // For root/shizuku URIs, use ShellIo to list directory
-                try {
-                    val path = uri.path ?: return listOf(uri)
-                    val parentPath = File(path).parent ?: return listOf(uri)
-
-                    val siblings = when (uri.scheme) {
-                        "root" -> shellIo.listRoot(parentPath)
-                        "shizuku" -> shellIo.listShizuku(parentPath)
-                        else -> emptyList()
-                    }
-
-                    siblings
-                        .filter { (name, isDir) -> !isDir && isImage(name) }
-                        .sortedBy { (name, _) -> name.lowercase() }
-                        .map { (name, _) ->
-                            Uri.Builder()
-                                .scheme(uri.scheme)
-                                .path("$parentPath/$name")
-                                .build()
-                        }
-                        .takeIf { it.isNotEmpty() }
-                        ?: listOf(uri)
-                } catch (e: Exception) {
-                    AppLog.d("ImageViewer", "sibling lookup failed: $uri", e)
-                    listOf(uri)
-                }
-            }
-
-            else -> listOf(uri)
-        }
-    }
-
-    private fun getFilePathFromContentUri(uri: Uri): String? {
-        return try {
-            when {
-                // Check if this is a media URI
-                uri.authority == "media" -> {
-                    contentResolver.query(uri, arrayOf(MediaStore.Images.Media.DATA), null, null, null)?.use { cursor ->
-                        if (cursor.moveToFirst()) {
-                            cursor.getString(0)
-                        } else null
-                    }
-                }
-                // Check for file path in the URI itself (some file managers include this)
-                uri.path?.contains("/storage/") == true -> {
-                    val path = uri.path ?: return null
-                    val startIndex = path.indexOf("/storage/")
-                    if (startIndex >= 0) {
-                        path.substring(startIndex)
-                    } else null
-                }
-                // Try to extract from common content provider patterns
-                else -> {
-                    val projection = arrayOf("_data", MediaStore.MediaColumns.DATA)
-                    contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
-                        val columnIndex = cursor.getColumnIndexOrThrow(projection[0])
-                        if (cursor.moveToFirst()) {
-                            cursor.getString(columnIndex)
-                        } else null
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            AppLog.d("ImageViewer", "getFilePathFromContentUri failed: $uri", e)
-            null
-        }
-    }
-
-    private fun tryGetContentUri(file: File): Uri? {
-        return try {
-            // Try to get a content:// URI using MediaScannerConnection or FileProvider
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                val projection = arrayOf(
-                    MediaStore.Images.Media._ID,
-                    MediaStore.Images.Media.DATA
-                )
-                val selection = "${MediaStore.Images.Media.DATA} = ?"
-                val selectionArgs = arrayOf(file.absolutePath)
-
-                contentResolver.query(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    projection,
-                    selection,
-                    selectionArgs,
-                    null
-                )?.use { cursor ->
-                    if (cursor.moveToFirst()) {
-                        val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
-                        ContentUris.withAppendedId(
-                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                            id
-                        )
-                    } else null
-                }
-            } else {
-                null
-            }
-        } catch (e: Exception) {
-            AppLog.d("ImageViewer", "tryGetContentUri failed: $file", e)
-            null
-        }
-    }
-
-    private fun tryQueryMediaStore(uri: Uri): List<Uri> {
-        val images = mutableListOf<Uri>()
-
-        try {
-            // Extract bucket/folder information from the current image
-            val projection = arrayOf(
-                MediaStore.Images.Media._ID,
-                MediaStore.Images.Media.DATA,
-                MediaStore.Images.Media.BUCKET_ID,
-                MediaStore.Images.Media.BUCKET_DISPLAY_NAME
-            )
-
-            var bucketId: String? = null
-            contentResolver.query(uri, projection, null, null, null)?.use { cursor ->
-                if (cursor.moveToFirst()) {
-                    bucketId = cursor.getString(cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID))
-                }
-            }
-
-            // If we found a bucket ID, query all images in the same bucket
-            if (bucketId != null) {
-                val selection = "${MediaStore.Images.Media.BUCKET_ID} = ?"
-                val selectionArgs = arrayOf(bucketId)
-                val sortOrder = "${MediaStore.Images.Media.DISPLAY_NAME} ASC"
-
-                contentResolver.query(
-                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                    arrayOf(
-                        MediaStore.Images.Media._ID,
-                        MediaStore.Images.Media.DISPLAY_NAME
-                    ),
-                    selection,
-                    selectionArgs,
-                    sortOrder
-                )?.use { cursor ->
-                    while (cursor.moveToNext()) {
-                        val id = cursor.getLong(cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID))
-                        val contentUri = ContentUris.withAppendedId(
-                            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                            id
-                        )
-                        images.add(contentUri)
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            AppLog.d("ImageViewer", "tryQueryMediaStore failed: $uri", e)
-        }
-
-        return if (images.size > 1) images else listOf(uri)
     }
 
     private fun startIndexFor(images: List<Uri>, original: Uri, originalName: String): Int {
@@ -733,7 +520,7 @@ fun FullscreenImageViewer(
                             }
                             .transformable(
                                 state = transformState,
-                                enabled = true
+                                enabled = scaleAnim.value > 1.01f
                             )
                             .graphicsLayer {
                                 translationX = offsetAnim.value.x

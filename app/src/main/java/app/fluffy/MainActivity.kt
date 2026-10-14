@@ -68,6 +68,7 @@ import app.fluffy.platform.StorageAccessPolicy
 import app.fluffy.helper.OpenTarget
 import app.fluffy.helper.detectTarget
 import app.fluffy.helper.launchImageViewer
+import app.fluffy.helper.launchTextEditor
 import app.fluffy.helper.openContent
 import app.fluffy.helper.shareWithFolders
 import app.fluffy.helper.toViewableUris
@@ -865,6 +866,10 @@ class MainActivity : AppCompatActivity() {
 
             is OpenTarget.Shared -> {
                 handleSharedUris(target.uris)
+            }
+
+            is OpenTarget.EditText -> {
+                applicationContext.launchTextEditor(target.uri, target.title)
             }
 
             OpenTarget.None -> {

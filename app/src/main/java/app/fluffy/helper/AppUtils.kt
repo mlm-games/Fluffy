@@ -34,6 +34,7 @@ sealed class OpenTarget {
     data class Images(val uris: List<Uri>, val title: String? = null) : OpenTarget()
     data class Archive(val uri: Uri) : OpenTarget()
     data class Shared(val uris: List<Uri>, val mime: String? = null) : OpenTarget()
+    data class EditText(val uri: Uri, val title: String? = null) : OpenTarget()
     data object None : OpenTarget()
 }
 
@@ -88,6 +89,12 @@ fun Intent.detectTarget(): OpenTarget {
                 val name = AppUtilsHelper.io.queryDisplayName(u).lowercase()
                 if (FileSystemAccess.isArchiveFile(name)) OpenTarget.Archive(u) else OpenTarget.None
             }
+        }
+
+        Intent.ACTION_EDIT, Intent.ACTION_PROCESS_TEXT -> {
+            val u = data ?: clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.uri
+                ?: return OpenTarget.None
+            OpenTarget.EditText(u, AppUtilsHelper.io.queryDisplayName(u))
         }
 
         Intent.ACTION_SEND, Intent.ACTION_SEND_MULTIPLE -> {
@@ -479,6 +486,11 @@ suspend fun Context.openWithBuiltInViewer(
         launchTextEditor(src, displayName)
         return true
     }
+    if (srcMime.startsWith("image/") || nameMime.startsWith("image/")) {
+        launchImageViewer(listOf(toViewableUri(src, displayName)), startIndex = 0, title = displayName)
+        return true
+    }
+
     val exported = exportForOpenWith(src, displayName)
     val mime = if (preferMime) {
         contentResolver.getType(exported) ?: nameMime
@@ -487,12 +499,6 @@ suspend fun Context.openWithBuiltInViewer(
     }
 
     return when {
-        mime.startsWith("image/") ||
-            nameMime.startsWith("image/") -> {
-            val viewable = toViewableUri(exported, displayName)
-            launchImageViewer(listOf(viewable), startIndex = 0, title = displayName)
-            true
-        }
         mime.startsWith("video/") || mime.startsWith("audio/") -> {
             launchMediaPlayer(exported, displayName)
             true

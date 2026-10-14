@@ -1,9 +1,14 @@
 package app.fluffy.io
 
+import android.content.ContentUris
 import android.content.Context
 import android.net.Uri
+import android.os.Environment
+import android.provider.DocumentsContract
+import android.provider.MediaStore
 import android.provider.OpenableColumns
 import app.fluffy.R
+import app.fluffy.util.AppLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
@@ -125,13 +130,12 @@ object DocumentController : KoinComponent {
         }
     }
 
-    // Image Sibling Scanning (Left/Right swipe support)
-    suspend fun listImageSiblings(uri: Uri): List<Uri> = withContext(Dispatchers.IO) {
-        val imageExts = setOf("jpg", "jpeg", "png", "gif", "webp", "bmp", "heic")
+    suspend fun listImageSiblings(context: Context, uri: Uri): List<Uri> = withContext(Dispatchers.IO) {
+        val imageExts = setOf("jpg", "jpeg", "png", "gif", "webp", "bmp", "svg", "heic", "heif", "avif")
 
         fun isImg(name: String) = name.substringAfterLast('.', "").lowercase() in imageExts
 
-        try {
+        val found = try {
             when (uri.scheme) {
                 "file" -> {
                     val f = File(uri.path ?: return@withContext listOf(uri))
@@ -145,7 +149,7 @@ object DocumentController : KoinComponent {
                     val path = uri.path ?: return@withContext listOf(uri)
                     val parent = File(path).parent ?: return@withContext listOf(uri)
 
-                    val list = if(uri.scheme == "root") shellIo.listRoot(parent) else shellIo.listShizuku(parent)
+                    val list = if (uri.scheme == "root") shellIo.listRoot(parent) else shellIo.listShizuku(parent)
 
                     list.filter { (name, isDir) -> !isDir && isImg(name) }
                         .sortedBy { it.first.lowercase() }
@@ -154,13 +158,126 @@ object DocumentController : KoinComponent {
                         }
                         .ifEmpty { listOf(uri) }
                 }
-                "content" -> {
-                    listOf(uri)
-                }
+                "content" -> listContentImages(context, uri, ::isImg)
                 else -> listOf(uri)
             }
         } catch (e: Exception) {
+            AppLog.w("DocumentController", "sibling listing failed for $uri", e)
             listOf(uri)
+        }
+
+        if (found.contains(uri)) found else listOf(uri) + found.filterNot { it == uri }
+    }
+
+    private fun listContentImages(context: Context, uri: Uri, isImageName: (String) -> Boolean): List<Uri> {
+        val children = queryDocumentChildren(context, uri)
+        if (children != null) {
+            val images = children.filter { isImageName(it.name) }.sortedBy { it.name.lowercase() }.map { it.uri }
+            if (images.size > 1) return images
+        }
+
+        directSiblings(uri, isImageName)?.let { if (it.size > 1) return it }
+
+        val media = queryMediaStoreBucket(context, uri)
+        if (media.size > 1) return media
+
+        return listOf(uri)
+    }
+
+    private data class ChildDoc(val uri: Uri, val name: String, val mime: String?)
+
+    private fun directSiblings(uri: Uri, isImageName: (String) -> Boolean): List<Uri>? = try {
+        val docId = DocumentsContract.getDocumentId(uri)
+        val relative = docId.substringAfter(':', "")
+        if (relative.isEmpty() || relative.startsWith("/")) {
+            null
+        } else {
+            val externalRoot = Environment.getExternalStorageDirectory()
+            val target = File(externalRoot, relative)
+            val parent = target.parentFile
+            val entries = if (parent?.canRead() == true) parent.listFiles() else null
+            entries
+                ?.takeIf { target.exists() }
+                ?.filter { it.isFile && isImageName(it.name) }
+                ?.sortedBy { it.name.lowercase() }
+                ?.map { if (it == target) uri else Uri.fromFile(it) }
+                ?: return null
+        }
+    } catch (e: Exception) {
+        AppLog.d("DocumentController", "direct sibling lookup failed for $uri", e)
+        null
+    }
+
+    private fun String.parentDocumentId(): String? {
+        if (endsWith('/')) return null
+        val lastSlash = lastIndexOf('/')
+        if (lastSlash < 0) {
+            val volume = substringBefore(':')
+            return volume.takeIf { it.isNotEmpty() && it != this }
+        }
+        val parent = substring(0, lastSlash)
+        return parent.takeIf { it.isNotEmpty() && it != this }
+    }
+
+    /**
+     * Returns null when the provider exposes no children (ex: a bare FileProvider).
+     */
+    private fun queryDocumentChildren(context: Context, uri: Uri): List<ChildDoc>? = try {
+        val authority = uri.authority ?: return null
+        val docId = DocumentsContract.getDocumentId(uri)
+        val parentId = docId.parentDocumentId()
+        if (parentId == null) {
+            null
+        } else {
+            val treeUri = DocumentsContract.buildTreeDocumentUri(authority, parentId)
+            val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, parentId)
+            val projection = arrayOf(
+                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                DocumentsContract.Document.COLUMN_MIME_TYPE
+            )
+            val docs = ArrayList<ChildDoc>()
+            context.contentResolver.query(childrenUri, projection, null, null, null)?.use { c ->
+                val idIdx = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+                val nameIdx = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                val mimeIdx = c.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_MIME_TYPE)
+                while (c.moveToNext()) {
+                    val childUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, c.getString(idIdx))
+                    docs.add(ChildDoc(childUri, c.getString(nameIdx).orEmpty(), c.getString(mimeIdx)))
+                }
+            }
+            docs
+        }
+    } catch (e: Exception) {
+        AppLog.e("DocumentController", "child document query unavailable for $uri", e)
+        null
+    }
+
+    private fun queryMediaStoreBucket(context: Context, uri: Uri): List<Uri> {
+        if (!uri.authority.orEmpty().startsWith("media")) return emptyList()
+
+        return try {
+            val bucketId = context.contentResolver.query(
+                uri, arrayOf(MediaStore.Images.Media.BUCKET_ID), null, null, null
+            )?.use { if (it.moveToFirst()) it.getString(0) else null } ?: return emptyList()
+
+            val images = mutableListOf<Uri>()
+            context.contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                arrayOf(MediaStore.Images.Media._ID),
+                "${MediaStore.Images.Media.BUCKET_ID} = ?",
+                arrayOf(bucketId),
+                null
+            )?.use { c ->
+                val idx = c.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+                while (c.moveToNext()) {
+                    images.add(ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, c.getLong(idx)))
+                }
+            }
+            images
+        } catch (e: Exception) {
+            AppLog.d("DocumentController", "media store bucket query failed for $uri", e)
+            emptyList()
         }
     }
 

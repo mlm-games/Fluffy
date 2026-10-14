@@ -1,6 +1,7 @@
 package app.fluffy.ui.viewers
 
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
@@ -49,11 +51,36 @@ class TextEditorActivity : ComponentActivity(), KoinComponent {
     private val io: SafIo by inject()
     private val settings: SettingsRepository by inject()
 
+    private var editTarget by mutableStateOf<Pair<Uri, String?>?>(null)
+
+    private var openedForEdit by mutableStateOf(false)
+
+    private fun acceptIntent(intent: Intent?) {
+        val uri = intent?.targetUri() ?: return
+        runCatching {
+            contentResolver.takePersistableUriPermission(uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        openedForEdit = intent.action == Intent.ACTION_EDIT ||
+            intent.action == Intent.ACTION_PROCESS_TEXT
+        editTarget = uri to (intent.getStringExtra(EXTRA_TITLE) ?: io.queryDisplayName(uri))
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        acceptIntent(intent)
+    }
+
+    private fun Intent.targetUri(): Uri? =
+        data ?: clipData?.takeIf { it.itemCount > 0 }?.getItemAt(0)?.uri
+
+    private fun intentTargetUri(): Uri? = intent?.targetUri()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val uri = intent?.data ?: run { finish(); return }
-        val title = intent?.getStringExtra(EXTRA_TITLE) ?: io.queryDisplayName(uri)
+        if (intentTargetUri() == null) { finish(); return }
+        acceptIntent(intent)
 
         setContent {
             val s = settings.settingsFlow.collectAsState(initial = AppSettings()).value
@@ -63,7 +90,10 @@ class TextEditorActivity : ComponentActivity(), KoinComponent {
                 else -> true
             }
             FluffyTheme(darkTheme = dark, useAuroraTheme = s.useAuroraTheme) {
-                TextEditorScreen(uri, title) { finish() }
+                val target = editTarget ?: return@FluffyTheme
+                key(target.first) {
+                    TextEditorScreen(target.first, target.second ?: "", openedForEdit) { finish() }
+                }
             }
         }
     }
@@ -73,7 +103,7 @@ class TextEditorActivity : ComponentActivity(), KoinComponent {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
+private fun TextEditorScreen(uri: Uri, title: String, openedForEdit: Boolean, onClose: () -> Unit) {
     val coroutineScope = rememberCoroutineScope()
 
     var originalContent by remember { mutableStateOf<String?>(null) }
@@ -91,10 +121,10 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
     val failedToOpen = stringResource(R.string.failed_to_open)
 
     LaunchedEffect(uri) {
-        if (originalContent != null) {
-            isLoading = false
-            return@LaunchedEffect
-        }
+        isLoading = true
+        error = null
+        saveError = null
+        showCharsetWarn = false
         DocumentController.read(context, uri, maxSize = 2 * 1024 * 1024)
             .onSuccess { docInfo ->
                 val cs = DocumentController.sniffCharset(docInfo.content)
@@ -202,7 +232,9 @@ private fun TextEditorScreen(uri: Uri, title: String, onClose: () -> Unit) {
                         )
                         if (isReadOnly) {
                             Text(
-                                stringResource(R.string.read_only),
+                                stringResource(
+                                if (openedForEdit) R.string.read_only_edit_intent else R.string.read_only
+                            ),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.error
                             )
