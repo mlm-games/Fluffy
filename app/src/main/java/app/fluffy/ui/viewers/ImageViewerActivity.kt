@@ -268,7 +268,14 @@ fun FullscreenImageViewer(
         topBar = {
             Box(modifier = Modifier.focusable(false)) {
                 TopAppBar(
-                    title = { Text("$displayIndex / ${images.size}") },
+                    title = {
+                        EditablePageIndicator(
+                            currentPage = pagerState.currentPage,
+                            pageCount = images.size,
+                            onNavigate = { viewerScope.launch { pagerState.scrollToPage(it) } },
+                            onEditingFinished = { contentFocus.requestFocus() }
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = onClose) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))

@@ -391,8 +391,6 @@ private fun FullscreenPdfViewer(
     val contentFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { contentFocus.requestFocus() }
 
-    val title = "${pagerState.currentPage + 1} / $pageCount"
-
     val dark = when (appSettings.themeMode) {
         0 -> isSystemInDarkTheme()
         1 -> false
@@ -406,7 +404,14 @@ private fun FullscreenPdfViewer(
         topBar = {
             Box(modifier = Modifier.focusable(false)) {
                 TopAppBar(
-                    title = { Text(title) },
+                    title = {
+                        EditablePageIndicator(
+                            currentPage = pagerState.currentPage,
+                            pageCount = pageCount,
+                            onNavigate = { viewerScope.launch { pagerState.scrollToPage(it) } },
+                            onEditingFinished = { contentFocus.requestFocus() }
+                        )
+                    },
                     navigationIcon = {
                         IconButton(onClick = onClose) {
                             Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
@@ -590,7 +595,7 @@ private fun FullscreenPdfViewer(
                             }
                             .transformable(
                                 state = transformState,
-                                enabled = true
+                                enabled = scaleAnim.value > 1.01f
                             )
                             .graphicsLayer {
                                 translationX = offsetAnim.value.x
