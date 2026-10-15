@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">Over en FAQ\'s</string>
     <string name="screen_time">Schermtijd</string>
     <string name="learn_more">Meer informatie</string>
@@ -37,6 +38,22 @@
     <string name="copy">Kopiëren…</string>
     <string name="move">Verplaatsen…</string>
     <string name="delete">Verwijderen</string>
+    <string name="delete_confirm">%1$s verwijderen?</string>
+    <string name="delete_failed">Bestand kon niet worden verwijderd</string>
+    <string name="error">Fout</string>
+    <string name="zip_password">Wachtwoord (optioneel)</string>
+    <string name="zip_encryption_hint">Archieven worden versleuteld met AES-256.</string>
+    <string name="failed_to_save">Opslaan mislukt</string>
+    <string name="more_options">Meer opties</string>
+    <string name="editor_charset">Tekenset</string>
+    <string name="editor_syntax">Syntaxis-markering</string>
+    <string name="editor_line_numbers">Regelnummers</string>
+    <string name="editor_word_wrap">Automatische regelafbreking</string>
+    <string name="editor_font_size">Tekstgrootte</string>
+    <string name="charset_discards_changes">Het wijzigen van de tekenset leest het bestand opnieuw en verwerpt niet-opgeslagen wijzigingen.</string>
+    <string name="editing_temporary_copy">Tijdelijke kopie</string>
+    <string name="temporary_copy_notice">Dit bestand kan niet direct worden gewijzigd. Sla een kopie op om uw wijzigingen te behouden.</string>
+    <string name="save_as">Opslaan als…</string>
     <string name="rename">Hernoemen</string>
     <string name="open_with">Openen met</string>
     <string name="create_zip">ZIP maken</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Geef toestemming om bestanden te doorzoeken (heropen na het verlenen)</string>
     <string name="bookmarks">Bladwijzers</string>
     <string name="edit">Bewerken</string>
+    <string name="edit_as_text">Bewerken als tekst</string>
     <string name="tap_to_remove">Tik om te verwijderen</string>
     <string name="storage">Opslag</string>
     <string name="downloads">Downloads</string>
@@ -78,6 +96,31 @@
     <string name="path">Pad</string>
     <string name="modified">Gewijzigd</string>
     <string name="mime_type">MIME-type</string>
+    <string name="meta_dimensions">Afmetingen</string>
+    <string name="meta_camera_make">Cameramerk</string>
+    <string name="meta_camera_model">Cameramodel</string>
+    <string name="meta_exposure">Belichting</string>
+    <string name="meta_fnumber">Diafragma</string>
+    <string name="meta_iso">Gevoeligheid</string>
+    <string name="meta_focal_length">Brandpuntsafstand</string>
+    <string name="meta_date_taken">Opnamedatum</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Duur</string>
+    <string name="meta_bitrate">Bitrate</string>
+    <string name="meta_resolution">Resolutie</string>
+    <string name="meta_frame_rate">Beeldsnelheid</string>
+    <string name="meta_artist">Artiest</string>
+    <string name="meta_title">Titel</string>
+    <string name="meta_album">Album</string>
+    <string name="meta_genre">Genre</string>
+    <string name="meta_year">Jaar</string>
+    <string name="meta_app_label">App-naam</string>
+    <string name="meta_app_version">Versie</string>
+    <string name="meta_entries">Items</string>
+    <string name="meta_permissions">Machtigingen</string>
+    <string name="meta_owner">Eigenaar</string>
+    <string name="meta_group">Groep</string>
+    <string name="meta_size_uncompressed">Grootte uitgepakt</string>
     <string name="items">Items</string>
     <string name="folder">Map</string>
     <string name="file">Bestand</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Wachtwoord</string>
     <string name="password_required">Wachtwoord vereist</string>
     <string name="pick_folder">Map kiezen</string>
-    <string name="read_only">Alleen-lezen</string>
     <string name="recent">Recent</string>
     <string name="save">Opslaan</string>
     <string name="save_error">Fout bij opslaan</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider is niet geconfigureerd voor dit pad</string>
     <string name="cannot_launch_installer">Installer kan niet worden gestart</string>
     <string name="no_installer_found">Geen installer gevonden</string>
+    <string name="install">Installeren</string>
     <string name="cta_banner">F-Droid wordt bedreigd. Google verandert de manier waarop u apps op uw telefoon installeert. Wij hebben uw hulp nodig.</string>
     <string name="moving_files">Bestanden verplaatsen</string>
     <string name="copying_files">Bestanden kopiëren</string>

@@ -66,6 +66,47 @@ class DefaultArchiveEngine(
         }
     }
 
+    override suspend fun verify(
+        archiveName: String,
+        open: () -> InputStream,
+        password: CharArray?,
+        onProgress: (Int, Int) -> Unit
+    ): ArchiveEngine.VerifyResult = withContext(Dispatchers.IO) {
+        val listed = list(archiveName, open, password)
+        if (listed.error != null) {
+            return@withContext ArchiveEngine.VerifyResult(false, 0, error = listed.error)
+        }
+        val totalFiles = listed.entries.count { !it.isDir }
+        var checked = 0
+        var current: String? = null
+        try {
+            extractAll(
+                archiveName,
+                open,
+                create = { path, isDir ->
+                    if (!isDir) {
+                        current = path
+                        checked++
+                        onProgress(checked, totalFiles)
+                    }
+                    DiscardOutputStream
+                },
+                password = password
+            )
+            ArchiveEngine.VerifyResult(true, checked)
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (e: Throwable) {
+            AppLog.w("ArchiveEngine", "verify failed: $archiveName", e)
+            ArchiveEngine.VerifyResult(false, checked, current, e.message ?: e.toString())
+        }
+    }
+
+    private object DiscardOutputStream : OutputStream() {
+        override fun write(b: Int) = Unit
+        override fun write(b: ByteArray, off: Int, len: Int) = Unit
+    }
+
     override suspend fun createZip(
         sources: List<Pair<String, () -> InputStream>>,
         writeTarget: () -> OutputStream,

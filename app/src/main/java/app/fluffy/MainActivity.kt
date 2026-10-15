@@ -409,9 +409,9 @@ class MainActivity : AppCompatActivity() {
                                             )
                                         },
 
-                                        onCreateZip = { sources, outName, targetDir, overwrite ->
+                                        onCreateZip = { sources, outName, password, targetDir, overwrite ->
                                             confirmShellWrite(targetDir) {
-                                                tasksVM.enqueueCreateZip(sources, targetDir, outName, overwrite)
+                                                tasksVM.enqueueCreateZip(sources, targetDir, outName, password, overwrite)
                                                 showTaskCenter = true
                                             }
                                         },

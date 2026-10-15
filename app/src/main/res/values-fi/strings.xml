@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">Tietoja ja UKK</string>
     <string name="screen_time">Näytön aika</string>
     <string name="learn_more">Lue lisää</string>
@@ -37,6 +38,22 @@
     <string name="copy">Kopioi…</string>
     <string name="move">Siirrä…</string>
     <string name="delete">Poista</string>
+    <string name="delete_confirm">Poistetaanko %1$s?</string>
+    <string name="delete_failed">Tiedoston poistaminen epäonnistui</string>
+    <string name="error">Virhe</string>
+    <string name="zip_password">Salasana (valinnainen)</string>
+    <string name="zip_encryption_hint">Arkistot salataan AES-256:lla.</string>
+    <string name="failed_to_save">Tallentaminen epäonnistui</string>
+    <string name="more_options">Lisää vaihtoehtoja</string>
+    <string name="editor_charset">Merkistö</string>
+    <string name="editor_syntax">Syntaksin korostus</string>
+    <string name="editor_line_numbers">Rivinumerot</string>
+    <string name="editor_word_wrap">Rivitys</string>
+    <string name="editor_font_size">Tekstin koko</string>
+    <string name="charset_discards_changes">Merkistön vaihtaminen lukee tiedoston uudelleen ja hylkää tallentamattomat muutokset.</string>
+    <string name="editing_temporary_copy">Väliaikainen kopio</string>
+    <string name="temporary_copy_notice">Tätä tiedostoa ei voi muokata suoraan. Tallenna kopio säilyttääksesi muutokset.</string>
+    <string name="save_as">Tallenna nimellä…</string>
     <string name="rename">Nimeä uudelleen</string>
     <string name="open_with">Avaa sovelluksella</string>
     <string name="create_zip">Luo ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Anna lupa selata tiedostoja (avaa uudelleen luvan myöntämisen jälkeen)</string>
     <string name="bookmarks">Kirjanmerkit</string>
     <string name="edit">Muokkaa</string>
+    <string name="edit_as_text">Muokkaa tekstinä</string>
     <string name="tap_to_remove">Poista napauttamalla</string>
     <string name="storage">Tallennustila</string>
     <string name="downloads">Lataukset</string>
@@ -78,6 +96,31 @@
     <string name="path">Polku</string>
     <string name="modified">Muokattu</string>
     <string name="mime_type">MIME-tyyppi</string>
+    <string name="meta_dimensions">Mitat</string>
+    <string name="meta_camera_make">Kameran valmistaja</string>
+    <string name="meta_camera_model">Kameran malli</string>
+    <string name="meta_exposure">Valotus</string>
+    <string name="meta_fnumber">Aukko</string>
+    <string name="meta_iso">Herkkyys</string>
+    <string name="meta_focal_length">Polttoväli</string>
+    <string name="meta_date_taken">Kuvauspäivä</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Kesto</string>
+    <string name="meta_bitrate">Bittinopeus</string>
+    <string name="meta_resolution">Tarkkuus</string>
+    <string name="meta_frame_rate">Kuvataajuus</string>
+    <string name="meta_artist">Artisti</string>
+    <string name="meta_title">Otsikko</string>
+    <string name="meta_album">Albumi</string>
+    <string name="meta_genre">Tyylilaji</string>
+    <string name="meta_year">Vuosi</string>
+    <string name="meta_app_label">Sovelluksen nimi</string>
+    <string name="meta_app_version">Versio</string>
+    <string name="meta_entries">Kohteet</string>
+    <string name="meta_permissions">Käyttöoikeudet</string>
+    <string name="meta_owner">Omistaja</string>
+    <string name="meta_group">Ryhmä</string>
+    <string name="meta_size_uncompressed">Pakkaamaton koko</string>
     <string name="items">Kohteet</string>
     <string name="folder">Kansio</string>
     <string name="file">Tiedosto</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Salasana</string>
     <string name="password_required">Salasana vaaditaan</string>
     <string name="pick_folder">Valitse kansio</string>
-    <string name="read_only">Vain luku</string>
     <string name="recent">Viimeisin</string>
     <string name="save">Tallenna</string>
     <string name="save_error">Tallennusvirhe</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider ei ole määritetty tälle polulle</string>
     <string name="cannot_launch_installer">Asentajan käynnistäminen ei onnistu</string>
     <string name="no_installer_found">Asentajaa ei löytynyt</string>
+    <string name="install">Asenna</string>
     <string name="cta_banner">F-Droid on uhattuna. Google muuttaa tapaa, jolla asennat sovelluksia puhimeesi. Tarvitsemme apuasi.</string>
     <string name="moving_files">Tiedostojen siirtäminen</string>
     <string name="copying_files">Tiedostojen kopiointi</string>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">O aplikaci a FAQ</string>
     <string name="screen_time">Čas na obrazovce</string>
     <string name="learn_more">Zjistit více</string>
@@ -37,6 +38,22 @@
     <string name="copy">Kopírovat…</string>
     <string name="move">Přesunout…</string>
     <string name="delete">Smazat</string>
+    <string name="delete_confirm">Odstranit %1$s?</string>
+    <string name="delete_failed">Soubor se nepodařilo odstranit</string>
+    <string name="error">Chyba</string>
+    <string name="zip_password">Heslo (volitelné)</string>
+    <string name="zip_encryption_hint">Archivy jsou šifrovány pomocí AES-256.</string>
+    <string name="failed_to_save">Uložení se nezdařilo</string>
+    <string name="more_options">Další možnosti</string>
+    <string name="editor_charset">Znaková sada</string>
+    <string name="editor_syntax">Zvýrazňování syntaxe</string>
+    <string name="editor_line_numbers">Čísla řádků</string>
+    <string name="editor_word_wrap">Zalamování řádků</string>
+    <string name="editor_font_size">Velikost textu</string>
+    <string name="charset_discards_changes">Změna znakové sady soubor znovu načte a zahodí neuložené změny.</string>
+    <string name="editing_temporary_copy">Dočasná kopie</string>
+    <string name="temporary_copy_notice">Tento soubor nelze změnit na místě. Uložte si kopii, abyste zachovali změny.</string>
+    <string name="save_as">Uložit jako…</string>
     <string name="rename">Přejmenovat</string>
     <string name="open_with">Otevřít v aplikaci</string>
     <string name="create_zip">Vytvořit ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Udělte oprávnění k procházení souborů (znovu otevřete po udělení)</string>
     <string name="bookmarks">Záložky</string>
     <string name="edit">Upravit</string>
+    <string name="edit_as_text">Upravit jako text</string>
     <string name="tap_to_remove">Klepnutím odeberete</string>
     <string name="storage">Úložiště</string>
     <string name="downloads">Stahování</string>
@@ -78,6 +96,31 @@
     <string name="path">Cesta</string>
     <string name="modified">Změněno</string>
     <string name="mime_type">Typ MIME</string>
+    <string name="meta_dimensions">Rozměry</string>
+    <string name="meta_camera_make">Výrobce fotoaparátu</string>
+    <string name="meta_camera_model">Model fotoaparátu</string>
+    <string name="meta_exposure">Expozice</string>
+    <string name="meta_fnumber">Clona</string>
+    <string name="meta_iso">Citlivost</string>
+    <string name="meta_focal_length">Ohnisková vzdálenost</string>
+    <string name="meta_date_taken">Datum pořízení</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Délka</string>
+    <string name="meta_bitrate">Datový tok</string>
+    <string name="meta_resolution">Rozlišení</string>
+    <string name="meta_frame_rate">Snímková frekvence</string>
+    <string name="meta_artist">Interpret</string>
+    <string name="meta_title">Název</string>
+    <string name="meta_album">Album</string>
+    <string name="meta_genre">Žánr</string>
+    <string name="meta_year">Rok</string>
+    <string name="meta_app_label">Název aplikace</string>
+    <string name="meta_app_version">Verze</string>
+    <string name="meta_entries">Položky</string>
+    <string name="meta_permissions">Oprávnění</string>
+    <string name="meta_owner">Vlastník</string>
+    <string name="meta_group">Skupina</string>
+    <string name="meta_size_uncompressed">Velikost po rozbalení</string>
     <string name="items">Položky</string>
     <string name="folder">Složka</string>
     <string name="file">Soubor</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Heslo</string>
     <string name="password_required">Vyžadováno heslo</string>
     <string name="pick_folder">Vybrat složku</string>
-    <string name="read_only">Jen pro čtení</string>
     <string name="recent">Nedávné</string>
     <string name="save">Uložit</string>
     <string name="save_error">Chyba uložení</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider není pro tuto cestu nakonfigurován</string>
     <string name="cannot_launch_installer">Instalátor nelze spustit</string>
     <string name="no_installer_found">Instalátor nenalezen</string>
+    <string name="install">Nainstalovat</string>
     <string name="cta_banner">F-Droid je v ohrožení. Google mění způsob, jakým instalujete aplikace do telefonu. Potřebujeme vaši pomoc.</string>
     <string name="moving_files">Přesouvání souborů</string>
     <string name="copying_files">Kopírování souborů</string>

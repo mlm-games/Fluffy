@@ -6,8 +6,21 @@ import java.io.OutputStream
 interface ArchiveEngine {
     data class Entry(val path: String, val isDir: Boolean, val size: Long, val time: Long)
     data class ListResult(val entries: List<Entry>, val encrypted: Boolean, val error: String? = null)
+    data class VerifyResult(
+        val ok: Boolean,
+        val checked: Int,
+        val failedPath: String? = null,
+        val error: String? = null
+    )
 
     suspend fun list(archiveName: String, open: () -> InputStream, password: CharArray? = null): ListResult
+
+    suspend fun verify(
+        archiveName: String,
+        open: () -> InputStream,
+        password: CharArray? = null,
+        onProgress: (Int, Int) -> Unit = { _, _ -> }
+    ): VerifyResult
 
     suspend fun extractAll(
         archiveName: String,

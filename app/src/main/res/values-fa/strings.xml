@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">درباره و پرسش‌های متداول</string>
     <string name="screen_time">زمان صفحه</string>
     <string name="learn_more">بیشتر بدانید</string>
@@ -37,6 +38,22 @@
     <string name="copy">کپی…</string>
     <string name="move">جابه‌جا کردن…</string>
     <string name="delete">حذف</string>
+    <string name="delete_confirm">%1$s حذف شود؟</string>
+    <string name="delete_failed">حذف پرونده ناموفق بود</string>
+    <string name="error">خطا</string>
+    <string name="zip_password">گذرواژه (اختیاری)</string>
+    <string name="zip_encryption_hint">بایگانی‌ها با AES-256 رمزنگاری می‌شوند.</string>
+    <string name="failed_to_save">ذخیره ناموفق بود</string>
+    <string name="more_options">گزینه‌های بیشتر</string>
+    <string name="editor_charset">مجموعه نویسه‌ها</string>
+    <string name="editor_syntax">برجسته‌سازی نحوی</string>
+    <string name="editor_line_numbers">شماره خط‌ها</string>
+    <string name="editor_word_wrap">شکستن خط‌ها</string>
+    <string name="editor_font_size">اندازه متن</string>
+    <string name="charset_discards_changes">تغییر مجموعه نویسه‌ها باعث بازخوانی پرونده و از دست رفتن تغییرات ذخیره‌نشده می‌شود.</string>
+    <string name="editing_temporary_copy">رونوشت موقت</string>
+    <string name="temporary_copy_notice">این پرونده را نمی‌توان در جای خود تغییر داد. برای حفظ تغییرات، یک رونوشت ذخیره کنید.</string>
+    <string name="save_as">ذخیره به‌عنوان…</string>
     <string name="rename">تغییر نام</string>
     <string name="open_with">باز کردن با</string>
     <string name="create_zip">ایجاد ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">برای مرور فایل‌ها اجازه بدهید (پس از اعطا، دوباره باز کنید)</string>
     <string name="bookmarks">نشانک‌ها</string>
     <string name="edit">ویرایش</string>
+    <string name="edit_as_text">ویرایش به‌عنوان متن</string>
     <string name="tap_to_remove">برای برداشتن ضربه بزنید</string>
     <string name="storage">ذخیره‌سازی</string>
     <string name="downloads">دانلودها</string>
@@ -78,6 +96,31 @@
     <string name="path">مسیر</string>
     <string name="modified">تغییر یافته</string>
     <string name="mime_type">نوع MIME</string>
+    <string name="meta_dimensions">ابعاد</string>
+    <string name="meta_camera_make">سازنده دوربین</string>
+    <string name="meta_camera_model">مدل دوربین</string>
+    <string name="meta_exposure">نوردهی</string>
+    <string name="meta_fnumber">دیافراگم</string>
+    <string name="meta_iso">حساسیت</string>
+    <string name="meta_focal_length">فاصله کانونی</string>
+    <string name="meta_date_taken">تاریخ ثبت</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">مدت</string>
+    <string name="meta_bitrate">نرخ بیت</string>
+    <string name="meta_resolution">وضوح</string>
+    <string name="meta_frame_rate">نرخ فریم</string>
+    <string name="meta_artist">هنرمند</string>
+    <string name="meta_title">عنوان</string>
+    <string name="meta_album">آلبوم</string>
+    <string name="meta_genre">ژانر</string>
+    <string name="meta_year">سال</string>
+    <string name="meta_app_label">نام برنامه</string>
+    <string name="meta_app_version">نگارش</string>
+    <string name="meta_entries">موردها</string>
+    <string name="meta_permissions">مجوزها</string>
+    <string name="meta_owner">مالک</string>
+    <string name="meta_group">گروه</string>
+    <string name="meta_size_uncompressed">اندازه بازشده</string>
     <string name="items">موارد</string>
     <string name="folder">پوشه</string>
     <string name="file">فایل</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">گذرواژه</string>
     <string name="password_required">گذرواژه لازم است</string>
     <string name="pick_folder">انتخاب پوشه</string>
-    <string name="read_only">فقط خواندنی</string>
     <string name="recent">اخیر</string>
     <string name="save">ذخیره</string>
     <string name="save_error">خطای ذخیره</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider برای این مسیر پیکربندی نشده است</string>
     <string name="cannot_launch_installer">اجرای نصب‌کننده ممکن نیست</string>
     <string name="no_installer_found">نصب‌کننده‌ای یافت نشد</string>
+    <string name="install">نصب</string>
     <string name="cta_banner">F-Droid در خطر است. گوگل روش نصب برنامه‌ها روی تلفن شما را تغییر می‌دهد. به کمک شما نیاز داریم.</string>
     <string name="moving_files">در حال جابه‌جایی پرونده‌ها</string>
     <string name="copying_files">در حال رونوشت پرونده‌ها</string>

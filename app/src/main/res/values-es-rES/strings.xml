@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">Sobre la aplicación y preguntas frecuentes</string>
     <string name="screen_time">Tiempo de pantalla</string>
     <string name="learn_more">Más información</string>
@@ -37,6 +38,22 @@
     <string name="copy">Copiar…</string>
     <string name="move">Mover…</string>
     <string name="delete">Eliminar</string>
+    <string name="delete_confirm">¿Eliminar %1$s?</string>
+    <string name="delete_failed">No se pudo eliminar el archivo</string>
+    <string name="error">Error</string>
+    <string name="zip_password">Contraseña (opcional)</string>
+    <string name="zip_encryption_hint">Los archivos se cifran con AES-256.</string>
+    <string name="failed_to_save">No se pudo guardar</string>
+    <string name="more_options">Más opciones</string>
+    <string name="editor_charset">Codificación</string>
+    <string name="editor_syntax">Resaltado de sintaxis</string>
+    <string name="editor_line_numbers">Números de línea</string>
+    <string name="editor_word_wrap">Ajuste de línea</string>
+    <string name="editor_font_size">Tamaño del texto</string>
+    <string name="charset_discards_changes">Cambiar el juego de caracteres vuelve a leer el archivo y descarta los cambios sin guardar.</string>
+    <string name="editing_temporary_copy">Copia temporal</string>
+    <string name="temporary_copy_notice">Este archivo no se puede modificar en su ubicación. Guarde una copia para conservar los cambios.</string>
+    <string name="save_as">Guardar como…</string>
     <string name="rename">Renombrar</string>
     <string name="open_with">Abrir con</string>
     <string name="create_zip">Crear ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Concede permiso para explorar los archivos (vuelve a abrir tras concederlo)</string>
     <string name="bookmarks">Marcadores</string>
     <string name="edit">Editar</string>
+    <string name="edit_as_text">Editar como texto</string>
     <string name="tap_to_remove">Toca para quitar</string>
     <string name="storage">Almacenamiento</string>
     <string name="downloads">Descargas</string>
@@ -78,6 +96,31 @@
     <string name="path">Ruta</string>
     <string name="modified">Modificado</string>
     <string name="mime_type">Tipo MIME</string>
+    <string name="meta_dimensions">Dimensiones</string>
+    <string name="meta_camera_make">Marca de la cámara</string>
+    <string name="meta_camera_model">Modelo de la cámara</string>
+    <string name="meta_exposure">Exposición</string>
+    <string name="meta_fnumber">Apertura</string>
+    <string name="meta_iso">Sensibilidad</string>
+    <string name="meta_focal_length">Distancia focal</string>
+    <string name="meta_date_taken">Fecha de captura</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Duración</string>
+    <string name="meta_bitrate">Tasa de bits</string>
+    <string name="meta_resolution">Resolución</string>
+    <string name="meta_frame_rate">Fotogramas por segundo</string>
+    <string name="meta_artist">Artista</string>
+    <string name="meta_title">Título</string>
+    <string name="meta_album">Álbum</string>
+    <string name="meta_genre">Género</string>
+    <string name="meta_year">Año</string>
+    <string name="meta_app_label">Nombre de la app</string>
+    <string name="meta_app_version">Versión</string>
+    <string name="meta_entries">Entradas</string>
+    <string name="meta_permissions">Permisos</string>
+    <string name="meta_owner">Propietario</string>
+    <string name="meta_group">Grupo</string>
+    <string name="meta_size_uncompressed">Tamaño sin comprimir</string>
     <string name="items">Elementos</string>
     <string name="folder">Carpeta</string>
     <string name="file">Archivo</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Contraseña</string>
     <string name="password_required">Contraseña requerida</string>
     <string name="pick_folder">Elegir carpeta</string>
-    <string name="read_only">Solo lectura</string>
     <string name="recent">Recientes</string>
     <string name="save">Guardar</string>
     <string name="save_error">Error al guardar</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider no está configurado para esta ruta</string>
     <string name="cannot_launch_installer">No se puede iniciar el instalador</string>
     <string name="no_installer_found">No se encontró ningún instalador</string>
+    <string name="install">Instalar</string>
     <string name="cta_banner">F-Droid está en peligro. Google está cambiando la forma en que instalas aplicaciones en tu teléfono. Necesitamos tu ayuda.</string>
     <string name="moving_files">Moviendo archivos</string>
     <string name="copying_files">Copiando archivos</string>

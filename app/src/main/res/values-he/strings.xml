@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">אודות ושאלות נפוצות</string>
     <string name="screen_time">זמן מסך</string>
     <string name="learn_more">מידע נוסף</string>
@@ -37,6 +38,22 @@
     <string name="copy">העתקה…</string>
     <string name="move">העברה…</string>
     <string name="delete">מחיקה</string>
+    <string name="delete_confirm">למחוק את %1$s?</string>
+    <string name="delete_failed">לא ניתן למחוק את הקובץ</string>
+    <string name="error">שגיאה</string>
+    <string name="zip_password">סיסמה (אופציונלי)</string>
+    <string name="zip_encryption_hint">הארכיונים מוצפנים ב־AES-256.</string>
+    <string name="failed_to_save">השמירה נכשלה</string>
+    <string name="more_options">אפשרויות נוספות</string>
+    <string name="editor_charset">ערכת תווים</string>
+    <string name="editor_syntax">הדגשת תחביר</string>
+    <string name="editor_line_numbers">מספרי שורות</string>
+    <string name="editor_word_wrap">גלישת שורות</string>
+    <string name="editor_font_size">גודל טקסט</string>
+    <string name="charset_discards_changes">שינוי ערכת התווים קורא את הקובץ מחדש ומבטל שינויים שלא נשמרו.</string>
+    <string name="editing_temporary_copy">עותק זמני</string>
+    <string name="temporary_copy_notice">לא ניתן לערוך קובץ זה במקומו. שמרו עותק כדי לשמור את השינויים.</string>
+    <string name="save_as">שמירה בשם…</string>
     <string name="rename">שינוי שם</string>
     <string name="open_with">פתיחה בעם</string>
     <string name="create_zip">יצירת ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">יש להעניק הרשאה לעיון בקבצים (יש לפתוח מחדש לאחר המתן ההרשאה)</string>
     <string name="bookmarks">סימניות</string>
     <string name="edit">עריכה</string>
+    <string name="edit_as_text">עריכה כטקסט</string>
     <string name="tap_to_remove">הקש כדי להסיר</string>
     <string name="storage">אחסון</string>
     <string name="downloads">הורדות</string>
@@ -78,6 +96,31 @@
     <string name="path">נתיב</string>
     <string name="modified">שונה</string>
     <string name="mime_type">סוג MIME</string>
+    <string name="meta_dimensions">ממדים</string>
+    <string name="meta_camera_make">יצרן המצלמה</string>
+    <string name="meta_camera_model">דגם המצלמה</string>
+    <string name="meta_exposure">חשיפה</string>
+    <string name="meta_fnumber">צמצם</string>
+    <string name="meta_iso">רגישות</string>
+    <string name="meta_focal_length">אורך מוקד</string>
+    <string name="meta_date_taken">תאריך הצילום</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">משך</string>
+    <string name="meta_bitrate">קצב סיביות</string>
+    <string name="meta_resolution">רזולוציה</string>
+    <string name="meta_frame_rate">קצב פריימים</string>
+    <string name="meta_artist">אמן</string>
+    <string name="meta_title">כותרת</string>
+    <string name="meta_album">אלבום</string>
+    <string name="meta_genre">ז\'אנר</string>
+    <string name="meta_year">שנה</string>
+    <string name="meta_app_label">שם האפליקציה</string>
+    <string name="meta_app_version">גרסה</string>
+    <string name="meta_entries">רשומות</string>
+    <string name="meta_permissions">הרשאות</string>
+    <string name="meta_owner">בעלים</string>
+    <string name="meta_group">קבוצה</string>
+    <string name="meta_size_uncompressed">גודל לא דחוס</string>
     <string name="items">פריטים</string>
     <string name="folder">תיקייה</string>
     <string name="file">קובץ</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">סיסמה</string>
     <string name="password_required">נדרשת סיסמה</string>
     <string name="pick_folder">בחירת תיקייה</string>
-    <string name="read_only">קריאה בלבד</string>
     <string name="recent">אחרונים</string>
     <string name="save">שמירה</string>
     <string name="save_error">שגיאת שמירה</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">ה־FileProvider אינו מוגדר עבור נתיב זה</string>
     <string name="cannot_launch_installer">לא ניתן להפעיל את המתקין</string>
     <string name="no_installer_found">לא נמצא מתקין</string>
+    <string name="install">התקנה</string>
     <string name="cta_banner">ה־F-Droid בסכנה. Google משנה את אופן התקנת היישומים בטלפון שלך. אנחנו זקוקים לעזרתך.</string>
     <string name="moving_files">מעבר קבצים</string>
     <string name="copying_files">העתקת קבצים</string>

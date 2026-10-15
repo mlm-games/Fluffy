@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">Tentang dan FAQ</string>
     <string name="screen_time">Waktu layar</string>
     <string name="learn_more">Pelajari lebih lanjut</string>
@@ -37,6 +38,22 @@
     <string name="copy">Salin…</string>
     <string name="move">Pindahkan…</string>
     <string name="delete">Hapus</string>
+    <string name="delete_confirm">Hapus %1$s?</string>
+    <string name="delete_failed">Berkas tidak dapat dihapus</string>
+    <string name="error">Kesalahan</string>
+    <string name="zip_password">Kata sandi (opsional)</string>
+    <string name="zip_encryption_hint">Arsip dienkripsi dengan AES-256.</string>
+    <string name="failed_to_save">Gagal menyimpan</string>
+    <string name="more_options">Opsi lainnya</string>
+    <string name="editor_charset">Rangkaian karakter</string>
+    <string name="editor_syntax">Penyorotan sintaks</string>
+    <string name="editor_line_numbers">Nomor baris</string>
+    <string name="editor_word_wrap">Bungkus kata</string>
+    <string name="editor_font_size">Ukuran teks</string>
+    <string name="charset_discards_changes">Mengubah rangkaian karakter akan membaca ulang berkas dan membuang perubahan yang belum disimpan.</string>
+    <string name="editing_temporary_copy">Salinan sementara</string>
+    <string name="temporary_copy_notice">Berkas ini tidak dapat diubah di tempatnya. Simpan salinan untuk mempertahankan perubahan Anda.</string>
+    <string name="save_as">Simpan sebagai…</string>
     <string name="rename">Ganti nama</string>
     <string name="open_with">Buka Dengan</string>
     <string name="create_zip">Buat ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Beri izin untuk menjelajah berkas (buka ulang setelah diberi izin)</string>
     <string name="bookmarks">Bookmark</string>
     <string name="edit">Edit</string>
+    <string name="edit_as_text">Edit sebagai teks</string>
     <string name="tap_to_remove">Ketuk untuk menghapus</string>
     <string name="storage">Penyimpanan</string>
     <string name="downloads">Unduhan</string>
@@ -78,6 +96,31 @@
     <string name="path">Jalur</string>
     <string name="modified">Diubah</string>
     <string name="mime_type">Tipe MIME</string>
+    <string name="meta_dimensions">Dimensi</string>
+    <string name="meta_camera_make">Merek kamera</string>
+    <string name="meta_camera_model">Model kamera</string>
+    <string name="meta_exposure">Pajanan</string>
+    <string name="meta_fnumber">Bukaan</string>
+    <string name="meta_iso">Sensitivitas</string>
+    <string name="meta_focal_length">Jarak fokus</string>
+    <string name="meta_date_taken">Tanggal diambil</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Durasi</string>
+    <string name="meta_bitrate">Laju bit</string>
+    <string name="meta_resolution">Resolusi</string>
+    <string name="meta_frame_rate">Kecepatan bingkai</string>
+    <string name="meta_artist">Artis</string>
+    <string name="meta_title">Judul</string>
+    <string name="meta_album">Album</string>
+    <string name="meta_genre">Genre</string>
+    <string name="meta_year">Tahun</string>
+    <string name="meta_app_label">Nama aplikasi</string>
+    <string name="meta_app_version">Versi</string>
+    <string name="meta_entries">Entri</string>
+    <string name="meta_permissions">Izin</string>
+    <string name="meta_owner">Pemilik</string>
+    <string name="meta_group">Grup</string>
+    <string name="meta_size_uncompressed">Ukuran tanpa kompresi</string>
     <string name="items">Item</string>
     <string name="folder">Map</string>
     <string name="file">Berkas</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Kata sandi</string>
     <string name="password_required">Kata sandi diperlukan</string>
     <string name="pick_folder">Pilih folder</string>
-    <string name="read_only">Hanya baca</string>
     <string name="recent">Terbaru</string>
     <string name="save">Simpan</string>
     <string name="save_error">Kesalahan menyimpan</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider tidak dikonfigurasi untuk path ini</string>
     <string name="cannot_launch_installer">Tidak dapat menjalankan installer</string>
     <string name="no_installer_found">Installer tidak ditemukan</string>
+    <string name="install">Pasang</string>
     <string name="cta_banner">F-Droid terancam. Google mengubah cara Anda memasang aplikasi di ponsel. Kami membutuhkan bantuan Anda.</string>
     <string name="moving_files">Memindahkan file</string>
     <string name="copying_files">Menyalin file</string>

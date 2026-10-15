@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">O aplikaciji i najčešća pitanja</string>
     <string name="screen_time">Vrijeme na zaslonu</string>
     <string name="learn_more">Saznajte više</string>
@@ -37,6 +38,22 @@
     <string name="copy">Kopiraj…</string>
     <string name="move">Premjesti…</string>
     <string name="delete">Izbriši</string>
+    <string name="delete_confirm">Izbrisati %1$s?</string>
+    <string name="delete_failed">Datoteku nije moguće izbrisati</string>
+    <string name="error">Greška</string>
+    <string name="zip_password">Lozinka (neobavezno)</string>
+    <string name="zip_encryption_hint">Arhive su šifrirane pomoću AES-256.</string>
+    <string name="failed_to_save">Spremanje nije uspjelo</string>
+    <string name="more_options">Više mogućnosti</string>
+    <string name="editor_charset">Skup znakova</string>
+    <string name="editor_syntax">Isticanje sintakse</string>
+    <string name="editor_line_numbers">Brojevi redaka</string>
+    <string name="editor_word_wrap">Prijelom redaka</string>
+    <string name="editor_font_size">Veličina teksta</string>
+    <string name="charset_discards_changes">Promjena skupa znakova ponovno učitava datoteku i odbacuje nespremljene promjene.</string>
+    <string name="editing_temporary_copy">Privremena kopija</string>
+    <string name="temporary_copy_notice">Ovu datoteku nije moguće izmijeniti na licu mjesta. Spremite kopiju kako biste sačuvali promjene.</string>
+    <string name="save_as">Spremi kao…</string>
     <string name="rename">Preimenuj</string>
     <string name="open_with">Otvori s</string>
     <string name="create_zip">Stvori ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Omogući dopuštenje za pregled datoteka (ponovno otvori nakon odobrenja)</string>
     <string name="bookmarks">Oznake</string>
     <string name="edit">Uredi</string>
+    <string name="edit_as_text">Uredi kao tekst</string>
     <string name="tap_to_remove">Tapnite za uklanjanje</string>
     <string name="storage">Pohrana</string>
     <string name="downloads">Preuzimanja</string>
@@ -78,6 +96,31 @@
     <string name="path">Putanja</string>
     <string name="modified">Izmijenjeno</string>
     <string name="mime_type">MIME vrsta</string>
+    <string name="meta_dimensions">Dimenzije</string>
+    <string name="meta_camera_make">Proizvođač fotoaparata</string>
+    <string name="meta_camera_model">Model fotoaparata</string>
+    <string name="meta_exposure">Ekspozicija</string>
+    <string name="meta_fnumber">Otvor blende</string>
+    <string name="meta_iso">Osjetljivost</string>
+    <string name="meta_focal_length">Žarišna duljina</string>
+    <string name="meta_date_taken">Datum snimanja</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Trajanje</string>
+    <string name="meta_bitrate">Brzina prijenosa</string>
+    <string name="meta_resolution">Razlučivost</string>
+    <string name="meta_frame_rate">Broj sličica u sekundi</string>
+    <string name="meta_artist">Izvođač</string>
+    <string name="meta_title">Naslov</string>
+    <string name="meta_album">Album</string>
+    <string name="meta_genre">Žanr</string>
+    <string name="meta_year">Godina</string>
+    <string name="meta_app_label">Naziv aplikacije</string>
+    <string name="meta_app_version">Verzija</string>
+    <string name="meta_entries">Stavke</string>
+    <string name="meta_permissions">Dozvole</string>
+    <string name="meta_owner">Vlasnik</string>
+    <string name="meta_group">Grupa</string>
+    <string name="meta_size_uncompressed">Veličina raspakirano</string>
     <string name="items">Stavke</string>
     <string name="folder">Mapa</string>
     <string name="file">Datoteka</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Lozinka</string>
     <string name="password_required">Potrebna je lozinka</string>
     <string name="pick_folder">Odaberi mapu</string>
-    <string name="read_only">Samo čitanje</string>
     <string name="recent">Nedavno</string>
     <string name="save">Spremi</string>
     <string name="save_error">Greška pri spremanju</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider nije konfiguriran za ovu putanju</string>
     <string name="cannot_launch_installer">Pokretanje instalatera nije moguće</string>
     <string name="no_installer_found">Instalater nije pronađen</string>
+    <string name="install">Instaliraj</string>
     <string name="cta_banner">F-Droid je ugrožen. Google mijenja način na koji instalirate aplikacije na telefon. Trebamo vašu pomoć.</string>
     <string name="moving_files">Premještanje datoteka</string>
     <string name="copying_files">Kopiranje datoteka</string>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">Giới thiệu và câu hỏi thường gặp</string>
     <string name="screen_time">Thời gian sử dụng màn hình</string>
     <string name="learn_more">Tìm hiểu thêm</string>
@@ -37,6 +38,22 @@
     <string name="copy">Sao chép…</string>
     <string name="move">Di chuyển…</string>
     <string name="delete">Xóa</string>
+    <string name="delete_confirm">Xóa %1$s?</string>
+    <string name="delete_failed">Không thể xóa tệp</string>
+    <string name="error">Lỗi</string>
+    <string name="zip_password">Mật khẩu (tùy chọn)</string>
+    <string name="zip_encryption_hint">Các tệp nén được mã hóa bằng AES-256.</string>
+    <string name="failed_to_save">Lưu thất bại</string>
+    <string name="more_options">Tùy chọn khác</string>
+    <string name="editor_charset">Bảng mã</string>
+    <string name="editor_syntax">Tô sáng cú pháp</string>
+    <string name="editor_line_numbers">Số dòng</string>
+    <string name="editor_word_wrap">Ngắt dòng</string>
+    <string name="editor_font_size">Cỡ chữ</string>
+    <string name="charset_discards_changes">Đổi bảng mã sẽ đọc lại tệp và hủy các thay đổi chưa lưu.</string>
+    <string name="editing_temporary_copy">Bản sao tạm thời</string>
+    <string name="temporary_copy_notice">Không thể sửa tệp này tại chỗ. Hãy lưu một bản sao để giữ lại các thay đổi.</string>
+    <string name="save_as">Lưu thành…</string>
     <string name="rename">Đổi tên</string>
     <string name="open_with">Mở bằng</string>
     <string name="create_zip">Tạo tệp ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Cấp quyền duyệt tệp (mở lại sau khi cấp quyền)</string>
     <string name="bookmarks">Dấu trang</string>
     <string name="edit">Chỉnh sửa</string>
+    <string name="edit_as_text">Sửa dưới dạng văn bản</string>
     <string name="tap_to_remove">Chạm để gỡ bỏ</string>
     <string name="storage">Bộ nhớ</string>
     <string name="downloads">Tải xuống</string>
@@ -78,6 +96,31 @@
     <string name="path">Đường dẫn</string>
     <string name="modified">Đã sửa đổi</string>
     <string name="mime_type">Loại MIME</string>
+    <string name="meta_dimensions">Kích thước</string>
+    <string name="meta_camera_make">Hãng máy ảnh</string>
+    <string name="meta_camera_model">Mẫu máy ảnh</string>
+    <string name="meta_exposure">Độ phơi sáng</string>
+    <string name="meta_fnumber">Khẩu độ</string>
+    <string name="meta_iso">Độ nhạy</string>
+    <string name="meta_focal_length">Tiêu cự</string>
+    <string name="meta_date_taken">Ngày chụp</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Thời lượng</string>
+    <string name="meta_bitrate">Tốc độ bit</string>
+    <string name="meta_resolution">Độ phân giải</string>
+    <string name="meta_frame_rate">Tốc độ khung hình</string>
+    <string name="meta_artist">Nghệ sĩ</string>
+    <string name="meta_title">Tiêu đề</string>
+    <string name="meta_album">Album</string>
+    <string name="meta_genre">Thể loại</string>
+    <string name="meta_year">Năm</string>
+    <string name="meta_app_label">Tên ứng dụng</string>
+    <string name="meta_app_version">Phiên bản</string>
+    <string name="meta_entries">Mục</string>
+    <string name="meta_permissions">Quyền</string>
+    <string name="meta_owner">Chủ sở hữu</string>
+    <string name="meta_group">Nhóm</string>
+    <string name="meta_size_uncompressed">Dung lượng đã giải nén</string>
     <string name="items">Mục</string>
     <string name="folder">Thư mục</string>
     <string name="file">Tệp</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Mật khẩu</string>
     <string name="password_required">Cần mật khẩu</string>
     <string name="pick_folder">Chọn thư mục</string>
-    <string name="read_only">Chỉ đọc</string>
     <string name="recent">Gần đây</string>
     <string name="save">Lưu</string>
     <string name="save_error">Lỗi khi lưu</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider chưa được cấu hình cho đường dẫn này</string>
     <string name="cannot_launch_installer">Không thể khởi chạy trình cài đặt</string>
     <string name="no_installer_found">Không tìm thấy trình cài đặt</string>
+    <string name="install">Cài đặt</string>
     <string name="cta_banner">F-Droid đang bị đe dọa. Google đang thay đổi cách bạn cài đặt ứng dụng trên điện thoại. Chúng tôi cần sự giúp đỡ của bạn.</string>
     <string name="moving_files">Đang di chuyển tệp</string>
     <string name="copying_files">Đang sao chép tệp</string>

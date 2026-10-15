@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">حول التطبيق والأسئلة الشائعة</string>
     <string name="screen_time">وقت الشاشة</string>
     <string name="learn_more">اعرف المزيد</string>
@@ -37,6 +38,22 @@
     <string name="copy">نسخ…</string>
     <string name="move">نقل…</string>
     <string name="delete">حذف</string>
+    <string name="delete_confirm">حذف %1$s؟</string>
+    <string name="delete_failed">تعذّر حذف الملف</string>
+    <string name="error">خطأ</string>
+    <string name="zip_password">كلمة المرور (اختياري)</string>
+    <string name="zip_encryption_hint">يتم تشفير الأرشيفات باستخدام AES-256.</string>
+    <string name="failed_to_save">فشل الحفظ</string>
+    <string name="more_options">خيارات أخرى</string>
+    <string name="editor_charset">مجموعة الأحرف</string>
+    <string name="editor_syntax">تمييز بناء الجملة</string>
+    <string name="editor_line_numbers">أرقام الأسطر</string>
+    <string name="editor_word_wrap">التفاف الأسطر</string>
+    <string name="editor_font_size">حجم النص</string>
+    <string name="charset_discards_changes">يؤدي تغيير مجموعة الأحرف إلى إعادة قراءة الملف وتجاهل التغييرات غير المحفوظة.</string>
+    <string name="editing_temporary_copy">نسخة مؤقتة</string>
+    <string name="temporary_copy_notice">لا يمكن تعديل هذا الملف في مكانه. احفظ نسخة للاحتفاظ بالتغييرات.</string>
+    <string name="save_as">حفظ باسم…</string>
     <string name="rename">تغيير الاسم</string>
     <string name="open_with">فتح باستخدام</string>
     <string name="create_zip">إنشاء ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">امنح إذن تصفح الملفات (أعد الفتح بعد المنح)</string>
     <string name="bookmarks">الإشارات المرجعية</string>
     <string name="edit">تحرير</string>
+    <string name="edit_as_text">تحرير كنص</string>
     <string name="tap_to_remove">اضغط للإزالة</string>
     <string name="storage">التخزين</string>
     <string name="downloads">التنزيلات</string>
@@ -78,6 +96,31 @@
     <string name="path">المسار</string>
     <string name="modified">معدّل</string>
     <string name="mime_type">نوع MIME</string>
+    <string name="meta_dimensions">الأبعاد</string>
+    <string name="meta_camera_make">الشركة المصنعة للكاميرا</string>
+    <string name="meta_camera_model">طراز الكاميرا</string>
+    <string name="meta_exposure">التعرض</string>
+    <string name="meta_fnumber">فتحة العدسة</string>
+    <string name="meta_iso">الحساسية</string>
+    <string name="meta_focal_length">البعد البؤري</string>
+    <string name="meta_date_taken">تاريخ الالتقاط</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">المدة</string>
+    <string name="meta_bitrate">معدل البت</string>
+    <string name="meta_resolution">الدقة</string>
+    <string name="meta_frame_rate">معدل الإطارات</string>
+    <string name="meta_artist">الفنان</string>
+    <string name="meta_title">العنوان</string>
+    <string name="meta_album">الألبوم</string>
+    <string name="meta_genre">النوع</string>
+    <string name="meta_year">السنة</string>
+    <string name="meta_app_label">اسم التطبيق</string>
+    <string name="meta_app_version">الإصدار</string>
+    <string name="meta_entries">العناصر</string>
+    <string name="meta_permissions">الأذونات</string>
+    <string name="meta_owner">المالك</string>
+    <string name="meta_group">المجموعة</string>
+    <string name="meta_size_uncompressed">الحجم غير المضغوط</string>
     <string name="items">العناصر</string>
     <string name="folder">مجلد</string>
     <string name="file">ملف</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">كلمة المرور</string>
     <string name="password_required">كلمة المرور مطلوبة</string>
     <string name="pick_folder">اختيار مجلد</string>
-    <string name="read_only">للقراءة فقط</string>
     <string name="recent">الأخيرة</string>
     <string name="save">حفظ</string>
     <string name="save_error">خطأ في الحفظ</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider غير مهيأ لهذا المسار</string>
     <string name="cannot_launch_installer">تعذّر تشغيل المُثبِّت</string>
     <string name="no_installer_found">لم يتم العثور على مُثبِّت</string>
+    <string name="install">تثبيت</string>
     <string name="cta_banner">F-Droid مهدَّد. يغيّر Google طريقة تثبيت التطبيقات على هاتفك. نحتاج إلى مساعدتك.</string>
     <string name="moving_files">جارٍ نقل الملفات</string>
     <string name="copying_files">جارٍ نسخ الملفات</string>

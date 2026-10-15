@@ -17,6 +17,8 @@ import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 
+data class PermInfo(val mode: String, val owner: String, val group: String)
+
 class SafIo(
     val context: Context,
     private val fileSystemAccess: FileSystemAccess,
@@ -76,6 +78,19 @@ class SafIo(
             }
             else -> emptyList()
         }
+    }
+
+    fun statPermissions(uri: Uri): PermInfo? {
+        val base = path(uri)
+        if (base.isBlank()) return null
+        val raw = when {
+            isRoot(uri) -> shellIo.statRoot(base)
+            isShizuku(uri) -> shellIo.statShizuku(base)
+            else -> null
+        }
+        val parts = raw?.split(' ')?.map { it.trim() }?.filter { it.isNotEmpty() } ?: return null
+        if (parts.size < 3) return null
+        return PermInfo(mode = parts[0], owner = parts[1], group = parts[2])
     }
 
     fun listShell(dir: Uri): List<ShellEntry> {

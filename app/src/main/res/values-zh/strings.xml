@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">关于本应用与常见问题</string>
     <string name="screen_time">屏幕使用时间</string>
     <string name="learn_more">了解更多</string>
@@ -37,6 +38,22 @@
     <string name="copy">复制…</string>
     <string name="move">移动…</string>
     <string name="delete">删除</string>
+    <string name="delete_confirm">删除%1$s？</string>
+    <string name="delete_failed">无法删除文件</string>
+    <string name="error">出错</string>
+    <string name="zip_password">密码（可选）</string>
+    <string name="zip_encryption_hint">压缩包使用 AES-256 加密。</string>
+    <string name="failed_to_save">保存失败</string>
+    <string name="more_options">更多选项</string>
+    <string name="editor_charset">字符集</string>
+    <string name="editor_syntax">语法高亮</string>
+    <string name="editor_line_numbers">行号</string>
+    <string name="editor_word_wrap">自动换行</string>
+    <string name="editor_font_size">文字大小</string>
+    <string name="charset_discards_changes">更改字符集将重新读取文件，并舍弃未保存的更改。</string>
+    <string name="editing_temporary_copy">临时副本</string>
+    <string name="temporary_copy_notice">无法直接修改此文件。请保存副本以保留更改。</string>
+    <string name="save_as">另存为…</string>
     <string name="rename">重命名</string>
     <string name="open_with">使用其他应用打开</string>
     <string name="create_zip">创建 ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">请授予浏览文件的权限（授予后请重新打开）</string>
     <string name="bookmarks">书签</string>
     <string name="edit">编辑</string>
+    <string name="edit_as_text">以文本方式编辑</string>
     <string name="tap_to_remove">点按即可移除</string>
     <string name="storage">存储空间</string>
     <string name="downloads">下载</string>
@@ -78,6 +96,31 @@
     <string name="path">路径</string>
     <string name="modified">修改时间</string>
     <string name="mime_type">MIME 类型</string>
+    <string name="meta_dimensions">尺寸</string>
+    <string name="meta_camera_make">相机制造商</string>
+    <string name="meta_camera_model">相机型号</string>
+    <string name="meta_exposure">曝光</string>
+    <string name="meta_fnumber">光圈</string>
+    <string name="meta_iso">感光度</string>
+    <string name="meta_focal_length">焦距</string>
+    <string name="meta_date_taken">拍摄日期</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">时长</string>
+    <string name="meta_bitrate">比特率</string>
+    <string name="meta_resolution">分辨率</string>
+    <string name="meta_frame_rate">帧率</string>
+    <string name="meta_artist">艺术家</string>
+    <string name="meta_title">标题</string>
+    <string name="meta_album">专辑</string>
+    <string name="meta_genre">流派</string>
+    <string name="meta_year">年份</string>
+    <string name="meta_app_label">应用名称</string>
+    <string name="meta_app_version">版本</string>
+    <string name="meta_entries">条目</string>
+    <string name="meta_permissions">权限</string>
+    <string name="meta_owner">所有者</string>
+    <string name="meta_group">群组</string>
+    <string name="meta_size_uncompressed">未压缩大小</string>
     <string name="items">项目</string>
     <string name="folder">文件夹</string>
     <string name="file">文件</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">密码</string>
     <string name="password_required">需要密码</string>
     <string name="pick_folder">选择文件夹</string>
-    <string name="read_only">只读</string>
     <string name="recent">最近</string>
     <string name="save">保存</string>
     <string name="save_error">保存失败</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">未为此路径配置 FileProvider</string>
     <string name="cannot_launch_installer">无法启动安装程序</string>
     <string name="no_installer_found">未找到安装程序</string>
+    <string name="install">安装</string>
     <string name="cta_banner">F-Droid 正面临威胁。Google 正在改变你在手机上安装应用的方式。我们需要你的帮助。</string>
     <string name="moving_files">正在移动文件</string>
     <string name="copying_files">正在复制文件</string>

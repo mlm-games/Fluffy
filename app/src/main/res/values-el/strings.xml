@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">Σχετικά και Συχνές ερωτήσεις</string>
     <string name="screen_time">Χρόνος οθόνης</string>
     <string name="learn_more">Μάθετε περισσότερα</string>
@@ -37,6 +38,22 @@
     <string name="copy">Αντιγραφή…</string>
     <string name="move">Μετακίνηση…</string>
     <string name="delete">Διαγραφή</string>
+    <string name="delete_confirm">Διαγραφή του %1$s;</string>
+    <string name="delete_failed">Δεν ήταν δυνατή η διαγραφή του αρχείου</string>
+    <string name="error">Σφάλμα</string>
+    <string name="zip_password">Κωδικός (προαιρετικά)</string>
+    <string name="zip_encryption_hint">Τα αρχεία κρυπτογραφούνται με AES-256.</string>
+    <string name="failed_to_save">Η αποθήκευση απέτυχε</string>
+    <string name="more_options">Περισσότερες επιλογές</string>
+    <string name="editor_charset">Σύνολο χαρακτήρων</string>
+    <string name="editor_syntax">Επισήμανση σύνταξης</string>
+    <string name="editor_line_numbers">Αριθμοί γραμμών</string>
+    <string name="editor_word_wrap">Αναδίπλωση γραμμών</string>
+    <string name="editor_font_size">Μέγεθος κειμένου</string>
+    <string name="charset_discards_changes">Η αλλαγή του συνόλου χαρακτήρων ξαναδιαβάζει το αρχείο και απορρίπτει τις μη αποθηκευμένες αλλαγές.</string>
+    <string name="editing_temporary_copy">Προσωρινό αντίγραφο</string>
+    <string name="temporary_copy_notice">Αυτό το αρχείο δεν μπορεί να τροποποιηθεί επιτόπου. Αποθηκεύστε ένα αντίγραφο για να κρατήσετε τις αλλαγές.</string>
+    <string name="save_as">Αποθήκευση ως…</string>
     <string name="rename">Μετονομασία</string>
     <string name="open_with">Άνοιγμα με</string>
     <string name="create_zip">Δημιουργία ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Παραχωρήστε άδεια για περιήγηση στα αρχεία (ανοίξτε ξανά μετά την παραχώρηση)</string>
     <string name="bookmarks">Σελιδοδείκτες</string>
     <string name="edit">Επεξεργασία</string>
+    <string name="edit_as_text">Επεξεργασία ως κείμενο</string>
     <string name="tap_to_remove">Πατήστε για αφαίρεση</string>
     <string name="storage">Αποθηκευτικός χώρος</string>
     <string name="downloads">Λήψεις</string>
@@ -78,6 +96,31 @@
     <string name="path">Διαδρομή</string>
     <string name="modified">Τροποποιήθηκε</string>
     <string name="mime_type">Τύπος MIME</string>
+    <string name="meta_dimensions">Διαστάσεις</string>
+    <string name="meta_camera_make">Κατασκευαστής κάμερας</string>
+    <string name="meta_camera_model">Μοντέλο κάμερας</string>
+    <string name="meta_exposure">Έκθεση</string>
+    <string name="meta_fnumber">Διάφραγμα</string>
+    <string name="meta_iso">Ευαισθησία</string>
+    <string name="meta_focal_length">Εστιακή απόσταση</string>
+    <string name="meta_date_taken">Ημερομηνία λήψης</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Διάρκεια</string>
+    <string name="meta_bitrate">Ρυθμός bit</string>
+    <string name="meta_resolution">Ανάλυση</string>
+    <string name="meta_frame_rate">Ρυθμός καρέ</string>
+    <string name="meta_artist">Καλλιτέχνης</string>
+    <string name="meta_title">Τίτλος</string>
+    <string name="meta_album">Άλμπουμ</string>
+    <string name="meta_genre">Είδος</string>
+    <string name="meta_year">Έτος</string>
+    <string name="meta_app_label">Όνομα εφαρμογής</string>
+    <string name="meta_app_version">Έκδοση</string>
+    <string name="meta_entries">Εγγραφές</string>
+    <string name="meta_permissions">Δικαιώματα</string>
+    <string name="meta_owner">Κάτοχος</string>
+    <string name="meta_group">Ομάδα</string>
+    <string name="meta_size_uncompressed">Μέγεθος αποσυμπιεσμένο</string>
     <string name="items">Στοιχεία</string>
     <string name="folder">Φάκελος</string>
     <string name="file">Αρχείο</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Κωδικός πρόσβασης</string>
     <string name="password_required">Απαιτείται κωδικός πρόσβασης</string>
     <string name="pick_folder">Επιλογή φακέλου</string>
-    <string name="read_only">Μόνο ανάγνωση</string>
     <string name="recent">Πρόσφατα</string>
     <string name="save">Αποθήκευση</string>
     <string name="save_error">Σφάλμα αποθήκευσης</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">Το FileProvider δεν έχει ρυθμιστεί για αυτή τη διαδρομή</string>
     <string name="cannot_launch_installer">Αδυναμία εκκίνησης του προγράμματος εγκατάστασης</string>
     <string name="no_installer_found">Δεν βρέθηκε πρόγραμμα εγκατάστασης</string>
+    <string name="install">Εγκατάσταση</string>
     <string name="cta_banner">Το F-Droid κινδυνεύει. Το Google αλλάζει τον τρόπο με τον οποίο εγκαθιστάτε εφαρμογές στο τηλέφωνό σας. Χρειαζόμαστε τη βοήθειά σας.</string>
     <string name="moving_files">Μεταφορά αρχείων</string>
     <string name="copying_files">Αντιγραφή αρχείων</string>

@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.InstallMobile
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.DropdownMenu
@@ -54,6 +55,9 @@ fun ViewerActionBar(
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
 
+    val isApk = remember(displayName) { displayName.endsWith(".apk", ignoreCase = true) }
+    val deleteFailedMessage = stringResource(R.string.delete_failed)
+
     Box(modifier) {
         IconButton(onClick = { menuOpen = true }) {
             Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.more), tint = iconTint)
@@ -67,6 +71,17 @@ fun ViewerActionBar(
                     showInfo = true
                 }
             )
+            if (isApk) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.install)) },
+                    leadingIcon = { Icon(Icons.Filled.InstallMobile, contentDescription = null) },
+                    onClick = {
+                        menuOpen = false
+                        runCatching { context.installApk(propsUri, direct) }
+                            .onFailure { error = it.message ?: it.javaClass.simpleName }
+                    }
+                )
+            }
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.share)) },
                 leadingIcon = { Icon(Icons.Filled.Share, contentDescription = null) },
@@ -96,7 +111,7 @@ fun ViewerActionBar(
     if (showDeleteConfirm) {
         ConfirmationDialog(
             title = stringResource(R.string.delete),
-            message = context.getString(R.string.delete_confirm, displayName),
+            message = stringResource(R.string.delete_confirm, displayName),
             onConfirm = {
                 showDeleteConfirm = false
                 scope.launch {
@@ -105,7 +120,7 @@ fun ViewerActionBar(
                         gone || io.deleteTree(uri)
                     }
                     DirectoryCounter.invalidateParent(uri)
-                    if (removed) onDeleted() else error = context.getString(R.string.delete_failed)
+                    if (removed) onDeleted() else error = deleteFailedMessage
                 }
             },
             onDismiss = { showDeleteConfirm = false }

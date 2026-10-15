@@ -67,13 +67,13 @@ object DocumentController : KoinComponent {
                     val path = uri.path ?: ""
                     val bytes = shellIo.readBytesRoot(path)
                     if (bytes.size > maxSize) throw IOException("File too large")
-                    DocInfo(File(path).name, bytes, false)
+                    DocInfo(File(path).name, bytes, !shellIo.isWritableRoot(path))
                 }
                 "shizuku" -> {
                     val path = uri.path ?: ""
                     val bytes = shellIo.readBytesShizuku(path)
                     if (bytes.size > maxSize) throw IOException("File too large")
-                    DocInfo(File(path).name, bytes, false)
+                    DocInfo(File(path).name, bytes, !shellIo.isWritableShizuku(path))
                 }
                 else -> throw IOException("Unknown scheme: ${uri.scheme}")
             }

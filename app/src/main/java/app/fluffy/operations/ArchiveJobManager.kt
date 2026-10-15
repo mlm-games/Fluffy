@@ -34,8 +34,8 @@ class ArchiveJobManager(
         sources: List<Uri>,
         targetDir: Uri,
         outName: String,
-        overwrite: Boolean = false,
-        password: String? = null
+        password: String? = null,
+        overwrite: Boolean = false
     ): String {
         val req = OneTimeWorkRequestBuilder<CreateArchiveWorker>()
             .addTag(TAG_ALL).addTag(TAG_CREATE_ZIP)

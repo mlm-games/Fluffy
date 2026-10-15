@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">このアプリについてとよくある質問</string>
     <string name="screen_time">画面使用時間</string>
     <string name="learn_more">詳細を見る</string>
@@ -37,6 +38,22 @@
     <string name="copy">コピー…</string>
     <string name="move">移動…</string>
     <string name="delete">削除</string>
+    <string name="delete_confirm">%1$sを削除しますか？</string>
+    <string name="delete_failed">ファイルを削除できませんでした</string>
+    <string name="error">エラー</string>
+    <string name="zip_password">パスワード（任意）</string>
+    <string name="zip_encryption_hint">アーカイブはAES-256で暗号化されます。</string>
+    <string name="failed_to_save">保存に失敗しました</string>
+    <string name="more_options">その他のオプション</string>
+    <string name="editor_charset">文字コード</string>
+    <string name="editor_syntax">シンタックスハイライト</string>
+    <string name="editor_line_numbers">行番号</string>
+    <string name="editor_word_wrap">折り返し表示</string>
+    <string name="editor_font_size">文字サイズ</string>
+    <string name="charset_discards_changes">文字コードを変更するとファイルを再読み込みし、未保存の変更は破棄されます。</string>
+    <string name="editing_temporary_copy">一時コピー</string>
+    <string name="temporary_copy_notice">このファイルは直接変更できません。変更を保持するにはコピーを保存してください。</string>
+    <string name="save_as">名前を付けて保存…</string>
     <string name="rename">名前を変更</string>
     <string name="open_with">このアプリで開く</string>
     <string name="create_zip">ZIP を作成</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">ファイルを参照する権限を許可してください（許可後に再度開いてください）</string>
     <string name="bookmarks">ブックマーク</string>
     <string name="edit">編集</string>
+    <string name="edit_as_text">テキストとして編集</string>
     <string name="tap_to_remove">タップして削除</string>
     <string name="storage">ストレージ</string>
     <string name="downloads">ダウンロード</string>
@@ -78,6 +96,31 @@
     <string name="path">パス</string>
     <string name="modified">更新日時</string>
     <string name="mime_type">MIME タイプ</string>
+    <string name="meta_dimensions">寸法</string>
+    <string name="meta_camera_make">カメラメーカー</string>
+    <string name="meta_camera_model">カメラモデル</string>
+    <string name="meta_exposure">露出</string>
+    <string name="meta_fnumber">絞り値</string>
+    <string name="meta_iso">感度</string>
+    <string name="meta_focal_length">焦点距離</string>
+    <string name="meta_date_taken">撮影日</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">再生時間</string>
+    <string name="meta_bitrate">ビットレート</string>
+    <string name="meta_resolution">解像度</string>
+    <string name="meta_frame_rate">フレームレート</string>
+    <string name="meta_artist">アーティスト</string>
+    <string name="meta_title">タイトル</string>
+    <string name="meta_album">アルバム</string>
+    <string name="meta_genre">ジャンル</string>
+    <string name="meta_year">年</string>
+    <string name="meta_app_label">アプリ名</string>
+    <string name="meta_app_version">バージョン</string>
+    <string name="meta_entries">エントリ</string>
+    <string name="meta_permissions">権限</string>
+    <string name="meta_owner">所有者</string>
+    <string name="meta_group">グループ</string>
+    <string name="meta_size_uncompressed">未圧縮サイズ</string>
     <string name="items">アイテム</string>
     <string name="folder">フォルダ</string>
     <string name="file">ファイル</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">パスワード</string>
     <string name="password_required">パスワードが必要です</string>
     <string name="pick_folder">フォルダを選択</string>
-    <string name="read_only">読み取り専用</string>
     <string name="recent">最近</string>
     <string name="save">保存</string>
     <string name="save_error">保存エラー</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">このパスに FileProvider が設定されていません</string>
     <string name="cannot_launch_installer">インストーラを起動できません</string>
     <string name="no_installer_found">インストーラが見つかりません</string>
+    <string name="install">インストール</string>
     <string name="cta_banner">F-Droid は脅威にさらされています。Google はスマホへのアプリのインストール方法を変えようとしています。ご支援をお願いします。</string>
     <string name="moving_files">ファイルを移動しています</string>
     <string name="copying_files">ファイルをコピーしています</string>

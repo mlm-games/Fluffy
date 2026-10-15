@@ -145,6 +145,18 @@ data class AppSettings(
     @Persisted(key = "cta_banner_dismissed_2026")
     val ctaBannerDismissed2026: Boolean = false,
 
+    @Persisted(key = "editor_font_size")
+    val editorFontSize: Int = 14,
+
+    @Persisted(key = "editor_word_wrap")
+    val editorWordWrap: Boolean = true,
+
+    @Persisted(key = "editor_line_numbers")
+    val editorLineNumbers: Boolean = false,
+
+    @Persisted(key = "editor_syntax")
+    val editorSyntax: Boolean = true,
+
     @Setting(
         titleKey = FluffySettingsKeys.SETTING_ZIP_LEVEL,
         description = "0 = no compression, 9 = maximum compression",

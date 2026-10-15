@@ -12,6 +12,14 @@ class ShellIo(
     fun listRoot(path: String): List<Pair<String, Boolean>> = rootBackend.list(path)
     fun listShizuku(path: String): List<Pair<String, Boolean>> = shizukuBackend.list(path)
 
+    fun statRoot(path: String): String? = rootBackend.execRead("stat -c '%a %U %G' ${quote(path)} 2>/dev/null")
+    fun statShizuku(path: String): String? = shizukuBackend.execRead("stat -c '%a %U %G' ${quote(path)} 2>/dev/null")
+
+    private fun quote(path: String): String = "'${path.replace("'", "'\"'\"'")}'"
+
+    fun isWritableRoot(path: String): Boolean = rootBackend.isWritable(path)
+    fun isWritableShizuku(path: String): Boolean = shizukuBackend.isWritable(path)
+
     fun openInRoot(path: String): InputStream = rootBackend.openInput(path)
     fun openInShizuku(path: String): InputStream = shizukuBackend.openInput(path)
 

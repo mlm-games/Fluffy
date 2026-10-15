@@ -20,8 +20,11 @@ interface PrivilegedBackend {
     fun isDirectory(path: String): Boolean
     fun isFile(path: String): Boolean
     fun exists(path: String): Boolean
+    fun isWritable(path: String): Boolean
 
     fun readBytes(path: String): ByteArray = openInput(path).use { it.readBytes() }
+
+    fun execRead(command: String): String? = null
 
     fun writeBytes(path: String, bytes: ByteArray): Boolean {
         return runCatching {
@@ -56,10 +59,39 @@ abstract class BasePrivilegedBackend : PrivilegedBackend {
         else runTest("test -d ${q(path)}")
     }.getOrDefault(false)
 
+    override fun execRead(command: String): String? = runCatching {
+        if (!isAvailable()) return null
+        val proc = spawnShellCommand(command) ?: return null
+        proc.inputStream.bufferedReader().use { it.readText() }.trim().ifBlank { null }
+    }.getOrNull()
+
     override fun isFile(path: String): Boolean = runCatching {
         if (!isAvailable() || path.isBlank()) false
         else runTest("test -f ${q(path)}")
     }.getOrDefault(false)
+
+    override fun isWritable(path: String): Boolean = runCatching {
+        if (!isAvailable() || path.isBlank()) false
+        else runTest("test -w ${q(path)}") && !isReadOnlyMount(path)
+    }.getOrDefault(false)
+
+    private fun isReadOnlyMount(path: String): Boolean {
+        val mounts = execRead("cat /proc/mounts") ?: return false
+        val canon = runCatching { File(path).canonicalPath }.getOrNull() ?: path
+        var bestLen = -1
+        var readOnly = false
+        for (line in mounts.lines()) {
+            val parts = line.split(" ")
+            if (parts.size < 4) continue
+            val mountPoint = parts[1].replace("\\040", " ")
+            val covers = canon == mountPoint || canon.startsWith(mountPoint.trimEnd('/') + "/")
+            if (covers && mountPoint.length > bestLen) {
+                bestLen = mountPoint.length
+                readOnly = "ro" in parts[3].split(",")
+            }
+        }
+        return readOnly
+    }
 
     override fun exists(path: String): Boolean = runCatching {
         if (!isAvailable() || path.isBlank()) false

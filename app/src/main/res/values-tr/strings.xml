@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">Hakkında ve SSS</string>
     <string name="screen_time">Ekran süresi</string>
     <string name="learn_more">Daha fazla bilgi edinin</string>
@@ -37,6 +38,22 @@
     <string name="copy">Kopyala…</string>
     <string name="move">Taşı…</string>
     <string name="delete">Sil</string>
+    <string name="delete_confirm">%1$s silinsin mi?</string>
+    <string name="delete_failed">Dosya silinemedi</string>
+    <string name="error">Hata</string>
+    <string name="zip_password">Parola (isteğe bağlı)</string>
+    <string name="zip_encryption_hint">Arşivler AES-256 ile şifrelenir.</string>
+    <string name="failed_to_save">Kaydetme başarısız</string>
+    <string name="more_options">Diğer seçenekler</string>
+    <string name="editor_charset">Karakter kümesi</string>
+    <string name="editor_syntax">Sözdizimi vurgulama</string>
+    <string name="editor_line_numbers">Satır numaraları</string>
+    <string name="editor_word_wrap">Satır kaydırma</string>
+    <string name="editor_font_size">Metin boyutu</string>
+    <string name="charset_discards_changes">Karakter kümesini değiştirmek dosyayı yeniden okur ve kaydedilmemiş değişiklikleri atar.</string>
+    <string name="editing_temporary_copy">Geçici kopya</string>
+    <string name="temporary_copy_notice">Bu dosya yerinde değiştirilemez. Değişiklikleri korumak için bir kopya kaydedin.</string>
+    <string name="save_as">Farklı kaydet…</string>
     <string name="rename">Yeniden adlandır</string>
     <string name="open_with">Şununla aç</string>
     <string name="create_zip">ZIP oluştur</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Dosyalara göz atmak için izin verin (izin verdikten sonra yeniden açın)</string>
     <string name="bookmarks">Yer imleri</string>
     <string name="edit">Düzenle</string>
+    <string name="edit_as_text">Metin olarak düzenle</string>
     <string name="tap_to_remove">Kaldırmak için dokunun</string>
     <string name="storage">Depolama</string>
     <string name="downloads">İndirilenler</string>
@@ -78,6 +96,31 @@
     <string name="path">Yol</string>
     <string name="modified">Değiştirildi</string>
     <string name="mime_type">MIME türü</string>
+    <string name="meta_dimensions">Boyutlar</string>
+    <string name="meta_camera_make">Kamera üreticisi</string>
+    <string name="meta_camera_model">Kamera modeli</string>
+    <string name="meta_exposure">Pozlama</string>
+    <string name="meta_fnumber">Diyafram</string>
+    <string name="meta_iso">Hassasiyet</string>
+    <string name="meta_focal_length">Odak uzaklığı</string>
+    <string name="meta_date_taken">Çekim tarihi</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Süre</string>
+    <string name="meta_bitrate">Bit hızı</string>
+    <string name="meta_resolution">Çözünürlük</string>
+    <string name="meta_frame_rate">Kare hızı</string>
+    <string name="meta_artist">Sanatçı</string>
+    <string name="meta_title">Başlık</string>
+    <string name="meta_album">Albüm</string>
+    <string name="meta_genre">Tür</string>
+    <string name="meta_year">Yıl</string>
+    <string name="meta_app_label">Uygulama adı</string>
+    <string name="meta_app_version">Sürüm</string>
+    <string name="meta_entries">Öğeler</string>
+    <string name="meta_permissions">İzinler</string>
+    <string name="meta_owner">Sahip</string>
+    <string name="meta_group">Grup</string>
+    <string name="meta_size_uncompressed">Sıkıştırmasız boyut</string>
     <string name="items">Öğeler</string>
     <string name="folder">Klasör</string>
     <string name="file">Dosya</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Parola</string>
     <string name="password_required">Parola gerekli</string>
     <string name="pick_folder">Klasör seç</string>
-    <string name="read_only">Salt okunur</string>
     <string name="recent">Son</string>
     <string name="save">Kaydet</string>
     <string name="save_error">Kaydetme hatası</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider bu yol için yapılandırılmamış</string>
     <string name="cannot_launch_installer">Yükleyici başlatılamıyor</string>
     <string name="no_installer_found">Yükleyici bulunamadı</string>
+    <string name="install">Yükle</string>
     <string name="cta_banner">F-Droid tehdit altında. Google, telefonunuza uygulama yükleme şeklinizi değiştiriyor. Yardımınıza ihtiyacımız var.</string>
     <string name="moving_files">Dosyalar taşınıyor</string>
     <string name="copying_files">Dosyalar kopyalanıyor</string>

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">О приложении и часто задаваемых вопросах</string>
     <string name="screen_time">Время на экране</string>
     <string name="learn_more">Подробнее</string>
@@ -37,6 +38,22 @@
     <string name="copy">Копировать…</string>
     <string name="move">Переместить…</string>
     <string name="delete">Удалить</string>
+    <string name="delete_confirm">Удалить %1$s?</string>
+    <string name="delete_failed">Не удалось удалить файл</string>
+    <string name="error">Ошибка</string>
+    <string name="zip_password">Пароль (необязательно)</string>
+    <string name="zip_encryption_hint">Архивы шифруются с помощью AES-256.</string>
+    <string name="failed_to_save">Не удалось сохранить</string>
+    <string name="more_options">Ещё</string>
+    <string name="editor_charset">Кодировка</string>
+    <string name="editor_syntax">Подсветка синтаксиса</string>
+    <string name="editor_line_numbers">Номера строк</string>
+    <string name="editor_word_wrap">Перенос строк</string>
+    <string name="editor_font_size">Размер текста</string>
+    <string name="charset_discards_changes">Смена кодировки перечитает файл и отменит несохранённые изменения.</string>
+    <string name="editing_temporary_copy">Временная копия</string>
+    <string name="temporary_copy_notice">Этот файл нельзя изменить на месте. Сохраните копию, чтобы не потерять изменения.</string>
+    <string name="save_as">Сохранить как…</string>
     <string name="rename">Переименовать</string>
     <string name="open_with">Открыть с помощью</string>
     <string name="create_zip">Создать ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Предоставьте разрешение на просмотр файлов (откройте заново после выдачи)</string>
     <string name="bookmarks">Закладки</string>
     <string name="edit">Изменить</string>
+    <string name="edit_as_text">Редактировать как текст</string>
     <string name="tap_to_remove">Коснитесь, чтобы убрать</string>
     <string name="storage">Хранилище</string>
     <string name="downloads">Загрузки</string>
@@ -78,6 +96,31 @@
     <string name="path">Путь</string>
     <string name="modified">Изменено</string>
     <string name="mime_type">Тип MIME</string>
+    <string name="meta_dimensions">Размеры</string>
+    <string name="meta_camera_make">Производитель камеры</string>
+    <string name="meta_camera_model">Модель камеры</string>
+    <string name="meta_exposure">Выдержка</string>
+    <string name="meta_fnumber">Диафрагма</string>
+    <string name="meta_iso">Чувствительность</string>
+    <string name="meta_focal_length">Фокусное расстояние</string>
+    <string name="meta_date_taken">Дата съёмки</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Длительность</string>
+    <string name="meta_bitrate">Битрейт</string>
+    <string name="meta_resolution">Разрешение</string>
+    <string name="meta_frame_rate">Частота кадров</string>
+    <string name="meta_artist">Исполнитель</string>
+    <string name="meta_title">Название</string>
+    <string name="meta_album">Альбом</string>
+    <string name="meta_genre">Жанр</string>
+    <string name="meta_year">Год</string>
+    <string name="meta_app_label">Название приложения</string>
+    <string name="meta_app_version">Версия</string>
+    <string name="meta_entries">Записи</string>
+    <string name="meta_permissions">Разрешения</string>
+    <string name="meta_owner">Владелец</string>
+    <string name="meta_group">Группа</string>
+    <string name="meta_size_uncompressed">Размер без сжатия</string>
     <string name="items">Объекты</string>
     <string name="folder">Папка</string>
     <string name="file">Файл</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Пароль</string>
     <string name="password_required">Требуется пароль</string>
     <string name="pick_folder">Выбрать папку</string>
-    <string name="read_only">Только чтение</string>
     <string name="recent">Недавние</string>
     <string name="save">Сохранить</string>
     <string name="save_error">Ошибка сохранения</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider не настроен для этого пути</string>
     <string name="cannot_launch_installer">Не удалось запустить установщик</string>
     <string name="no_installer_found">Установщик не найден</string>
+    <string name="install">Установить</string>
     <string name="cta_banner">F-Droid под угрозой. Google меняет способ установки приложений на вашем телефоне. Нам нужна ваша помощь.</string>
     <string name="moving_files">Перемещение файлов</string>
     <string name="copying_files">Копирование файлов</string>

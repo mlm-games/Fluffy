@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">Про застосунок і поширені запитання</string>
     <string name="screen_time">Час на екрані</string>
     <string name="learn_more">Докладніше</string>
@@ -37,6 +38,22 @@
     <string name="copy">Копіювати…</string>
     <string name="move">Перемістити…</string>
     <string name="delete">Видалити</string>
+    <string name="delete_confirm">Видалити %1$s?</string>
+    <string name="delete_failed">Не вдалося видалити файл</string>
+    <string name="error">Помилка</string>
+    <string name="zip_password">Пароль (необов\'язково)</string>
+    <string name="zip_encryption_hint">Архіви шифруються за допомогою AES-256.</string>
+    <string name="failed_to_save">Не вдалося зберегти</string>
+    <string name="more_options">Ще</string>
+    <string name="editor_charset">Кодування</string>
+    <string name="editor_syntax">Підсвічування синтаксису</string>
+    <string name="editor_line_numbers">Номери рядків</string>
+    <string name="editor_word_wrap">Перенесення рядків</string>
+    <string name="editor_font_size">Розмір тексту</string>
+    <string name="charset_discards_changes">Зміна кодування перечитає файл і скасує незбережені зміни.</string>
+    <string name="editing_temporary_copy">Тимчасова копія</string>
+    <string name="temporary_copy_notice">Цей файл не можна змінити на місці. Збережіть копію, щоб не втратити зміни.</string>
+    <string name="save_as">Зберегти як…</string>
     <string name="rename">Перейменувати</string>
     <string name="open_with">Відкрити за допомогою</string>
     <string name="create_zip">Створити ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Надайте дозвіл на перегляд файлів (відкрийте знову після надання)</string>
     <string name="bookmarks">Закладки</string>
     <string name="edit">Редагувати</string>
+    <string name="edit_as_text">Редагувати як текст</string>
     <string name="tap_to_remove">Торкніться, щоб прибрати</string>
     <string name="storage">Сховище</string>
     <string name="downloads">Завантаження</string>
@@ -78,6 +96,31 @@
     <string name="path">Шлях</string>
     <string name="modified">Змінено</string>
     <string name="mime_type">Тип MIME</string>
+    <string name="meta_dimensions">Розміри</string>
+    <string name="meta_camera_make">Виробник камери</string>
+    <string name="meta_camera_model">Модель камери</string>
+    <string name="meta_exposure">Витримка</string>
+    <string name="meta_fnumber">Діафрагма</string>
+    <string name="meta_iso">Чутливість</string>
+    <string name="meta_focal_length">Фокусна відстань</string>
+    <string name="meta_date_taken">Дата зйомки</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Тривалість</string>
+    <string name="meta_bitrate">Бітрейт</string>
+    <string name="meta_resolution">Роздільна здатність</string>
+    <string name="meta_frame_rate">Частота кадрів</string>
+    <string name="meta_artist">Виконавець</string>
+    <string name="meta_title">Назва</string>
+    <string name="meta_album">Альбом</string>
+    <string name="meta_genre">Жанр</string>
+    <string name="meta_year">Рік</string>
+    <string name="meta_app_label">Назва застосунку</string>
+    <string name="meta_app_version">Версія</string>
+    <string name="meta_entries">Записи</string>
+    <string name="meta_permissions">Дозволи</string>
+    <string name="meta_owner">Власник</string>
+    <string name="meta_group">Група</string>
+    <string name="meta_size_uncompressed">Розмір без стиснення</string>
     <string name="items">Елементи</string>
     <string name="folder">Тека</string>
     <string name="file">Файл</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Пароль</string>
     <string name="password_required">Потрібен пароль</string>
     <string name="pick_folder">Вибрати теку</string>
-    <string name="read_only">Лише читання</string>
     <string name="recent">Останні</string>
     <string name="save">Зберегти</string>
     <string name="save_error">Помилка збереження</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider не налаштовано для цього шляху</string>
     <string name="cannot_launch_installer">Не вдалося запустити інсталятор</string>
     <string name="no_installer_found">Інсталятор не знайдено</string>
+    <string name="install">Установити</string>
     <string name="cta_banner">F-Droid під загрозою. Google змінює спосіб інсталяції застосунків на вашому телефоні. Нам потрібна ваша допомога.</string>
     <string name="moving_files">Переміщення файлів</string>
     <string name="copying_files">Копіювання файлів</string>

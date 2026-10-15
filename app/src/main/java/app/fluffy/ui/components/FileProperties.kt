@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -44,6 +46,9 @@ import androidx.documentfile.provider.DocumentFile
 import app.fluffy.R
 import app.fluffy.helper.DeviceUtils
 import app.fluffy.io.FileSystemAccess
+import app.fluffy.util.FileMetadata
+import app.fluffy.util.MetaKey
+import app.fluffy.util.MetaRow
 import app.fluffy.util.UiFormat.formatDate
 import app.fluffy.util.UiFormat.formatSize
 import kotlinx.coroutines.Dispatchers
@@ -139,6 +144,48 @@ private fun resolveItemProperties(context: Context, uri: Uri, knownIsDir: Boolea
     } else base
 }
 
+internal data class ItemDetails(val props: ItemProperties, val extra: List<MetaRow>)
+
+private suspend fun resolveDetails(
+    context: Context,
+    uri: Uri,
+    knownIsDir: Boolean?,
+    withMetadata: Boolean
+): ItemDetails {
+    val props = resolveItemProperties(context, uri, knownIsDir)
+    if (!withMetadata || props.isDir) return ItemDetails(props, emptyList())
+    val extra = FileMetadata.collect(context, uri, props.name, props.mimeType)
+    return ItemDetails(props, extra)
+}
+
+private fun labelFor(key: MetaKey): Int = when (key) {
+    MetaKey.DIMENSIONS -> R.string.meta_dimensions
+    MetaKey.CAMERA_MAKE -> R.string.meta_camera_make
+    MetaKey.CAMERA_MODEL -> R.string.meta_camera_model
+    MetaKey.EXPOSURE_TIME -> R.string.meta_exposure
+    MetaKey.F_NUMBER -> R.string.meta_fnumber
+    MetaKey.ISO -> R.string.meta_iso
+    MetaKey.FOCAL_LENGTH -> R.string.meta_focal_length
+    MetaKey.DATE_TAKEN -> R.string.meta_date_taken
+    MetaKey.GPS -> R.string.meta_gps
+    MetaKey.DURATION -> R.string.meta_duration
+    MetaKey.BITRATE -> R.string.meta_bitrate
+    MetaKey.RESOLUTION -> R.string.meta_resolution
+    MetaKey.FRAME_RATE -> R.string.meta_frame_rate
+    MetaKey.ARTIST -> R.string.meta_artist
+    MetaKey.TITLE -> R.string.meta_title
+    MetaKey.ALBUM -> R.string.meta_album
+    MetaKey.GENRE -> R.string.meta_genre
+    MetaKey.YEAR -> R.string.meta_year
+    MetaKey.APP_LABEL -> R.string.meta_app_label
+    MetaKey.APP_VERSION -> R.string.meta_app_version
+    MetaKey.ENTRIES -> R.string.meta_entries
+    MetaKey.SIZE_UNCOMPRESSED -> R.string.meta_size_uncompressed
+    MetaKey.PERMISSIONS -> R.string.meta_permissions
+    MetaKey.OWNER -> R.string.meta_owner
+    MetaKey.GROUP -> R.string.meta_group
+}
+
 @Composable
 fun ItemPropertiesDialog(
     uris: List<Uri>,
@@ -149,9 +196,10 @@ fun ItemPropertiesDialog(
     val scroll = rememberScrollState()
     val contentFocus = remember { FocusRequester() }
     val confirmFocus = remember { FocusRequester() }
-    val propsList by produceState<List<ItemProperties>?>(initialValue = null, uris) {
+    val details by produceState<List<ItemDetails>?>(initialValue = null, uris) {
+        val single = uris.size == 1
         value = withContext(Dispatchers.IO) {
-            uris.map { uri -> resolveItemProperties(context, uri, knownIsDir(uri)) }
+            uris.map { uri -> resolveDetails(context, uri, knownIsDir(uri), single) }
         }
     }
 
@@ -164,7 +212,7 @@ fun ItemPropertiesDialog(
             )
         },
         text = {
-            when (val list = propsList) {
+            when (val list = details) {
                 null -> {
                     Box(
                         Modifier
@@ -183,7 +231,7 @@ fun ItemPropertiesDialog(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         if (list.size == 1) {
-                            val p = list.first()
+                            val p = list.first().props
                             PropertyRow(stringResource(R.string.name), p.name)
                             PropertyRow(
                                 stringResource(R.string.type),
@@ -217,10 +265,21 @@ fun ItemPropertiesDialog(
                                     if (it) stringResource(R.string.yes) else stringResource(R.string.no)
                                 )
                             }
+                            val extra = list.first().extra
+                            if (extra.isNotEmpty()) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 4.dp),
+                                    color = MaterialTheme.colorScheme.outlineVariant
+                                )
+                                extra.forEach { row ->
+                                    PropertyRow(stringResource(labelFor(row.key)), row.value)
+                                }
+                            }
                         } else {
-                            val folders = list.count { it.isDir }
-                            val files = list.size - folders
-                            val totalSize = list.mapNotNull { it.sizeBytes }.sum()
+                            val props = list.map { it.props }
+                            val folders = props.count { it.isDir }
+                            val files = props.size - folders
+                            val totalSize = props.mapNotNull { it.sizeBytes }.sum()
                             Text(
                                 stringResource(R.string.folders_count, folders),
                                 style = MaterialTheme.typography.bodyMedium
@@ -236,7 +295,7 @@ fun ItemPropertiesDialog(
                                 )
                             }
                             Spacer(Modifier.height(8.dp))
-                            list.take(20).forEach { p ->
+                            props.take(20).forEach { p ->
                                 Text(
                                     "• ${p.name}",
                                     style = MaterialTheme.typography.bodySmall,
@@ -244,9 +303,9 @@ fun ItemPropertiesDialog(
                                     overflow = TextOverflow.Ellipsis
                                 )
                             }
-                            if (list.size > 20) {
+                            if (props.size > 20) {
                                 Text(
-                                    "… +${list.size - 20}",
+                                    "… +${props.size - 20}",
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -293,9 +352,9 @@ fun TvDialogScrollBox(
     val scope = rememberCoroutineScope()
     var focused by remember { mutableStateOf(false) }
 
-    Box(Modifier.fillMaxWidth()) {
-        Column(
-            modifier = Modifier
+    Box(Modifier.fillMaxWidth().heightIn(max = 360.dp)) {
+        Box(
+            Modifier
                 .fillMaxWidth()
                 .verticalScroll(scroll)
                 .then(
@@ -329,10 +388,14 @@ fun TvDialogScrollBox(
                             }
                         }
                     else Modifier
-                ),
-            verticalArrangement = verticalArrangement
+                )
         ) {
-            content()
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = verticalArrangement
+            ) {
+                content()
+            }
         }
         if (isTv && focused) {
             if (scroll.canScrollBackward) {

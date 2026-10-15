@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">Az alkalmazásról és a gyakori kérdésekről</string>
     <string name="screen_time">Képernyőidő</string>
     <string name="learn_more">Tudj meg többet</string>
@@ -37,6 +38,22 @@
     <string name="copy">Másolás…</string>
     <string name="move">Áthelyezés…</string>
     <string name="delete">Törlés</string>
+    <string name="delete_confirm">Törli ezt: %1$s?</string>
+    <string name="delete_failed">A fájl törlése nem sikerült</string>
+    <string name="error">Hiba</string>
+    <string name="zip_password">Jelszó (nem kötelező)</string>
+    <string name="zip_encryption_hint">Az archívumok AES-256 titkosítással készülnek.</string>
+    <string name="failed_to_save">Mentés sikertelen</string>
+    <string name="more_options">További lehetőségek</string>
+    <string name="editor_charset">Karakterkészlet</string>
+    <string name="editor_syntax">Szintaxiskiemelés</string>
+    <string name="editor_line_numbers">Sorszámok</string>
+    <string name="editor_word_wrap">Sortörés</string>
+    <string name="editor_font_size">Betűméret</string>
+    <string name="charset_discards_changes">A karakterkészlet módosítása újraolvassa a fájlt, és elveti a nem mentett módosításokat.</string>
+    <string name="editing_temporary_copy">Ideiglenes másolat</string>
+    <string name="temporary_copy_notice">Ez a fájl nem módosítható a helyén. Mentse másolatként a változtatások megtartásához.</string>
+    <string name="save_as">Mentés másként…</string>
     <string name="rename">Átnevezés</string>
     <string name="open_with">Megnyitás ezzel</string>
     <string name="create_zip">ZIP létrehozása</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Adjon engedélyt a fájlok böngészéséhez (az engedélyezés után nyissa újra)</string>
     <string name="bookmarks">Könyvjelzők</string>
     <string name="edit">Szerkesztés</string>
+    <string name="edit_as_text">Szerkesztés szövegként</string>
     <string name="tap_to_remove">Érintse meg az eltávolításhoz</string>
     <string name="storage">Tárhely</string>
     <string name="downloads">Letöltések</string>
@@ -78,6 +96,31 @@
     <string name="path">Útvonal</string>
     <string name="modified">Módosítva</string>
     <string name="mime_type">MIME-típus</string>
+    <string name="meta_dimensions">Méretek</string>
+    <string name="meta_camera_make">Fényképezőgép gyártója</string>
+    <string name="meta_camera_model">Fényképezőgép típusa</string>
+    <string name="meta_exposure">Expozíció</string>
+    <string name="meta_fnumber">Rekesz</string>
+    <string name="meta_iso">Érzékenység</string>
+    <string name="meta_focal_length">Fókusztávolság</string>
+    <string name="meta_date_taken">Felvétel dátuma</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Időtartam</string>
+    <string name="meta_bitrate">Bitráta</string>
+    <string name="meta_resolution">Felbontás</string>
+    <string name="meta_frame_rate">Képkockasebesség</string>
+    <string name="meta_artist">Előadó</string>
+    <string name="meta_title">Cím</string>
+    <string name="meta_album">Album</string>
+    <string name="meta_genre">Műfaj</string>
+    <string name="meta_year">Év</string>
+    <string name="meta_app_label">Alkalmazás neve</string>
+    <string name="meta_app_version">Verzió</string>
+    <string name="meta_entries">Bejegyzések</string>
+    <string name="meta_permissions">Engedélyek</string>
+    <string name="meta_owner">Tulajdonos</string>
+    <string name="meta_group">Csoport</string>
+    <string name="meta_size_uncompressed">Kicsomagolt méret</string>
     <string name="items">Elemek</string>
     <string name="folder">Mappa</string>
     <string name="file">Fájl</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Jelszó</string>
     <string name="password_required">Jelszó szükséges</string>
     <string name="pick_folder">Mappa kiválasztása</string>
-    <string name="read_only">Csak olvasható</string>
     <string name="recent">Legutóbbi</string>
     <string name="save">Mentés</string>
     <string name="save_error">Mentési hiba</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">A FileProvider nincs beállítva ehhez az útvonalhoz</string>
     <string name="cannot_launch_installer">A telepítő indítása nem sikerült</string>
     <string name="no_installer_found">Nem található telepítő</string>
+    <string name="install">Telepítés</string>
     <string name="cta_banner">A F-Droid veszélyben van. A Google megváltoztatja, hogyan telepítesz alkalmazásokat a telefonodra. Szükségünk van a segítségedre.</string>
     <string name="moving_files">Fájlok áthelyezése</string>
     <string name="copying_files">Fájlok másolása</string>

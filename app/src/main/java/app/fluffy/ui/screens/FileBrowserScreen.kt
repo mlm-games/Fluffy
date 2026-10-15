@@ -160,7 +160,7 @@ fun FileBrowserScreen(
     onOpenDir: (Uri) -> Unit,
     onBack: () -> Unit,
     onExtractArchive: (Uri, Uri) -> Unit,
-    onCreateZip: (List<Uri>, String, Uri, Boolean) -> Unit,
+    onCreateZip: (List<Uri>, String, String?, Uri, Boolean) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenTasks: () -> Unit,
     onAddBookmark: (String) -> Unit = {},
@@ -246,6 +246,7 @@ fun FileBrowserScreen(
 
     // Overwrite confirmations (ZIP / 7z created into currentDir)
     var pendingZipName by remember { mutableStateOf<String?>(null) }
+    var pendingZipPwd by remember { mutableStateOf<String?>(null) }
     var pending7zName by remember { mutableStateOf<String?>(null) }
     var pending7zPwd by remember { mutableStateOf<String?>(null) }
     var showOverwriteConfirm by remember { mutableStateOf(false) }
@@ -332,15 +333,16 @@ fun FileBrowserScreen(
         return runCatching { safIo.childExists(parent, name) }.getOrDefault(false)
     }
 
-    fun confirmOrCreateZip(name: String) {
+    fun confirmOrCreateZip(name: String, pwd: String? = null) {
         val dir = currentDirUri ?: return
         val sources = selected + selectedFiles.map { Uri.fromFile(it) }
         if (uriChildExists(dir, name)) {
             pendingZipName = name
+            pendingZipPwd = pwd
             overwriteMessage = "A file named \"$name\" already exists here. Overwrite it?"
             showOverwriteConfirm = true
         } else {
-            onCreateZip(sources, name, dir, false)
+            onCreateZip(sources, name, pwd?.ifBlank { null }, dir, false)
             selected.clear(); selectedFiles.clear()
         }
     }
@@ -1015,21 +1017,36 @@ fun FileBrowserScreen(
 
     if (showZipNameDialog && currentDirUri != null) {
         var name by rememberSaveable { mutableStateOf("archive.zip") }
+        var pwd by rememberSaveable { mutableStateOf("") }
         AlertDialog(
             onDismissRequest = { showZipNameDialog = false },
             title = { Text(stringResource(R.string.create_zip)) },
             text = {
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    singleLine = true,
-                    label = { Text(stringResource(R.string.filename)) }
-                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = name,
+                        onValueChange = { name = it },
+                        singleLine = true,
+                        label = { Text(stringResource(R.string.filename)) }
+                    )
+                    OutlinedTextField(
+                        value = pwd,
+                        onValueChange = { pwd = it },
+                        singleLine = true,
+                        visualTransformation = PasswordVisualTransformation(),
+                        label = { Text(stringResource(R.string.zip_password)) }
+                    )
+                    Text(
+                        stringResource(R.string.zip_encryption_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             },
             confirmButton = {
                 TextButton(onClick = {
                     showZipNameDialog = false
-                    confirmOrCreateZip(name)
+                    confirmOrCreateZip(name, pwd)
                 }) { Text(stringResource(R.string.create)) }
             },
             dismissButton = {
@@ -1213,8 +1230,9 @@ fun FileBrowserScreen(
                 if (currentDirUri != null) {
                     val sources = selected + selectedFiles.map { Uri.fromFile(it) }
                     pendingZipName?.let { n ->
-                        onCreateZip(sources, n, currentDirUri, true)
+                        onCreateZip(sources, n, pendingZipPwd, currentDirUri, true)
                         pendingZipName = null
+                        pendingZipPwd = null
                     }
                     pending7zName?.let { n ->
                         onCreate7z(sources, n, pending7zPwd, currentDirUri, true)
@@ -1227,6 +1245,7 @@ fun FileBrowserScreen(
             onDismiss = {
                 showOverwriteConfirm = false
                 pendingZipName = null
+                pendingZipPwd = null
                 pending7zName = null
                 pending7zPwd = null
             }

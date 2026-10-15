@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">Om appen och vanliga frågor</string>
     <string name="screen_time">Skärmtid</string>
     <string name="learn_more">Läs mer</string>
@@ -37,6 +38,22 @@
     <string name="copy">Kopiera…</string>
     <string name="move">Flytta…</string>
     <string name="delete">Ta bort</string>
+    <string name="delete_confirm">Ta bort %1$s?</string>
+    <string name="delete_failed">Kunde inte ta bort filen</string>
+    <string name="error">Fel</string>
+    <string name="zip_password">Lösenord (valfritt)</string>
+    <string name="zip_encryption_hint">Arkiv krypteras med AES-256.</string>
+    <string name="failed_to_save">Kunde inte spara</string>
+    <string name="more_options">Fler alternativ</string>
+    <string name="editor_charset">Teckenuppsättning</string>
+    <string name="editor_syntax">Syntaxmarkering</string>
+    <string name="editor_line_numbers">Radnummer</string>
+    <string name="editor_word_wrap">Radbrytning</string>
+    <string name="editor_font_size">Textstorlek</string>
+    <string name="charset_discards_changes">Om du ändrar teckenuppsättningen läses filen in på nytt och osparade ändringar kasseras.</string>
+    <string name="editing_temporary_copy">Tillfällig kopia</string>
+    <string name="temporary_copy_notice">Den här filen kan inte ändras på plats. Spara en kopia för att behålla ändringarna.</string>
+    <string name="save_as">Spara som…</string>
     <string name="rename">Byt namn</string>
     <string name="open_with">Öppna med</string>
     <string name="create_zip">Skapa ZIP</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">Ge tillstånd att bläddra bland filer (öppna igen när du har beviljat)</string>
     <string name="bookmarks">Bokmärken</string>
     <string name="edit">Redigera</string>
+    <string name="edit_as_text">Redigera som text</string>
     <string name="tap_to_remove">Tryck för att ta bort</string>
     <string name="storage">Lagring</string>
     <string name="downloads">Nedladdningar</string>
@@ -78,6 +96,31 @@
     <string name="path">Sökväg</string>
     <string name="modified">Ändrad</string>
     <string name="mime_type">MIME-typ</string>
+    <string name="meta_dimensions">Mått</string>
+    <string name="meta_camera_make">Kameratillverkare</string>
+    <string name="meta_camera_model">Kameramodell</string>
+    <string name="meta_exposure">Exponering</string>
+    <string name="meta_fnumber">Bländare</string>
+    <string name="meta_iso">Känslighet</string>
+    <string name="meta_focal_length">Brännvidd</string>
+    <string name="meta_date_taken">Fotodatum</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">Längd</string>
+    <string name="meta_bitrate">Bithastighet</string>
+    <string name="meta_resolution">Upplösning</string>
+    <string name="meta_frame_rate">Bildfrekvens</string>
+    <string name="meta_artist">Artist</string>
+    <string name="meta_title">Titel</string>
+    <string name="meta_album">Album</string>
+    <string name="meta_genre">Genre</string>
+    <string name="meta_year">År</string>
+    <string name="meta_app_label">Appnamn</string>
+    <string name="meta_app_version">Version</string>
+    <string name="meta_entries">Poster</string>
+    <string name="meta_permissions">Behörigheter</string>
+    <string name="meta_owner">Ägare</string>
+    <string name="meta_group">Grupp</string>
+    <string name="meta_size_uncompressed">Okomprimerad storlek</string>
     <string name="items">Objekt</string>
     <string name="folder">Mapp</string>
     <string name="file">Fil</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">Lösenord</string>
     <string name="password_required">Lösenord krävs</string>
     <string name="pick_folder">Välj mapp</string>
-    <string name="read_only">Skrivskyddad</string>
     <string name="recent">Senaste</string>
     <string name="save">Spara</string>
     <string name="save_error">Fel vid sparande</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">FileProvider är inte konfigurerad för den här sökvägen</string>
     <string name="cannot_launch_installer">Kan inte starta installatorn</string>
     <string name="no_installer_found">Ingen installator hittades</string>
+    <string name="install">Installera</string>
     <string name="cta_banner">F-Droid är hotat. Google ändrar hur du installerar appar på din telefon. Vi behöver ditt stöd.</string>
     <string name="moving_files">Flyttar filer</string>
     <string name="copying_files">Kopierar filer</string>

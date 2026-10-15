@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name">Fluffy</string>
     <string name="about_fluffy">정보 및 자주 묻는 질문</string>
     <string name="screen_time">화면 사용 시간</string>
     <string name="learn_more">자세히 알아보기</string>
@@ -37,6 +38,22 @@
     <string name="copy">복사…</string>
     <string name="move">이동…</string>
     <string name="delete">삭제</string>
+    <string name="delete_confirm">%1$s을(를) 삭제할까요?</string>
+    <string name="delete_failed">파일을 삭제할 수 없습니다</string>
+    <string name="error">오류</string>
+    <string name="zip_password">비밀번호(선택 사항)</string>
+    <string name="zip_encryption_hint">압축 파일은 AES-256으로 암호화됩니다.</string>
+    <string name="failed_to_save">저장 실패</string>
+    <string name="more_options">추가 옵션</string>
+    <string name="editor_charset">문자 집합</string>
+    <string name="editor_syntax">구문 강조</string>
+    <string name="editor_line_numbers">줄 번호</string>
+    <string name="editor_word_wrap">자동 줄 바꿈</string>
+    <string name="editor_font_size">글자 크기</string>
+    <string name="charset_discards_changes">문자 집합을 변경하면 파일을 다시 읽고 저장하지 않은 변경사항이 버려집니다.</string>
+    <string name="editing_temporary_copy">임시 복사본</string>
+    <string name="temporary_copy_notice">이 파일은 직접 수정할 수 없습니다. 변경사항을 유지하려면 복사본을 저장하세요.</string>
+    <string name="save_as">다른 이름으로 저장…</string>
     <string name="rename">이름 변경</string>
     <string name="open_with">다른 앱으로 열기</string>
     <string name="create_zip">ZIP 만들기</string>
@@ -53,6 +70,7 @@
     <string name="grant_permission">파일 탐색 권한을 허용하세요(허용 후 다시 열어 주세요)</string>
     <string name="bookmarks">북마크</string>
     <string name="edit">편집</string>
+    <string name="edit_as_text">텍스트로 편집</string>
     <string name="tap_to_remove">탭하여 제거</string>
     <string name="storage">저장공간</string>
     <string name="downloads">다운로드</string>
@@ -78,6 +96,31 @@
     <string name="path">경로</string>
     <string name="modified">수정됨</string>
     <string name="mime_type">MIME 유형</string>
+    <string name="meta_dimensions">크기</string>
+    <string name="meta_camera_make">카메라 제조사</string>
+    <string name="meta_camera_model">카메라 모델</string>
+    <string name="meta_exposure">노출</string>
+    <string name="meta_fnumber">조리개</string>
+    <string name="meta_iso">감도</string>
+    <string name="meta_focal_length">초점 거리</string>
+    <string name="meta_date_taken">촬영 날짜</string>
+    <string name="meta_gps">GPS</string>
+    <string name="meta_duration">재생 시간</string>
+    <string name="meta_bitrate">비트레이트</string>
+    <string name="meta_resolution">해상도</string>
+    <string name="meta_frame_rate">프레임 속도</string>
+    <string name="meta_artist">아티스트</string>
+    <string name="meta_title">제목</string>
+    <string name="meta_album">앨범</string>
+    <string name="meta_genre">장르</string>
+    <string name="meta_year">연도</string>
+    <string name="meta_app_label">앱 이름</string>
+    <string name="meta_app_version">버전</string>
+    <string name="meta_entries">항목</string>
+    <string name="meta_permissions">권한</string>
+    <string name="meta_owner">소유자</string>
+    <string name="meta_group">그룹</string>
+    <string name="meta_size_uncompressed">압축 해제 크기</string>
     <string name="items">항목</string>
     <string name="folder">폴더</string>
     <string name="file">파일</string>
@@ -188,7 +231,6 @@
     <string name="password_plain">비밀번호</string>
     <string name="password_required">비밀번호 필요</string>
     <string name="pick_folder">폴더 선택</string>
-    <string name="read_only">읽기 전용</string>
     <string name="recent">최근</string>
     <string name="save">저장</string>
     <string name="save_error">저장 오류</string>
@@ -232,6 +274,7 @@
     <string name="fileprovider_error">이 경로에 FileProvider가 구성되지 않았습니다</string>
     <string name="cannot_launch_installer">인스톨러를 실행할 수 없습니다</string>
     <string name="no_installer_found">인스톨러를 찾을 수 없습니다</string>
+    <string name="install">설치</string>
     <string name="cta_banner">F-Droid가 위협받고 있습니다. Google가 스마트폰에 앱을 설치하는 방식을 바꾸려 합니다. 여러분의 도움이 필요합니다.</string>
     <string name="moving_files">파일 이동 중</string>
     <string name="copying_files">파일 복사 중</string>
