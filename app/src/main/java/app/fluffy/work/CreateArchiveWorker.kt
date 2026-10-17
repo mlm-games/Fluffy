@@ -48,11 +48,24 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
             }
             val password = inputData.getString(KEY_PASSWORD)?.takeIf { it.isNotEmpty() }?.toCharArray()
             val overwrite = inputData.getBoolean(KEY_OVERWRITE, false)
+            val encryption = runCatching {
+                ArchiveEngine.ZipEncryption.valueOf(
+                    inputData.getString(KEY_ENCRYPTION) ?: "NONE"
+                )
+            }.getOrDefault(ArchiveEngine.ZipEncryption.NONE)
+            val comment = inputData.getString(KEY_COMMENT)?.takeIf { it.isNotEmpty() }
+            val splitBytes = inputData.getLong(KEY_SPLIT_BYTES, -1L).takeIf { it > 0 }
 
             val level = settings.settingsFlow.first().zipCompressionLevel.roundToInt().coerceIn(0, 9)
+            val options = ArchiveEngine.ZipCreateOptions(
+                compressionLevel = level,
+                encryption = if (password != null) encryption else ArchiveEngine.ZipEncryption.NONE,
+                comment = comment,
+                splitSizeBytes = splitBytes
+            )
 
-            if (!overwrite && io.childExists(targetDir, outName)) {
-                return@withContext Result.failure(workDataOf("error" to "Exists: $outName"))
+            if (splitBytes != null && !outName.endsWith(".zip", ignoreCase = true)) {
+                return@withContext Result.failure(workDataOf("error" to "Split archives need a .zip name"))
             }
 
             val pairs = mutableListOf<Pair<String, () -> InputStream>>()
@@ -63,24 +76,75 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
             }
             if (pairs.isEmpty()) return@withContext Result.failure(workDataOf("error" to "Nothing to archive"))
 
-            val outUri = io.createFile(targetDir, outName, "application/zip", overwrite = overwrite)
-            val writeTarget: () -> OutputStream = { io.openOut(outUri) }
-
             setProgress(workDataOf("progress" to 0f))
 
-            try {
-                archive.createZip(
+            fun progress(done: Long, total: Long) {
+                val frac = if (total > 0) done.toFloat() / total else 0f
+                setProgressAsync(workDataOf("progress" to frac))
+            }
+
+            if (splitBytes != null) {
+                val stem = outName.dropLast(4)
+                val staged = archive.stageZipParts(
                     sources = pairs,
-                    writeTarget = writeTarget,
-                    compressionLevel = level,
-                    password = password
-                ) { done, total ->
-                    val frac = if (total > 0) done.toFloat() / total else 0f
-                    setProgressAsync(workDataOf("progress" to frac))
+                    options = options,
+                    password = password,
+                    onProgress = ::progress
+                )
+                val created = mutableListOf<Uri>()
+                try {
+                    for (part in staged) {
+                        val suffix = part.name.let { n ->
+                            val i = n.lastIndexOf(".z")
+                            if (i != -1 && n.substring(i).matches(Regex("\\.z\\d+"))) {
+                                n.substring(i)
+                            } else {
+                                ".zip"
+                            }
+                        }
+                        val partName = stem + suffix
+                        if (!overwrite && io.childExists(targetDir, partName)) {
+                            throw java.io.IOException("Exists: $partName")
+                        }
+                        val partUri = io.createFile(
+                            targetDir, partName, "application/zip", overwrite = overwrite
+                        )
+                        created += partUri
+                        part.inputStream().use { input ->
+                            io.openOut(partUri).use { output -> input.copyTo(output) }
+                        }
+                    }
+                } catch (e: Exception) {
+                    created.forEach { runCatching { io.delete(it) } }
+                    throw e
+                } finally {
+                    staged.forEach { runCatching { it.delete() } }
                 }
-            } catch (e: Exception) {
-                runCatching { io.delete(outUri) }
-                throw e
+                sweepStaleSplitParts(targetDir, stem, keep = created)
+            } else {
+                if (!overwrite && io.childExists(targetDir, outName)) {
+                    return@withContext Result.failure(workDataOf("error" to "Exists: $outName"))
+                }
+                val stem = outName.removeSuffix(".zip").removeSuffix(".ZIP")
+                val outUri = io.createFile(targetDir, outName, "application/zip", overwrite = overwrite)
+                val writeTarget: () -> OutputStream = { io.openOut(outUri) }
+
+                try {
+                    archive.createZip(
+                        sources = pairs,
+                        writeTarget = writeTarget,
+                        options = options,
+                        password = password,
+                        onProgress = ::progress
+                    )
+                } catch (e: Exception) {
+                    if (e is kotlinx.coroutines.CancellationException) throw e
+                    runCatching { io.delete(outUri) }
+                    throw e
+                }
+                if (overwrite) {
+                    sweepStaleSplitParts(targetDir, stem, keep = listOf(outUri))
+                }
             }
 
             setProgressAsync(workDataOf("progress" to 1f))
@@ -90,6 +154,17 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
         } catch (e: Exception) {
             app.fluffy.util.AppLog.e("CreateArchiveWorker", "create zip failed", e)
             Result.failure(workDataOf("error" to (e.message ?: e.toString())))
+        }
+    }
+
+    private fun sweepStaleSplitParts(targetDir: Uri, stem: String, keep: List<Uri>) {
+        if (stem.isBlank()) return
+        runCatching {
+            val keepNames = keep.mapNotNull { runCatching { io.queryDisplayName(it) }.getOrNull() }.toSet()
+            val pattern = Regex("${Regex.escape(stem)}\\.z\\d{2,3}")
+            io.listChildRefs(targetDir)
+                .filter { !it.isDir && pattern.matches(it.name) && it.name !in keepNames }
+                .forEach { runCatching { io.delete(it.uri) } }
         }
     }
 
@@ -215,5 +290,8 @@ class CreateArchiveWorker(appContext: Context, params: WorkerParameters) : Corou
         const val KEY_OUT_NAME = "outName"
         const val KEY_PASSWORD = "password"
         const val KEY_OVERWRITE = "overwrite"
+        const val KEY_ENCRYPTION = "encryption"
+        const val KEY_COMMENT = "comment"
+        const val KEY_SPLIT_BYTES = "splitBytes"
     }
 }

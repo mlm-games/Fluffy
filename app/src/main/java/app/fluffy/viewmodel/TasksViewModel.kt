@@ -48,7 +48,12 @@ class TasksViewModel(
         outName: String,
         password: String?,
         overwrite: Boolean,
-    ): String = jobs.enqueueCreateZip(sources, targetDir, outName, password, overwrite)
+        encryption: String = "NONE",
+        comment: String? = null,
+        splitBytes: Long = -1L,
+    ): String = jobs.enqueueCreateZip(
+        sources, targetDir, outName, password, overwrite, encryption, comment, splitBytes
+    )
 
     fun enqueueCreate7z(
         sources: List<Uri>,

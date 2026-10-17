@@ -409,9 +409,18 @@ class MainActivity : AppCompatActivity() {
                                             )
                                         },
 
-                                        onCreateZip = { sources, outName, password, targetDir, overwrite ->
-                                            confirmShellWrite(targetDir) {
-                                                tasksVM.enqueueCreateZip(sources, targetDir, outName, password, overwrite)
+                                        onCreateZip = { req ->
+                                            confirmShellWrite(req.targetDir) {
+                                                tasksVM.enqueueCreateZip(
+                                                    sources = req.sources,
+                                                    targetDir = req.targetDir,
+                                                    outName = req.outName,
+                                                    password = req.password,
+                                                    overwrite = req.overwrite,
+                                                    encryption = req.encryption.name,
+                                                    comment = req.comment,
+                                                    splitBytes = req.splitBytes ?: -1L
+                                                )
                                                 showTaskCenter = true
                                             }
                                         },

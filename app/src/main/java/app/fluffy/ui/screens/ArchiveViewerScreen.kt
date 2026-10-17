@@ -11,6 +11,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,8 +25,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.FactCheck
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Comment
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.FileOpen
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.InstallDesktop
 import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material.icons.filled.Search
@@ -39,6 +47,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.LoadingIndicator
@@ -125,6 +135,9 @@ fun ArchiveViewerScreen(
     var canOpenAsFolder by remember { mutableStateOf(false) }
     var selectionMode by remember { mutableStateOf(false) }
     val selected = remember { mutableStateMapOf<String, Boolean>() }
+    var updating by remember { mutableStateOf(false) }
+    var confirmDeletePaths by remember { mutableStateOf<List<String>?>(null) }
+    var showCommentDialog by remember { mutableStateOf(false) }
     var currentPath by rememberSaveable(archiveUri) { mutableStateOf("") }
     var searchActive by rememberSaveable(archiveUri) { mutableStateOf(false) }
     var searchQuery by rememberSaveable(archiveUri) { mutableStateOf("") }
@@ -150,6 +163,10 @@ fun ArchiveViewerScreen(
 
     val archiveFilter = searchQuery.trim()
     val isArchiveFiltering = archiveFilter.isNotEmpty()
+
+    val isZipLike = remember(title) {
+        ArchiveTypes.infer(title.lowercase())?.let { it == ArchiveTypes.Kind.ZIP } == true
+    }
 
     // Visible (top-level directory within currentPath)
     val visible = remember(listing, currentPath, archiveFilter) {
@@ -235,8 +252,7 @@ fun ArchiveViewerScreen(
         val doc = io.docFileFromUri(archiveUri)
         val mimeType = doc?.type ?: ""
         val fileName = name.lowercase()
-
-        val isZipLike = ArchiveTypes.infer(fileName)?.let { it == ArchiveTypes.Kind.ZIP } == true
+        val zipLikeNow = ArchiveTypes.infer(fileName)?.let { it == ArchiveTypes.Kind.ZIP } == true
 
         if (doc?.isDirectory == true && mimeType.startsWith("vnd.android.document") ) {
             loading = false
@@ -292,7 +308,7 @@ fun ArchiveViewerScreen(
             if (listing.isEmpty() && res.error != null) {
                 error = res.error
             }
-            if (listing.isEmpty() && isZipLike) {
+            if (listing.isEmpty() && zipLikeNow) {
                 val fb = withContext(Dispatchers.IO) { listWithCommonsZip() }
                 if (fb.isNotEmpty()) listing = fb
             }
@@ -300,7 +316,7 @@ fun ArchiveViewerScreen(
             loading = false
             listing = emptyList()
 
-            if (isZipLike) {
+            if (zipLikeNow) {
                 val fb = withContext(Dispatchers.IO) { listWithCommonsZip() }
                 if (fb.isNotEmpty()) {
                     error = null
@@ -331,6 +347,83 @@ fun ArchiveViewerScreen(
         selected.clear()
     }
 
+    fun runUpdate(
+        remove: List<String> = emptyList(),
+        add: List<Pair<String, () -> java.io.InputStream>> = emptyList(),
+        comment: String? = null,
+        replaceComment: Boolean = false,
+    ) {
+        scope.launch {
+            updating = true
+            error = null
+            try {
+                withContext(Dispatchers.IO) {
+                    archive.updateZip(
+                        title,
+                        { io.openIn(archiveUri) },
+                        password = password.ifBlank { null }?.toCharArray(),
+                        remove = remove,
+                        add = add,
+                        comment = comment,
+                        replaceComment = replaceComment,
+                        writeBack = { io.openOut(archiveUri) }
+                    )
+                }
+                selectionMode = false
+                load()
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                error = e.message ?: msgUnknownError
+            } finally {
+                updating = false
+            }
+        }
+    }
+
+    val addPicker = rememberLauncherForActivityResult(
+        ActivityResultContracts.GetMultipleContents()
+    ) { uris ->
+        if (uris.isNotEmpty()) {
+            val pairs = uris.map { uri ->
+                val entryName = io.queryDisplayName(uri).ifBlank { "item" }
+                entryName to { io.openIn(uri) }
+            }
+            runUpdate(add = pairs)
+        }
+    }
+
+    fun openApkInstaller() {
+        val installUri = when (archiveUri.scheme) {
+            "file" -> try {
+                FileProvider.getUriForFile(
+                    ctx,
+                    "${ctx.packageName}.fileprovider",
+                    File(requireNotNull(archiveUri.path))
+                )
+            } catch (e: Exception) {
+                AppLog.w("ArchiveViewer", "install FileProvider failed: $archiveUri", e)
+                snackBarManager.show(msgFileProvider)
+                return
+            }
+            else -> archiveUri
+        }
+
+        val intent = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(installUri, "application/vnd.android.package-archive")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+
+        val pm = ctx.packageManager
+        if (intent.resolveActivity(pm) != null) {
+            runCatching { ctx.startActivity(intent) }.onFailure {
+                snackBarManager.show(msgCannotLaunch)
+            }
+        } else {
+            snackBarManager.show(msgNoInstaller)
+        }
+    }
+
     LaunchedEffect(archiveUri) { load() }
     LaunchedEffect(password) { if (password.isNotEmpty()) load() }
 
@@ -354,56 +447,90 @@ fun ArchiveViewerScreen(
                         IconButton(onClick = { searchActive = true }) {
                             Icon(Icons.Default.Search, contentDescription = stringResource(R.string.search))
                         }
-                        IconButton(onClick = { onExtractTo(archiveUri, password.ifBlank { null }) }) {
-                            Icon(Icons.Filled.FileOpen, contentDescription = stringResource(R.string.extract_all))
-                        }
-                        IconButton(onClick = { selectionMode = !selectionMode }) {
-                            Icon(Icons.AutoMirrored.Filled.FactCheck, contentDescription = stringResource(R.string.select_entries))
-                        }
-                        if (selectionMode && selected.values.any { it }) {
-                            IconButton(onClick = {
-                                val paths = selected.entries.filter { it.value }.map { it.key }
-                                onExtractSelected(archiveUri, paths, password.ifBlank { null })
-                            }) {
-                                Icon(Icons.Filled.DoneAll, contentDescription = stringResource(R.string.extract_selected))
-                            }
-                        }
+                        var overflowMenu by remember { mutableStateOf(false) }
+                        val hasSelection = selectionMode && selected.values.any { it }
                         val isApk = remember(title) { title.lowercase().endsWith(".apk") }
-                        if (isApk) {
-                            IconButton(onClick = {
-                                val installUri = when (archiveUri.scheme) {
-                                    "file" ->                                 try {
-                                        FileProvider.getUriForFile(
-                                            ctx,
-                                            "${ctx.packageName}.fileprovider",
-                                            File(requireNotNull(archiveUri.path))
-                                        )
-                                    } catch (e: Exception) {
-                                        AppLog.w("ArchiveViewer", "install FileProvider failed: $archiveUri", e)
-                                        snackBarManager.show(msgFileProvider)
-                                        return@IconButton
+                        Box {
+                            IconButton(onClick = { overflowMenu = true }) {
+                                Icon(Icons.Filled.MoreVert, contentDescription = stringResource(R.string.more_options))
+                            }
+                            DropdownMenu(
+                                expanded = overflowMenu,
+                                onDismissRequest = { overflowMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.extract_all)) },
+                                    leadingIcon = { Icon(Icons.Filled.FileOpen, null) },
+                                    onClick = {
+                                        overflowMenu = false
+                                        onExtractTo(archiveUri, password.ifBlank { null })
                                     }
-                                    else -> archiveUri
-                                }
-
-                                val intent = Intent(Intent.ACTION_VIEW).apply {
-                                    setDataAndType(installUri, "application/vnd.android.package-archive")
-                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                    // addFlags(Intent.FLAG_ACTIVITY_NEW_TASK) // only if ctx is not an Activity
-                                }
-
-                                val pm = ctx.packageManager
-                                if (intent.resolveActivity(pm) != null) {
-                                    runCatching { ctx.startActivity(intent) }.onFailure {
-                                        snackBarManager.show(msgCannotLaunch)
+                                )
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.select_entries)) },
+                                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.FactCheck, null) },
+                                    trailingIcon = { if (selectionMode) Icon(Icons.Filled.Check, null) },
+                                    onClick = {
+                                        overflowMenu = false
+                                        selectionMode = !selectionMode
                                     }
-                                } else {
-                                    snackBarManager.show(msgNoInstaller)
+                                )
+                                if (hasSelection) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.extract_selected)) },
+                                        leadingIcon = { Icon(Icons.Filled.DoneAll, null) },
+                                        onClick = {
+                                            overflowMenu = false
+                                            val paths = selected.entries.filter { it.value }.map { it.key }
+                                            onExtractSelected(archiveUri, paths, password.ifBlank { null })
+                                        }
+                                    )
                                 }
-                            }) {
-                                Icon(Icons.Default.InstallDesktop, contentDescription = stringResource(R.string.install_open_with))
+                                if (isZipLike && !updating) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.add_files)) },
+                                        leadingIcon = { Icon(Icons.Filled.Add, null) },
+                                        onClick = {
+                                            overflowMenu = false
+                                            addPicker.launch("*/*")
+                                        }
+                                    )
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.archive_comment)) },
+                                        leadingIcon = { Icon(Icons.Filled.Comment, null) },
+                                        onClick = {
+                                            overflowMenu = false
+                                            showCommentDialog = true
+                                        }
+                                    )
+                                }
+                                if (isZipLike && hasSelection && !updating) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.delete)) },
+                                        leadingIcon = { Icon(Icons.Filled.Delete, null) },
+                                        onClick = {
+                                            overflowMenu = false
+                                            val picked = selected.entries.filter { it.value }.map { it.key }.toSet()
+                                            val expanded = listing
+                                                .filter { e -> !e.isDir && picked.any { p -> e.path == p || e.path.startsWith(p.trimEnd('/') + "/") } }
+                                                .map { it.path }
+                                            confirmDeletePaths = picked.toList() + expanded.filter { it !in picked }
+                                        }
+                                    )
+                                }
+                                if (isApk) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.install_open_with)) },
+                                        leadingIcon = { Icon(Icons.Default.InstallDesktop, null) },
+                                        onClick = {
+                                            overflowMenu = false
+                                            openApkInstaller()
+                                        }
+                                    )
+                                }
                             }
                         }
+                        
                     }
                 }
             )
@@ -615,6 +742,89 @@ fun ArchiveViewerScreen(
                     Text(stringResource(R.string.cancel))
                 }
             }
+        )
+    }
+
+    confirmDeletePaths?.let { paths ->
+        AlertDialog(
+            onDismissRequest = { confirmDeletePaths = null },
+            title = { Text(stringResource(R.string.delete)) },
+            text = { Text(stringResource(R.string.delete_entries_confirm, paths.size)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    confirmDeletePaths = null
+                    runUpdate(remove = paths)
+                }) { Text(stringResource(R.string.delete)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDeletePaths = null }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
+    if (showCommentDialog) {
+        var draft by remember(showCommentDialog) { mutableStateOf("") }
+        var commentLoading by remember(showCommentDialog) { mutableStateOf(true) }
+        LaunchedEffect(showCommentDialog) {
+            draft = withContext(Dispatchers.IO) {
+                runCatching {
+                    archive.readComment(
+                        title,
+                        { io.openIn(archiveUri) },
+                        password = password.ifBlank { null }?.toCharArray()
+                    )
+                }.getOrNull().orEmpty()
+            }
+            commentLoading = false
+        }
+        AlertDialog(
+            onDismissRequest = { showCommentDialog = false },
+            title = { Text(stringResource(R.string.archive_comment)) },
+            text = {
+                if (commentLoading) {
+                    CircularProgressIndicator()
+                } else {
+                    OutlinedTextField(
+                        value = draft,
+                        onValueChange = { draft = it },
+                        label = { Text(stringResource(R.string.archive_comment)) },
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    enabled = !commentLoading,
+                    onClick = {
+                        showCommentDialog = false
+                        runUpdate(comment = draft, replaceComment = true)
+                    }
+                ) { Text(stringResource(R.string.save)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showCommentDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
+    if (updating) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text(stringResource(R.string.updating_archive)) },
+            text = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CircularProgressIndicator()
+                    Text(stringResource(R.string.please_wait))
+                }
+            },
+            confirmButton = {}
         )
     }
 }

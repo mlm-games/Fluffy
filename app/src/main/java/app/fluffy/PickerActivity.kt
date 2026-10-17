@@ -120,7 +120,7 @@ class PickerActivity : ComponentActivity() {
                             }
                         },
                         onExtractArchive = { _, _ -> snackbar.show("Not available in picker mode") },
-                        onCreateZip = { _, _, _, _, _ -> snackbar.show("Not available in picker mode") },
+                        onCreateZip = { _ -> snackbar.show("Not available in picker mode") },
                         onCreate7z = { _, _, _, _, _ -> snackbar.show("Not available in picker mode") },
                         onOpenSettings = { /* hidden in picker mode */ },
                         onOpenTasks = { /* hidden in picker mode */ },

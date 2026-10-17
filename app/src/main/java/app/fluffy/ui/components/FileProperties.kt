@@ -44,8 +44,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.documentfile.provider.DocumentFile
 import app.fluffy.R
+import app.fluffy.archive.ArchiveEngine
 import app.fluffy.helper.DeviceUtils
 import app.fluffy.io.FileSystemAccess
+import app.fluffy.io.SafIo
 import app.fluffy.util.FileMetadata
 import app.fluffy.util.MetaKey
 import app.fluffy.util.MetaRow
@@ -54,6 +56,7 @@ import app.fluffy.util.UiFormat.formatSize
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.koin.compose.koinInject
 import java.io.File
 
 data class ItemProperties(
@@ -150,11 +153,15 @@ private suspend fun resolveDetails(
     context: Context,
     uri: Uri,
     knownIsDir: Boolean?,
-    withMetadata: Boolean
+    withMetadata: Boolean,
+    archive: ArchiveEngine,
+    safIo: SafIo
 ): ItemDetails {
     val props = resolveItemProperties(context, uri, knownIsDir)
     if (!withMetadata || props.isDir) return ItemDetails(props, emptyList())
-    val extra = FileMetadata.collect(context, uri, props.name, props.mimeType)
+    val extra = runCatching {
+        FileMetadata.collect(context, uri, props.name, props.mimeType, archive, safIo)
+    }.getOrDefault(emptyList())
     return ItemDetails(props, extra)
 }
 
@@ -196,10 +203,12 @@ fun ItemPropertiesDialog(
     val scroll = rememberScrollState()
     val contentFocus = remember { FocusRequester() }
     val confirmFocus = remember { FocusRequester() }
+    val archive: ArchiveEngine = koinInject()
+    val safIo: SafIo = koinInject()
     val details by produceState<List<ItemDetails>?>(initialValue = null, uris) {
         val single = uris.size == 1
         value = withContext(Dispatchers.IO) {
-            uris.map { uri -> resolveDetails(context, uri, knownIsDir(uri), single) }
+            uris.map { uri -> resolveDetails(context, uri, knownIsDir(uri), single, archive, safIo) }
         }
     }
 

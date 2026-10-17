@@ -11,8 +11,6 @@ import androidx.exifinterface.media.ExifInterface
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.io.DocumentController
 import app.fluffy.io.SafIo
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.attribute.PosixFilePermission
@@ -30,9 +28,7 @@ enum class MetaKey {
 
 data class MetaRow(val key: MetaKey, val value: String)
 
-object FileMetadata : KoinComponent {
-    private val archive: ArchiveEngine by inject()
-
+object FileMetadata {
     private const val TAG_KEYS_INT_API = 37
 
     private val imageExts = listOf(".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif", ".bmp", ".gif", ".dng")
@@ -43,7 +39,9 @@ object FileMetadata : KoinComponent {
         context: Context,
         uri: Uri,
         displayName: String,
-        mime: String?
+        mime: String?,
+        archive: ArchiveEngine,
+        safIo: SafIo
     ): List<MetaRow> = withContext(Dispatchers.IO) {
         val name = displayName
         val lower = name.lowercase(Locale.ROOT)
@@ -52,20 +50,21 @@ object FileMetadata : KoinComponent {
         val rows = mutableListOf<MetaRow>()
         when {
             lower.endsWith(".apk") -> rows += apkRows(context, uri)
-            ArchiveTypes.isArchive(name) -> rows += archiveRows(context, uri, name)
+            ArchiveTypes.isArchive(name) -> rows += archiveRows(uri, name, archive)
             type.startsWith("image/") || imageExts.any { lower.endsWith(it) } ->
                 rows += imageRows(context, uri)
             type.startsWith("audio/") || type.startsWith("video/") ||
                 audioExts.any { lower.endsWith(it) } || videoExts.any { lower.endsWith(it) } ->
                 rows += mediaRows(context, uri)
         }
-        rows + permissionRows(uri)
+        rows + runCatching { permissionRows(uri, safIo) }
+            .onFailure { AppLog.d("FileMetadata", "permission rows failed for $uri", it) }
+            .getOrDefault(emptyList())
     }
 
-    private suspend fun permissionRows(uri: Uri): List<MetaRow> {
+    private suspend fun permissionRows(uri: Uri, safIo: SafIo): List<MetaRow> {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return emptyList()
-        val io: SafIo by inject()
-        val shell = runCatching { io.statPermissions(uri) }.getOrNull()
+        val shell = runCatching { safIo.statPermissions(uri) }.getOrNull()
         if (shell != null) {
             return buildList {
                 add(MetaRow(MetaKey.PERMISSIONS, shell.mode))
@@ -245,7 +244,11 @@ object FileMetadata : KoinComponent {
         }.getOrDefault(emptyList())
     }
 
-    private suspend fun archiveRows(context: Context, uri: Uri, name: String): List<MetaRow> {
+    private suspend fun archiveRows(
+        uri: Uri,
+        name: String,
+        archive: ArchiveEngine
+    ): List<MetaRow> {
         val file = DocumentController.directFile(uri) ?: return emptyList()
         val opened = runCatching {
             archive.list(name, { file.inputStream() })

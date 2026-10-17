@@ -35,7 +35,10 @@ class ArchiveJobManager(
         targetDir: Uri,
         outName: String,
         password: String? = null,
-        overwrite: Boolean = false
+        overwrite: Boolean = false,
+        encryption: String = "NONE",
+        comment: String? = null,
+        splitBytes: Long = -1L
     ): String {
         val req = OneTimeWorkRequestBuilder<CreateArchiveWorker>()
             .addTag(TAG_ALL).addTag(TAG_CREATE_ZIP)
@@ -45,7 +48,10 @@ class ArchiveJobManager(
                     CreateArchiveWorker.KEY_TARGET_DIR to targetDir.toString(),
                     CreateArchiveWorker.KEY_OUT_NAME to outName,
                     CreateArchiveWorker.KEY_PASSWORD to (password ?: ""),
-                    CreateArchiveWorker.KEY_OVERWRITE to overwrite
+                    CreateArchiveWorker.KEY_OVERWRITE to overwrite,
+                    CreateArchiveWorker.KEY_ENCRYPTION to encryption,
+                    CreateArchiveWorker.KEY_COMMENT to (comment ?: ""),
+                    CreateArchiveWorker.KEY_SPLIT_BYTES to splitBytes
                 )
             )
             .build()

@@ -1,5 +1,6 @@
 package app.fluffy.archive
 
+import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -11,6 +12,15 @@ interface ArchiveEngine {
         val checked: Int,
         val failedPath: String? = null,
         val error: String? = null
+    )
+
+    enum class ZipEncryption { NONE, ZIP_CRYPTO, AES_128, AES_192, AES_256 }
+
+    data class ZipCreateOptions(
+        val compressionLevel: Int = 5,
+        val encryption: ZipEncryption = ZipEncryption.NONE,
+        val comment: String? = null,
+        val splitSizeBytes: Long? = null,
     )
 
     suspend fun list(archiveName: String, open: () -> InputStream, password: CharArray? = null): ListResult
@@ -33,8 +43,33 @@ interface ArchiveEngine {
     suspend fun createZip(
         sources: List<Pair<String, () -> InputStream>>,
         writeTarget: () -> OutputStream,
-        compressionLevel: Int = 5,
+        options: ZipCreateOptions = ZipCreateOptions(),
         password: CharArray? = null,
+        onProgress: (Long, Long) -> Unit = { _, _ -> }
+    )
+
+    suspend fun stageZipParts(
+        sources: List<Pair<String, () -> InputStream>>,
+        options: ZipCreateOptions,
+        password: CharArray? = null,
+        onProgress: (Long, Long) -> Unit = { _, _ -> }
+    ): List<File>
+
+    suspend fun readComment(
+        archiveName: String,
+        open: () -> InputStream,
+        password: CharArray? = null
+    ): String?
+
+    suspend fun updateZip(
+        archiveName: String,
+        open: () -> InputStream,
+        password: CharArray? = null,
+        remove: List<String> = emptyList(),
+        add: List<Pair<String, () -> InputStream>> = emptyList(),
+        comment: String? = null,
+        replaceComment: Boolean = false,
+        writeBack: () -> OutputStream,
         onProgress: (Long, Long) -> Unit = { _, _ -> }
     )
 }

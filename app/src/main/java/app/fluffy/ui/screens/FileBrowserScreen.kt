@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -39,6 +40,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.DriveFileMove
 import androidx.compose.material.icons.automirrored.filled.ViewList
 import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Check
@@ -100,6 +102,8 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -144,11 +148,32 @@ import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.util.UiFormat.formatDate
 import app.fluffy.util.UiFormat.formatSize
 import app.fluffy.viewmodel.QuickAccessItem
+import app.fluffy.archive.ArchiveEngine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.compose.koinInject
 import java.io.File
+
+data class ZipCreateRequest(
+    val sources: List<Uri>,
+    val targetDir: Uri,
+    val outName: String,
+    val password: String?,
+    val encryption: ArchiveEngine.ZipEncryption,
+    val comment: String?,
+    val splitBytes: Long?,
+    val overwrite: Boolean,
+)
+
+val ArchiveEngine.ZipEncryption.labelRes: Int
+    get() = when (this) {
+        ArchiveEngine.ZipEncryption.NONE -> R.string.zip_encryption_none
+        ArchiveEngine.ZipEncryption.ZIP_CRYPTO -> R.string.zip_encryption_zipcrypto
+        ArchiveEngine.ZipEncryption.AES_128 -> R.string.zip_encryption_aes128
+        ArchiveEngine.ZipEncryption.AES_192 -> R.string.zip_encryption_aes192
+        ArchiveEngine.ZipEncryption.AES_256 -> R.string.zip_encryption_aes256
+    }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -160,7 +185,7 @@ fun FileBrowserScreen(
     onOpenDir: (Uri) -> Unit,
     onBack: () -> Unit,
     onExtractArchive: (Uri, Uri) -> Unit,
-    onCreateZip: (List<Uri>, String, String?, Uri, Boolean) -> Unit,
+    onCreateZip: (ZipCreateRequest) -> Unit,
     onOpenSettings: () -> Unit,
     onOpenTasks: () -> Unit,
     onAddBookmark: (String) -> Unit = {},
@@ -245,8 +270,7 @@ fun FileBrowserScreen(
     }
 
     // Overwrite confirmations (ZIP / 7z created into currentDir)
-    var pendingZipName by remember { mutableStateOf<String?>(null) }
-    var pendingZipPwd by remember { mutableStateOf<String?>(null) }
+    var pendingZipRequest by remember { mutableStateOf<ZipCreateRequest?>(null) }
     var pending7zName by remember { mutableStateOf<String?>(null) }
     var pending7zPwd by remember { mutableStateOf<String?>(null) }
     var showOverwriteConfirm by remember { mutableStateOf(false) }
@@ -333,16 +357,36 @@ fun FileBrowserScreen(
         return runCatching { safIo.childExists(parent, name) }.getOrDefault(false)
     }
 
-    fun confirmOrCreateZip(name: String, pwd: String? = null) {
+    fun confirmOrCreateZip(
+        name: String,
+        pwd: String? = null,
+        encryption: ArchiveEngine.ZipEncryption = ArchiveEngine.ZipEncryption.NONE,
+        comment: String? = null,
+        splitBytes: Long? = null
+    ) {
         val dir = currentDirUri ?: return
         val sources = selected + selectedFiles.map { Uri.fromFile(it) }
-        if (uriChildExists(dir, name)) {
-            pendingZipName = name
-            pendingZipPwd = pwd
-            overwriteMessage = "A file named \"$name\" already exists here. Overwrite it?"
+        val fixedName = if (splitBytes != null && !name.endsWith(".zip", ignoreCase = true)) {
+            "$name.zip"
+        } else {
+            name
+        }
+        val request = ZipCreateRequest(
+            sources = sources,
+            targetDir = dir,
+            outName = fixedName,
+            password = pwd?.ifBlank { null },
+            encryption = encryption,
+            comment = comment?.ifBlank { null },
+            splitBytes = splitBytes,
+            overwrite = false
+        )
+        if (uriChildExists(dir, fixedName)) {
+            pendingZipRequest = request
+            overwriteMessage = "A file named \"$fixedName\" already exists here. Overwrite it?"
             showOverwriteConfirm = true
         } else {
-            onCreateZip(sources, name, pwd?.ifBlank { null }, dir, false)
+            onCreateZip(request)
             selected.clear(); selectedFiles.clear()
         }
     }
@@ -1018,11 +1062,21 @@ fun FileBrowserScreen(
     if (showZipNameDialog && currentDirUri != null) {
         var name by rememberSaveable { mutableStateOf("archive.zip") }
         var pwd by rememberSaveable { mutableStateOf("") }
+        var encryption by remember { mutableStateOf(ArchiveEngine.ZipEncryption.AES_256) }
+        var comment by rememberSaveable { mutableStateOf("") }
+        var splitMb by rememberSaveable { mutableStateOf("") }
+        var encryptionMenu by remember { mutableStateOf(false) }
+        val hasPassword = pwd.isNotBlank()
+        val dlgScroll = rememberScrollState()
         AlertDialog(
             onDismissRequest = { showZipNameDialog = false },
             title = { Text(stringResource(R.string.create_zip)) },
             text = {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.fillMaxWidth().heightIn(max = 360.dp)) {
+                    Column(
+                        Modifier.fillMaxWidth().verticalScroll(dlgScroll),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it },
@@ -1036,17 +1090,90 @@ fun FileBrowserScreen(
                         visualTransformation = PasswordVisualTransformation(),
                         label = { Text(stringResource(R.string.zip_password)) }
                     )
+                    Box {
+                        OutlinedTextField(
+                            value = stringResource(encryption.labelRes),
+                            onValueChange = {},
+                            readOnly = true,
+                            singleLine = true,
+                            enabled = hasPassword,
+                            label = { Text(stringResource(R.string.zip_encryption)) },
+                            trailingIcon = {
+                                IconButton(
+                                    enabled = hasPassword,
+                                    onClick = { encryptionMenu = true }
+                                ) {
+                                    Icon(
+                                        Icons.Default.ArrowDropDown,
+                                        contentDescription = null
+                                    )
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        DropdownMenu(
+                            expanded = encryptionMenu,
+                            onDismissRequest = { encryptionMenu = false }
+                        ) {
+                            ArchiveEngine.ZipEncryption.entries.forEach { option ->
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(option.labelRes)) },
+                                    onClick = {
+                                        encryption = option
+                                        encryptionMenu = false
+                                    }
+                                )
+                            }
+                        }
+                    }
                     Text(
-                        stringResource(R.string.zip_encryption_hint),
+                        stringResource(
+                            if (!hasPassword) R.string.zip_encryption_hint
+                            else if (encryption == ArchiveEngine.ZipEncryption.ZIP_CRYPTO) {
+                                R.string.zip_crypto_warning
+                            } else {
+                                R.string.zip_encryption_hint
+                            }
+                        ),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (hasPassword &&
+                            encryption == ArchiveEngine.ZipEncryption.ZIP_CRYPTO
+                        ) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
                     )
+                    OutlinedTextField(
+                        value = comment,
+                        onValueChange = { comment = it },
+                        singleLine = true,
+                        label = { Text(stringResource(R.string.zip_comment)) }
+                    )
+                    OutlinedTextField(
+                        value = splitMb,
+                        onValueChange = { splitMb = it.filter { c -> c.isDigit() }.take(5) },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        label = { Text(stringResource(R.string.zip_split_mb)) }
+                    )
+                    }
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
                     showZipNameDialog = false
-                    confirmOrCreateZip(name, pwd)
+                    val splitBytes = splitMb.toLongOrNull()
+                        ?.takeIf { it >= 1 }
+                        ?.times(1024L * 1024L)
+                    confirmOrCreateZip(
+                        name = name,
+                        pwd = pwd,
+                        encryption = if (hasPassword) encryption
+                        else ArchiveEngine.ZipEncryption.NONE,
+                        comment = comment,
+                        splitBytes = splitBytes
+                    )
                 }) { Text(stringResource(R.string.create)) }
             },
             dismissButton = {
@@ -1229,10 +1356,9 @@ fun FileBrowserScreen(
                 showOverwriteConfirm = false
                 if (currentDirUri != null) {
                     val sources = selected + selectedFiles.map { Uri.fromFile(it) }
-                    pendingZipName?.let { n ->
-                        onCreateZip(sources, n, pendingZipPwd, currentDirUri, true)
-                        pendingZipName = null
-                        pendingZipPwd = null
+                    pendingZipRequest?.let { req ->
+                        onCreateZip(req.copy(overwrite = true))
+                        pendingZipRequest = null
                     }
                     pending7zName?.let { n ->
                         onCreate7z(sources, n, pending7zPwd, currentDirUri, true)
@@ -1244,8 +1370,7 @@ fun FileBrowserScreen(
             },
             onDismiss = {
                 showOverwriteConfirm = false
-                pendingZipName = null
-                pendingZipPwd = null
+                pendingZipRequest = null
                 pending7zName = null
                 pending7zPwd = null
             }

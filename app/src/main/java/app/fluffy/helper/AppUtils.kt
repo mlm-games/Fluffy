@@ -319,7 +319,11 @@ suspend fun Context.createTempZipForShare(sources: List<Pair<Uri, String>>): Fil
             CacheManager.Area.Work, "share_${safeBase}_", ".zip"
         )
         try {
-            archive.createZip(pairs, { out.outputStream() }, compressionLevel = 5)
+            archive.createZip(
+                pairs,
+                { out.outputStream() },
+                options = ArchiveEngine.ZipCreateOptions(compressionLevel = 5)
+            )
         } catch (e: Exception) {
             runCatching { out.delete() }
             throw e
