@@ -53,6 +53,10 @@
     <string name="zip_comment">Arşiv yorumu (isteğe bağlı)</string>
     <string name="zip_split_mb">Parçalara böl, MB (isteğe bağlı)</string>
     <string name="zip_split_enable">Arşivi parçalara böl</string>
+    <string name="test_archive">Arşivi sına</string>
+    <string name="test_archive_ok">Arşiv geçerli. %1$d öğe denetlendi.</string>
+    <string name="test_archive_bad_entry">%1$d öğeden sonra başarısız, %2$s konumunda.</string>
+    <string name="test_archive_failed">Arşiv sınanamadı: %1$s</string>
     <string name="add_files">Dosya ekle</string>
     <string name="archive_comment">Arşiv yorumu</string>
     <string name="updating_archive">Arşiv güncelleniyor</string>

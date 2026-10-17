@@ -53,6 +53,10 @@
     <string name="zip_comment">アーカイブコメント（任意）</string>
     <string name="zip_split_mb">分割サイズ、MB（任意）</string>
     <string name="zip_split_enable">アーカイブを分割する</string>
+    <string name="test_archive">アーカイブをテスト</string>
+    <string name="test_archive_ok">アーカイブは正常です。%1$d件を確認しました。</string>
+    <string name="test_archive_bad_entry">%1$d件の後、%2$sで失敗しました。</string>
+    <string name="test_archive_failed">アーカイブをテストできませんでした: %1$s</string>
     <string name="add_files">ファイルを追加</string>
     <string name="archive_comment">アーカイブコメント</string>
     <string name="updating_archive">アーカイブを更新中</string>

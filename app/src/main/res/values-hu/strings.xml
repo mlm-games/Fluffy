@@ -53,6 +53,10 @@
     <string name="zip_comment">Archív megjegyzés (nem kötelező)</string>
     <string name="zip_split_mb">Felosztás részekre, MB (nem kötelező)</string>
     <string name="zip_split_enable">Archív felosztása kötetekre</string>
+    <string name="test_archive">Archív tesztelése</string>
+    <string name="test_archive_ok">Az archívum érvényes. %1$d bejegyzés ellenőrizve.</string>
+    <string name="test_archive_bad_entry">Hiba %1$d bejegyzés után, itt: %2$s.</string>
+    <string name="test_archive_failed">Az archívum nem tesztelhető: %1$s</string>
     <string name="add_files">Fájlok hozzáadása</string>
     <string name="archive_comment">Archív megjegyzés</string>
     <string name="updating_archive">Archív frissítése</string>

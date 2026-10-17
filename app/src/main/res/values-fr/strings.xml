@@ -53,6 +53,10 @@
     <string name="zip_comment">Commentaire d\'archive (facultatif)</string>
     <string name="zip_split_mb">Diviser en parties, Mo (facultatif)</string>
     <string name="zip_split_enable">Diviser l\'archive en volumes</string>
+    <string name="test_archive">Tester l\'archive</string>
+    <string name="test_archive_ok">L\'archive est valide. %1$d entrées vérifiées.</string>
+    <string name="test_archive_bad_entry">Échec après %1$d entrées, à %2$s.</string>
+    <string name="test_archive_failed">Impossible de tester l\'archive : %1$s</string>
     <string name="add_files">Ajouter des fichiers</string>
     <string name="archive_comment">Commentaire d\'archive</string>
     <string name="updating_archive">Mise à jour de l\'archive</string>

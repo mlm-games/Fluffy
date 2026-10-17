@@ -53,6 +53,10 @@
     <string name="zip_comment">تعليق الأرشيف (اختياري)</string>
     <string name="zip_split_mb">تقسيم إلى أجزاء، ميغابايت (اختياري)</string>
     <string name="zip_split_enable">تقسيم الأرشيف إلى أجزاء</string>
+    <string name="test_archive">اختبار الأرشيف</string>
+    <string name="test_archive_ok">الأرشيف سليم. تم فحص %1$d عنصرًا.</string>
+    <string name="test_archive_bad_entry">فشل بعد %1$d عنصرًا، عند %2$s.</string>
+    <string name="test_archive_failed">تعذّر اختبار الأرشيف: %1$s</string>
     <string name="add_files">إضافة ملفات</string>
     <string name="archive_comment">تعليق الأرشيف</string>
     <string name="updating_archive">جارٍ تحديث الأرشيف</string>

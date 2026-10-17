@@ -53,6 +53,10 @@
     <string name="zip_comment">הערת ארכיון (אופציונלי)</string>
     <string name="zip_split_mb">פיצול לחלקים, מ״ב (אופציונלי)</string>
     <string name="zip_split_enable">פיצול הארכיון לכרכים</string>
+    <string name="test_archive">בדיקת ארכיון</string>
+    <string name="test_archive_ok">הארכיון תקין. נבדקו %1$d רשומות.</string>
+    <string name="test_archive_bad_entry">נכשל לאחר %1$d רשומות, ב־%2$s.</string>
+    <string name="test_archive_failed">לא ניתן לבדוק את הארכיון: %1$s</string>
     <string name="add_files">הוספת קבצים</string>
     <string name="archive_comment">הערת ארכיון</string>
     <string name="updating_archive">מעדכן ארכיון</string>

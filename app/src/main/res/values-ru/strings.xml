@@ -53,6 +53,10 @@
     <string name="zip_comment">Комментарий к архиву (необязательно)</string>
     <string name="zip_split_mb">Разбить на части, МБ (необязательно)</string>
     <string name="zip_split_enable">Разбить архив на части</string>
+    <string name="test_archive">Проверить архив</string>
+    <string name="test_archive_ok">Архив корректен. Проверено записей: %1$d.</string>
+    <string name="test_archive_bad_entry">Сбой после %1$d записей, на %2$s.</string>
+    <string name="test_archive_failed">Не удалось проверить архив: %1$s</string>
     <string name="add_files">Добавить файлы</string>
     <string name="archive_comment">Комментарий к архиву</string>
     <string name="updating_archive">Обновление архива</string>

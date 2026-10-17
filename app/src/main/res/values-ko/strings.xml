@@ -53,6 +53,10 @@
     <string name="zip_comment">압축 파일 설명(선택 사항)</string>
     <string name="zip_split_mb">분할 크기, MB(선택 사항)</string>
     <string name="zip_split_enable">압축 파일을 분할</string>
+    <string name="test_archive">압축 파일 검사</string>
+    <string name="test_archive_ok">압축 파일이 정상입니다. %1$d개 항목을 확인했습니다.</string>
+    <string name="test_archive_bad_entry">%1$d개 항목 후 %2$s에서 실패했습니다.</string>
+    <string name="test_archive_failed">압축 파일을 검사할 수 없습니다: %1$s</string>
     <string name="add_files">파일 추가</string>
     <string name="archive_comment">압축 파일 설명</string>
     <string name="updating_archive">압축 파일 업데이트 중</string>

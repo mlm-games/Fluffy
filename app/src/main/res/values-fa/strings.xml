@@ -53,6 +53,10 @@
     <string name="zip_comment">توضیح بایگانی (اختیاری)</string>
     <string name="zip_split_mb">تقسیم به بخش‌ها، مگابایت (اختیاری)</string>
     <string name="zip_split_enable">تقسیم بایگانی به بخش‌ها</string>
+    <string name="test_archive">آزمایش بایگانی</string>
+    <string name="test_archive_ok">بایگانی سالم است. %1$d مورد بررسی شد.</string>
+    <string name="test_archive_bad_entry">پس از %1$d مورد ناموفق بود، در %2$s.</string>
+    <string name="test_archive_failed">آزمایش بایگانی ممکن نشد: %1$s</string>
     <string name="add_files">افزودن پرونده‌ها</string>
     <string name="archive_comment">توضیح بایگانی</string>
     <string name="updating_archive">به‌روزرسانی بایگانی</string>

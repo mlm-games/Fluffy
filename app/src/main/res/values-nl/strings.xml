@@ -53,6 +53,10 @@
     <string name="zip_comment">Archiefopmerking (optioneel)</string>
     <string name="zip_split_mb">Splitsen in delen, MB (optioneel)</string>
     <string name="zip_split_enable">Archief opsplitsen in delen</string>
+    <string name="test_archive">Archief testen</string>
+    <string name="test_archive_ok">Archief is geldig. %1$d items gecontroleerd.</string>
+    <string name="test_archive_bad_entry">Mislukt na %1$d items, bij %2$s.</string>
+    <string name="test_archive_failed">Archief kon niet worden getest: %1$s</string>
     <string name="add_files">Bestanden toevoegen</string>
     <string name="archive_comment">Archiefopmerking</string>
     <string name="updating_archive">Archief bijwerken</string>

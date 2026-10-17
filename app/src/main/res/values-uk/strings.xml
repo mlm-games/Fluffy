@@ -53,6 +53,10 @@
     <string name="zip_comment">Коментар до архіву (необов\'язково)</string>
     <string name="zip_split_mb">Розбити на частини, МБ (необов\'язково)</string>
     <string name="zip_split_enable">Розбити архів на частини</string>
+    <string name="test_archive">Перевірити архів</string>
+    <string name="test_archive_ok">Архів коректний. Перевірено записів: %1$d.</string>
+    <string name="test_archive_bad_entry">Збій після %1$d записів, на %2$s.</string>
+    <string name="test_archive_failed">Не вдалося перевірити архів: %1$s</string>
     <string name="add_files">Додати файли</string>
     <string name="archive_comment">Коментар до архіву</string>
     <string name="updating_archive">Оновлення архіву</string>

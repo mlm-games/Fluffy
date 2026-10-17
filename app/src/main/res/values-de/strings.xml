@@ -53,6 +53,10 @@
     <string name="zip_comment">Archivkommentar (optional)</string>
     <string name="zip_split_mb">In Teile aufteilen, MB (optional)</string>
     <string name="zip_split_enable">Archiv in Teilarchive aufteilen</string>
+    <string name="test_archive">Archiv testen</string>
+    <string name="test_archive_ok">Archiv ist gültig. %1$d Einträge geprüft.</string>
+    <string name="test_archive_bad_entry">Fehlgeschlagen nach %1$d Einträgen, bei %2$s.</string>
+    <string name="test_archive_failed">Archiv konnte nicht getestet werden: %1$s</string>
     <string name="add_files">Dateien hinzufügen</string>
     <string name="archive_comment">Archivkommentar</string>
     <string name="updating_archive">Archiv wird aktualisiert</string>

@@ -34,6 +34,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.FileOpen
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.InstallDesktop
 import androidx.compose.material.icons.filled.OpenWith
 import androidx.compose.material.icons.filled.Search
@@ -138,6 +139,8 @@ fun ArchiveViewerScreen(
     var updating by remember { mutableStateOf(false) }
     var confirmDeletePaths by remember { mutableStateOf<List<String>?>(null) }
     var showCommentDialog by remember { mutableStateOf(false) }
+    var testRunning by remember { mutableStateOf(false) }
+    var testResult by remember { mutableStateOf<ArchiveEngine.VerifyResult?>(null) }
     var currentPath by rememberSaveable(archiveUri) { mutableStateOf("") }
     var searchActive by rememberSaveable(archiveUri) { mutableStateOf(false) }
     var searchQuery by rememberSaveable(archiveUri) { mutableStateOf("") }
@@ -532,6 +535,33 @@ fun ArchiveViewerScreen(
                                         }
                                     )
                                 }
+                                DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.test_archive)) },
+                                    leadingIcon = { Icon(Icons.Filled.Verified, null) },
+                                    enabled = !testRunning && !updating,
+                                    onClick = {
+                                        overflowMenu = false
+                                        testRunning = true
+                                        scope.launch {
+                                            val outcome = runCatching {
+                                                withContext(Dispatchers.IO) {
+                                                    archive.verify(
+                                                        title,
+                                                        { io.openIn(archiveUri) },
+                                                        password = password.ifBlank { null }?.toCharArray()
+                                                    )
+                                                }
+                                            }
+                                            testRunning = false
+                                            testResult = outcome.getOrElse { e ->
+                                                ArchiveEngine.VerifyResult(
+                                                    false, 0,
+                                                    error = e.message ?: e.toString()
+                                                )
+                                            }
+                                        }
+                                    }
+                                )
                             }
                         }
                         
@@ -810,6 +840,33 @@ fun ArchiveViewerScreen(
             dismissButton = {
                 TextButton(onClick = { showCommentDialog = false }) {
                     Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
+    testResult?.let { outcome ->
+        AlertDialog(
+            onDismissRequest = { testResult = null },
+            title = { Text(stringResource(R.string.test_archive)) },
+            text = {
+                Text(
+                    when {
+                        outcome.error != null ->
+                            stringResource(R.string.test_archive_failed, outcome.error)
+                        outcome.ok ->
+                            stringResource(R.string.test_archive_ok, outcome.checked)
+                        else -> stringResource(
+                            R.string.test_archive_bad_entry,
+                            outcome.checked,
+                            outcome.failedPath.orEmpty()
+                        )
+                    }
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { testResult = null }) {
+                    Text(stringResource(R.string.close))
                 }
             }
         )

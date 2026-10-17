@@ -53,6 +53,10 @@
     <string name="zip_comment">Σχόλιο αρχείου (προαιρετικά)</string>
     <string name="zip_split_mb">Διαίρεση σε μέρη, MB (προαιρετικά)</string>
     <string name="zip_split_enable">Διαχωρισμός αρχείου σε τόμους</string>
+    <string name="test_archive">Έλεγχος αρχείου</string>
+    <string name="test_archive_ok">Το αρχείο είναι έγκυρο. Ελέγχθηκαν %1$d εγγραφές.</string>
+    <string name="test_archive_bad_entry">Απέτυχε μετά από %1$d εγγραφές, στο %2$s.</string>
+    <string name="test_archive_failed">Δεν ήταν δυνατός ο έλεγχος: %1$s</string>
     <string name="add_files">Προσθήκη αρχείων</string>
     <string name="archive_comment">Σχόλιο αρχείου</string>
     <string name="updating_archive">Ενημέρωση αρχείου</string>

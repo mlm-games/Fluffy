@@ -53,6 +53,10 @@
     <string name="zip_comment">Komentář k archivu (volitelné)</string>
     <string name="zip_split_mb">Rozdělit na části, MB (volitelné)</string>
     <string name="zip_split_enable">Rozdělit archiv na části</string>
+    <string name="test_archive">Otestovat archiv</string>
+    <string name="test_archive_ok">Archiv je platný. Zkontrolováno %1$d položek.</string>
+    <string name="test_archive_bad_entry">Selhalo po %1$d položkách, u %2$s.</string>
+    <string name="test_archive_failed">Archiv nelze otestovat: %1$s</string>
     <string name="add_files">Přidat soubory</string>
     <string name="archive_comment">Komentář k archivu</string>
     <string name="updating_archive">Aktualizace archivu</string>

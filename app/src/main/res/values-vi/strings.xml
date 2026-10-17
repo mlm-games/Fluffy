@@ -53,6 +53,10 @@
     <string name="zip_comment">Chú thích tệp nén (tùy chọn)</string>
     <string name="zip_split_mb">Chia thành nhiều phần, MB (tùy chọn)</string>
     <string name="zip_split_enable">Chia tệp nén thành nhiều phần</string>
+    <string name="test_archive">Kiểm tra tệp nén</string>
+    <string name="test_archive_ok">Tệp nén hợp lệ. Đã kiểm tra %1$d mục.</string>
+    <string name="test_archive_bad_entry">Thất bại sau %1$d mục, tại %2$s.</string>
+    <string name="test_archive_failed">Không thể kiểm tra tệp nén: %1$s</string>
     <string name="add_files">Thêm tệp</string>
     <string name="archive_comment">Chú thích tệp nén</string>
     <string name="updating_archive">Đang cập nhật tệp nén</string>

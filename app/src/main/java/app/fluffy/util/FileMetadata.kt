@@ -6,14 +6,12 @@ import android.media.MediaFormat
 import android.media.MediaMetadataRetriever
 import android.net.Uri
 import android.os.Build
-import androidx.annotation.RequiresApi
+import android.system.Os
 import androidx.exifinterface.media.ExifInterface
 import app.fluffy.archive.ArchiveEngine
 import app.fluffy.io.DocumentController
 import app.fluffy.io.SafIo
 import java.io.File
-import java.nio.file.Files
-import java.nio.file.attribute.PosixFilePermission
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -63,7 +61,6 @@ object FileMetadata {
     }
 
     private suspend fun permissionRows(uri: Uri, safIo: SafIo): List<MetaRow> {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return emptyList()
         val shell = runCatching { safIo.statPermissions(uri) }.getOrNull()
         if (shell != null) {
             return buildList {
@@ -73,36 +70,45 @@ object FileMetadata {
             }
         }
         val file = DocumentController.directFile(uri) ?: return emptyList()
-        val mode = runCatching { posixMode(file) }.getOrNull() ?: return emptyList()
-        return listOf(MetaRow(MetaKey.PERMISSIONS, mode))
+        return statRows(file)
     }
 
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun posixMode(file: File): String? {
-        val perms = Files.getPosixFilePermissions(file.toPath())
-        fun triplet(
-            r: PosixFilePermission,
-            w: PosixFilePermission,
-            x: PosixFilePermission
-        ): String = buildString {
-            append(if (r in perms) 'r' else '-')
-            append(if (w in perms) 'w' else '-')
-            append(if (x in perms) 'x' else '-')
+    private fun statRows(file: File): List<MetaRow> {
+        val st = runCatching { Os.stat(file.absolutePath) }.getOrNull() ?: return emptyList()
+        val bits = st.st_mode and 0x1FF
+        val rwx = buildString {
+            val chars = charArrayOf('r', 'w', 'x')
+            for (i in 0 until 9) {
+                append(if (bits and (1 shl (8 - i)) != 0) chars[i % 3] else '-')
+            }
         }
-        return triplet(
-            PosixFilePermission.OWNER_READ,
-            PosixFilePermission.OWNER_WRITE,
-            PosixFilePermission.OWNER_EXECUTE
-        ) + triplet(
-            PosixFilePermission.GROUP_READ,
-            PosixFilePermission.GROUP_WRITE,
-            PosixFilePermission.GROUP_EXECUTE
-        ) + triplet(
-            PosixFilePermission.OTHERS_READ,
-            PosixFilePermission.OTHERS_WRITE,
-            PosixFilePermission.OTHERS_EXECUTE
+        val owner = userName(st.st_uid) ?: st.st_uid.toString()
+        val group = groupName(st.st_gid) ?: st.st_gid.toString()
+        return listOf(
+            MetaRow(MetaKey.PERMISSIONS, "$rwx (${Integer.toOctalString(bits)})"),
+            MetaRow(MetaKey.OWNER, owner),
+            MetaRow(MetaKey.GROUP, group)
         )
     }
+
+    private val userNames: Map<Int, String> by lazy { parseIdFile("/system/etc/passwd", 2) }
+    private val groupNames: Map<Int, String> by lazy { parseIdFile("/system/etc/group", 2) }
+
+    private fun userName(uid: Int): String? = userNames[uid]
+
+    private fun groupName(gid: Int): String? = groupNames[gid]
+
+    private fun parseIdFile(path: String, idIndex: Int): Map<Int, String> = runCatching {
+        val out = mutableMapOf<Int, String>()
+        File(path).forEachLine { line ->
+            if (line.isBlank() || line.startsWith("#")) return@forEachLine
+            val parts = line.split(':')
+            if (parts.size <= idIndex) return@forEachLine
+            val id = parts[idIndex].trim().toIntOrNull() ?: return@forEachLine
+            out.putIfAbsent(id, parts[0])
+        }
+        out
+    }.getOrDefault(emptyMap())
 
     private fun imageRows(context: Context, uri: Uri): List<MetaRow> {
         val file = DocumentController.directFile(uri) ?: return emptyList()

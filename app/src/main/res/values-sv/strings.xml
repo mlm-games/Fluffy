@@ -53,6 +53,10 @@
     <string name="zip_comment">Arkivkommentar (valfritt)</string>
     <string name="zip_split_mb">Dela i delar, MB (valfritt)</string>
     <string name="zip_split_enable">Dela arkivet i volymer</string>
+    <string name="test_archive">Testa arkiv</string>
+    <string name="test_archive_ok">Arkivet är giltigt. %1$d poster kontrollerade.</string>
+    <string name="test_archive_bad_entry">Misslyckades efter %1$d poster, vid %2$s.</string>
+    <string name="test_archive_failed">Kunde inte testa arkivet: %1$s</string>
     <string name="add_files">Lägg till filer</string>
     <string name="archive_comment">Arkivkommentar</string>
     <string name="updating_archive">Uppdaterar arkiv</string>

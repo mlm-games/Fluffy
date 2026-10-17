@@ -53,6 +53,10 @@
     <string name="zip_comment">Komentarz do archiwum (opcjonalnie)</string>
     <string name="zip_split_mb">Podziel na części, MB (opcjonalnie)</string>
     <string name="zip_split_enable">Podziel archiwum na części</string>
+    <string name="test_archive">Testuj archiwum</string>
+    <string name="test_archive_ok">Archiwum jest poprawne. Sprawdzono %1$d wpisów.</string>
+    <string name="test_archive_bad_entry">Niepowodzenie po %1$d wpisach, przy %2$s.</string>
+    <string name="test_archive_failed">Nie można przetestować archiwum: %1$s</string>
     <string name="add_files">Dodaj pliki</string>
     <string name="archive_comment">Komentarz do archiwum</string>
     <string name="updating_archive">Aktualizowanie archiwum</string>

@@ -53,6 +53,10 @@
     <string name="zip_comment">Arkiston kommentti (valinnainen)</string>
     <string name="zip_split_mb">Jaa osiin, Mt (valinnainen)</string>
     <string name="zip_split_enable">Jaa arkisto osiin</string>
+    <string name="test_archive">Testaa arkisto</string>
+    <string name="test_archive_ok">Arkisto on kelvollinen. Tarkistettiin %1$d kohdetta.</string>
+    <string name="test_archive_bad_entry">Epäonnistui %1$d kohteen jälkeen, kohdassa %2$s.</string>
+    <string name="test_archive_failed">Arkistoa ei voitu testata: %1$s</string>
     <string name="add_files">Lisää tiedostoja</string>
     <string name="archive_comment">Arkiston kommentti</string>
     <string name="updating_archive">Päivitetään arkistoa</string>

@@ -53,6 +53,10 @@
     <string name="zip_comment">压缩包注释（可选）</string>
     <string name="zip_split_mb">按大小分卷，MB（可选）</string>
     <string name="zip_split_enable">将压缩包分割为多个分卷</string>
+    <string name="test_archive">测试压缩包</string>
+    <string name="test_archive_ok">压缩包有效，已检查 %1$d 个条目。</string>
+    <string name="test_archive_bad_entry">在 %2$s 处、检查 %1$d 个条目后失败。</string>
+    <string name="test_archive_failed">无法测试压缩包：%1$s</string>
     <string name="add_files">添加文件</string>
     <string name="archive_comment">压缩包注释</string>
     <string name="updating_archive">正在更新压缩包</string>

@@ -53,6 +53,10 @@
     <string name="zip_comment">Komentar arhive (neobavezno)</string>
     <string name="zip_split_mb">Podijeli u dijelove, MB (neobavezno)</string>
     <string name="zip_split_enable">Podijeli arhivu u dijelove</string>
+    <string name="test_archive">Testiraj arhivu</string>
+    <string name="test_archive_ok">Arhiva je ispravna. Provjereno %1$d stavki.</string>
+    <string name="test_archive_bad_entry">Neuspjeh nakon %1$d stavki, kod %2$s.</string>
+    <string name="test_archive_failed">Arhivu nije moguće testirati: %1$s</string>
     <string name="add_files">Dodaj datoteke</string>
     <string name="archive_comment">Komentar arhive</string>
     <string name="updating_archive">Ažuriranje arhive</string>

@@ -53,6 +53,10 @@
     <string name="zip_comment">Komentar arsip (opsional)</string>
     <string name="zip_split_mb">Pisah menjadi beberapa bagian, MB (opsional)</string>
     <string name="zip_split_enable">Pisah arsip menjadi beberapa bagian</string>
+    <string name="test_archive">Uji arsip</string>
+    <string name="test_archive_ok">Arsip valid. %1$d entri diperiksa.</string>
+    <string name="test_archive_bad_entry">Gagal setelah %1$d entri, pada %2$s.</string>
+    <string name="test_archive_failed">Tidak dapat menguji arsip: %1$s</string>
     <string name="add_files">Tambah berkas</string>
     <string name="archive_comment">Komentar arsip</string>
     <string name="updating_archive">Memperbarui arsip</string>
