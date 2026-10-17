@@ -288,12 +288,16 @@ fun ArchiveViewerScreen(
             }
         }.getOrElse { emptyList() }
 
+        val stagedSplit = runCatching { withContext(Dispatchers.IO) { io.stageSplitSet(archiveUri) } }
+            .getOrNull()
+
         val result = runCatching {
             withContext(Dispatchers.IO) {
                 archive.list(
                     name,
                     { io.openIn(archiveUri) },
-                    password = password.ifBlank { null }?.toCharArray()
+                    password = password.ifBlank { null }?.toCharArray(),
+                    stagedSplit = stagedSplit
                 )
             }
         }
@@ -841,6 +845,7 @@ private suspend fun extractEntryToCache(
     safIo: SafIo,
     cacheManager: CacheManager
 ): Uri? = withContext(Dispatchers.IO) {
+    val stagedSplit = runCatching { safIo.stageSplitSet(archiveUri) }.getOrNull()
     try {
         fun norm(p: String) = p.trim().trimStart('/').replace('\\', '/')
         val cleanTarget = norm(pathInArchive)
@@ -849,6 +854,7 @@ private suspend fun extractEntryToCache(
         val safeName = rawName.replace(Regex("[^A-Za-z0-9._-]"), "_").takeLast(64).ifBlank { "item" }
         val out = cacheManager.tempFile(CacheManager.Area.Previews, "preview_", "_$safeName")
         var found = false
+        val stagedSplit = runCatching { safIo.stageSplitSet(archiveUri) }.getOrNull()
 
         archiveEngine.extractAll(
             archiveName.ifBlank { "archive" },
@@ -866,7 +872,8 @@ private suspend fun extractEntryToCache(
                 }
             },
             password = pwd?.toCharArray(),
-            onProgress = { _, _ -> }
+            onProgress = { _, _ -> },
+            stagedSplit = stagedSplit
         )
         if (found && out.exists() && out.length() > 0) {
             runCatching {
@@ -879,6 +886,8 @@ private suspend fun extractEntryToCache(
     } catch (e: Exception) {
         AppLog.w("ArchiveViewer", "extractEntryToCache failed: $pathInArchive", e)
         null
+    } finally {
+        safIo.releaseStagedSplit(stagedSplit)
     }
 }
 

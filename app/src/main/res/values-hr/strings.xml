@@ -52,6 +52,8 @@
     <string name="zip_crypto_warning">ZipCrypto je slab i lako ga je probiti. Koristite AES kad god je moguće.</string>
     <string name="zip_comment">Komentar arhive (neobavezno)</string>
     <string name="zip_split_mb">Podijeli u dijelove, MB (neobavezno)</string>
+    <string name="zip_split_enable">Podijeli arhivu u dijelove</string>
+    <string name="zip_split_experimental">Eksperimentalno. Fluffy može otvoriti i raspakirati vlastite podijeljene arhive, druge aplikacije možda ne.</string>
     <string name="add_files">Dodaj datoteke</string>
     <string name="archive_comment">Komentar arhive</string>
     <string name="updating_archive">Ažuriranje arhive</string>

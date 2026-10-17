@@ -52,6 +52,8 @@
     <string name="zip_crypto_warning">ZipCrypto слабое и легко взламывается. По возможности используйте AES.</string>
     <string name="zip_comment">Комментарий к архиву (необязательно)</string>
     <string name="zip_split_mb">Разбить на части, МБ (необязательно)</string>
+    <string name="zip_split_enable">Разбить архив на части</string>
+    <string name="zip_split_experimental">Экспериментально. Fluffy может открывать и распаковывать созданные им многотомные архивы, другие приложения — не обязательно.</string>
     <string name="add_files">Добавить файлы</string>
     <string name="archive_comment">Комментарий к архиву</string>
     <string name="updating_archive">Обновление архива</string>

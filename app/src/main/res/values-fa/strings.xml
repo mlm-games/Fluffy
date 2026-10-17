@@ -52,6 +52,8 @@
     <string name="zip_crypto_warning">ZipCrypto ضعیف است و به‌راحتی شکسته می‌شود. در صورت امکان از AES استفاده کنید.</string>
     <string name="zip_comment">توضیح بایگانی (اختیاری)</string>
     <string name="zip_split_mb">تقسیم به بخش‌ها، مگابایت (اختیاری)</string>
+    <string name="zip_split_enable">تقسیم بایگانی به بخش‌ها</string>
+    <string name="zip_split_experimental">آزمایشی. Fluffy می‌تواند بایگانی‌های تقسیم‌شدهٔ ساختهٔ خود را باز و استخراج کند، اما برنامه‌های دیگر ممکن است نتوانند.</string>
     <string name="add_files">افزودن پرونده‌ها</string>
     <string name="archive_comment">توضیح بایگانی</string>
     <string name="updating_archive">به‌روزرسانی بایگانی</string>

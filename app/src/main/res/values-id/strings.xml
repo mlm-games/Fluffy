@@ -52,6 +52,8 @@
     <string name="zip_crypto_warning">ZipCrypto lemah dan mudah dibobol. Gunakan AES jika memungkinkan.</string>
     <string name="zip_comment">Komentar arsip (opsional)</string>
     <string name="zip_split_mb">Pisah menjadi beberapa bagian, MB (opsional)</string>
+    <string name="zip_split_enable">Pisah arsip menjadi beberapa bagian</string>
+    <string name="zip_split_experimental">Eksperimental. Fluffy dapat membuka dan mengekstrak arsip terpisah buatannya, aplikasi lain mungkin tidak.</string>
     <string name="add_files">Tambah berkas</string>
     <string name="archive_comment">Komentar arsip</string>
     <string name="updating_archive">Memperbarui arsip</string>

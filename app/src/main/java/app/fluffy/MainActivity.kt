@@ -419,9 +419,22 @@ class MainActivity : AppCompatActivity() {
                                                     overwrite = req.overwrite,
                                                     encryption = req.encryption.name,
                                                     comment = req.comment,
-                                                    splitBytes = req.splitBytes ?: -1L
+                                                    splitBytes = if (s.zipSplitEnabled) {
+                                                        req.splitBytes ?: -1L
+                                                    } else {
+                                                        -1L
+                                                    }
                                                 )
                                                 showTaskCenter = true
+                                            }
+                                        },
+
+                                        zipSplitEnabled = s.zipSplitEnabled,
+                                        onZipSplitEnabledChange = { enabled ->
+                                            lifecycleScope.launch {
+                                                settingsRepository.updateSettings {
+                                                    it.copy(zipSplitEnabled = enabled)
+                                                }
                                             }
                                         },
 

@@ -35,6 +35,9 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
     private val settings: SettingsRepository by inject()
     private val archiveE: ArchiveEngine by inject()
 
+    @Volatile
+    private var stagedSplit: File? = null
+
     override suspend fun getForegroundInfo(): ForegroundInfo = createForeground("Extracting archive")
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
@@ -127,11 +130,18 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
 
             setProgress(workDataOf("progress" to 0f))
 
+            val staged = runCatching { io.stageSplitSet(archive) }.getOrNull()
+            stagedSplit = staged
+
             try {
-                archiveE.extractAll(name, open, create, password) { done, total ->
-                    val frac = if (total > 0) done.toFloat() / total else 0.0f
-                    setProgressAsync(workDataOf("progress" to frac))
-                }
+                archiveE.extractAll(
+                    name, open, create, password,
+                    onProgress = { done, total ->
+                        val frac = if (total > 0) done.toFloat() / total else 0.0f
+                        setProgressAsync(workDataOf("progress" to frac))
+                    },
+                    stagedSplit = stagedSplit
+                )
             } catch (e: ZipException) {
                 AppLog.w("ExtractArchiveWorker", "strict zip extract failed, trying fallback: $name", e)
                 open().use { input ->
@@ -165,6 +175,8 @@ class ExtractArchiveWorker(appContext: Context, params: WorkerParameters) : Coro
         } catch (e: Exception) {
             AppLog.e("ExtractArchiveWorker", "extract failed: $archive", e)
             Result.failure(workDataOf("error" to (e.message ?: e.toString())))
+        } finally {
+            io.releaseStagedSplit(stagedSplit)
         }
     }
 

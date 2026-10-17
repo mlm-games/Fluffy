@@ -52,6 +52,8 @@
     <string name="zip_crypto_warning">ZipCrypto is weak and easily broken. Use AES when possible.</string>
     <string name="zip_comment">Archive comment (optional)</string>
     <string name="zip_split_mb">Split into parts, MB (optional)</string>
+    <string name="zip_split_enable">Split archive into volumes</string>
+    <string name="zip_split_experimental">Experimental. Fluffy can open and extract split archives it creates, but other apps may not.</string>
     <string name="add_files">Add files</string>
     <string name="archive_comment">Archive comment</string>
     <string name="updating_archive">Updating archive</string>

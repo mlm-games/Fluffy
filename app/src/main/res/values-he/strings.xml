@@ -52,6 +52,8 @@
     <string name="zip_crypto_warning">ZipCrypto חלש וקל לפריצה. השתמשו ב־AES כשאפשר.</string>
     <string name="zip_comment">הערת ארכיון (אופציונלי)</string>
     <string name="zip_split_mb">פיצול לחלקים, מ״ב (אופציונלי)</string>
+    <string name="zip_split_enable">פיצול הארכיון לכרכים</string>
+    <string name="zip_split_experimental">ניסיוני. Fluffy יכול לפתוח ולחלץ ארכיונים מפוצלים שהוא יוצר, אפליקציות אחרות אולי לא.</string>
     <string name="add_files">הוספת קבצים</string>
     <string name="archive_comment">הערת ארכיון</string>
     <string name="updating_archive">מעדכן ארכיון</string>

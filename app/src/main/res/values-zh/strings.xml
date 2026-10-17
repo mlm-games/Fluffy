@@ -52,6 +52,8 @@
     <string name="zip_crypto_warning">ZipCrypto 强度弱，容易被破解。如有可能请使用 AES。</string>
     <string name="zip_comment">压缩包注释（可选）</string>
     <string name="zip_split_mb">按大小分卷，MB（可选）</string>
+    <string name="zip_split_enable">将压缩包分割为多个分卷</string>
+    <string name="zip_split_experimental">实验性功能。Fluffy 可以打开并解压它自己创建的分卷压缩包，其他应用可能不行。</string>
     <string name="add_files">添加文件</string>
     <string name="archive_comment">压缩包注释</string>
     <string name="updating_archive">正在更新压缩包</string>

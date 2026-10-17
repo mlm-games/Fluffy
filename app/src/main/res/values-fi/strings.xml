@@ -52,6 +52,8 @@
     <string name="zip_crypto_warning">ZipCrypto on heikko ja helppo murtaa. Käytä AES:ää aina kun mahdollista.</string>
     <string name="zip_comment">Arkiston kommentti (valinnainen)</string>
     <string name="zip_split_mb">Jaa osiin, Mt (valinnainen)</string>
+    <string name="zip_split_enable">Jaa arkisto osiin</string>
+    <string name="zip_split_experimental">Kokeellinen. Fluffy avaa ja purkaa itse luomansa jaetut arkistot, muut sovellukset eivät välttämättä.</string>
     <string name="add_files">Lisää tiedostoja</string>
     <string name="archive_comment">Arkiston kommentti</string>
     <string name="updating_archive">Päivitetään arkistoa</string>

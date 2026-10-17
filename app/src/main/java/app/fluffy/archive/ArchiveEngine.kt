@@ -23,7 +23,12 @@ interface ArchiveEngine {
         val splitSizeBytes: Long? = null,
     )
 
-    suspend fun list(archiveName: String, open: () -> InputStream, password: CharArray? = null): ListResult
+    suspend fun list(
+        archiveName: String,
+        open: () -> InputStream,
+        password: CharArray? = null,
+        stagedSplit: File? = null
+    ): ListResult
 
     suspend fun verify(
         archiveName: String,
@@ -37,7 +42,8 @@ interface ArchiveEngine {
         open: () -> InputStream,
         create: (pathInArchive: String, isDir: Boolean) -> OutputStream,
         password: CharArray? = null,
-        onProgress: (Long, Long) -> Unit = { _, _ -> }
+        onProgress: (Long, Long) -> Unit = { _, _ -> },
+        stagedSplit: File? = null
     )
 
     suspend fun createZip(

@@ -157,6 +157,9 @@ data class AppSettings(
     @Persisted(key = "editor_syntax")
     val editorSyntax: Boolean = true,
 
+    @Persisted(key = "zip_split_enabled")
+    val zipSplitEnabled: Boolean = false,
+
     @Setting(
         titleKey = FluffySettingsKeys.SETTING_ZIP_LEVEL,
         description = "0 = no compression, 9 = maximum compression",

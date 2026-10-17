@@ -86,6 +86,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -186,6 +187,8 @@ fun FileBrowserScreen(
     onBack: () -> Unit,
     onExtractArchive: (Uri, Uri) -> Unit,
     onCreateZip: (ZipCreateRequest) -> Unit,
+    zipSplitEnabled: Boolean = false,
+    onZipSplitEnabledChange: (Boolean) -> Unit = {},
     onOpenSettings: () -> Unit,
     onOpenTasks: () -> Unit,
     onAddBookmark: (String) -> Unit = {},
@@ -1068,6 +1071,7 @@ fun FileBrowserScreen(
         var encryptionMenu by remember { mutableStateOf(false) }
         val hasPassword = pwd.isNotBlank()
         val dlgScroll = rememberScrollState()
+        val splitEnabled = zipSplitEnabled
         AlertDialog(
             onDismissRequest = { showZipNameDialog = false },
             title = { Text(stringResource(R.string.create_zip)) },
@@ -1150,13 +1154,34 @@ fun FileBrowserScreen(
                         singleLine = true,
                         label = { Text(stringResource(R.string.zip_comment)) }
                     )
-                    OutlinedTextField(
-                        value = splitMb,
-                        onValueChange = { splitMb = it.filter { c -> c.isDigit() }.take(5) },
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        label = { Text(stringResource(R.string.zip_split_mb)) }
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            stringResource(R.string.zip_split_enable),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.weight(1f)
+                        )
+                        Switch(
+                            checked = splitEnabled,
+                            onCheckedChange = { onZipSplitEnabledChange(it) }
+                        )
+                    }
+                    if (splitEnabled) {
+                        OutlinedTextField(
+                            value = splitMb,
+                            onValueChange = { splitMb = it.filter { c -> c.isDigit() }.take(5) },
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            label = { Text(stringResource(R.string.zip_split_mb)) }
+                        )
+                        Text(
+                            stringResource(R.string.zip_split_experimental),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     }
                 }
             },

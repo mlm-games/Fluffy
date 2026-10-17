@@ -52,6 +52,8 @@
     <string name="zip_crypto_warning">ZipCrypto is zwak en eenvoudig te kraken. Gebruik waar mogelijk AES.</string>
     <string name="zip_comment">Archiefopmerking (optioneel)</string>
     <string name="zip_split_mb">Splitsen in delen, MB (optioneel)</string>
+    <string name="zip_split_enable">Archief opsplitsen in delen</string>
+    <string name="zip_split_experimental">Experimenteel. Fluffy kan zijn eigen gesplitste archieven openen en uitpakken, andere apps mogelijk niet.</string>
     <string name="add_files">Bestanden toevoegen</string>
     <string name="archive_comment">Archiefopmerking</string>
     <string name="updating_archive">Archief bijwerken</string>

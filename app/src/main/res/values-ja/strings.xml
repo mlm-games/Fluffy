@@ -52,6 +52,8 @@
     <string name="zip_crypto_warning">ZipCryptoは脆弱で容易に解読されます。可能な場合はAESを使用してください。</string>
     <string name="zip_comment">アーカイブコメント（任意）</string>
     <string name="zip_split_mb">分割サイズ、MB（任意）</string>
+    <string name="zip_split_enable">アーカイブを分割する</string>
+    <string name="zip_split_experimental">実験的機能。Fluffyが作成した分割アーカイブはFluffyで開けますが、他のアプリでは開けない場合があります。</string>
     <string name="add_files">ファイルを追加</string>
     <string name="archive_comment">アーカイブコメント</string>
     <string name="updating_archive">アーカイブを更新中</string>

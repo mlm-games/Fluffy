@@ -34,8 +34,12 @@ class DefaultArchiveEngine(
     override suspend fun list(
         archiveName: String,
         open: () -> InputStream,
-        password: CharArray?
+        password: CharArray?,
+        stagedSplit: File?
     ): ArchiveEngine.ListResult = withContext(Dispatchers.IO) {
+        if (stagedSplit != null && ArchiveTypes.infer(archiveName) == ArchiveTypes.Kind.ZIP) {
+            return@withContext listZipRandomAccess(stagedSplit, password)
+        }
         when (ArchiveTypes.infer(archiveName) ?: return@withContext ArchiveEngine.ListResult(
             emptyList(), encrypted = false, error = "Unsupported archive type: $archiveName"
         )) {
@@ -48,13 +52,47 @@ class DefaultArchiveEngine(
         }
     }
 
+    private fun listZipRandomAccess(file: File, password: CharArray?): ArchiveEngine.ListResult {
+        return try {
+            val zipFile = if (password?.isNotEmpty() == true) {
+                net.lingala.zip4j.ZipFile(file, password)
+            } else {
+                net.lingala.zip4j.ZipFile(file)
+            }
+            val entries = zipFile.fileHeaders.map { header ->
+                ArchiveEngine.Entry(
+                    path = header.fileName,
+                    isDir = header.isDirectory,
+                    size = header.uncompressedSize,
+                    time = header.lastModifiedTime
+                )
+            }
+            ArchiveEngine.ListResult(entries, encrypted = zipFile.isEncrypted)
+        } catch (e: Throwable) {
+            AppLog.w("ArchiveEngine", "listZipRandomAccess failed: $file", e)
+            val msg = e.message ?: e.toString()
+            val lower = msg.lowercase(Locale.ROOT)
+            val encryptedHint = lower.contains("password") || lower.contains("encrypt")
+            ArchiveEngine.ListResult(
+                emptyList(),
+                encrypted = encryptedHint,
+                error = if (encryptedHint && (password == null || password.isEmpty())) null else msg
+            )
+        }
+    }
+
     override suspend fun extractAll(
         archiveName: String,
         open: () -> InputStream,
         create: (String, Boolean) -> OutputStream,
         password: CharArray?,
-        onProgress: (Long, Long) -> Unit
+        onProgress: (Long, Long) -> Unit,
+        stagedSplit: File?
     ) = withContext(Dispatchers.IO) {
+        if (stagedSplit != null && ArchiveTypes.infer(archiveName) == ArchiveTypes.Kind.ZIP) {
+            extractZipRandomAccess(stagedSplit, create, password, onProgress)
+            return@withContext
+        }
         when (ArchiveTypes.infer(archiveName)
             ?: throw IllegalArgumentException("Unsupported archive type: $archiveName")) {
             ArchiveTypes.Kind.ZIP   -> extractZip(open, create, password, onProgress)
@@ -523,6 +561,43 @@ class DefaultArchiveEngine(
         }
     }
 
+
+    private fun extractZipRandomAccess(
+        file: File,
+        create: (String, Boolean) -> OutputStream,
+        password: CharArray?,
+        onProgress: (Long, Long) -> Unit
+    ) {
+        val zipFile = if (password?.isNotEmpty() == true) {
+            net.lingala.zip4j.ZipFile(file, password)
+        } else {
+            net.lingala.zip4j.ZipFile(file)
+        }
+        val buf = ByteArray(128 * 1024)
+        var done = 0L
+        for (header in zipFile.fileHeaders) {
+            val name = header.fileName
+            if (header.isDirectory) {
+                create(ensureDirSuffix(name), true).use { }
+            } else {
+                create(name, false).use { out ->
+                    zipFile.getInputStream(header).use { input ->
+                        var r = input.read(buf)
+                        while (r != -1) {
+                            if (r > 0) {
+                                out.write(buf, 0, r)
+                                done += r
+                                onProgress(done, -1L)
+                            }
+                            r = input.read(buf)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun ensureDirSuffix(p: String) = if (p.endsWith("/")) p else "$p/"
 
     // ZIP
     private fun extractZip(

@@ -52,6 +52,8 @@
     <string name="zip_crypto_warning">A ZipCrypto gyenge és könnyen feltörhető. Ha lehet, használjon AES-t.</string>
     <string name="zip_comment">Archív megjegyzés (nem kötelező)</string>
     <string name="zip_split_mb">Felosztás részekre, MB (nem kötelező)</string>
+    <string name="zip_split_enable">Archív felosztása kötetekre</string>
+    <string name="zip_split_experimental">Kísérleti. A Fluffy meg tudja nyitni és ki tudja csomagolni a saját felosztott archívumait, más alkalmazások lehet, hogy nem.</string>
     <string name="add_files">Fájlok hozzáadása</string>
     <string name="archive_comment">Archív megjegyzés</string>
     <string name="updating_archive">Archív frissítése</string>

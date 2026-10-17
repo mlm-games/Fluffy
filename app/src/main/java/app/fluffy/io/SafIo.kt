@@ -133,6 +133,105 @@ class SafIo(
     fun isSymlinkUri(uri: Uri): Boolean =
         uri.scheme == "file" && uri.path?.let { File(it).isSymlink() } == true
 
+    fun splitPartPattern(stem: String): Regex =
+        Regex(Regex.escape(stem) + "\\.z\\d{2,3}")
+
+    /**
+     * Locates sibling split segments (`name.z01`, `name.zNN`...) next to [archiveUri].
+     * Returns an empty list when the archive is not a split set.
+     */
+    fun splitSiblingUris(archiveUri: Uri, archiveName: String): List<Pair<String, Uri>> {
+        if (!archiveName.endsWith(".zip", ignoreCase = true)) return emptyList()
+        val stem = archiveName.dropLast(4)
+        if (stem.isBlank()) return emptyList()
+        val pattern = splitPartPattern(stem)
+        return runCatching {
+            when {
+                isRoot(archiveUri) || isShizuku(archiveUri) -> {
+                    val parentDir = File(path(archiveUri)).parent ?: return emptyList()
+                    val dirUri = Uri.Builder()
+                        .scheme(if (isRoot(archiveUri)) "root" else "shizuku")
+                        .path(parentDir)
+                        .build()
+                    listShell(dirUri)
+                        .filter { !it.isDir && pattern.matches(it.name) }
+                        .map { it.name to it.uri }
+                }
+                archiveUri.scheme == "file" -> {
+                    val dir = File(requirePath(archiveUri)).parentFile ?: return emptyList()
+                    dir.listFiles()
+                        ?.filter { it.isFile && pattern.matches(it.name) }
+                        ?.map { it.name to Uri.fromFile(it) }
+                        ?: emptyList()
+                }
+                archiveUri.scheme == "content" -> {
+                    val treeId = runCatching {
+                        DocumentsContract.getTreeDocumentId(archiveUri)
+                    }.getOrNull() ?: return emptyList()
+                    val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(
+                        archiveUri, treeId
+                    )
+                    val out = mutableListOf<Pair<String, Uri>>()
+                    cr.query(
+                        childrenUri,
+                        arrayOf(
+                            DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                            DocumentsContract.Document.COLUMN_DISPLAY_NAME
+                        ),
+                        null, null, null
+                    )?.use { c ->
+                        while (c.moveToNext()) {
+                            val docId = c.getString(0) ?: continue
+                            val name = c.getString(1) ?: continue
+                            if (pattern.matches(name)) {
+                                out += name to DocumentsContract.buildDocumentUriUsingTree(
+                                    archiveUri, docId
+                                )
+                            }
+                        }
+                    }
+                    out
+                }
+                else -> emptyList()
+            }
+        }.getOrElse { e ->
+            AppLog.d("SafIo", "split sibling scan failed for $archiveUri", e)
+            emptyList()
+        }
+    }
+
+    /**
+     * Copies a split archive's segments into one temp directory so a random-access
+     * reader can open the set. Returns null when [archiveUri] is not a split archive.
+     */
+    suspend fun stageSplitSet(archiveUri: Uri): File? = withContext(Dispatchers.IO) {
+        val name = queryDisplayName(archiveUri)
+        val siblings = splitSiblingUris(archiveUri, name)
+        if (siblings.isEmpty()) return@withContext null
+        val dir = File(cacheManager.dir(CacheManager.Area.Stage), "split_${System.nanoTime()}")
+        if (!dir.mkdirs()) return@withContext null
+        try {
+            openIn(archiveUri).use { input ->
+                File(dir, name).outputStream().use { output -> input.copyTo(output) }
+            }
+            for ((partName, partUri) in siblings) {
+                openIn(partUri).use { input ->
+                    File(dir, partName).outputStream().use { output -> input.copyTo(output) }
+                }
+            }
+        } catch (e: Throwable) {
+            runCatching { dir.deleteRecursively() }
+            AppLog.w("SafIo", "staging split set failed for $archiveUri", e)
+            return@withContext null
+        }
+        AppLog.d("SafIo", "staged split set (${siblings.size} parts) for $archiveUri")
+        File(dir, name)
+    }
+
+    fun releaseStagedSplit(staged: File?) {
+        staged?.parentFile?.let { runCatching { it.deleteRecursively() } }
+    }
+
     fun cycleKey(uri: Uri): String = when (uri.scheme) {
         "content" -> uri.toString()
         "file" -> {

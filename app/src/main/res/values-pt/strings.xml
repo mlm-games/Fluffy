@@ -52,6 +52,8 @@
     <string name="zip_crypto_warning">ZipCrypto é fraco e fácil de quebrar. Use AES quando possível.</string>
     <string name="zip_comment">Comentário do arquivo (opcional)</string>
     <string name="zip_split_mb">Dividir em partes, MB (opcional)</string>
+    <string name="zip_split_enable">Dividir arquivo em volumes</string>
+    <string name="zip_split_experimental">Experimental. O Fluffy consegue abrir e extrair os arquivos divididos que cria; outros apps podem não conseguir.</string>
     <string name="add_files">Adicionar arquivos</string>
     <string name="archive_comment">Comentário do arquivo</string>
     <string name="updating_archive">Atualizando o arquivo</string>
