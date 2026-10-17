@@ -1176,11 +1176,6 @@ fun FileBrowserScreen(
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             label = { Text(stringResource(R.string.zip_split_mb)) }
                         )
-                        Text(
-                            stringResource(R.string.zip_split_experimental),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
                     }
                     }
                 }

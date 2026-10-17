@@ -53,7 +53,6 @@
     <string name="zip_comment">Arşiv yorumu (isteğe bağlı)</string>
     <string name="zip_split_mb">Parçalara böl, MB (isteğe bağlı)</string>
     <string name="zip_split_enable">Arşivi parçalara böl</string>
-    <string name="zip_split_experimental">Deneysel. Fluffy kendi oluşturduğu parçalı arşivleri açıp çıkarabilir, diğer uygulamalar açamayabilir.</string>
     <string name="add_files">Dosya ekle</string>
     <string name="archive_comment">Arşiv yorumu</string>
     <string name="updating_archive">Arşiv güncelleniyor</string>

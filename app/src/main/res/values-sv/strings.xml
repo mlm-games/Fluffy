@@ -53,7 +53,6 @@
     <string name="zip_comment">Arkivkommentar (valfritt)</string>
     <string name="zip_split_mb">Dela i delar, MB (valfritt)</string>
     <string name="zip_split_enable">Dela arkivet i volymer</string>
-    <string name="zip_split_experimental">Experimentellt. Fluffy kan öppna och packa upp sina egna delade arkiv, andra appar kanske inte.</string>
     <string name="add_files">Lägg till filer</string>
     <string name="archive_comment">Arkivkommentar</string>
     <string name="updating_archive">Uppdaterar arkiv</string>

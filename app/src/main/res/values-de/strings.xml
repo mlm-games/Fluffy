@@ -53,7 +53,6 @@
     <string name="zip_comment">Archivkommentar (optional)</string>
     <string name="zip_split_mb">In Teile aufteilen, MB (optional)</string>
     <string name="zip_split_enable">Archiv in Teilarchive aufteilen</string>
-    <string name="zip_split_experimental">Experimentell. Fluffy kann erstellte Teilarchive öffnen und entpacken, andere Apps möglicherweise nicht.</string>
     <string name="add_files">Dateien hinzufügen</string>
     <string name="archive_comment">Archivkommentar</string>
     <string name="updating_archive">Archiv wird aktualisiert</string>

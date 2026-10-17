@@ -53,7 +53,6 @@
     <string name="zip_comment">تعليق الأرشيف (اختياري)</string>
     <string name="zip_split_mb">تقسيم إلى أجزاء، ميغابايت (اختياري)</string>
     <string name="zip_split_enable">تقسيم الأرشيف إلى أجزاء</string>
-    <string name="zip_split_experimental">تجريبي. يستطيع Fluffy فتح واستخراج الأرشيفات المقسمة التي ينشئها، وقد لا تستطيع تطبيقات أخرى ذلك.</string>
     <string name="add_files">إضافة ملفات</string>
     <string name="archive_comment">تعليق الأرشيف</string>
     <string name="updating_archive">جارٍ تحديث الأرشيف</string>

@@ -53,7 +53,6 @@
     <string name="zip_comment">Chú thích tệp nén (tùy chọn)</string>
     <string name="zip_split_mb">Chia thành nhiều phần, MB (tùy chọn)</string>
     <string name="zip_split_enable">Chia tệp nén thành nhiều phần</string>
-    <string name="zip_split_experimental">Thử nghiệm. Fluffy có thể mở và giải nén tệp nén chia phần do chính nó tạo, ứng dụng khác có thể không.</string>
     <string name="add_files">Thêm tệp</string>
     <string name="archive_comment">Chú thích tệp nén</string>
     <string name="updating_archive">Đang cập nhật tệp nén</string>

@@ -53,7 +53,6 @@
     <string name="zip_comment">Коментар до архіву (необов\'язково)</string>
     <string name="zip_split_mb">Розбити на частини, МБ (необов\'язково)</string>
     <string name="zip_split_enable">Розбити архів на частини</string>
-    <string name="zip_split_experimental">Експериментально. Fluffy може відкривати й розпаковувати створені ним багатотомні архіви, інші застосунки — не обов\'язково.</string>
     <string name="add_files">Додати файли</string>
     <string name="archive_comment">Коментар до архіву</string>
     <string name="updating_archive">Оновлення архіву</string>
