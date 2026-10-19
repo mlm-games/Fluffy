@@ -1,3 +1,11 @@
+## v4.6.0
+
+- Text editor improvmenets and info button shows mime based stats
+- dropdown menu for share/delete/info in intent activities
+- allow tapping X/Y for Imageviewer/pdfViewer to edit ppage no.
+- text editor works via intents, and fix sibling img viewing too
+
+
 ## v4.5.4
 
 - prev. rel fix
