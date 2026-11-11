@@ -9,7 +9,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -38,8 +37,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,7 +49,6 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -69,6 +69,8 @@ import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.ShellEntry
 import app.fluffy.io.ShellIo
 import app.fluffy.ui.screens.AnimatedListCard
+import app.fluffy.ui.theme.LocalIsDarkTheme
+import app.fluffy.ui.util.PdfDarkMode
 import app.fluffy.util.AppLog
 import app.fluffy.util.UiFormat.formatDate
 import app.fluffy.util.UiFormat.formatSize
@@ -85,15 +87,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-
-private val pdfDarkModeMatrix = ColorMatrix(
-    floatArrayOf(
-        -0.299f, -0.587f, -0.114f, 0f, 255f,
-        -0.299f, -0.587f, -0.114f, 0f, 232f,
-        -0.299f, -0.587f, -0.114f, 0f, 184f,
-        0f, 0f, 0f, 1f, 0f
-    )
-)
 
 data class RowModel(
     val name: String,
@@ -225,26 +218,28 @@ fun FileTypeIcon(
             .build()
     }
 
-    Box(modifier = modifier) {
-        Icon(
-            imageVector = model.fallbackVector(),
-            contentDescription = null,
-            modifier = Modifier.fillMaxSize(),
-            tint = model.fallbackTint(),
-        )
+    var thumbnailLoaded by remember(request) { mutableStateOf(false) }
+    val darkTheme = LocalIsDarkTheme.current
+
+    Box(modifier = modifier.clip(RoundedCornerShape(8.dp))) {
+        if (!thumbnailLoaded) {
+            fallbackIcon(model = model, modifier = Modifier.fillMaxSize())
+        }
+
         AsyncImage(
             model = request,
             contentDescription = model.name,
             imageLoader = ctx.imageLoader,
-            modifier = Modifier
-                .fillMaxSize()
-                .clip(RoundedCornerShape(8.dp)),
+            modifier = Modifier.fillMaxSize(),
             contentScale = ContentScale.Crop,
-            colorFilter = if (model.isPdf && isSystemInDarkTheme()) {
-                ColorFilter.colorMatrix(pdfDarkModeMatrix)
+            colorFilter = if (model.isPdf && darkTheme) {
+                ColorFilter.colorMatrix(PdfDarkMode.colorMatrix)
             } else {
                 null
             },
+            onLoading = { thumbnailLoaded = false },
+            onSuccess = { thumbnailLoaded = true },
+            onError = { thumbnailLoaded = false },
         )
     }
 }

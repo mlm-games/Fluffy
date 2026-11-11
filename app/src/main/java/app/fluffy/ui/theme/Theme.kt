@@ -9,13 +9,17 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+
+val LocalIsDarkTheme = compositionLocalOf { false }
 
 @Composable
 fun FluffyTheme(
@@ -81,10 +85,12 @@ fun FluffyTheme(
         extraLarge = RoundedCornerShape(28.dp)
     )
 
-    MaterialExpressiveTheme(
-        colorScheme = colorScheme,
-        typography = MaterialTheme.typography,
-        shapes = shapes,
-        content = content
-    )
+    CompositionLocalProvider(LocalIsDarkTheme provides darkTheme) {
+        MaterialExpressiveTheme(
+            colorScheme = colorScheme,
+            typography = MaterialTheme.typography,
+            shapes = shapes,
+            content = content
+        )
+    }
 }

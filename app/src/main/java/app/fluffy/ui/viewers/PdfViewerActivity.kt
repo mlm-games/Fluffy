@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.graphics.pdf.PdfRenderer
 import android.net.Uri
 import android.os.Bundle
@@ -65,7 +66,6 @@ import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
@@ -88,6 +88,7 @@ import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.helper.AppUtilsHelper
 import app.fluffy.ui.theme.FluffyTheme
+import app.fluffy.ui.util.PdfDarkMode
 import app.fluffy.util.AppLog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.collectLatest
@@ -166,13 +167,17 @@ private class PdfDoc(
                     viewportH.toFloat() / baseH.toFloat()
                 ).coerceAtLeast(0.5f)
 
-                val targetW = (baseW * fitScale * bucket).toInt().coerceIn(64, 2048)
-                val targetH = (baseH * fitScale * bucket).toInt().coerceIn(64, 2048)
+                val rawW = baseW * fitScale * bucket
+                val rawH = baseH * fitScale * bucket
+                val shrink = minOf(1f, 2048f / maxOf(rawW, rawH))
+                val targetW = (rawW * shrink).toInt().coerceIn(64, 2048)
+                val targetH = (rawH * shrink).toInt().coerceIn(64, 2048)
                 val key = "$pageIndex@$bucket@${targetW}x${targetH}"
 
                 cache.get(key)?.let { return@withContext it }
 
                 val bmp = createBitmap(targetW, targetH)
+                bmp.eraseColor(Color.WHITE)
                 page.render(bmp, null, null, PdfRenderer.Page.RENDER_MODE_FOR_DISPLAY)
                 val existing = cache.get(key)
                 if (existing != null) {
@@ -295,17 +300,7 @@ private fun PdfPageImage(
             }
     }
 
-    val darkModeMatrix = remember {
-        val warmR = 1.00f; val warmG = 0.92f; val warmB = 0.72f
-        ColorMatrix(
-            floatArrayOf(
-                -0.299f * warmR, -0.587f * warmR, -0.114f * warmR, 0f, 255f * warmR,
-                -0.299f * warmG, -0.587f * warmG, -0.114f * warmG, 0f, 255f * warmG,
-                -0.299f * warmB, -0.587f * warmB, -0.114f * warmB, 0f, 255f * warmB,
-                0f,              0f,              0f,              1f, 0f
-            )
-        )
-    }
+    val darkModeMatrix = remember { PdfDarkMode.colorMatrix }
 
     bmp?.let {
         Image(
