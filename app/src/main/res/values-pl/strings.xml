@@ -363,4 +363,10 @@
     <string name="no_folder_for_task">Najpierw otwórz folder</string>
     <string name="same_folder_copy_warning">Wybierz inny folder; źródło już tam jest</string>
     <string name="source_permission_expired">Dostęp do pliku źródłowego wygasł; dodaj go ponownie</string>
+
+
+    <string name="remount_title">Ponownie zamontować partycję?</string>
+    <string name="remount_message">Ten plik znajduje się na partycji tylko do odczytu %1$s. Fluffy musi zamontować ją ponownie z dostępem do zapisu. Zmiana obowiązuje do restartu urządzenia.</string>
+    <string name="remount_dont_ask">Nie pytaj ponownie</string>
+    <string name="remount_action">Zamontuj ponownie</string>
 </resources>

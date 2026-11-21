@@ -357,4 +357,10 @@
     <string name="no_folder_for_task">Open eerst een map</string>
     <string name="same_folder_copy_warning">Kies een andere map; de bron staat daar al</string>
     <string name="source_permission_expired">Toegang tot een bronbestand is verlopen; voeg het opnieuw toe</string>
+
+
+    <string name="remount_title">Partition opnieuw koppelen?</string>
+    <string name="remount_message">Dit bestand staat op de alleen-lezen partitie %1$s. Fluffy moet deze opnieuw koppelen met lees-/schrijfrechten om door te gaan. De wijziging blijft gelden tot de herstart van het apparaat.</string>
+    <string name="remount_dont_ask">Niet opnieuw vragen</string>
+    <string name="remount_action">Opnieuw koppelen</string>
 </resources>

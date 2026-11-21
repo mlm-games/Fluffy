@@ -357,4 +357,10 @@
     <string name="no_folder_for_task">Zuerst einen Ordner öffnen</string>
     <string name="same_folder_copy_warning">Anderen Ordner wählen; die Quelle ist bereits dort</string>
     <string name="source_permission_expired">Zugriff auf eine Quelldatei abgelaufen; sie erneut hinzufügen</string>
+
+
+    <string name="remount_title">Partition neu einhängen?</string>
+    <string name="remount_message">Diese Datei liegt auf der schreibgeschützten Partition %1$s. Fluffy muss sie zum Fortfahren mit Lese-/Schreibzugriff neu einhängen. Die Änderung bleibt bis zum Neustart des Geräts bestehen.</string>
+    <string name="remount_dont_ask">Nicht erneut fragen</string>
+    <string name="remount_action">Neu einhängen</string>
 </resources>

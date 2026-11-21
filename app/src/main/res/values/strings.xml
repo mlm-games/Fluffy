@@ -377,4 +377,8 @@
     <string name="no_folder_for_task">Open a folder first</string>
     <string name="same_folder_copy_warning">Choose a different folder; the source is already there</string>
     <string name="source_permission_expired">Access to a source file has expired; add it again</string>
+    <string name="remount_title">Remount partition?</string>
+    <string name="remount_message">This file is on the read-only partition %1$s. Fluffy needs to remount it as read-write to continue. The change lasts until the device restarts.</string>
+    <string name="remount_dont_ask">Don\'t ask again</string>
+    <string name="remount_action">Remount</string>
 </resources>

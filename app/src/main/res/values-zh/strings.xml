@@ -354,4 +354,10 @@
     <string name="no_folder_for_task">请先打开一个文件夹</string>
     <string name="same_folder_copy_warning">请选择其他文件夹；源文件已在该位置</string>
     <string name="source_permission_expired">源文件的访问权限已过期；请重新添加</string>
+
+
+    <string name="remount_title">重新挂载分区？</string>
+    <string name="remount_message">此文件位于只读分区 %1$s 上。Fluffy 需要将其重新挂载为可读写才能继续。此更改会持续到设备重启。</string>
+    <string name="remount_dont_ask">不再询问</string>
+    <string name="remount_action">重新挂载</string>
 </resources>

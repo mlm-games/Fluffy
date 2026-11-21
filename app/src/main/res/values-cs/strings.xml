@@ -363,4 +363,10 @@
     <string name="no_folder_for_task">Nejprve otevřete složku</string>
     <string name="same_folder_copy_warning">Vyberte jinou složku; zdroj už tam je</string>
     <string name="source_permission_expired">Přístup ke zdrojovému souboru vypršel; přidejte ho znovu</string>
+
+
+    <string name="remount_title">Připojit oddíl znovu?</string>
+    <string name="remount_message">Tento soubor je na oddílu pouze pro čtení %1$s. Fluffy jej musí znovu připojit pro zápis. Změna trvá až do restartu zařízení.</string>
+    <string name="remount_dont_ask">Neptat se znovu</string>
+    <string name="remount_action">Znovu připojit</string>
 </resources>

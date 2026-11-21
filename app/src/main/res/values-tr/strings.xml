@@ -357,4 +357,10 @@
     <string name="no_folder_for_task">Önce bir klasör aç</string>
     <string name="same_folder_copy_warning">Başka bir klasör seç; kaynak zaten orada</string>
     <string name="source_permission_expired">Kaynak dosyaya erişim süresi doldu; dosyayı yeniden ekle</string>
+
+
+    <string name="remount_title">Bölüm yeniden bağlansın mı?</string>
+    <string name="remount_message">Bu dosya salt okunur %1$s bölümünde. Devam etmek için Fluffy\'nin onu okunur/yazılabilir olarak yeniden bağlaması gerekiyor. Değişiklik cihaz yeniden başlatılana kadar sürer.</string>
+    <string name="remount_dont_ask">Tekrar sorma</string>
+    <string name="remount_action">Yeniden bağla</string>
 </resources>

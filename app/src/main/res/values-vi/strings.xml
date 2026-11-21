@@ -354,4 +354,10 @@
     <string name="no_folder_for_task">Hãy mở một thư mục trước</string>
     <string name="same_folder_copy_warning">Chọn thư mục khác; nguồn đã ở đó rồi</string>
     <string name="source_permission_expired">Quyền truy cập tệp nguồn đã hết hạn; hãy thêm lại</string>
+
+
+    <string name="remount_title">Gắn lại phân vùng?</string>
+    <string name="remount_message">Tệp này nằm trên phân vùng chỉ đọc %1$s. Fluffy cần gắn lại ở chế độ đọc-ghi để tiếp tục. Thay đổi có hiệu lực đến khi khởi động lại thiết bị.</string>
+    <string name="remount_dont_ask">Không hỏi lại</string>
+    <string name="remount_action">Gắn lại</string>
 </resources>

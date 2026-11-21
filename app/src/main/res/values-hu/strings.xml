@@ -357,4 +357,10 @@
     <string name="no_folder_for_task">Először nyisson meg egy mappát</string>
     <string name="same_folder_copy_warning">Válasszon másik mappát; a forrás már ott van</string>
     <string name="source_permission_expired">A forrásfájl elérése lejárt; adja hozzá újra</string>
+
+
+    <string name="remount_title">Partíció újrahátolása?</string>
+    <string name="remount_message">Ez a fájl az írásvédett %1$s partíción van. A Fluffynek írhatóként újra kell hátolnia a folytatáshoz. A változás az eszköz újraindításáig tart.</string>
+    <string name="remount_dont_ask">Ne kérdezd újra</string>
+    <string name="remount_action">Újrahátolás</string>
 </resources>

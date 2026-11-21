@@ -360,4 +360,10 @@
     <string name="no_folder_for_task">Ouvrez d’abord un dossier</string>
     <string name="same_folder_copy_warning">Choisissez un autre dossier ; la source s’y trouve déjà</string>
     <string name="source_permission_expired">L’accès à un fichier source a expiré ; ajoutez-le à nouveau</string>
+
+
+    <string name="remount_title">Remonter la partition ?</string>
+    <string name="remount_message">Ce fichier se trouve sur la partition en lecture seule %1$s. Fluffy doit la remonter en lecture-écriture pour continuer. La modification persiste jusqu’au redémarrage de l’appareil.</string>
+    <string name="remount_dont_ask">Ne plus demander</string>
+    <string name="remount_action">Remonter</string>
 </resources>

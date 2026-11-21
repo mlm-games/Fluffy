@@ -357,4 +357,10 @@
     <string name="no_folder_for_task">ابتدا یک پوشه باز کنید</string>
     <string name="same_folder_copy_warning">پوشه دیگری انتخاب کنید؛ منبع از قبل آنجاست</string>
     <string name="source_permission_expired">دسترسی به فایل منبع منقضی شد؛ دوباره اضافه کنید</string>
+
+
+    <string name="remount_title">دوباره سوار کردن پارتیشن؟</string>
+    <string name="remount_message">این فایل روی پارتیشن فقطخواندنی %1$s است. Fluffy باید آن را برای ادامه با دسترسی خواندن/نوشتن دوباره سوار کند. این تغییر تا راهاندازی مجدد دستگاه باقی میماند.</string>
+    <string name="remount_dont_ask">دیگر نپرس</string>
+    <string name="remount_action">دوباره سوار کردن</string>
 </resources>

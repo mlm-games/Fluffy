@@ -357,4 +357,10 @@
     <string name="no_folder_for_task">Avaa ensin kansio</string>
     <string name="same_folder_copy_warning">Valitse toinen kansio; lähde on jo siellä</string>
     <string name="source_permission_expired">Lähdetiedoston käyttöoikeus on vanhentunut; lisää se uudelleen</string>
+
+
+    <string name="remount_title">Asenna osio uudelleen?</string>
+    <string name="remount_message">Tämä tiedosto on vain luettavassa osiossa %1$s. Fluffyn on asennettava se uudelleen luettavaksi ja kirjoitettavaksi. Muutos kestää laitteen uudelleenkäynnistykseen asti.</string>
+    <string name="remount_dont_ask">Älä kysy uudelleen</string>
+    <string name="remount_action">Asenna uudelleen</string>
 </resources>

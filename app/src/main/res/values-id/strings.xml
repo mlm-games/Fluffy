@@ -354,4 +354,10 @@
     <string name="no_folder_for_task">Buka folder terlebih dahulu</string>
     <string name="same_folder_copy_warning">Pilih folder lain; sumbernya sudah di sana</string>
     <string name="source_permission_expired">Akses ke file sumber telah kedaluwarsa; tambahkan lagi</string>
+
+
+    <string name="remount_title">Pasang ulang partisi?</string>
+    <string name="remount_message">Berkas ini ada di partisi hanya-baca %1$s. Fluffy perlu memasangnya ulang sebagai baca-tulis untuk melanjutkan. Perubahan berlaku sampai perangkat dimulai ulang.</string>
+    <string name="remount_dont_ask">Jangan tanya lagi</string>
+    <string name="remount_action">Pasang ulang</string>
 </resources>

@@ -360,4 +360,10 @@
     <string name="no_folder_for_task">Abra uma pasta primeiro</string>
     <string name="same_folder_copy_warning">Escolha outra pasta; a origem já está lá</string>
     <string name="source_permission_expired">O acesso a um ficheiro de origem expirou; adicione-o novamente</string>
+
+
+    <string name="remount_title">Montar a partição novamente?</string>
+    <string name="remount_message">Este ficheiro está na partição só de leitura %1$s. O Fluffy precisa de a montar novamente como leitura e escrita para continuar. A alteração mantém-se até ao reinício do dispositivo.</string>
+    <string name="remount_dont_ask">Não perguntar novamente</string>
+    <string name="remount_action">Montar novamente</string>
 </resources>

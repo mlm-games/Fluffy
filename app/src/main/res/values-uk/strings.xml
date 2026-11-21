@@ -363,4 +363,10 @@
     <string name="no_folder_for_task">Спочатку відкрийте папку</string>
     <string name="same_folder_copy_warning">Виберіть іншу папку; джерело вже там</string>
     <string name="source_permission_expired">Доступ до вихідного файлу закінчився; додайте його знову</string>
+
+
+    <string name="remount_title">Перемонтувати розділ?</string>
+    <string name="remount_message">Цей файл знаходиться на розділі лише для читання %1$s. Для продовження Fluffy має перемонтувати його для читання та запису. Зміна зберігається до перезавантаження пристрою.</string>
+    <string name="remount_dont_ask">Більше не питати</string>
+    <string name="remount_action">Перемонтувати</string>
 </resources>

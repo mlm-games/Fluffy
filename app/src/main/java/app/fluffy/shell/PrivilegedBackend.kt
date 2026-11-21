@@ -6,6 +6,9 @@ import java.io.FilterInputStream
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.TimeUnit
+import kotlinx.coroutines.runBlocking
 
 interface PrivilegedBackend {
     val scheme: String
@@ -33,9 +36,15 @@ interface PrivilegedBackend {
     }
 }
 
-abstract class BasePrivilegedBackend : PrivilegedBackend {
+abstract class BasePrivilegedBackend(
+    protected val remountApprover: RemountApprover? = null,
+) : PrivilegedBackend {
+    private val remountedMounts = ConcurrentHashMap.newKeySet<String>()
+    private val mountLocks = ConcurrentHashMap<String, Any>()
+
     protected companion object {
         const val BUF = 128 * 1024
+        const val REMOUNT_TIMEOUT_SECONDS = 10L
 
         fun q(path: String): String = "'${path.replace("'", "'\"'\"'")}'"
 
@@ -75,22 +84,58 @@ abstract class BasePrivilegedBackend : PrivilegedBackend {
         else runTest("test -w ${q(path)}") && !isReadOnlyMount(path)
     }.getOrDefault(false)
 
-    private fun isReadOnlyMount(path: String): Boolean {
-        val mounts = execRead("cat /proc/mounts") ?: return false
+    private data class Mount(val point: String, val readOnly: Boolean)
+
+    private fun findMount(path: String): Mount? {
+        val mounts = execRead("cat /proc/mounts") ?: return null
         val canon = runCatching { File(path).canonicalPath }.getOrNull() ?: path
-        var bestLen = -1
-        var readOnly = false
+        var best: Mount? = null
         for (line in mounts.lines()) {
             val parts = line.split(" ")
             if (parts.size < 4) continue
-            val mountPoint = parts[1].replace("\\040", " ")
-            val covers = canon == mountPoint || canon.startsWith(mountPoint.trimEnd('/') + "/")
-            if (covers && mountPoint.length > bestLen) {
-                bestLen = mountPoint.length
-                readOnly = "ro" in parts[3].split(",")
+            val point = parts[1].replace("\\040", " ")
+            val covers = canon == point || canon.startsWith(point.trimEnd('/') + "/")
+            if (covers && (best == null || point.length > best.point.length)) {
+                best = Mount(point, "ro" in parts[3].split(","))
             }
         }
-        return readOnly
+        return best
+    }
+
+    private fun isReadOnlyMount(path: String): Boolean = findMount(path)?.readOnly == true
+
+    private fun prepareWrite(path: String): Boolean {
+        val approver = remountApprover ?: return true
+        val mount = findMount(path)?.takeIf { it.readOnly }?.point ?: return true
+        if (mount in remountedMounts) return true
+        val lock = mountLocks.computeIfAbsent(mount) { Any() }
+        return synchronized(lock) {
+            if (mount in remountedMounts) return@synchronized true
+            val approval = runBlocking { approver.approve(mount) }
+            if (!approval.granted) return@synchronized false
+            if (!remount(mount, path)) return@synchronized false
+            if (approval.remember) runBlocking { approver.remember() }
+            remountedMounts.add(mount)
+            true
+        }
+    }
+
+    private fun remount(mount: String, path: String): Boolean {
+        val points = listOf(mount, "/", "/system_root").distinct()
+        for (point in points) {
+            for (command in listOf(
+                "mount -o rw,remount ${q(point)}",
+                "mount -o remount,rw ${q(point)}",
+            )) {
+                val process = spawnShellCommand(command) ?: continue
+                if (!runCatching { process.waitFor(REMOUNT_TIMEOUT_SECONDS, TimeUnit.SECONDS) }
+                        .getOrDefault(false)) {
+                    runCatching { process.destroyForcibly() }
+                }
+                if (!isReadOnlyMount(path)) return true
+            }
+        }
+        return false
     }
 
     override fun exists(path: String): Boolean = runCatching {
@@ -155,6 +200,7 @@ abstract class BasePrivilegedBackend : PrivilegedBackend {
     override fun openOutput(path: String): OutputStream {
         if (path.isBlank()) throw IOException("Empty path")
         if (isDangerousTarget(path)) throw IOException("Refusing to write to $path")
+        if (!prepareWrite(path)) throw IOException("Read-only partition: $path")
         val parent = File(path).parent ?: "/"
         val mkExit = spawnShellCommand("mkdir -p ${q(parent)}")
             ?.waitFor() ?: 1
@@ -196,24 +242,30 @@ abstract class BasePrivilegedBackend : PrivilegedBackend {
         }
     }
 
-    override fun mkdirs(path: String): Boolean =
-        (spawnShellCommand("mkdir -p ${q(path)}")?.waitFor() ?: 1) == 0
+    override fun mkdirs(path: String): Boolean {
+        if (isDangerousTarget(path)) return false
+        if (!prepareWrite(path)) return false
+        return (spawnShellCommand("mkdir -p ${q(path)}")?.waitFor() ?: 1) == 0
+    }
 
     override fun delete(path: String): Boolean {
         if (isDangerousTarget(path)) return false
+        if (!prepareWrite(path)) return false
         return (spawnShellCommand("rm -rf ${q(path)}")?.waitFor() ?: 1) == 0
     }
 
     override fun rename(oldPath: String, newPath: String): Boolean {
         if (oldPath.isBlank() || newPath.isBlank()) return false
-        if (isDangerousTarget(oldPath)) return false
+        if (isDangerousTarget(oldPath) || isDangerousTarget(newPath)) return false
+        if (!prepareWrite(oldPath) || !prepareWrite(newPath)) return false
         return (spawnShellCommand("mv -n ${q(oldPath)} ${q(newPath)}")?.waitFor() ?: 1) == 0
     }
 }
 
 class RootBackend(
     private val rootAccess: RootAccess,
-) : BasePrivilegedBackend() {
+    remountApprover: RemountApprover,
+) : BasePrivilegedBackend(remountApprover) {
     override val scheme: String = "root"
 
     override fun isAvailable(): Boolean = rootAccess.isAvailable()

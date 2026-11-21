@@ -103,6 +103,7 @@ import app.fluffy.helper.toViewableUris
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.operations.ArchiveJobManager
 import app.fluffy.search.SearchHit
+import app.fluffy.shell.RemountApprover
 import app.fluffy.shell.ShizukuAccess
 import app.fluffy.ui.components.ConfirmationDialog
 import app.fluffy.ui.components.DirectoryCounter
@@ -163,6 +164,7 @@ class MainActivity : AppCompatActivity() {
     private val storageAccessPolicy: StorageAccessPolicy by inject()
     private val snackbar: SnackbarManager by inject()
     private val cacheManager: CacheManager by inject()
+    private val remountApprover: RemountApprover by inject()
 
     private val filesVM: FileBrowserViewModel by viewModel()
     private val tasksVM: TasksViewModel by viewModel()
@@ -336,6 +338,7 @@ class MainActivity : AppCompatActivity() {
                 val workInfos by tasksVM.workInfos.collectAsState()
                 val queuedTasks by tasksVM.queuedTasks.collectAsState()
                 val pendingRun by tasksVM.pendingRun.collectAsState()
+                val remountRequest by remountApprover.request.collectAsState()
 
                 val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -591,7 +594,9 @@ class MainActivity : AppCompatActivity() {
                                         onRenameOne = { uri, newName, _ ->
                                             lifecycleScope.launch {
                                                 if (newName.isNotBlank()) {
-                                                    io.rename(uri, newName)
+                                                    withContext(Dispatchers.IO) {
+                                                        io.rename(uri, newName)
+                                                    }
                                                     filesVM.refreshCurrentDir()
                                                 }
                                             }
@@ -861,6 +866,14 @@ class MainActivity : AppCompatActivity() {
                     )
                 }
 
+                remountRequest?.let { request ->
+                    RemountDialog(
+                        mount = request.mount,
+                        onDismiss = { answerRemount(request, false, false) },
+                        onConfirm = { remember -> answerRemount(request, true, remember) },
+                    )
+                }
+
                 if (showOverwriteDialog.value) {
                     ConfirmationDialog(
                         title = stringResource(R.string.confirm),
@@ -879,6 +892,16 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        remountApprover.setUiActive(true)
+    }
+
+    override fun onStop() {
+        remountApprover.setUiActive(false)
+        super.onStop()
     }
 
     override fun onResume() {
@@ -1164,6 +1187,16 @@ class MainActivity : AppCompatActivity() {
             manageStoragePermissionLauncher.launch(intent)
         } else {
             requestRegularStoragePermissions()
+        }
+    }
+
+    private fun answerRemount(
+        request: RemountApprover.Request,
+        granted: Boolean,
+        remember: Boolean,
+    ) {
+        lifecycleScope.launch {
+            remountApprover.respond(request, granted, remember)
         }
     }
 
@@ -1501,6 +1534,39 @@ private fun QueuedTask.needsPassword(): Boolean = when (this) {
     is QueuedTask.Copy, is QueuedTask.Move -> false
     is QueuedTask.CreateZip -> hasPassword
     is QueuedTask.Create7z -> hasPassword
+}
+
+@Composable
+private fun RemountDialog(
+    mount: String,
+    onDismiss: () -> Unit,
+    onConfirm: (Boolean) -> Unit,
+) {
+    var dontAsk by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.remount_title)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.remount_message, mount))
+                Spacer(Modifier.height(12.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = dontAsk, onCheckedChange = { dontAsk = it })
+                    Text(stringResource(R.string.remount_dont_ask))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(dontAsk) }) {
+                Text(stringResource(R.string.remount_action))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
 }
 
 @Composable

@@ -13,6 +13,7 @@ import app.fluffy.io.SafIo
 import app.fluffy.io.ShellIo
 import app.fluffy.operations.ArchiveJobManager
 import app.fluffy.platform.StorageAccessPolicy
+import app.fluffy.shell.RemountApprover
 import app.fluffy.shell.RootAccess
 import app.fluffy.shell.RootBackend
 import app.fluffy.shell.ShizukuAccess
@@ -39,7 +40,8 @@ val appModule = module {
 
     single { RootAccess() }
     single { ShizukuAccess() }
-    single { RootBackend(get<RootAccess>()) }
+    single { RemountApprover(get<SettingsRepository>()) }
+    single { RootBackend(get<RootAccess>(), get<RemountApprover>()) }
     single { ShizukuBackend(get<ShizukuAccess>()) }
     single { ShellIo(get<RootBackend>(), get<ShizukuBackend>()) }
 

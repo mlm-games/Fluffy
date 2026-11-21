@@ -145,6 +145,9 @@ data class AppSettings(
     @Persisted(key = "cta_banner_dismissed_2026")
     val ctaBannerDismissed2026: Boolean = false,
 
+    @Persisted(key = "remount_prompt_done")
+    val remountPromptDone: Boolean = false,
+
     @Persisted(key = "editor_font_size")
     val editorFontSize: Int = 14,
 

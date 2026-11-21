@@ -360,4 +360,10 @@
     <string name="no_folder_for_task">Prvo otvori mapu</string>
     <string name="same_folder_copy_warning">Odaberi drugu mapu; izvor je već tamo</string>
     <string name="source_permission_expired">Pristup izvornoj datoteci je istekao; dodaj je ponovno</string>
+
+
+    <string name="remount_title">Ponovno montirati particiju?</string>
+    <string name="remount_message">Ova datoteka je na particiji samo za čitanje %1$s. Fluffy je mora ponovno montirati s pristupom za čitanje i pisanje. Promjena traje do ponovnog pokretanja uređaja.</string>
+    <string name="remount_dont_ask">Ne pitaj ponovno</string>
+    <string name="remount_action">Ponovno montiraj</string>
 </resources>

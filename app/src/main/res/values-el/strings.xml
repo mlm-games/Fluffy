@@ -357,4 +357,10 @@
     <string name="no_folder_for_task">Ανοίξτε πρώτα έναν φάκελο</string>
     <string name="same_folder_copy_warning">Επιλέξτε άλλον φάκελο· η πηγή είναι ήδη εκεί</string>
     <string name="source_permission_expired">Η πρόσβαση σε ένα αρχείο πηγής έχει λήξει· προσθέστε το ξανά</string>
+
+
+    <string name="remount_title">Επαναπροσάρτηση διαμερίσματος;</string>
+    <string name="remount_message">Το αρχείο βρίσκεται στο διαμέρισμα μόνο για ανάγνωση %1$s. Το Fluffy πρέπει να το προσαρτήσει ξανά με δικαιώματα εγγραφής. Η αλλαγή διαρκεί μέχρι την επανεκκίνηση της συσκευής.</string>
+    <string name="remount_dont_ask">Να μην ξαναρωτηθώ</string>
+    <string name="remount_action">Επαναπροσάρτηση</string>
 </resources>

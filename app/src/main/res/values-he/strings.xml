@@ -360,4 +360,10 @@
     <string name="no_folder_for_task">פתח תיקייה תחילה</string>
     <string name="same_folder_copy_warning">בחר תיקייה אחרת; המקור כבר נמצא שם</string>
     <string name="source_permission_expired">גישה לקובץ מקור פגה; הוסף אותו שוב</string>
+
+
+    <string name="remount_title">לחבר מחדש את המחיצה?</string>
+    <string name="remount_message">הקובץ נמצא במחיצה לקריאה בלבד %1$s. Fluffy צריך לחבר אותה מחדש לקריאה וכתיבה כדי להמשיך. השינוי נמשך עד להפעלה מחדש של המכשיר.</string>
+    <string name="remount_dont_ask">לא לשאול שוב</string>
+    <string name="remount_action">חיבור מחדש</string>
 </resources>

@@ -360,4 +360,10 @@
     <string name="no_folder_for_task">Apri prima una cartella</string>
     <string name="same_folder_copy_warning">Scegli un’altra cartella; l’origine è già lì</string>
     <string name="source_permission_expired">L’accesso a un file di origine è scaduto; aggiungilo di nuovo</string>
+
+
+    <string name="remount_title">Rimontare la partizione?</string>
+    <string name="remount_message">Questo file si trova nella partizione di sola lettura %1$s. Fluffy deve rimontarla in lettura-scrittura per continuare. La modifica resta fino al riavvio del dispositivo.</string>
+    <string name="remount_dont_ask">Non chiedere ancora</string>
+    <string name="remount_action">Rimonta</string>
 </resources>

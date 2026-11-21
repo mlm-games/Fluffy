@@ -357,4 +357,10 @@
     <string name="no_folder_for_task">Öppna en mapp först</string>
     <string name="same_folder_copy_warning">Välj en annan mapp; källan finns redan där</string>
     <string name="source_permission_expired">Åtkomsten till en källfil har gått ut; lägg till den igen</string>
+
+
+    <string name="remount_title">Montera om partitionen?</string>
+    <string name="remount_message">Den här filen ligger på den skrivskyddade partitionen %1$s. Fluffy måste montera om den som läs-/skrivbar för att fortsätta. Ändringen gäller tills enheten startas om.</string>
+    <string name="remount_dont_ask">Fråga inte igen</string>
+    <string name="remount_action">Montera om</string>
 </resources>

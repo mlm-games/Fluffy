@@ -369,4 +369,10 @@
     <string name="no_folder_for_task">افتح مجلدًا أولًا</string>
     <string name="same_folder_copy_warning">اختر مجلدًا آخر؛ المصدر موجود بالفعل هناك</string>
     <string name="source_permission_expired">انتهت صلاحية الوصول إلى ملف مصدر؛ أضفه مرة أخرى</string>
+
+
+    <string name="remount_title">إعادة تركيب القسم؟</string>
+    <string name="remount_message">هذا الملف موجود على القسم للقراءة فقط %1$s. يحتاج Fluffy إلى إعادة تركيبته للقراءة والكتابة للمتابعة. يستمر التغيير حتى إعادة تشغيل الجهاز.</string>
+    <string name="remount_dont_ask">لا تسأل مرة أخرى</string>
+    <string name="remount_action">إعادة التركيب</string>
 </resources>

@@ -354,4 +354,10 @@
     <string name="no_folder_for_task">先にフォルダーを開いてください</string>
     <string name="same_folder_copy_warning">別のフォルダーを選択してください。元のファイルはすでにそこにあります</string>
     <string name="source_permission_expired">元ファイルへのアクセスが期限切れです。もう一度追加してください</string>
+
+
+    <string name="remount_title">パーティションを再マウントしますか？</string>
+    <string name="remount_message">このファイルは読み取り専用パーティション %1$s にあります。続行するには Fluffy が読み書き可能として再マウントする必要があります。変更はデバイスの再起動まで有効です。</string>
+    <string name="remount_dont_ask">次回から表示しない</string>
+    <string name="remount_action">再マウント</string>
 </resources>
