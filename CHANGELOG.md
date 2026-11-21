@@ -1,3 +1,8 @@
+## v4.6.1
+
+- Add task queue mode (#69), and iconify few buttons
+
+
 ## v4.6.0
 
 - Text editor improvmenets and info button shows mime based stats
