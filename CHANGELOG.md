@@ -1,3 +1,8 @@
+## v4.6.2
+
+- root-rw remapping (with a one-time alert dialog)
+
+
 ## v4.6.1
 
 - Add task queue mode (#69), and iconify few buttons
