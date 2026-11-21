@@ -4,7 +4,7 @@
     <string name="about_fluffy">Tentang dan FAQ</string>
     <string name="screen_time">Waktu layar</string>
     <string name="learn_more">Pelajari lebih lanjut</string>
-    <string name="cannot_access">Tidak dapat mengakses %s: %s</string>
+    <string name="cannot_access">Tidak dapat mengakses %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku tidak berjalan</string>
     <string name="root_access_not_available">Akses root tidak tersedia</string>
     <string name="enable_root_or_shizuku">Aktifkan Root atau Shizuku di Pengaturan</string>
@@ -332,4 +332,26 @@
     <plurals name="search_truncated">
         <item quantity="other">Menampilkan %1$d hasil, dihentikan setelah %2$d map. Persempit pencarian Anda.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Mode antrean tugas</string>
+    <string name="setting_task_mode_desc">Tambahkan operasi salin, pindah, dan arsip ke Pusat Tugas alih-alih langsung meminta tujuan</string>
+    <string name="task_added">Tugas ditambahkan</string>
+    <string name="task_updated">Tugas diperbarui</string>
+    <string name="queued">Dalam antrean (%1$d)</string>
+    <string name="queued_copy">Salin (%1$d)</string>
+    <string name="queued_move">Pindah (%1$d)</string>
+    <string name="queued_create_zip">Buat ZIP (%1$d)</string>
+    <string name="queued_create_7z">Buat 7z (%1$d)</string>
+    <string name="clear_queue">Kosongkan antrean</string>
+    <string name="cancel_task">Batalkan tugas</string>
+    <string name="paste_here">Tempel di sini</string>
+    <string name="create_here">Buat di sini</string>
+    <string name="choose_folder">Pilih folder</string>
+    <string name="run_task">Jalankan tugas</string>
+    <string name="task_destination">Tujuan: %1$s</string>
+    <string name="replace_existing">Ganti file yang sudah ada</string>
+    <string name="no_folder_for_task">Buka folder terlebih dahulu</string>
+    <string name="same_folder_copy_warning">Pilih folder lain; sumbernya sudah di sana</string>
+    <string name="source_permission_expired">Akses ke file sumber telah kedaluwarsa; tambahkan lagi</string>
 </resources>

@@ -4,7 +4,7 @@
     <string name="about_fluffy">Over en FAQ\'s</string>
     <string name="screen_time">Schermtijd</string>
     <string name="learn_more">Meer informatie</string>
-    <string name="cannot_access">Geen toegang tot %s: %s</string>
+    <string name="cannot_access">Geen toegang tot %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku is niet gestart</string>
     <string name="root_access_not_available">Root-toegang niet beschikbaar</string>
     <string name="enable_root_or_shizuku">Root of Shizuku inschakelen in Instellingen</string>
@@ -335,4 +335,26 @@
         <item quantity="one">%1$d resultaat weergegeven, gestopt na %2$d mappen. Verfijn je zoekopdracht.</item>
         <item quantity="other">%1$d resultaten weergegeven, gestopt na %2$d mappen. Verfijn je zoekopdracht.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Modus takenwachtrij</string>
+    <string name="setting_task_mode_desc">Kopieer-, verplaats- en archiveerbewerkingen toevoegen aan Taken in plaats van direct om een bestemming te vragen</string>
+    <string name="task_added">Taak toegevoegd</string>
+    <string name="task_updated">Taak bijgewerkt</string>
+    <string name="queued">In wachtrij (%1$d)</string>
+    <string name="queued_copy">Kopiëren (%1$d)</string>
+    <string name="queued_move">Verplaatsen (%1$d)</string>
+    <string name="queued_create_zip">ZIP maken (%1$d)</string>
+    <string name="queued_create_7z">7z maken (%1$d)</string>
+    <string name="clear_queue">Wachtrij wissen</string>
+    <string name="cancel_task">Taak annuleren</string>
+    <string name="paste_here">Hier plakken</string>
+    <string name="create_here">Hier maken</string>
+    <string name="choose_folder">Map kiezen</string>
+    <string name="run_task">Taak uitvoeren</string>
+    <string name="task_destination">Bestemming: %1$s</string>
+    <string name="replace_existing">Bestaande bestanden vervangen</string>
+    <string name="no_folder_for_task">Open eerst een map</string>
+    <string name="same_folder_copy_warning">Kies een andere map; de bron staat daar al</string>
+    <string name="source_permission_expired">Toegang tot een bronbestand is verlopen; voeg het opnieuw toe</string>
 </resources>

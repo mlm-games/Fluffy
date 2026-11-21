@@ -4,7 +4,7 @@
     <string name="about_fluffy">Om appen och vanliga frågor</string>
     <string name="screen_time">Skärmtid</string>
     <string name="learn_more">Läs mer</string>
-    <string name="cannot_access">Kan inte komma åt %s: %s</string>
+    <string name="cannot_access">Kan inte komma åt %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku körs inte</string>
     <string name="root_access_not_available">Root-åtkomst är inte tillgänglig</string>
     <string name="enable_root_or_shizuku">Aktivera Root eller Shizuku i inställningarna</string>
@@ -335,4 +335,26 @@
         <item quantity="one">Visar %1$d resultat, stoppade efter %2$d mappar. Avgränsa sökningen.</item>
         <item quantity="other">Visar %1$d resultat, stoppade efter %2$d mappar. Avgränsa sökningen.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Uppgiftsköläge</string>
+    <string name="setting_task_mode_desc">Lägg till kopiering, flytt och arkivering i Uppgifter i stället för att fråga efter en målmapp direkt</string>
+    <string name="task_added">Uppgift tillagd</string>
+    <string name="task_updated">Uppgift uppdaterad</string>
+    <string name="queued">I kö (%1$d)</string>
+    <string name="queued_copy">Kopiera (%1$d)</string>
+    <string name="queued_move">Flytta (%1$d)</string>
+    <string name="queued_create_zip">Skapa ZIP (%1$d)</string>
+    <string name="queued_create_7z">Skapa 7z (%1$d)</string>
+    <string name="clear_queue">Rensa kö</string>
+    <string name="cancel_task">Avbryt uppgift</string>
+    <string name="paste_here">Klistra in här</string>
+    <string name="create_here">Skapa här</string>
+    <string name="choose_folder">Välj mapp</string>
+    <string name="run_task">Kör uppgift</string>
+    <string name="task_destination">Mål: %1$s</string>
+    <string name="replace_existing">Ersätt befintliga filer</string>
+    <string name="no_folder_for_task">Öppna en mapp först</string>
+    <string name="same_folder_copy_warning">Välj en annan mapp; källan finns redan där</string>
+    <string name="source_permission_expired">Åtkomsten till en källfil har gått ut; lägg till den igen</string>
 </resources>

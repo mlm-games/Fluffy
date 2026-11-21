@@ -4,7 +4,7 @@
     <string name="about_fluffy">Informazioni e domande frequenti</string>
     <string name="screen_time">Tempo sullo schermo</string>
     <string name="learn_more">Scopri di più</string>
-    <string name="cannot_access">Impossibile accedere a %s: %s</string>
+    <string name="cannot_access">Impossibile accedere a %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku non è in esecuzione</string>
     <string name="root_access_not_available">Accesso root non disponibile</string>
     <string name="enable_root_or_shizuku">Attiva Root o Shizuku nelle impostazioni</string>
@@ -338,4 +338,26 @@
         <item quantity="many">Mostrati %1$d risultati, interrotto dopo %2$d cartelle. Restringi la ricerca.</item>
         <item quantity="other">Mostrati %1$d risultati, interrotto dopo %2$d cartelle. Restringi la ricerca.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Modalità coda attività</string>
+    <string name="setting_task_mode_desc">Aggiungi le operazioni di copia, spostamento e archiviazione al Centro attività invece di chiedere subito una destinazione</string>
+    <string name="task_added">Attività aggiunta</string>
+    <string name="task_updated">Attività aggiornata</string>
+    <string name="queued">In coda (%1$d)</string>
+    <string name="queued_copy">Copia (%1$d)</string>
+    <string name="queued_move">Sposta (%1$d)</string>
+    <string name="queued_create_zip">Crea ZIP (%1$d)</string>
+    <string name="queued_create_7z">Crea 7z (%1$d)</string>
+    <string name="clear_queue">Svuota coda</string>
+    <string name="cancel_task">Annulla attività</string>
+    <string name="paste_here">Incolla qui</string>
+    <string name="create_here">Crea qui</string>
+    <string name="choose_folder">Scegli cartella</string>
+    <string name="run_task">Esegui attività</string>
+    <string name="task_destination">Destinazione: %1$s</string>
+    <string name="replace_existing">Sostituisci i file esistenti</string>
+    <string name="no_folder_for_task">Apri prima una cartella</string>
+    <string name="same_folder_copy_warning">Scegli un’altra cartella; l’origine è già lì</string>
+    <string name="source_permission_expired">L’accesso a un file di origine è scaduto; aggiungilo di nuovo</string>
 </resources>

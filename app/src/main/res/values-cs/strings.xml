@@ -4,7 +4,7 @@
     <string name="about_fluffy">O aplikaci a FAQ</string>
     <string name="screen_time">Čas na obrazovce</string>
     <string name="learn_more">Zjistit více</string>
-    <string name="cannot_access">Nelze přistupovat k %s: %s</string>
+    <string name="cannot_access">Nelze přistupovat k %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku není spuštěný</string>
     <string name="root_access_not_available">Přístup root není dostupný</string>
     <string name="enable_root_or_shizuku">Povolte Root nebo Shizuku v Nastavení</string>
@@ -341,4 +341,26 @@
         <item quantity="many">Zobrazeno %1$d výsledků, zastaveno po %2$d složkách. Zpřesněte hledání.</item>
         <item quantity="other">Zobrazeno %1$d výsledků, zastaveno po %2$d složkách. Zpřesněte hledání.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Režim fronty úloh</string>
+    <string name="setting_task_mode_desc">Přidávat operace kopírování, přesouvání a archivace do Centra úloh místo okamžitého výběru cíle</string>
+    <string name="task_added">Úloha přidána</string>
+    <string name="task_updated">Úloha aktualizována</string>
+    <string name="queued">Ve frontě (%1$d)</string>
+    <string name="queued_copy">Kopírovat (%1$d)</string>
+    <string name="queued_move">Přesunout (%1$d)</string>
+    <string name="queued_create_zip">Vytvořit ZIP (%1$d)</string>
+    <string name="queued_create_7z">Vytvořit 7z (%1$d)</string>
+    <string name="clear_queue">Vymazat frontu</string>
+    <string name="cancel_task">Zrušit úlohu</string>
+    <string name="paste_here">Vložit sem</string>
+    <string name="create_here">Vytvořit zde</string>
+    <string name="choose_folder">Vybrat složku</string>
+    <string name="run_task">Spustit úlohu</string>
+    <string name="task_destination">Cíl: %1$s</string>
+    <string name="replace_existing">Nahradit existující soubory</string>
+    <string name="no_folder_for_task">Nejprve otevřete složku</string>
+    <string name="same_folder_copy_warning">Vyberte jinou složku; zdroj už tam je</string>
+    <string name="source_permission_expired">Přístup ke zdrojovému souboru vypršel; přidejte ho znovu</string>
 </resources>

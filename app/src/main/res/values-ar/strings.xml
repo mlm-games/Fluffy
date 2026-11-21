@@ -4,7 +4,7 @@
     <string name="about_fluffy">حول التطبيق والأسئلة الشائعة</string>
     <string name="screen_time">وقت الشاشة</string>
     <string name="learn_more">اعرف المزيد</string>
-    <string name="cannot_access">لا يمكن الوصول إلى %s: %s</string>
+    <string name="cannot_access">لا يمكن الوصول إلى %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku لا يعمل</string>
     <string name="root_access_not_available">صلاحيات root غير متاحة</string>
     <string name="enable_root_or_shizuku">فعّل Root أو Shizuku من الإعدادات</string>
@@ -347,4 +347,26 @@
         <item quantity="many">تم عرض %1$d نتيجة، وأُوقف البحث بعد %2$d مجلدًا. ضيّق نطاق البحث.</item>
         <item quantity="other">تم عرض %1$d نتيجة، وأُوقف البحث بعد %2$d مجلدًا. ضيّق نطاق البحث.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">وضع قائمة المهام</string>
+    <string name="setting_task_mode_desc">أضف عمليات النسخ والنقل والأرشفة إلى مركز المهام بدلاً من طلب الوجهة فورًا</string>
+    <string name="task_added">تمت إضافة المهمة</string>
+    <string name="task_updated">تم تحديث المهمة</string>
+    <string name="queued">في الانتظار (%1$d)</string>
+    <string name="queued_copy">نسخ (%1$d)</string>
+    <string name="queued_move">نقل (%1$d)</string>
+    <string name="queued_create_zip">إنشاء ZIP (%1$d)</string>
+    <string name="queued_create_7z">إنشاء 7z (%1$d)</string>
+    <string name="clear_queue">مسح قائمة الانتظار</string>
+    <string name="cancel_task">إلغاء المهمة</string>
+    <string name="paste_here">لصق هنا</string>
+    <string name="create_here">إنشاء هنا</string>
+    <string name="choose_folder">اختر مجلدًا</string>
+    <string name="run_task">تشغيل المهمة</string>
+    <string name="task_destination">الوجهة: %1$s</string>
+    <string name="replace_existing">استبدال الملفات الموجودة</string>
+    <string name="no_folder_for_task">افتح مجلدًا أولًا</string>
+    <string name="same_folder_copy_warning">اختر مجلدًا آخر؛ المصدر موجود بالفعل هناك</string>
+    <string name="source_permission_expired">انتهت صلاحية الوصول إلى ملف مصدر؛ أضفه مرة أخرى</string>
 </resources>

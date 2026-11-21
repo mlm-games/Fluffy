@@ -4,7 +4,7 @@
     <string name="about_fluffy">关于本应用与常见问题</string>
     <string name="screen_time">屏幕使用时间</string>
     <string name="learn_more">了解更多</string>
-    <string name="cannot_access">无法访问 %s：%s</string>
+    <string name="cannot_access">无法访问 %1$s：%2$s</string>
     <string name="shizuku_not_running">Shizuku 未在运行</string>
     <string name="root_access_not_available">无法使用 root 权限</string>
     <string name="enable_root_or_shizuku">请在设置中启用 Root 或 Shizuku</string>
@@ -332,4 +332,26 @@
     <plurals name="search_truncated">
         <item quantity="other">已显示 %1$d 个结果，在 %2$d 个文件夹后停止。请缩小搜索范围。</item>
     </plurals>
+
+
+    <string name="setting_task_mode">任务队列模式</string>
+    <string name="setting_task_mode_desc">将复制、移动和压缩操作添加到任务中心，而不是立即询问目标位置</string>
+    <string name="task_added">已添加任务</string>
+    <string name="task_updated">已更新任务</string>
+    <string name="queued">排队中 (%1$d)</string>
+    <string name="queued_copy">复制 (%1$d)</string>
+    <string name="queued_move">移动 (%1$d)</string>
+    <string name="queued_create_zip">创建 ZIP (%1$d)</string>
+    <string name="queued_create_7z">创建 7z (%1$d)</string>
+    <string name="clear_queue">清空队列</string>
+    <string name="cancel_task">取消任务</string>
+    <string name="paste_here">粘贴到此处</string>
+    <string name="create_here">在此创建</string>
+    <string name="choose_folder">选择文件夹</string>
+    <string name="run_task">运行任务</string>
+    <string name="task_destination">目标位置：%1$s</string>
+    <string name="replace_existing">替换现有文件</string>
+    <string name="no_folder_for_task">请先打开一个文件夹</string>
+    <string name="same_folder_copy_warning">请选择其他文件夹；源文件已在该位置</string>
+    <string name="source_permission_expired">源文件的访问权限已过期；请重新添加</string>
 </resources>

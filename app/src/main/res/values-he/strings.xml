@@ -4,7 +4,7 @@
     <string name="about_fluffy">אודות ושאלות נפוצות</string>
     <string name="screen_time">זמן מסך</string>
     <string name="learn_more">מידע נוסף</string>
-    <string name="cannot_access">לא ניתן לגשת אל %s: %s</string>
+    <string name="cannot_access">לא ניתן לגשת אל %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku אינו פועל</string>
     <string name="root_access_not_available">גישת root אינה זמינה</string>
     <string name="enable_root_or_shizuku">הפעלת Root או Shizuku בהגדרות</string>
@@ -338,4 +338,26 @@
         <item quantity="two">מוצג %1$d תוצאות, הופסק לאחר %2$d תיקיות. צמצם את החיפוש.</item>
         <item quantity="other">מוצג %1$d תוצאות, הופסק לאחר %2$d תיקיות. צמצם את החיפוש.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">מצב תור משימות</string>
+    <string name="setting_task_mode_desc">הוסף פעולות העתקה, העברה וארכוב למרכז המשימות במקום לבקש יעד מיד</string>
+    <string name="task_added">המשימה נוספה</string>
+    <string name="task_updated">המשימה עודכנה</string>
+    <string name="queued">בתור (%1$d)</string>
+    <string name="queued_copy">העתק (%1$d)</string>
+    <string name="queued_move">העבר (%1$d)</string>
+    <string name="queued_create_zip">צור ZIP (%1$d)</string>
+    <string name="queued_create_7z">צור 7z (%1$d)</string>
+    <string name="clear_queue">נקה תור</string>
+    <string name="cancel_task">בטל משימה</string>
+    <string name="paste_here">הדבק כאן</string>
+    <string name="create_here">צור כאן</string>
+    <string name="choose_folder">בחר תיקייה</string>
+    <string name="run_task">הפעל משימה</string>
+    <string name="task_destination">יעד: %1$s</string>
+    <string name="replace_existing">החלף קבצים קיימים</string>
+    <string name="no_folder_for_task">פתח תיקייה תחילה</string>
+    <string name="same_folder_copy_warning">בחר תיקייה אחרת; המקור כבר נמצא שם</string>
+    <string name="source_permission_expired">גישה לקובץ מקור פגה; הוסף אותו שוב</string>
 </resources>

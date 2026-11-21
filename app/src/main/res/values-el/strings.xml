@@ -4,7 +4,7 @@
     <string name="about_fluffy">Σχετικά και Συχνές ερωτήσεις</string>
     <string name="screen_time">Χρόνος οθόνης</string>
     <string name="learn_more">Μάθετε περισσότερα</string>
-    <string name="cannot_access">Δεν είναι δυνατή η πρόσβαση σε %s: %s</string>
+    <string name="cannot_access">Δεν είναι δυνατή η πρόσβαση σε %1$s: %2$s</string>
     <string name="shizuku_not_running">Το Shizuku δεν εκτελείται</string>
     <string name="root_access_not_available">Η πρόσβαση root δεν είναι διαθέσιμη</string>
     <string name="enable_root_or_shizuku">Ενεργοποιήστε το Root ή το Shizuku στις Ρυθμίσεις</string>
@@ -335,4 +335,26 @@
         <item quantity="one">Εμφάνιση %1$d αποτέλεσμα, διακοπή μετά από %2$d φακέλους. Περιορίστε την αναζήτηση.</item>
         <item quantity="other">Εμφάνιση %1$d αποτελεσμάτων, διακοπή μετά από %2$d φακέλους. Περιορίστε την αναζήτηση.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Λειτουργία ουράς εργασιών</string>
+    <string name="setting_task_mode_desc">Προσθήκη λειτουργιών αντιγραφής, μετακίνησης και αρχειοθέτησης στο Κέντρο εργασιών αντί για άμεση ερώτηση προορισμού</string>
+    <string name="task_added">Η εργασία προστέθηκε</string>
+    <string name="task_updated">Η εργασία ενημερώθηκε</string>
+    <string name="queued">Στην ουρά (%1$d)</string>
+    <string name="queued_copy">Αντιγραφή (%1$d)</string>
+    <string name="queued_move">Μετακίνηση (%1$d)</string>
+    <string name="queued_create_zip">Δημιουργία ZIP (%1$d)</string>
+    <string name="queued_create_7z">Δημιουργία 7z (%1$d)</string>
+    <string name="clear_queue">Εκκαθάριση ουράς</string>
+    <string name="cancel_task">Ακύρωση εργασίας</string>
+    <string name="paste_here">Επικόλληση εδώ</string>
+    <string name="create_here">Δημιουργία εδώ</string>
+    <string name="choose_folder">Επιλογή φακέλου</string>
+    <string name="run_task">Εκτέλεση εργασίας</string>
+    <string name="task_destination">Προορισμός: %1$s</string>
+    <string name="replace_existing">Αντικατάσταση υπαρχόντων αρχείων</string>
+    <string name="no_folder_for_task">Ανοίξτε πρώτα έναν φάκελο</string>
+    <string name="same_folder_copy_warning">Επιλέξτε άλλον φάκελο· η πηγή είναι ήδη εκεί</string>
+    <string name="source_permission_expired">Η πρόσβαση σε ένα αρχείο πηγής έχει λήξει· προσθέστε το ξανά</string>
 </resources>

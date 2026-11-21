@@ -4,7 +4,7 @@
     <string name="about_fluffy">Hakkında ve SSS</string>
     <string name="screen_time">Ekran süresi</string>
     <string name="learn_more">Daha fazla bilgi edinin</string>
-    <string name="cannot_access">%s erişilemiyor: %s</string>
+    <string name="cannot_access">%1$s erişilemiyor: %2$s</string>
     <string name="shizuku_not_running">Shizuku çalışmıyor</string>
     <string name="root_access_not_available">Root erişimi kullanılamıyor</string>
     <string name="enable_root_or_shizuku">Ayarlardan Root veya Shizuku\'yu etkinleştirin</string>
@@ -335,4 +335,26 @@
         <item quantity="one">%1$d sonuç gösterildi, %2$d klasörden sonra durduruldu. Aramanızı daraltın.</item>
         <item quantity="other">%1$d sonuç gösterildi, %2$d klasörden sonra durduruldu. Aramanızı daraltın.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Görev kuyruğu modu</string>
+    <string name="setting_task_mode_desc">Kopyalama, taşıma ve arşivleme işlemlerini, hemen hedef sormak yerine Görev Merkezi\'ne ekle</string>
+    <string name="task_added">Görev eklendi</string>
+    <string name="task_updated">Görev güncellendi</string>
+    <string name="queued">Kuyrukta (%1$d)</string>
+    <string name="queued_copy">Kopyala (%1$d)</string>
+    <string name="queued_move">Taşı (%1$d)</string>
+    <string name="queued_create_zip">ZIP oluştur (%1$d)</string>
+    <string name="queued_create_7z">7z oluştur (%1$d)</string>
+    <string name="clear_queue">Kuyruğu temizle</string>
+    <string name="cancel_task">Görevi iptal et</string>
+    <string name="paste_here">Buraya yapıştır</string>
+    <string name="create_here">Burada oluştur</string>
+    <string name="choose_folder">Klasör seç</string>
+    <string name="run_task">Görevi çalıştır</string>
+    <string name="task_destination">Hedef: %1$s</string>
+    <string name="replace_existing">Var olan dosyaları değiştir</string>
+    <string name="no_folder_for_task">Önce bir klasör aç</string>
+    <string name="same_folder_copy_warning">Başka bir klasör seç; kaynak zaten orada</string>
+    <string name="source_permission_expired">Kaynak dosyaya erişim süresi doldu; dosyayı yeniden ekle</string>
 </resources>

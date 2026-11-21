@@ -4,7 +4,7 @@
     <string name="about_fluffy">Über und FAQs</string>
     <string name="screen_time">Bildschirmzeit</string>
     <string name="learn_more">Mehr erfahren</string>
-    <string name="cannot_access">Kein Zugriff auf %s: %s</string>
+    <string name="cannot_access">Kein Zugriff auf %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku wird nicht ausgeführt</string>
     <string name="root_access_not_available">Root-Zugriff nicht verfügbar</string>
     <string name="enable_root_or_shizuku">Root oder Shizuku in den Einstellungen aktivieren</string>
@@ -335,4 +335,26 @@
         <item quantity="one">%1$d Ergebnis angezeigt, nach %2$d Ordnern gestoppt. Suche eingrenzen.</item>
         <item quantity="other">%1$d Ergebnisse angezeigt, nach %2$d Ordnern gestoppt. Suche eingrenzen.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Warteschlangen-Modus</string>
+    <string name="setting_task_mode_desc">Kopier-, Verschieb- und Archivierungsvorgänge zur Aufgabenliste hinzufügen, statt sofort nach einem Ziel zu fragen</string>
+    <string name="task_added">Aufgabe hinzugefügt</string>
+    <string name="task_updated">Aufgabe aktualisiert</string>
+    <string name="queued">In Warteschlange (%1$d)</string>
+    <string name="queued_copy">Kopieren (%1$d)</string>
+    <string name="queued_move">Verschieben (%1$d)</string>
+    <string name="queued_create_zip">ZIP erstellen (%1$d)</string>
+    <string name="queued_create_7z">7z erstellen (%1$d)</string>
+    <string name="clear_queue">Warteschlange leeren</string>
+    <string name="cancel_task">Aufgabe abbrechen</string>
+    <string name="paste_here">Hier einfügen</string>
+    <string name="create_here">Hier erstellen</string>
+    <string name="choose_folder">Ordner wählen</string>
+    <string name="run_task">Aufgabe ausführen</string>
+    <string name="task_destination">Ziel: %1$s</string>
+    <string name="replace_existing">Vorhandene Dateien ersetzen</string>
+    <string name="no_folder_for_task">Zuerst einen Ordner öffnen</string>
+    <string name="same_folder_copy_warning">Anderen Ordner wählen; die Quelle ist bereits dort</string>
+    <string name="source_permission_expired">Zugriff auf eine Quelldatei abgelaufen; sie erneut hinzufügen</string>
 </resources>

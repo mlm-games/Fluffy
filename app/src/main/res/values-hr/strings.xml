@@ -4,7 +4,7 @@
     <string name="about_fluffy">O aplikaciji i najčešća pitanja</string>
     <string name="screen_time">Vrijeme na zaslonu</string>
     <string name="learn_more">Saznajte više</string>
-    <string name="cannot_access">Pristup nije moguć: %s: %s</string>
+    <string name="cannot_access">Pristup nije moguć: %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku ne radi</string>
     <string name="root_access_not_available">Root pristup nije dostupan</string>
     <string name="enable_root_or_shizuku">Omogućite Root ili Shizuku u postavkama</string>
@@ -338,4 +338,26 @@
         <item quantity="few">Prikazana %1$d rezultata, zaustavljena nakon %2$d mapa. Sužite pretragu.</item>
         <item quantity="other">Prikazano %1$d rezultata, zaustavljeno nakon %2$d mapa. Sužite pretragu.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Način reda zadataka</string>
+    <string name="setting_task_mode_desc">Dodaj operacije kopiranja, premještanja i arhiviranja u Središte zadataka umjesto odmah traženja odredišta</string>
+    <string name="task_added">Zadatak dodan</string>
+    <string name="task_updated">Zadatak ažuriran</string>
+    <string name="queued">U redu (%1$d)</string>
+    <string name="queued_copy">Kopiraj (%1$d)</string>
+    <string name="queued_move">Premjesti (%1$d)</string>
+    <string name="queued_create_zip">Napravi ZIP (%1$d)</string>
+    <string name="queued_create_7z">Napravi 7z (%1$d)</string>
+    <string name="clear_queue">Očisti red</string>
+    <string name="cancel_task">Otkaži zadatak</string>
+    <string name="paste_here">Zalijepi ovdje</string>
+    <string name="create_here">Napravi ovdje</string>
+    <string name="choose_folder">Odaberi mapu</string>
+    <string name="run_task">Pokreni zadatak</string>
+    <string name="task_destination">Odredište: %1$s</string>
+    <string name="replace_existing">Zamijeni postojeće datoteke</string>
+    <string name="no_folder_for_task">Prvo otvori mapu</string>
+    <string name="same_folder_copy_warning">Odaberi drugu mapu; izvor je već tamo</string>
+    <string name="source_permission_expired">Pristup izvornoj datoteci je istekao; dodaj je ponovno</string>
 </resources>

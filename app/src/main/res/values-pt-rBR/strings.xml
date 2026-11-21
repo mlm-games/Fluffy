@@ -4,7 +4,7 @@
     <string name="about_fluffy">Sobre</string>
     <string name="screen_time">Tempo de tela</string>
     <string name="learn_more">Saber mais</string>
-    <string name="cannot_access">Não é possível aceder %s: %s</string>
+    <string name="cannot_access">Não é possível aceder %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku não está em execução</string>
     <string name="root_access_not_available">Acesso root não disponível</string>
     <string name="enable_root_or_shizuku">Ativar Root ou Shizuku nas Configurações</string>
@@ -338,4 +338,26 @@
         <item quantity="many">Exibindo %1$d resultados, parado após %2$d pastas. Refine a pesquisa.</item>
         <item quantity="other">Exibindo %1$d resultados, parado após %2$d pastas. Refine a pesquisa.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Modo de fila de tarefas</string>
+    <string name="setting_task_mode_desc">Adicionar operações de copiar, mover e arquivar ao Centro de tarefas em vez de pedir um destino imediatamente</string>
+    <string name="task_added">Tarefa adicionada</string>
+    <string name="task_updated">Tarefa atualizada</string>
+    <string name="queued">Na fila (%1$d)</string>
+    <string name="queued_copy">Copiar (%1$d)</string>
+    <string name="queued_move">Mover (%1$d)</string>
+    <string name="queued_create_zip">Criar ZIP (%1$d)</string>
+    <string name="queued_create_7z">Criar 7z (%1$d)</string>
+    <string name="clear_queue">Limpar fila</string>
+    <string name="cancel_task">Cancelar tarefa</string>
+    <string name="paste_here">Colar aqui</string>
+    <string name="create_here">Criar aqui</string>
+    <string name="choose_folder">Escolher pasta</string>
+    <string name="run_task">Executar tarefa</string>
+    <string name="task_destination">Destino: %1$s</string>
+    <string name="replace_existing">Substituir arquivos existentes</string>
+    <string name="no_folder_for_task">Abra uma pasta primeiro</string>
+    <string name="same_folder_copy_warning">Escolha outra pasta; a origem já está lá</string>
+    <string name="source_permission_expired">O acesso a um arquivo de origem expirou; adicione-o novamente</string>
 </resources>

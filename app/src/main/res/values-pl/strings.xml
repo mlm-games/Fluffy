@@ -4,7 +4,7 @@
     <string name="about_fluffy">O aplikacji i FAQ</string>
     <string name="screen_time">Czas na ekranie</string>
     <string name="learn_more">Dowiedz się więcej</string>
-    <string name="cannot_access">Brak dostępu do %s: %s</string>
+    <string name="cannot_access">Brak dostępu do %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku nie działa</string>
     <string name="root_access_not_available">Dostęp root niedostępny</string>
     <string name="enable_root_or_shizuku">Włącz Root lub Shizuku w ustawieniach</string>
@@ -341,4 +341,26 @@
         <item quantity="many">Wyświetlono %1$d wyników, zatrzymano po %2$d folderach. Zawęź wyszukiwanie.</item>
         <item quantity="other">Wyświetlono %1$d wyników, zatrzymano po %2$d folderach. Zawęź wyszukiwanie.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Tryb kolejki zadań</string>
+    <string name="setting_task_mode_desc">Dodawaj operacje kopiowania, przenoszenia i archiwizowania do Centrum zadań zamiast od razu pytać o miejsce docelowe</string>
+    <string name="task_added">Dodano zadanie</string>
+    <string name="task_updated">Zaktualizowano zadanie</string>
+    <string name="queued">W kolejce (%1$d)</string>
+    <string name="queued_copy">Kopiuj (%1$d)</string>
+    <string name="queued_move">Przenieś (%1$d)</string>
+    <string name="queued_create_zip">Utwórz ZIP (%1$d)</string>
+    <string name="queued_create_7z">Utwórz 7z (%1$d)</string>
+    <string name="clear_queue">Wyczyść kolejkę</string>
+    <string name="cancel_task">Anuluj zadanie</string>
+    <string name="paste_here">Wklej tutaj</string>
+    <string name="create_here">Utwórz tutaj</string>
+    <string name="choose_folder">Wybierz folder</string>
+    <string name="run_task">Uruchom zadanie</string>
+    <string name="task_destination">Miejsce docelowe: %1$s</string>
+    <string name="replace_existing">Zastąp istniejące pliki</string>
+    <string name="no_folder_for_task">Najpierw otwórz folder</string>
+    <string name="same_folder_copy_warning">Wybierz inny folder; źródło już tam jest</string>
+    <string name="source_permission_expired">Dostęp do pliku źródłowego wygasł; dodaj go ponownie</string>
 </resources>

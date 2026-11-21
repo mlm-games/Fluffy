@@ -4,7 +4,7 @@
     <string name="about_fluffy">Sobre la aplicación y preguntas frecuentes</string>
     <string name="screen_time">Tiempo de pantalla</string>
     <string name="learn_more">Más información</string>
-    <string name="cannot_access">No se puede acceder a %s: %s</string>
+    <string name="cannot_access">No se puede acceder a %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku no se está ejecutando</string>
     <string name="root_access_not_available">El acceso root no está disponible</string>
     <string name="enable_root_or_shizuku">Activa Root o Shizuku en los ajustes</string>
@@ -338,4 +338,26 @@
         <item quantity="many">Se mostraron %1$d resultados, se detuvo después de %2$d carpetas. Acota la búsqueda.</item>
         <item quantity="other">Se mostraron %1$d resultados, se detuvo después de %2$d carpetas. Acota la búsqueda.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Modo de cola de tareas</string>
+    <string name="setting_task_mode_desc">Agregar operaciones de copiar, mover y archivar al Centro de tareas en lugar de pedir un destino inmediatamente</string>
+    <string name="task_added">Tarea agregada</string>
+    <string name="task_updated">Tarea actualizada</string>
+    <string name="queued">En cola (%1$d)</string>
+    <string name="queued_copy">Copiar (%1$d)</string>
+    <string name="queued_move">Mover (%1$d)</string>
+    <string name="queued_create_zip">Crear ZIP (%1$d)</string>
+    <string name="queued_create_7z">Crear 7z (%1$d)</string>
+    <string name="clear_queue">Vaciar cola</string>
+    <string name="cancel_task">Cancelar tarea</string>
+    <string name="paste_here">Pegar aquí</string>
+    <string name="create_here">Crear aquí</string>
+    <string name="choose_folder">Elegir carpeta</string>
+    <string name="run_task">Ejecutar tarea</string>
+    <string name="task_destination">Destino: %1$s</string>
+    <string name="replace_existing">Reemplazar archivos existentes</string>
+    <string name="no_folder_for_task">Abre una carpeta primero</string>
+    <string name="same_folder_copy_warning">Elige otra carpeta; el origen ya está ahí</string>
+    <string name="source_permission_expired">El acceso a un archivo de origen caducó; agrégalo de nuevo</string>
 </resources>

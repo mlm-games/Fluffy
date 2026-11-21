@@ -4,7 +4,7 @@
     <string name="about_fluffy">정보 및 자주 묻는 질문</string>
     <string name="screen_time">화면 사용 시간</string>
     <string name="learn_more">자세히 알아보기</string>
-    <string name="cannot_access">%s에 접근할 수 없음: %s</string>
+    <string name="cannot_access">%1$s에 접근할 수 없음: %2$s</string>
     <string name="shizuku_not_running">Shizuku가 실행 중이 아닙니다</string>
     <string name="root_access_not_available">root 권한을 사용할 수 없습니다</string>
     <string name="enable_root_or_shizuku">설정에서 Root 또는 Shizuku를 활성화하세요</string>
@@ -332,4 +332,26 @@
     <plurals name="search_truncated">
         <item quantity="other">%1$d개 표시, %2$d개 폴더에서 중지됨. 검색어를 좁혀 보세요.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">작업 대기열 모드</string>
+    <string name="setting_task_mode_desc">대상을 바로 묻는 대신 복사, 이동, 압축 작업을 작업 센터에 추가합니다</string>
+    <string name="task_added">작업이 추가되었습니다</string>
+    <string name="task_updated">작업이 업데이트되었습니다</string>
+    <string name="queued">대기 중 (%1$d)</string>
+    <string name="queued_copy">복사 (%1$d)</string>
+    <string name="queued_move">이동 (%1$d)</string>
+    <string name="queued_create_zip">ZIP 만들기 (%1$d)</string>
+    <string name="queued_create_7z">7z 만들기 (%1$d)</string>
+    <string name="clear_queue">대기열 비우기</string>
+    <string name="cancel_task">작업 취소</string>
+    <string name="paste_here">여기에 붙여넣기</string>
+    <string name="create_here">여기에 만들기</string>
+    <string name="choose_folder">폴더 선택</string>
+    <string name="run_task">작업 실행</string>
+    <string name="task_destination">대상: %1$s</string>
+    <string name="replace_existing">기존 파일 바꾸기</string>
+    <string name="no_folder_for_task">먼저 폴더를 여세요</string>
+    <string name="same_folder_copy_warning">다른 폴더를 선택하세요. 원본이 이미 그곳에 있습니다</string>
+    <string name="source_permission_expired">원본 파일에 대한 액세스가 만료되었습니다. 다시 추가하세요</string>
 </resources>

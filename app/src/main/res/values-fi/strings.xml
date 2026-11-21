@@ -4,7 +4,7 @@
     <string name="about_fluffy">Tietoja ja UKK</string>
     <string name="screen_time">Näytön aika</string>
     <string name="learn_more">Lue lisää</string>
-    <string name="cannot_access">Ei voi käyttää: %s: %s</string>
+    <string name="cannot_access">Ei voi käyttää: %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku ei ole käynnissä</string>
     <string name="root_access_not_available">Root-käyttö ei ole käytettävissä</string>
     <string name="enable_root_or_shizuku">Ota Root tai Shizuku käyttöön asetuksista</string>
@@ -335,4 +335,26 @@
         <item quantity="one">Näytetään %1$d tulos, pysäytetty %2$d kansion jälkeen. Tarkenna hakua.</item>
         <item quantity="other">Näytetään %1$d tulosta, pysäytetty %2$d kansion jälkeen. Tarkenna hakua.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Tehtäväjonomoodi</string>
+    <string name="setting_task_mode_desc">Lisää kopiointi-, siirto- ja arkistointitoiminnot Tehtäväkeskukseen sen sijaan, että kohde kysytään heti</string>
+    <string name="task_added">Tehtävä lisätty</string>
+    <string name="task_updated">Tehtävä päivitetty</string>
+    <string name="queued">Jonossa (%1$d)</string>
+    <string name="queued_copy">Kopioi (%1$d)</string>
+    <string name="queued_move">Siirrä (%1$d)</string>
+    <string name="queued_create_zip">Luo ZIP (%1$d)</string>
+    <string name="queued_create_7z">Luo 7z (%1$d)</string>
+    <string name="clear_queue">Tyhjennä jono</string>
+    <string name="cancel_task">Peruuta tehtävä</string>
+    <string name="paste_here">Liitä tähän</string>
+    <string name="create_here">Luo tähän</string>
+    <string name="choose_folder">Valitse kansio</string>
+    <string name="run_task">Suorita tehtävä</string>
+    <string name="task_destination">Kohde: %1$s</string>
+    <string name="replace_existing">Korvaa olemassa olevat tiedostot</string>
+    <string name="no_folder_for_task">Avaa ensin kansio</string>
+    <string name="same_folder_copy_warning">Valitse toinen kansio; lähde on jo siellä</string>
+    <string name="source_permission_expired">Lähdetiedoston käyttöoikeus on vanhentunut; lisää se uudelleen</string>
 </resources>

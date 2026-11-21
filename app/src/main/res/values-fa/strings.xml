@@ -4,7 +4,7 @@
     <string name="about_fluffy">درباره و پرسش‌های متداول</string>
     <string name="screen_time">زمان صفحه</string>
     <string name="learn_more">بیشتر بدانید</string>
-    <string name="cannot_access">دسترسی به %s ممکن نیست: %s</string>
+    <string name="cannot_access">دسترسی به %1$s ممکن نیست: %2$s</string>
     <string name="shizuku_not_running">Shizuku در حال اجرا نیست</string>
     <string name="root_access_not_available">دسترسی root در دسترس نیست</string>
     <string name="enable_root_or_shizuku">Root یا Shizuku را در تنظیمات فعال کنید</string>
@@ -335,4 +335,26 @@
         <item quantity="one">نمایش %1$d نتیجه، پس از %2$d پوشه متوقف شد. جستجو را محدود کنید.</item>
         <item quantity="other">نمایش %1$d نتیجه، پس از %2$d پوشه متوقف شد. جستجو را محدود کنید.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">حالت صف وظایف</string>
+    <string name="setting_task_mode_desc">عملیات کپی، جابهجایی و بایگانی را به مرکز وظایف اضافه کند به جای اینکه بلافاصله مقصد را بپرسد</string>
+    <string name="task_added">وظیفه اضافه شد</string>
+    <string name="task_updated">وظیفه بهروز شد</string>
+    <string name="queued">در صف (%1$d)</string>
+    <string name="queued_copy">کپی (%1$d)</string>
+    <string name="queued_move">جابهجایی (%1$d)</string>
+    <string name="queued_create_zip">ایجاد ZIP (%1$d)</string>
+    <string name="queued_create_7z">ایجاد 7z (%1$d)</string>
+    <string name="clear_queue">پاک کردن صف</string>
+    <string name="cancel_task">لغو وظیفه</string>
+    <string name="paste_here">جایگذاری اینجا</string>
+    <string name="create_here">ایجاد اینجا</string>
+    <string name="choose_folder">انتخاب پوشه</string>
+    <string name="run_task">اجرای وظیفه</string>
+    <string name="task_destination">مقصد: %1$s</string>
+    <string name="replace_existing">جایگزینی فایلهای موجود</string>
+    <string name="no_folder_for_task">ابتدا یک پوشه باز کنید</string>
+    <string name="same_folder_copy_warning">پوشه دیگری انتخاب کنید؛ منبع از قبل آنجاست</string>
+    <string name="source_permission_expired">دسترسی به فایل منبع منقضی شد؛ دوباره اضافه کنید</string>
 </resources>

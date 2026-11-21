@@ -4,7 +4,7 @@
     <string name="about_fluffy">Az alkalmazásról és a gyakori kérdésekről</string>
     <string name="screen_time">Képernyőidő</string>
     <string name="learn_more">Tudj meg többet</string>
-    <string name="cannot_access">Nem érhető el: %s: %s</string>
+    <string name="cannot_access">Nem érhető el: %1$s: %2$s</string>
     <string name="shizuku_not_running">A Shizuku nem fut</string>
     <string name="root_access_not_available">A root hozzáférés nem érhető el</string>
     <string name="enable_root_or_shizuku">Engedélyezze a Root vagy a Shizuku használatát a Beállításokban</string>
@@ -335,4 +335,26 @@
         <item quantity="one">%1$d találat megjelenítve, %2$d után leállítva. Szűkítse a keresést.</item>
         <item quantity="other">%1$d találat megjelenítve, %2$d után leállítva. Szűkítse a keresést.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Feladatsor mód</string>
+    <string name="setting_task_mode_desc">Másolási, áthelyezési és archiválási műveletek hozzáadása a Feladatközponthoz a cél azonnali kérése helyett</string>
+    <string name="task_added">Feladat hozzáadva</string>
+    <string name="task_updated">Feladat frissítve</string>
+    <string name="queued">Várólistán (%1$d)</string>
+    <string name="queued_copy">Másolás (%1$d)</string>
+    <string name="queued_move">Áthelyezés (%1$d)</string>
+    <string name="queued_create_zip">ZIP létrehozása (%1$d)</string>
+    <string name="queued_create_7z">7z létrehozása (%1$d)</string>
+    <string name="clear_queue">Várólista törlése</string>
+    <string name="cancel_task">Feladat megszakítása</string>
+    <string name="paste_here">Beillesztés ide</string>
+    <string name="create_here">Létrehozás itt</string>
+    <string name="choose_folder">Mappa kiválasztása</string>
+    <string name="run_task">Feladat futtatása</string>
+    <string name="task_destination">Cél: %1$s</string>
+    <string name="replace_existing">Létező fájlok cseréje</string>
+    <string name="no_folder_for_task">Először nyisson meg egy mappát</string>
+    <string name="same_folder_copy_warning">Válasszon másik mappát; a forrás már ott van</string>
+    <string name="source_permission_expired">A forrásfájl elérése lejárt; adja hozzá újra</string>
 </resources>

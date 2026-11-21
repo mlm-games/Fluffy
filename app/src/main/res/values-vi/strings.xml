@@ -4,7 +4,7 @@
     <string name="about_fluffy">Giới thiệu và câu hỏi thường gặp</string>
     <string name="screen_time">Thời gian sử dụng màn hình</string>
     <string name="learn_more">Tìm hiểu thêm</string>
-    <string name="cannot_access">Không thể truy cập %s: %s</string>
+    <string name="cannot_access">Không thể truy cập %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku chưa chạy</string>
     <string name="root_access_not_available">Không có quyền root</string>
     <string name="enable_root_or_shizuku">Bật Root hoặc Shizuku trong Cài đặt</string>
@@ -332,4 +332,26 @@
     <plurals name="search_truncated">
         <item quantity="other">Đang hiển thị %1$d kết quả, đã dừng sau %2$d thư mục. Hãy thu hẹp tìm kiếm.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Chế độ hàng đợi tác vụ</string>
+    <string name="setting_task_mode_desc">Thêm các thao tác sao chép, di chuyển và nén vào Trung tâm tác vụ thay vì hỏi đích ngay lập tức</string>
+    <string name="task_added">Đã thêm tác vụ</string>
+    <string name="task_updated">Đã cập nhật tác vụ</string>
+    <string name="queued">Trong hàng đợi (%1$d)</string>
+    <string name="queued_copy">Sao chép (%1$d)</string>
+    <string name="queued_move">Di chuyển (%1$d)</string>
+    <string name="queued_create_zip">Tạo ZIP (%1$d)</string>
+    <string name="queued_create_7z">Tạo 7z (%1$d)</string>
+    <string name="clear_queue">Xóa hàng đợi</string>
+    <string name="cancel_task">Hủy tác vụ</string>
+    <string name="paste_here">Dán vào đây</string>
+    <string name="create_here">Tạo tại đây</string>
+    <string name="choose_folder">Chọn thư mục</string>
+    <string name="run_task">Chạy tác vụ</string>
+    <string name="task_destination">Đích: %1$s</string>
+    <string name="replace_existing">Thay thế các tệp hiện có</string>
+    <string name="no_folder_for_task">Hãy mở một thư mục trước</string>
+    <string name="same_folder_copy_warning">Chọn thư mục khác; nguồn đã ở đó rồi</string>
+    <string name="source_permission_expired">Quyền truy cập tệp nguồn đã hết hạn; hãy thêm lại</string>
 </resources>

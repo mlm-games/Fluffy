@@ -4,7 +4,7 @@
     <string name="about_fluffy">Про застосунок і поширені запитання</string>
     <string name="screen_time">Час на екрані</string>
     <string name="learn_more">Докладніше</string>
-    <string name="cannot_access">Немає доступу до %s: %s</string>
+    <string name="cannot_access">Немає доступу до %1$s: %2$s</string>
     <string name="shizuku_not_running">Shizuku не запущено</string>
     <string name="root_access_not_available">Доступ root недоступний</string>
     <string name="enable_root_or_shizuku">Увімкніть Root або Shizuku в налаштуваннях</string>
@@ -341,4 +341,26 @@
         <item quantity="many">Показано %1$d результатів, зупинено після %2$d тек. Уточніть запит.</item>
         <item quantity="other">Показано %1$d результатів, зупинено після %2$d тек. Уточніть запит.</item>
     </plurals>
+
+
+    <string name="setting_task_mode">Режим черги завдань</string>
+    <string name="setting_task_mode_desc">Додавати операції копіювання, переміщення та архівування до Центру завдань замість негайного запиту папки призначення</string>
+    <string name="task_added">Завдання додано</string>
+    <string name="task_updated">Завдання оновлено</string>
+    <string name="queued">У черзі (%1$d)</string>
+    <string name="queued_copy">Копіювати (%1$d)</string>
+    <string name="queued_move">Перемістити (%1$d)</string>
+    <string name="queued_create_zip">Створити ZIP (%1$d)</string>
+    <string name="queued_create_7z">Створити 7z (%1$d)</string>
+    <string name="clear_queue">Очистити чергу</string>
+    <string name="cancel_task">Скасувати завдання</string>
+    <string name="paste_here">Вставити тут</string>
+    <string name="create_here">Створити тут</string>
+    <string name="choose_folder">Вибрати папку</string>
+    <string name="run_task">Запустити завдання</string>
+    <string name="task_destination">Призначення: %1$s</string>
+    <string name="replace_existing">Замінити наявні файли</string>
+    <string name="no_folder_for_task">Спочатку відкрийте папку</string>
+    <string name="same_folder_copy_warning">Виберіть іншу папку; джерело вже там</string>
+    <string name="source_permission_expired">Доступ до вихідного файлу закінчився; додайте його знову</string>
 </resources>
