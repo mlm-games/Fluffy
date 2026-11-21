@@ -13,6 +13,8 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -23,20 +25,39 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Archive
+import androidx.compose.material.icons.filled.ClearAll
+import androidx.compose.material.icons.filled.ContentPaste
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.FolderOpen
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.BottomSheetDefaults
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearWavyProgressIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,7 +68,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.documentfile.provider.DocumentFile
@@ -61,10 +86,13 @@ import androidx.work.WorkInfo
 import app.fluffy.R
 import app.fluffy.cache.CacheManager
 import app.fluffy.data.repository.AppSettings
+import app.fluffy.data.repository.QueueAddResult
+import app.fluffy.data.repository.QueuedTask
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.data.repository.applyAppLocale
 import app.fluffy.io.SafIo
 import app.fluffy.platform.StorageAccessPolicy
+import app.fluffy.provider.LocalDocumentsProvider
 import app.fluffy.helper.OpenTarget
 import app.fluffy.helper.detectTarget
 import app.fluffy.helper.launchImageViewer
@@ -92,6 +120,7 @@ import app.fluffy.viewmodel.BrowseLocation
 import app.fluffy.viewmodel.FileBrowserState
 import app.fluffy.viewmodel.FileBrowserViewModel
 import app.fluffy.viewmodel.PendingAction
+import app.fluffy.viewmodel.PendingTaskRun
 import app.fluffy.viewmodel.SearchViewModel
 import app.fluffy.viewmodel.SettingsViewModel
 import app.fluffy.viewmodel.TasksViewModel
@@ -118,6 +147,9 @@ class MainActivity : AppCompatActivity() {
 
     // Pending operations that need a destination folder
     private var pendingAction: PendingAction = PendingAction.None
+    private var pendingFolderCallback: ((Uri) -> Unit)? = null
+    private var folderPickerActive = false
+    private var showTaskCenter by mutableStateOf(false)
 
     // SAF tree pickers
     private lateinit var pickRoot: ActivityResultLauncher<Uri?>
@@ -125,7 +157,6 @@ class MainActivity : AppCompatActivity() {
 
     private val showInAppFolderPicker = mutableStateOf(false)
     private val inAppFolderPickerTitle = mutableStateOf("")
-    private var pendingFolderPickCallback: ((Uri) -> Unit)? = null
 
     private val io: SafIo by inject()
     private val settingsRepository: SettingsRepository by inject()
@@ -183,6 +214,8 @@ class MainActivity : AppCompatActivity() {
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        tasksVM.releaseClaim()
 
         inAppFolderPickerTitle.value = "Choose destination folder"
 
@@ -251,6 +284,7 @@ class MainActivity : AppCompatActivity() {
         checkStoragePermissions()
 
         pickRoot = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
+            clearFolderPicker()
             uri?.let {
                 // SAF tree selection; persistable grants only make sense for content://
                 runCatching {
@@ -264,8 +298,13 @@ class MainActivity : AppCompatActivity() {
         }
 
         pickTargetDir = registerForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-            val target = uri ?: return@registerForActivityResult
-            handleTargetDirPicked(target)
+            val callback = pendingFolderCallback ?: ::handleTargetDirPicked
+            clearFolderPicker()
+            if (uri != null) {
+                callback(uri)
+            } else {
+                tasksVM.releaseClaim()
+            }
         }
 
         lifecycleScope.launch {
@@ -295,8 +334,9 @@ class MainActivity : AppCompatActivity() {
 
                 val browserState by filesVM.state.collectAsState()
                 val workInfos by tasksVM.workInfos.collectAsState()
+                val queuedTasks by tasksVM.queuedTasks.collectAsState()
+                val pendingRun by tasksVM.pendingRun.collectAsState()
 
-                var showTaskCenter by rememberSaveable { mutableStateOf(false) }
                 val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
                 var seenFinished by rememberSaveable { mutableStateOf(emptySet<String>()) }
@@ -382,11 +422,14 @@ class MainActivity : AppCompatActivity() {
                                         pickFolderMode = showInAppFolderPicker.value,
                                         pickFolderTitle = inAppFolderPickerTitle.value,
                                         onPickFolder = { folderUri ->
-                                            val cb = pendingFolderPickCallback
+                                            val cb = pendingFolderCallback
                                             dismissInAppFolderPicker()
                                             cb?.invoke(folderUri)
                                         },
-                                        onCancelPickFolder = { dismissInAppFolderPicker() },
+                                        onCancelPickFolder = {
+                                            dismissInAppFolderPicker()
+                                            tasksVM.releaseClaim()
+                                        },
 
                                         // TV-friendly tree/document picker (DocumentsProvider)
                                         isTreePickMode = isTreePickMode || isCreateDocumentMode,
@@ -409,26 +452,43 @@ class MainActivity : AppCompatActivity() {
                                             )
                                         },
 
-                                        onCreateZip = { req ->
-                                            confirmShellWrite(req.targetDir) {
-                                                tasksVM.enqueueCreateZip(
-                                                    sources = req.sources,
-                                                    targetDir = req.targetDir,
-                                                    outName = req.outName,
-                                                    password = req.password,
-                                                    overwrite = req.overwrite,
-                                                    encryption = req.encryption.name,
-                                                    comment = req.comment,
-                                                    splitBytes = if (s.zipSplitEnabled) {
-                                                        req.splitBytes ?: -1L
-                                                    } else {
-                                                        -1L
-                                                    }
+                                        onCreateZip = zip@{ req ->
+                                            if (s.taskMode) {
+                                                addQueuedTask(
+                                                    QueuedTask.CreateZip(
+                                                        sources = req.sources.map { it.toString() },
+                                                        outName = req.outName,
+                                                        encryption = req.encryption.name,
+                                                        comment = req.comment,
+                                                        splitBytes = if (s.zipSplitEnabled) req.splitBytes else null,
+                                                        hasPassword = !req.password.isNullOrBlank(),
+                                                    )
                                                 )
-                                                showTaskCenter = true
+                                            } else {
+                                                val target = req.targetDir
+                                                    ?: getCurrentDirUri(filesVM.state.value)
+                                                if (target == null) return@zip
+                                                confirmShellWrite(target) {
+                                                    tasksVM.enqueueCreateZip(
+                                                        sources = req.sources,
+                                                        targetDir = target,
+                                                        outName = req.outName,
+                                                        password = req.password,
+                                                        overwrite = req.overwrite,
+                                                        encryption = req.encryption.name,
+                                                        comment = req.comment,
+                                                        splitBytes = if (s.zipSplitEnabled) {
+                                                            req.splitBytes ?: -1L
+                                                        } else {
+                                                            -1L
+                                                        },
+                                                    )
+                                                    showTaskCenter = true
+                                                }
                                             }
                                         },
 
+                                        taskMode = s.taskMode,
                                         zipSplitEnabled = s.zipSplitEnabled,
                                         onZipSplitEnabledChange = { enabled ->
                                             lifecycleScope.launch {
@@ -438,10 +498,25 @@ class MainActivity : AppCompatActivity() {
                                             }
                                         },
 
-                                        onCreate7z = { sources, outName, password, targetDir, overwrite ->
-                                            confirmShellWrite(targetDir) {
-                                                tasksVM.enqueueCreate7z(sources, targetDir, outName, password, overwrite)
-                                                showTaskCenter = true
+                                        onCreate7z = sevenZ@{ sources, outName, password, targetDir, overwrite ->
+                                            if (s.taskMode) {
+                                                addQueuedTask(
+                                                    QueuedTask.Create7z(
+                                                        sources = sources.map { it.toString() },
+                                                        outName = outName,
+                                                        hasPassword = !password.isNullOrBlank(),
+                                                    )
+                                                )
+                                            } else {
+                                                val target = targetDir
+                                                    ?: getCurrentDirUri(filesVM.state.value)
+                                                    ?: return@sevenZ
+                                                confirmShellWrite(target) {
+                                                    tasksVM.enqueueCreate7z(
+                                                        sources, target, outName, password, overwrite
+                                                    )
+                                                    showTaskCenter = true
+                                                }
                                             }
                                         },
 
@@ -468,13 +543,25 @@ class MainActivity : AppCompatActivity() {
                                         },
 
                                         onCopySelected = { list ->
-                                            pendingAction = PendingAction.Copy(list)
-                                            launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
+                                            if (s.taskMode) {
+                                                addQueuedTask(
+                                                    QueuedTask.Copy(sources = list.map { it.toString() })
+                                                )
+                                            } else {
+                                                pendingAction = PendingAction.Copy(list)
+                                                launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
+                                            }
                                         },
 
                                         onMoveSelected = { list ->
-                                            pendingAction = PendingAction.Move(list)
-                                            launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
+                                            if (s.taskMode) {
+                                                addQueuedTask(
+                                                    QueuedTask.Move(sources = list.map { it.toString() })
+                                                )
+                                            } else {
+                                                pendingAction = PendingAction.Move(list)
+                                                launchPickTargetDirOrFallback(s.alwaysUseInAppFolderPicker)
+                                            }
                                         },
 
                                         onDeleteSelected = { list ->
@@ -742,13 +829,36 @@ class MainActivity : AppCompatActivity() {
                     ) {
                         TaskCenterSheet(
                             workInfos = workInfos,
+                            queuedTasks = queuedTasks,
+                            currentDir = getCurrentDirUri(browserState),
+                            onRunHere = ::runQueuedTaskHere,
+                            onChooseFolder = { task ->
+                                chooseTargetForQueuedTask(task, s.alwaysUseInAppFolderPicker)
+                            },
+                            onDeleteTask = { task -> tasksVM.removeTask(task.id) },
+                            onClearQueue = { tasksVM.clearQueue() },
                             onCancel = { id -> tasksVM.cancel(id) },
-                            onClearFinished = { /* visual clear only */ },
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .navigationBarsPadding()
                         )
                     }
+                }
+
+                pendingRun?.let { run: PendingTaskRun ->
+                    RunTaskDialog(
+                        task = run.task,
+                        target = run.target,
+                        onDismiss = {
+                            tasksVM.dismissRun()
+                            tasksVM.releaseClaim()
+                        },
+                        onRun = { password, overwrite ->
+                            tasksVM.runTask(run.task, run.target, password, overwrite)
+                            tasksVM.dismissRun()
+                            tasksVM.releaseClaim()
+                        }
+                    )
                 }
 
                 if (showOverwriteDialog.value) {
@@ -763,6 +873,7 @@ class MainActivity : AppCompatActivity() {
                         onDismiss = {
                             showOverwriteDialog.value = false
                             onOverwriteConfirm = null
+                            tasksVM.releaseClaim()
                         }
                     )
                 }
@@ -810,29 +921,139 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun clearFolderPicker() {
+        folderPickerActive = false
+        pendingFolderCallback = null
+    }
+
     private fun launchPickRootOrFallback(alwaysInApp: Boolean) {
+        if (folderPickerActive) return
+        folderPickerActive = true
         if (alwaysInApp) {
             showInAppFolderPicker.value = true
             inAppFolderPickerTitle.value = "Choose root folder"
-            pendingFolderPickCallback = { uri -> filesVM.openRoot(uri) }
+            pendingFolderCallback = { uri -> filesVM.openRoot(uri) }
         } else {
             pickRoot.launch(null)
         }
     }
 
-    private fun launchPickTargetDirOrFallback(alwaysInApp: Boolean) {
+    private fun launchPickTargetDirOrFallback(
+        alwaysInApp: Boolean,
+        onPicked: ((Uri) -> Unit)? = null,
+    ) {
+        if (folderPickerActive) return
+        folderPickerActive = true
+        val callback = onPicked ?: ::handleTargetDirPicked
         if (alwaysInApp) {
             showInAppFolderPicker.value = true
             inAppFolderPickerTitle.value = "Choose destination folder"
-            pendingFolderPickCallback = { uri -> handleTargetDirPicked(uri) }
+            pendingFolderCallback = callback
         } else {
+            pendingFolderCallback = callback
             pickTargetDir.launch(null)
+        }
+    }
+
+    private fun persistSourceAccess(sources: List<Uri>) {
+        sources.filter { it.scheme == "content" }.forEach { uri ->
+            runCatching {
+                contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
+            runCatching {
+                contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_WRITE_URI_PERMISSION
+                )
+            }
+        }
+    }
+
+    private fun localDocumentsAuthority(): String {
+        val runtimeAuth = "${packageName}.documents"
+        return if (packageManager.resolveContentProvider(runtimeAuth, 0) != null) {
+            runtimeAuth
+        } else {
+            LocalDocumentsProvider.AUTHORITY
+        }
+    }
+
+    private fun documentId(uri: Uri): String? =
+        runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
+            ?: runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull()
+
+    private fun hasSourceAccess(uri: Uri): Boolean {
+        if (uri.scheme != "content") return true
+        if (uri.authority == localDocumentsAuthority()) return true
+        val requestedId = documentId(uri) ?: return false
+        return contentResolver.persistedUriPermissions.any { permission ->
+            if (permission.uri.authority != uri.authority) return@any false
+            if (!permission.isReadPermission) return@any false
+            val grantedId = documentId(permission.uri) ?: return@any false
+            grantedId == requestedId || requestedId.startsWith("$grantedId/")
+        }
+    }
+
+    private fun addQueuedTask(task: QueuedTask) {
+        persistSourceAccess(task.sources.map { Uri.parse(it) })
+        lifecycleScope.launch {
+            val result = tasksVM.addTask(task)
+            snackbar.show(
+                message = getString(
+                    if (result == QueueAddResult.ADDED) R.string.task_added else R.string.task_updated
+                ),
+                actionLabel = getString(R.string.tasks),
+                duration = SnackbarDuration.Long,
+                onAction = { showTaskCenter = true },
+            )
+        }
+    }
+
+    private fun runQueuedTaskHere(task: QueuedTask) {
+        if (!tasksVM.claimTask(task)) return
+        showTaskCenter = false
+        val dir = getCurrentDirUri(filesVM.state.value)
+        if (dir == null) {
+            tasksVM.releaseClaim()
+            snackbar.show(getString(R.string.no_folder_for_task))
+            return
+        }
+        runQueuedTask(task, dir)
+    }
+
+    private fun chooseTargetForQueuedTask(task: QueuedTask, alwaysInApp: Boolean) {
+        if (folderPickerActive) return
+        if (!tasksVM.claimTask(task)) return
+        showTaskCenter = false
+        launchPickTargetDirOrFallback(alwaysInApp) { target ->
+            runQueuedTask(task, target)
+        }
+    }
+
+    private fun runQueuedTask(task: QueuedTask, target: Uri) {
+        if (!tasksVM.isClaimed(task)) return
+        val sources = task.sources.map { Uri.parse(it) }
+        if (sources.any { !hasSourceAccess(it) }) {
+            tasksVM.releaseClaim()
+            snackbar.show(getString(R.string.source_permission_expired), duration = SnackbarDuration.Long)
+            return
+        }
+        if (task is QueuedTask.Copy && sources.any { parentDirUriOf(it) == target }) {
+            tasksVM.releaseClaim()
+            snackbar.show(getString(R.string.same_folder_copy_warning), duration = SnackbarDuration.Long)
+            return
+        }
+        confirmShellWrite(target, sources) {
+            tasksVM.requestRun(task, target)
         }
     }
 
     private fun dismissInAppFolderPicker() {
         showInAppFolderPicker.value = false
-        pendingFolderPickCallback = null
+        clearFolderPicker()
     }
 
     private fun handleTargetDirPicked(target: Uri) {
@@ -946,13 +1167,19 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun confirmShellWrite(target: Uri, proceed: () -> Unit) {
+    private fun confirmShellWrite(
+        target: Uri,
+        sources: List<Uri> = emptyList(),
+        proceed: () -> Unit,
+    ) {
         lifecycleScope.launch {
             val s = settingsRepository.settingsFlow.first()
-            val needsWarn = s.warnBeforeShellWrites && (target.scheme == "root" || target.scheme == "shizuku")
+            val schemes = (listOf(target) + sources).mapNotNull { it.scheme }.toSet()
+            val needsWarn = s.warnBeforeShellWrites &&
+                schemes.any { it == "root" || it == "shizuku" }
             if (needsWarn) {
                 overwriteMessage.value =
-                    "You're about to write using ${target.scheme?.uppercase()} permissions. This can modify system files. Continue?"
+                    "You're about to use elevated (root/shizuku) access. This can modify system files. Continue?"
                 onOverwriteConfirm = proceed
                 showOverwriteDialog.value = true
             } else {
@@ -1045,9 +1272,11 @@ private fun MiniTaskIndicator(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurface
                     )
-                    TextButton(onClick = onOpenTasks) {
-                        Text(stringResource(R.string.details))
-                    }
+                    HintIconButton(
+                        hint = stringResource(R.string.details),
+                        icon = Icons.Default.Info,
+                        onClick = onOpenTasks,
+                    )
                 }
                 if (showProgressBar) {
                     if (progress != null) {
@@ -1073,15 +1302,22 @@ private fun MiniTaskIndicator(
 @Composable
 private fun TaskCenterSheet(
     workInfos: List<WorkInfo>,
+    queuedTasks: List<QueuedTask>,
+    currentDir: Uri?,
+    onRunHere: (QueuedTask) -> Unit,
+    onChooseFolder: (QueuedTask) -> Unit,
+    onDeleteTask: (QueuedTask) -> Unit,
+    onClearQueue: () -> Unit,
     onCancel: (UUID) -> Unit,
-    onClearFinished: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     val active = workInfos.filter { !it.state.isFinished }
     val finished = workInfos.filter { it.state.isFinished }.takeLast(10)
 
     Column(
-        modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier = modifier
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Text(
@@ -1089,7 +1325,36 @@ private fun TaskCenterSheet(
             style = MaterialTheme.typography.titleMedium
         )
 
-        if (active.isEmpty() && finished.isEmpty()) {
+        if (queuedTasks.isNotEmpty()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    stringResource(R.string.queued, queuedTasks.size),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                HintIconButton(
+                    hint = stringResource(R.string.clear_queue),
+                    icon = Icons.Default.ClearAll,
+                    onClick = onClearQueue,
+                )
+            }
+            queuedTasks.forEach { task ->
+                QueuedTaskRow(
+                    task = task,
+                    currentDir = currentDir,
+                    onRunHere = onRunHere,
+                    onChooseFolder = onChooseFolder,
+                    onDeleteTask = onDeleteTask,
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+
+        if (queuedTasks.isEmpty() && active.isEmpty() && finished.isEmpty()) {
             Text(
                 stringResource(R.string.no_tasks),
                 style = MaterialTheme.typography.bodyMedium,
@@ -1116,6 +1381,172 @@ private fun TaskCenterSheet(
             finished.asReversed().forEach { wi -> TaskRowCompact(wi, onCancel = null) }
         }
     }
+}
+
+@Composable
+private fun HintIconButton(
+    hint: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+    tint: Color = LocalContentColor.current,
+) {
+    TooltipBox(
+        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+            TooltipAnchorPosition.Above
+        ),
+        tooltip = { PlainTooltip { Text(hint) } },
+        state = rememberTooltipState(),
+    ) {
+        IconButton(onClick = onClick) {
+            Icon(icon, contentDescription = hint, tint = tint)
+        }
+    }
+}
+
+@Composable
+private fun QueuedTaskTitle(task: QueuedTask): String {
+    val label = when (task) {
+        is QueuedTask.Copy -> R.string.queued_copy
+        is QueuedTask.Move -> R.string.queued_move
+        is QueuedTask.CreateZip -> R.string.queued_create_zip
+        is QueuedTask.Create7z -> R.string.queued_create_7z
+    }
+    return stringResource(label, task.sources.size)
+}
+
+private fun sourceDisplayName(source: String): String {
+    val uri = Uri.parse(source)
+    var name = uri.lastPathSegment ?: source
+    if (uri.scheme == "content") {
+        name = name.substringAfterLast(':').substringAfterLast('/')
+    }
+    return name.ifBlank { source }
+}
+
+private fun QueuedTask.runIcon(): ImageVector = when (this) {
+    is QueuedTask.Copy, is QueuedTask.Move -> Icons.Default.ContentPaste
+    is QueuedTask.CreateZip, is QueuedTask.Create7z -> Icons.Default.Archive
+}
+
+private fun QueuedTask.detailLine(): String {
+    val names = sources.map(::sourceDisplayName)
+    val shown = names.take(3).joinToString(", ")
+    val more = (names.size - 3).let { if (it > 0) " +$it" else "" }
+    val items = shown + more
+    return when (this) {
+        is QueuedTask.Copy, is QueuedTask.Move -> items
+        is QueuedTask.CreateZip -> "$outName: $items"
+        is QueuedTask.Create7z -> "$outName: $items"
+    }
+}
+
+@Composable
+private fun QueuedTaskRow(
+    task: QueuedTask,
+    currentDir: Uri?,
+    onRunHere: (QueuedTask) -> Unit,
+    onChooseFolder: (QueuedTask) -> Unit,
+    onDeleteTask: (QueuedTask) -> Unit,
+) {
+    val runHint = stringResource(
+        when (task) {
+            is QueuedTask.Copy, is QueuedTask.Move -> R.string.paste_here
+            is QueuedTask.CreateZip, is QueuedTask.Create7z -> R.string.create_here
+        }
+    )
+    ElevatedCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp)) {
+            Text(QueuedTaskTitle(task), style = MaterialTheme.typography.bodyLarge)
+            Text(
+                task.detailLine(),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                stringResource(
+                    R.string.task_destination,
+                    currentDir?.path ?: stringResource(R.string.no_folder_for_task)
+                ),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(6.dp))
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                HintIconButton(
+                    hint = runHint,
+                    icon = task.runIcon(),
+                    onClick = { onRunHere(task) },
+                )
+                HintIconButton(
+                    hint = stringResource(R.string.choose_folder),
+                    icon = Icons.Default.FolderOpen,
+                    onClick = { onChooseFolder(task) },
+                )
+                HintIconButton(
+                    hint = stringResource(R.string.delete),
+                    icon = Icons.Default.Delete,
+                    onClick = { onDeleteTask(task) },
+                )
+            }
+        }
+    }
+}
+
+private fun QueuedTask.needsPassword(): Boolean = when (this) {
+    is QueuedTask.Copy, is QueuedTask.Move -> false
+    is QueuedTask.CreateZip -> hasPassword
+    is QueuedTask.Create7z -> hasPassword
+}
+
+@Composable
+private fun RunTaskDialog(
+    task: QueuedTask,
+    target: Uri,
+    onDismiss: () -> Unit,
+    onRun: (String?, Boolean) -> Unit,
+) {
+    var password by remember { mutableStateOf("") }
+    var overwrite by remember { mutableStateOf(false) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.run_task)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.task_destination, target.path ?: target.toString()))
+                if (task.needsPassword()) {
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = { Text(stringResource(R.string.password_required)) },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = overwrite, onCheckedChange = { overwrite = it })
+                    Text(stringResource(R.string.replace_existing))
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onRun(password.ifBlank { null }, overwrite) }) {
+                Text(stringResource(R.string.run_action))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        },
+    )
 }
 
 @Composable
@@ -1150,14 +1581,12 @@ private fun TaskRowCompact(
                 }
 
                 if (isRunning && onCancel != null) {
-                    TextButton(
+                    HintIconButton(
+                        hint = stringResource(R.string.cancel_task),
+                        icon = Icons.Default.Stop,
                         onClick = { onCancel(wi.id) },
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
-                    ) {
-                        Text(stringResource(R.string.cancel))
-                    }
+                        tint = MaterialTheme.colorScheme.error,
+                    )
                 }
             }
 

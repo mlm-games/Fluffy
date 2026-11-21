@@ -6,6 +6,7 @@ import app.fluffy.archive.DefaultArchiveEngine
 import app.fluffy.cache.CacheManager
 import app.fluffy.data.repository.BookmarksRepository
 import app.fluffy.data.repository.SettingsRepository
+import app.fluffy.data.repository.TaskQueueRepository
 import app.fluffy.data.repository.fluffyStringResourceProvider
 import app.fluffy.io.FileSystemAccess
 import app.fluffy.io.SafIo
@@ -34,6 +35,7 @@ val appModule = module {
 
     single { SettingsRepository(androidContext()) }
     single { BookmarksRepository(androidContext()) }
+    single { TaskQueueRepository(androidContext()) }
 
     single { RootAccess() }
     single { ShizukuAccess() }
@@ -56,6 +58,6 @@ val appModule = module {
 
     viewModel { FileBrowserViewModel(androidContext(), get(), get(), get(), get(), get(), get()) }
     viewModel { SearchViewModel(get(), get()) }
-    viewModel { TasksViewModel(get(), get()) }
+    viewModel { TasksViewModel(get(), get(), get()) }
     viewModel { SettingsViewModel(get(), get()) }
 }

@@ -182,6 +182,10 @@
     >Load image previews in list and grid (could cause lag for old TVs)</string>
     <string name="setting_dynamic_color">Dynamic colors</string>
     <string name="setting_dynamic_color_desc">Android 12+</string>
+    <string name="setting_task_mode">Task queue mode</string>
+    <string
+        name="setting_task_mode_desc"
+    >Add copy, move and archive operations to Task Center instead of asking for a destination immediately</string>
     <string name="setting_oled_black">Pure black (OLED)</string>
     <string name="setting_zip_level">ZIP compression level</string>
     <string name="setting_zip_level_desc">0 = no compression, 9 = maximum compression</string>
@@ -354,4 +358,23 @@
         <item quantity="one">Showing %1$d result, stopped after %2$d folders. Narrow your search.</item>
         <item quantity="other">Showing %1$d results, stopped after %2$d folders. Narrow your search.</item>
     </plurals>
+
+    <string name="task_added">Task added</string>
+    <string name="task_updated">Task updated</string>
+    <string name="queued">Queued (%1$d)</string>
+    <string name="queued_copy">Copy (%1$d)</string>
+    <string name="queued_move">Move (%1$d)</string>
+    <string name="queued_create_zip">Create ZIP (%1$d)</string>
+    <string name="queued_create_7z">Create 7z (%1$d)</string>
+    <string name="clear_queue">Clear queue</string>
+    <string name="cancel_task">Cancel task</string>
+    <string name="paste_here">Paste here</string>
+    <string name="create_here">Create here</string>
+    <string name="choose_folder">Choose folder</string>
+    <string name="run_task">Run task</string>
+    <string name="task_destination">Destination: %1$s</string>
+    <string name="replace_existing">Replace existing files</string>
+    <string name="no_folder_for_task">Open a folder first</string>
+    <string name="same_folder_copy_warning">Choose a different folder; the source is already there</string>
+    <string name="source_permission_expired">Access to a source file has expired; add it again</string>
 </resources>

@@ -85,12 +85,17 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.PlainTooltip
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TooltipAnchorPosition
+import androidx.compose.material3.TooltipBox
+import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -158,7 +163,7 @@ import java.io.File
 
 data class ZipCreateRequest(
     val sources: List<Uri>,
-    val targetDir: Uri,
+    val targetDir: Uri? = null,
     val outName: String,
     val password: String?,
     val encryption: ArchiveEngine.ZipEncryption,
@@ -187,6 +192,7 @@ fun FileBrowserScreen(
     onBack: () -> Unit,
     onExtractArchive: (Uri, Uri) -> Unit,
     onCreateZip: (ZipCreateRequest) -> Unit,
+    taskMode: Boolean = false,
     zipSplitEnabled: Boolean = false,
     onZipSplitEnabledChange: (Boolean) -> Unit = {},
     onOpenSettings: () -> Unit,
@@ -202,7 +208,7 @@ fun FileBrowserScreen(
     onShareSelected: (List<Uri>) -> Unit = {},
     onPasteClipboard: (String) -> Unit = {},
     onRenameOne: (Uri, String, String) -> Unit = { _, _, _ -> },
-    onCreate7z: (List<Uri>, String, String?, Uri, Boolean) -> Unit = { _, _, _, _, _ -> },
+    onCreate7z: (List<Uri>, String, String?, Uri?, Boolean) -> Unit = { _, _, _, _, _ -> },
     onOpenFile: (File) -> Unit = {},
     onQuickAccessClick: (QuickAccessItem) -> Unit = {},
     onBookmarkClick: (Bookmark) -> Unit = {},
@@ -272,7 +278,6 @@ fun FileBrowserScreen(
         showCtaBanner = AlertBannerManager.shouldShowBanner(context)
     }
 
-    // Overwrite confirmations (ZIP / 7z created into currentDir)
     var pendingZipRequest by remember { mutableStateOf<ZipCreateRequest?>(null) }
     var pending7zName by remember { mutableStateOf<String?>(null) }
     var pending7zPwd by remember { mutableStateOf<String?>(null) }
@@ -384,7 +389,7 @@ fun FileBrowserScreen(
             splitBytes = splitBytes,
             overwrite = false
         )
-        if (uriChildExists(dir, fixedName)) {
+        if (!taskMode && uriChildExists(dir, fixedName)) {
             pendingZipRequest = request
             overwriteMessage = "A file named \"$fixedName\" already exists here. Overwrite it?"
             showOverwriteConfirm = true
@@ -397,7 +402,7 @@ fun FileBrowserScreen(
     fun confirmOrCreate7z(name: String, pwd: String?) {
         val dir = currentDirUri ?: return
         val sources = selected + selectedFiles.map { Uri.fromFile(it) }
-        if (uriChildExists(dir, name)) {
+        if (!taskMode && uriChildExists(dir, name)) {
             pending7zName = name
             pending7zPwd = pwd
             overwriteMessage = "A file named \"$name\" already exists here. Overwrite it?"
@@ -722,12 +727,26 @@ fun FileBrowserScreen(
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onPrimaryContainer
                                     )
-                                    TextButton(
-                                        onClick = {
-                                            selected.clear()
-                                            selectedFiles.clear()
+                                    TooltipBox(
+                                        positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                                            TooltipAnchorPosition.Above
+                                        ),
+                                        tooltip = { PlainTooltip { Text(stringResource(R.string.clear)) } },
+                                        state = rememberTooltipState(),
+                                    ) {
+                                        IconButton(
+                                            onClick = {
+                                                selected.clear()
+                                                selectedFiles.clear()
+                                            }
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Close,
+                                                contentDescription = stringResource(R.string.clear),
+                                                tint = MaterialTheme.colorScheme.onPrimaryContainer
+                                            )
                                         }
-                                    ) { Text(stringResource(R.string.clear)) }
+                                    }
                                 }
 
                                 Row(
@@ -1367,7 +1386,6 @@ fun FileBrowserScreen(
         )
     }
 
-    // Overwrite confirmation (ZIP / 7z)
     if (showOverwriteConfirm) {
         ConfirmationDialog(
             title = stringResource(R.string.overwrite_file),
@@ -1494,8 +1512,20 @@ private fun QuickAccessView(
                         color = MaterialTheme.colorScheme.primary
                     )
                     if (hasBookmarks) {
-                        TextButton(onClick = { isEditMode = !isEditMode }) {
-                            Text(stringResource(if (isEditMode) R.string.done else R.string.edit))
+                        val editHint = stringResource(if (isEditMode) R.string.done else R.string.edit)
+                        TooltipBox(
+                            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(
+                                TooltipAnchorPosition.Above
+                            ),
+                            tooltip = { PlainTooltip { Text(editHint) } },
+                            state = rememberTooltipState(),
+                        ) {
+                            IconButton(onClick = { isEditMode = !isEditMode }) {
+                                Icon(
+                                    if (isEditMode) Icons.Default.Check else Icons.Default.Edit,
+                                    contentDescription = editHint,
+                                )
+                            }
                         }
                     }
                 }
