@@ -1,3 +1,8 @@
+## v4.6.3
+
+- text viewer theme fix
+
+
 ## v4.6.2
 
 - root-rw remapping (with a one-time alert dialog)
