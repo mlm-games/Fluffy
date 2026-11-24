@@ -1,5 +1,6 @@
 package app.fluffy.shell
 
+import android.os.Build
 import java.io.BufferedOutputStream
 import java.io.File
 import java.io.FilterInputStream
@@ -44,7 +45,8 @@ abstract class BasePrivilegedBackend(
 
     protected companion object {
         const val BUF = 128 * 1024
-        const val REMOUNT_TIMEOUT_SECONDS = 10L
+        const val REMOUNT_TIMEOUT_MS = 10_000L
+        const val PROCESS_POLL_MS = 50L
 
         fun q(path: String): String = "'${path.replace("'", "'\"'\"'")}'"
 
@@ -120,6 +122,31 @@ abstract class BasePrivilegedBackend(
         }
     }
 
+    private fun awaitExit(process: Process, timeoutMs: Long): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val exited = runCatching {
+                process.waitFor(timeoutMs, TimeUnit.MILLISECONDS)
+            }.getOrDefault(false)
+            if (!exited) runCatching { process.destroyForcibly() }
+            return exited
+        }
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (true) {
+            runCatching { process.exitValue() }.getOrNull()?.let { return true }
+            if (System.currentTimeMillis() >= deadline) {
+                runCatching { process.destroy() }
+                return false
+            }
+            try {
+                Thread.sleep(PROCESS_POLL_MS)
+            } catch (e: InterruptedException) {
+                Thread.currentThread().interrupt()
+                runCatching { process.destroy() }
+                return false
+            }
+        }
+    }
+
     private fun remount(mount: String, path: String): Boolean {
         val points = listOf(mount, "/", "/system_root").distinct()
         for (point in points) {
@@ -128,10 +155,7 @@ abstract class BasePrivilegedBackend(
                 "mount -o remount,rw ${q(point)}",
             )) {
                 val process = spawnShellCommand(command) ?: continue
-                if (!runCatching { process.waitFor(REMOUNT_TIMEOUT_SECONDS, TimeUnit.SECONDS) }
-                        .getOrDefault(false)) {
-                    runCatching { process.destroyForcibly() }
-                }
+                awaitExit(process, REMOUNT_TIMEOUT_MS)
                 if (!isReadOnlyMount(path)) return true
             }
         }
