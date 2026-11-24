@@ -14,7 +14,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
@@ -53,7 +52,7 @@ import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.SafIo
 import app.fluffy.ui.dialogs.FluffyDialog
-import app.fluffy.ui.theme.FluffyTheme
+import app.fluffy.ui.theme.AppTheme
 import androidx.media3.common.util.UnstableApi
 import io.github.kdroidfilter.composemediaplayer.VideoPlayerSurface
 import io.github.kdroidfilter.composemediaplayer.rememberVideoPlayerState
@@ -80,8 +79,7 @@ class MediaPlayerActivity : ComponentActivity(), KoinComponent {
 
         setContent {
             val s = settings.settingsFlow.collectAsState(initial = AppSettings()).value
-            val dark = when (s.themeMode) { 0 -> isSystemInDarkTheme(); 1 -> false; else -> true }
-            FluffyTheme(darkTheme = dark, useAuroraTheme = s.useAuroraTheme) {
+            AppTheme(settings = s) {
                 MediaPlayerScreen(
                     uri = uri, title = title,
                     onClose = { finish() }

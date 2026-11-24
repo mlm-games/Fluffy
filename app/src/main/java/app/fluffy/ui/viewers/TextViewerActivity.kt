@@ -9,7 +9,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.gestures.scrollBy
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -31,7 +30,7 @@ import app.fluffy.R
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.SafIo
-import app.fluffy.ui.theme.FluffyTheme
+import app.fluffy.ui.theme.AppTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -54,12 +53,7 @@ class TextViewerActivity : ComponentActivity(), KoinComponent {
 
         setContent {
             val s = settings.settingsFlow.collectAsState(initial = AppSettings()).value
-            val dark = when (s.themeMode) {
-                0 -> isSystemInDarkTheme()
-                1 -> false
-                else -> true
-            }
-            FluffyTheme(darkTheme = dark, useAuroraTheme = s.useAuroraTheme) {
+            AppTheme(settings = s) {
                 TextViewerScreen(uri, title, io) { finish() }
             }
         }

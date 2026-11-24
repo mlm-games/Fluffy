@@ -24,7 +24,6 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -87,7 +86,8 @@ import app.fluffy.cache.CacheManager
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.helper.AppUtilsHelper
-import app.fluffy.ui.theme.FluffyTheme
+import app.fluffy.ui.theme.AppTheme
+import app.fluffy.ui.theme.appIsDarkTheme
 import app.fluffy.ui.util.PdfDarkMode
 import app.fluffy.util.AppLog
 import kotlinx.coroutines.Dispatchers
@@ -123,12 +123,7 @@ class PdfViewerActivity : ComponentActivity(), KoinComponent {
 
         setContent {
             val s = settings.settingsFlow.collectAsState(initial = AppSettings()).value
-            val dark = when (s.themeMode) {
-                0 -> isSystemInDarkTheme()
-                1 -> false
-                else -> true
-            }
-            FluffyTheme(darkTheme = dark, useAuroraTheme = s.useAuroraTheme) {
+            AppTheme(settings = s) {
                 FullscreenPdfViewer(
                     uri = inputUri,
                     appSettings = s,
@@ -386,15 +381,10 @@ private fun FullscreenPdfViewer(
     val contentFocus = remember { FocusRequester() }
     LaunchedEffect(Unit) { contentFocus.requestFocus() }
 
-    val dark = when (appSettings.themeMode) {
-        0 -> isSystemInDarkTheme()
-        1 -> false
-        else -> true
-    }
+    val initialDarkMode = appIsDarkTheme(appSettings)
+    var pdfDarkMode by remember { mutableStateOf(initialDarkMode) }
 
-    var pdfDarkMode by remember { mutableStateOf(dark) }
-
-    FluffyTheme(darkTheme = pdfDarkMode, useAuroraTheme = appSettings.useAuroraTheme) {
+    AppTheme(settings = appSettings, darkTheme = pdfDarkMode) {
     Scaffold(
         topBar = {
             Box(modifier = Modifier.focusable(false)) {

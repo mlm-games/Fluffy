@@ -2,6 +2,7 @@ package app.fluffy.ui.theme
 
 import android.app.Activity
 import android.os.Build
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialExpressiveTheme
 import androidx.compose.material3.MaterialTheme
@@ -18,8 +19,31 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
+import app.fluffy.data.repository.AppSettings
 
 val LocalIsDarkTheme = compositionLocalOf { false }
+
+@Composable
+fun appIsDarkTheme(settings: AppSettings): Boolean = when (settings.themeMode) {
+    0 -> isSystemInDarkTheme()
+    1 -> false
+    else -> true
+}
+
+@Composable
+fun AppTheme(
+    settings: AppSettings,
+    darkTheme: Boolean? = null,
+    content: @Composable () -> Unit,
+) {
+    FluffyTheme(
+        darkTheme = darkTheme ?: appIsDarkTheme(settings),
+        dynamicColor = settings.dynamicColor,
+        useAuroraTheme = settings.useAuroraTheme && !settings.dynamicColor,
+        oledBlack = settings.oledBlack,
+        content = content,
+    )
+}
 
 @Composable
 fun FluffyTheme(

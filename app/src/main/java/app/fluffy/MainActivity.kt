@@ -12,7 +12,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -114,7 +113,7 @@ import app.fluffy.ui.screens.FileBrowserScreen
 import app.fluffy.ui.screens.SearchScreen
 import app.fluffy.ui.screens.SettingsScreen
 import app.fluffy.ui.screens.TasksScreen
-import app.fluffy.ui.theme.FluffyTheme
+import app.fluffy.ui.theme.AppTheme
 import app.fluffy.ui.util.ScreenKey
 import app.fluffy.util.AppLog
 import app.fluffy.viewmodel.BrowseLocation
@@ -318,18 +317,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val s by settingsRepository.settingsFlow.collectAsState(initial = AppSettings())
 
-            val dark = when (s.themeMode) {
-                0 -> isSystemInDarkTheme()
-                1 -> false
-                else -> true
-            }
-
-            FluffyTheme(
-                darkTheme = dark,
-                dynamicColor = s.dynamicColor,
-                useAuroraTheme = s.useAuroraTheme && !s.dynamicColor,
-                oledBlack = s.oledBlack
-            ) {
+            AppTheme(settings = s) {
                 val backStack = rememberNavBackStack(
                     ScreenKey.Files
                 )

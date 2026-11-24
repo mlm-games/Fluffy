@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.provider.DocumentsContract
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
@@ -31,7 +30,7 @@ import app.fluffy.provider.LocalDocumentsProvider
 import app.fluffy.ui.components.snackbar.LauncherSnackbarHost
 import app.fluffy.ui.components.snackbar.SnackbarManager
 import app.fluffy.ui.screens.FileBrowserScreen
-import app.fluffy.ui.theme.FluffyTheme
+import app.fluffy.ui.theme.AppTheme
 import app.fluffy.util.AppLog
 import app.fluffy.viewmodel.FileBrowserViewModel
 import kotlinx.coroutines.launch
@@ -78,17 +77,7 @@ class PickerActivity : ComponentActivity() {
 
         setContent {
             val s by settingsRepository.settingsFlow.collectAsState(initial = AppSettings())
-            val dark = when (s.themeMode) {
-                0 -> isSystemInDarkTheme()
-                1 -> false
-                else -> true
-            }
-            FluffyTheme(
-                darkTheme = dark,
-                dynamicColor = s.dynamicColor,
-                useAuroraTheme = s.useAuroraTheme && !s.dynamicColor,
-                oledBlack = s.oledBlack
-            ) {
+            AppTheme(settings = s) {
                 val browserState by filesVM.state.collectAsState()
                 val snackbarHostState = remember { SnackbarHostState() }
 

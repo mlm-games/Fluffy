@@ -16,7 +16,6 @@ import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.rememberTransformableState
 import androidx.compose.foundation.gestures.transformable
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxSize
@@ -70,7 +69,7 @@ import androidx.core.net.toUri
 import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.DocumentController
-import app.fluffy.ui.theme.FluffyTheme
+import app.fluffy.ui.theme.AppTheme
 import app.fluffy.util.AppLog
 import coil3.compose.AsyncImage
 import coil3.imageLoader
@@ -126,12 +125,7 @@ class ImageViewerActivity : ComponentActivity(), KoinComponent {
 
         setContent {
             val s = settings.settingsFlow.collectAsState(initial = AppSettings()).value
-            val dark = when (s.themeMode) {
-                0 -> isSystemInDarkTheme()
-                1 -> false
-                else -> true
-            }
-            FluffyTheme(darkTheme = dark, useAuroraTheme = s.useAuroraTheme) {
+            AppTheme(settings = s) {
                 var images by remember { mutableStateOf<List<Uri>?>(if (initialUris.size == 1) null else initialUris) }
                 var startIndex by remember { mutableIntStateOf(initialIndex.coerceIn(0, (images?.size ?: 1) - 1)) }
                 LaunchedEffect(initialUris) {

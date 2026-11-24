@@ -12,7 +12,6 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
@@ -56,7 +55,7 @@ import app.fluffy.data.repository.AppSettings
 import app.fluffy.data.repository.SettingsRepository
 import app.fluffy.io.DocumentController
 import app.fluffy.io.SafIo
-import app.fluffy.ui.theme.FluffyTheme
+import app.fluffy.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -99,13 +98,8 @@ class TextEditorActivity : ComponentActivity(), KoinComponent {
         setContent {
             val coroutineScope = rememberCoroutineScope()
             val s = settings.settingsFlow.collectAsState(initial = AppSettings()).value
-            val dark = when (s.themeMode) {
-                0 -> isSystemInDarkTheme()
-                1 -> false
-                else -> true
-            }
-            FluffyTheme(darkTheme = dark, useAuroraTheme = s.useAuroraTheme) {
-                val target = editTarget ?: return@FluffyTheme
+            AppTheme(settings = s) {
+                val target = editTarget ?: return@AppTheme
                 key(target.first) {
                     TextEditorScreen(
                         uri = target.first,
